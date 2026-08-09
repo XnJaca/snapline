@@ -73,27 +73,44 @@ Hay además un caso que no es de comodidad sino de regla: el `ACCOUNTANT` tiene
 
 ## Las pestañas
 
-Derivadas de lo que el dominio dice que puede cada rol, no inventadas:
+**No hay tabla de roles en el móvil.** Cada pestaña declara qué permiso necesita, y
+se dibuja si ese permiso está en `membership.permissions`, que el login devuelve.
+
+| Pestaña | Permiso que exige |
+|---|---|
+| Hoy | `time.clock` |
+| Fotos | `media.read` |
+| Horas | `time.read` |
+| Cuadrilla | `crews.read` |
+| Proyectos | `projects.write` |
+| Clientes | `customers.read` |
+| Reportes | `reports.read` |
+| Facturación | `billing.read` |
+
+Lo que sale de aplicar eso a los permisos reales del API:
 
 | Rol | Pestañas |
 |---|---|
-| `WORKER` | Hoy · Fotos · Mis horas |
+| `WORKER` | Hoy · Fotos |
 | `FOREMAN` | Hoy · Cuadrilla · Fotos · Horas |
 | `OWNER`, `ADMIN` | Proyectos · Clientes · Fotos · Horas |
 | `ACCOUNTANT` | Reportes · Facturación |
 
-Tres cosas que no son arbitrarias:
+Tres consecuencias que conviene mirar, porque ninguna se eligió a mano:
 
-- **`WORKER` no ve Proyectos ni Clientes.** Su día es una obra, no una cartera.
-  El dominio le da "marcar entrada y salida, tomar fotos. Nada más".
-- **`ACCOUNTANT` no ve Fotos.** El dominio dice *"cero acceso a fotos"*, y los
-  permisos del API lo confirman: `media.read` no lo incluye. Una pestaña que
-  llevara a un 403 sería una promesa rota.
-- **`FOREMAN` ve Cuadrilla** porque el dominio le da "su cuadrilla: marcar por su
-  gente", que ningún otro rol de campo tiene.
+- **`WORKER` no tiene "Mis horas".** No está en `time.read` —solo en `time.clock`—
+  así que hoy puede marcar pero no leer ni sus propias horas. Coincide con el
+  dominio: *"marcar entrada y salida, tomar fotos. Nada más"*. Si se decide que un
+  trabajador debe ver su propio registro, **eso es un cambio de permisos en el API**,
+  no una pestaña que el móvil agregue por su cuenta.
+- **`ACCOUNTANT` no ve Fotos**, porque `media.read` no lo incluye. El dominio dice
+  *"cero acceso a fotos"* y el permiso lo refleja.
+- **`WORKER` queda con dos pestañas.** Es el mínimo, y es coherente con que la
+  visión le prometa *"la única pantalla que un trabajador debería necesitar"*.
 
 **Nunca menos de dos ni más de cuatro.** Con una, la barra sobra; con cinco, los
-objetivos táctiles se vuelven demasiado angostos para un dedo con guante.
+objetivos táctiles se vuelven demasiado angostos para un dedo con guante. Si un rol
+quedara con una sola pestaña, no se muestra barra.
 
 ## Comportamiento sin señal
 
@@ -132,11 +149,15 @@ dominio. Que una pestaña se dibuje no significa que su acción vaya a pasar.
 
 ## Criterios de aceptación
 
-- [ ] Un `WORKER` ve exactamente tres pestañas: Hoy, Fotos y Mis horas.
+- [ ] Un `WORKER` ve exactamente dos pestañas: Hoy y Fotos.
+- [ ] Un `FOREMAN` ve cuatro, incluida Cuadrilla — la única que lo distingue de un
+      `WORKER`.
 - [ ] Un `OWNER` ve cuatro: Proyectos, Clientes, Fotos y Horas.
 - [ ] Un `ACCOUNTANT` **no** ve la pestaña de Fotos.
+- [ ] Las pestañas salen de `membership.permissions`, no de una tabla de roles en
+      el móvil: una sesión con permisos recortados a mano muestra menos pestañas.
 - [ ] Ningún rol ve menos de dos ni más de cuatro pestañas.
-- [ ] Cambiar de pestaña conserva el estado de la anterior.
+- [ ] Cambiar de pestaña y volver conserva la posición de scroll de la anterior.
 - [ ] Cerrar la app y reabrirla vuelve a la última pestaña usada.
 - [ ] Cada pestaña muestra icono **y** texto.
 - [ ] Las pestañas se arman sin red, desde la sesión guardada.
@@ -146,14 +167,19 @@ dominio. Que una pestaña se dibuje no significa que su acción vaya a pasar.
 
 ## Riesgos / consideraciones
 
-**La tabla de roles vive dos veces.** El API la tiene en
-`apps/api/src/auth/permissions.ts` y el móvil necesita la suya para dibujar. Si un
-rol gana un permiso en el servidor y acá no, la pestaña no aparece aunque debería —
-falla silenciosa, del lado seguro.
+**~~La tabla de roles vive dos veces.~~** Resuelto antes de implementar: el login
+devuelve `membership.permissions` con lo que ese rol puede hacer, calculado por
+`permissionsForRole()` sobre la misma tabla que usa el guard. El móvil no replica
+nada y no hay deuda que registrar.
 
-Se acepta porque la alternativa —que el login devuelva la lista de permisos— es un
-cambio de contrato que no vale para cuatro entradas. Si la tabla crece o empieza a
-desincronizarse, se registra como deuda y se mueve al contrato.
+Gana algo más: si mañana un rol recibe un permiso nuevo en el servidor, **la app se
+entera en el siguiente login**, sin publicar una versión. Importa porque el teléfono
+de un trabajador se actualiza cuando él quiere, no cuando sale el release — el mismo
+argumento por el que el ADR-0008 pidió `unknown_enum_value`.
+
+**Que se dibuje una pestaña no autoriza nada.** `permissions` es para la interfaz;
+el guard del API sigue verificando cada request. Un cliente modificado puede
+mostrarse las pestañas que quiera y el servidor las va a rechazar igual.
 
 **Las pestañas son placeholders.** Es andamiaje deliberado: se construye la
 estructura para que cada spec de pantalla llegue a un lugar ya definido. El riesgo

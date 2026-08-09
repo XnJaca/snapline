@@ -54,8 +54,11 @@ credenciales antes de hablarle en su idioma.
   Se muestra una sola vez.
 - La elección se guarda en el dispositivo y sobrevive a cerrar la app.
 - Cambiar el idioma desde **configuración**, en cualquier momento.
-- Al cambiarlo con sesión abierta, se propaga a la cuenta con
-  `PATCH /auth/me/locale`, para que el idioma siga a la persona a otro dispositivo.
+- Propagar el idioma a la cuenta con `PATCH /auth/me/locale`, **para que las
+  notificaciones push salgan en el idioma correcto**. Ver "Precedencia": no es
+  para sincronizar la interfaz entre dispositivos.
+- Comparar el idioma local contra `user.locale` al iniciar sesión, y propagar si
+  difieren. Es un cambio al flujo del [[../0001-login-movil/README|SPEC-0001]].
 
 ### No entra
 
@@ -80,28 +83,68 @@ La elección de idioma es **enteramente local** y nunca depende de la red:
 |---|---|
 | Primer arranque, sin red | Se elige igual. Es una preferencia del dispositivo. |
 | Cambio en configuración, sin red | Se aplica al instante en la app. |
-| Cambio sin red, con sesión abierta | La app queda en el idioma nuevo; **la cuenta se actualiza cuando vuelva la red**. |
-| Sin red y el `PATCH` falla | No se muestra error al usuario: lo que eligió ya se aplicó. Se reintenta. |
+| Cambio sin red, con sesión abierta | La app queda en el idioma nuevo. El `PATCH` falla y **no se muestra ningún error**: lo que el usuario pidió ya pasó. |
 
 **El idioma nunca se pierde por falta de red.** Lo que puede demorar es que la
-cuenta se entere, y eso no afecta al usuario en ese dispositivo.
+cuenta se entere, y eso no afecta cómo se ve la app en este dispositivo.
+
+### El reintento, sin bandeja de salida
+
+La bandeja de salida del ADR-0008 **todavía no existe**, así que este spec no puede
+apoyarse en ella. En vez de prometer un reintento automático que nadie dispara, el
+mecanismo es explícito y acotado:
+
+**Cada vez que se inicia sesión se compara el idioma local contra el `user.locale`
+recibido, y si difieren se manda el `PATCH`.** Eso significa agregar esa comparación
+al flujo de login del [[../0001-login-movil/README|SPEC-0001]], que ya está
+implementado.
+
+Consecuencia aceptada: si alguien cambia el idioma sin red y no vuelve a iniciar
+sesión en semanas, sus push llegan en el idioma viejo durante ese tiempo. Es
+vivible porque el efecto es sobre notificaciones, no sobre la app, y porque el
+único caso que lo produce es cambiar de idioma justo sin cobertura.
+
+Cuando exista la bandeja de salida, esto pasa a ser una mutación encolada más y la
+comparación en el login deja de hacer falta.
 
 ## Precedencia
 
-Tres fuentes, en este orden:
-
 ```
-1. lo que el usuario eligió en este dispositivo   ← manda
-2. el `locale` de su cuenta (user.locale)
-3. el idioma del sistema operativo
+1. lo que el usuario eligió en este dispositivo   ← manda siempre
+2. el idioma del sistema operativo                ← solo antes de elegir
 ```
 
-La elección explícita gana sobre la cuenta: si alguien tocó el selector, la app no
-puede cambiárselo sola al iniciar sesión.
+La elección explícita gana, incluso sobre el `locale` de la cuenta: si alguien tocó
+el selector, la app no puede cambiárselo sola al iniciar sesión.
+
+### Qué significa eso para `user.locale`
+
+Como el picker aparece **antes** del login, para cuando se conoce la cuenta ya hay
+una elección local, y esa elección gana siempre. **En la práctica, `user.locale` no
+decide cómo se ve la app en este dispositivo.**
+
+Conviene decirlo claro en vez de dejarlo implícito, porque de ahí salen dos cosas:
+
+- **El endpoint no existe para sincronizar la interfaz entre dispositivos.** Existe
+  para que el servidor sepa en qué idioma hablarle a esa persona — y hoy eso son
+  las **notificaciones push**, que se traducen con el `locale` de la cuenta según
+  `code-guidelines/i18n.md`. Sin el `PATCH`, alguien podría tener la app en
+  español y recibir las push en inglés.
+- **En un teléfono nuevo el picker vuelve a preguntar**, porque es una preferencia
+  del dispositivo y ahí todavía no hay ninguna. No se hereda de la cuenta, y está
+  bien: preguntar una vez cuesta menos que adivinar mal.
+
+### Cuándo se propaga a la cuenta
+
+Dos momentos, los dos concretos:
+
+1. **Al iniciar sesión**, si el idioma elegido en el dispositivo difiere del
+   `user.locale` que devolvió el login.
+2. **Al cambiarlo en configuración**, si hay sesión abierta.
 
 ## Contrato de API
 
-**Endpoint nuevo**, creado con este spec:
+Endpoint **ya implementado y verificado** en `apps/api`, junto con este spec:
 
 ```http
 PATCH /auth/me/locale
@@ -166,26 +209,32 @@ opciones.
 - [ ] En el segundo arranque **no** vuelve a preguntar.
 - [ ] La elección sobrevive a cerrar y reabrir la app.
 - [ ] Con sesión abierta, cambiar el idioma en configuración lo persiste en la
-      cuenta: al entrar en otro dispositivo, el idioma es el nuevo.
+      cuenta: `GET /auth/me` y el siguiente login devuelven el `locale` nuevo.
 - [ ] Si el `PATCH` falla por falta de red, el idioma igual queda aplicado en la
       app y no se muestra ningún error.
-- [ ] La elección del usuario gana sobre el `locale` de la cuenta al iniciar sesión.
+- [ ] La elección del usuario gana sobre el `locale` de la cuenta al iniciar sesión,
+      y además la corrige: tras entrar, la cuenta queda con el idioma elegido.
+- [ ] Las claves del selector **no se traducen**: "Español" y "English" se leen
+      igual con la app en cualquiera de los dos idiomas.
 - [ ] `PATCH /auth/me/locale` con un valor fuera del enum responde `400`.
 - [ ] `PATCH /auth/me/locale` sin token responde `401`.
 - [ ] Ningún texto de estas pantallas está quemado: todo pasa por i18n en `en` y `es`.
 
 ## Riesgos / consideraciones
 
-**El reintento del `PATCH` sin red no tiene todavía dónde encolarse.** La bandeja
-de salida es del ADR-0008 pero no existe: hasta que exista, el cambio de idioma sin
-red se aplica local y se propaga en el próximo cambio o login. Es aceptable porque
-el único efecto de la desincronización es de qué idioma salen las notificaciones
-push, no cómo se ve la app.
+**Las claves del selector no se pueden traducir, y ya existían unas que sí lo
+hacían.** `localeSpanish` / `localeEnglish` devolvían "Spanish"/"Español" según el
+idioma activo — exactamente el bug que este spec evita. Se eliminaron y se
+reemplazaron por `languageSpanish` / `languageEnglish`, idénticas en los dos ARB.
+Si alguien agrega un idioma, su etiqueta se escribe en ese idioma en **todos** los
+archivos.
 
-**Las push se traducen con el `locale` de la cuenta**, según
-`code-guidelines/i18n.md`. Mientras la cuenta no se entere de la elección local, un
-trabajador podría ver la app en español y recibir la push en inglés. Es la razón
-por la que este spec incluye el endpoint y no se conforma con guardar local.
+**El picker vuelve a aparecer en cada instalación nueva.** Es consecuencia de que
+sea preferencia del dispositivo, y de que se pregunte antes de conocer la cuenta.
+Si alguna vez molesta, la salida no es leer `user.locale` antes del login —no se
+puede— sino dejar de mostrar el picker cuando el idioma del sistema ya sea `en` o
+`es`. No se hace ahora porque el caso que motiva el spec es justamente el teléfono
+configurado en un idioma que la persona no lee.
 
 ## ADRs relacionados
 

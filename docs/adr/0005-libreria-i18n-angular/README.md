@@ -4,7 +4,7 @@ title: "Librería de i18n para el admin en Angular"
 aliases:
   - "ADR-0005: Librería de i18n para el admin en Angular"
 type: adr
-status: propuesto
+status: aceptado
 supersedes: null
 superseded_by: null
 related_specs: []
@@ -14,13 +14,13 @@ deciders:
   - jaca
 tags:
   - adr
-  - adr/propuesto
+  - adr/aceptado
 ---
 
 # ADR-0005: Librería de i18n para el admin en Angular
 
-> **Bloquea el primer componente de Angular.** Migrar de una opción a la otra con
-> la app llena de claves es caro, así que se decide antes de escribir UI.
+> Se decidió **antes** de escribir el primer componente de Angular: migrar de una
+> opción a la otra con la app llena de claves es caro.
 
 ## Contexto
 
@@ -36,7 +36,13 @@ de idioma sin recargar el navegador.**
 
 ## Decisión
 
-**Propuesta: Transloco.** Pendiente de confirmar.
+**Transloco.** Aceptado el 2026-08-08.
+
+Pesaron dos cosas concretas de este proyecto por sobre el mejor rendimiento del
+nativo: los catálogos JSON se comparten con Flutter (ARB es JSON con metadata) y
+con Astro sin convertir formatos, y el cambio de idioma sin recargar importa
+porque **el `locale` es por usuario dentro de una misma cuenta** — William
+administra en inglés mientras su gente usa la app en español.
 
 ## Alternativas consideradas
 

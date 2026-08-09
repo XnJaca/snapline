@@ -86,9 +86,12 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
       triggers e índices. Ojo: los índices traen su nombre en el mensaje, los
       triggers solo el texto del `RAISE`.
 
-- [ ] **Specs retroactivos de `catalog`, `crews`, `billing`, `reports` y
-      `publishing`.** Se construyeron sin spec, contra la regla 2. O se escriben
-      con `/spec-new`, o se registra la deuda con `/debt-new` — pero no queda así.
+- [x] ~~**Specs retroactivos.**~~ Escritos el 2026-08-08: SPEC-0001 a 0006 en
+      `docs/specs/web/`, con su `goal` y sus criterios marcados, y movidos a
+      Implementado en el BOARD.
+
+      Van marcados como **retroactivos** a propósito: son registro de lo que hay,
+      no el proceso funcionando. De acá en adelante el spec va antes del código.
 
 - [x] ~~**Limpieza real del EXIF.**~~ Hecho el 2026-08-08 con `sharp`:
       `POST /media/:id/strip-exif` baja el objeto, lo reescribe sin metadatos y lo
@@ -166,8 +169,10 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
       lo manda firmado). En desarrollo el origen es `http://localhost:4200`; en
       producción, el dominio real. **Nunca `*` en producción.**
 
-- [ ] **ADR-0005 (librería de i18n para Angular)** sigue en `propuesto`.
-      Bloquea el primer componente de `apps/web`.
+- [x] ~~**ADR-0005 — librería de i18n para Angular.**~~ Aceptado el 2026-08-08:
+      **Transloco**. Pesaron los catálogos JSON compartidos con Flutter y Astro, y
+      el cambio de idioma sin recargar, porque el `locale` es por usuario dentro de
+      una misma cuenta. Ya no bloquea `apps/web`.
 
 - [ ] **Verificar el nombre** en App Store Connect, Google Play y USPTO antes de
       registrar bundle ID o dominio. Ver [[NOMBRE]].
