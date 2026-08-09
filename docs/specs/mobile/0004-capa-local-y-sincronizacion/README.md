@@ -52,8 +52,33 @@ después.
 
 ## Prerequisitos en `apps/api`
 
-Dos cosas del contrato bloquean esto y se arreglan primero. **No son alcance
-opcional: sin ellas el resto no se puede implementar.**
+Lo que sigue bloquea todo lo demás y se arregla primero. **No es alcance opcional:
+sin esto el resto no se puede implementar.**
+
+Los cinco salieron de verificar el contrato contra el código, no de leerlo. El
+primero es un agujero de permisos que ya está en `main`.
+
+### 0. `/sync` no autoriza por operación — GRAVE
+
+`sync.controller.ts` gatea el `POST /sync` entero con `@RequirePermission('time.clock')`,
+que tienen `OWNER`, `ADMIN`, `FOREMAN` y `WORKER`. Pero adentro del lote procesa
+`customer.create` y `project.create`, cuyos endpoints REST exigen `customers.write`
+y `projects.write` — **solo `OWNER` y `ADMIN`**.
+
+O sea: hoy un `WORKER` da de alta clientes y proyectos por la puerta de sync,
+saltándose el permiso que le cierra la puerta REST. Es la regla 7 incumplida — el
+endpoint declara su permiso, las operaciones de adentro no.
+
+Agregar `customer.update` y `project.update` **empeora** esto: pasaría a poder
+editar clientes y obras de toda la empresa.
+
+Arreglo: cada tipo de `SYNC_OPERATIONS` declara el permiso que necesita y el
+servicio lo verifica **antes de aplicar cada operación**. La que no pasa vuelve
+`failed` con `FORBIDDEN`; las demás del lote entran igual, como ya hace con
+cualquier otro fallo. El gate del endpoint se queda en `time.clock`, que es el
+mínimo para que un trabajador pueda empujar su marcaje.
+
+**No cambia la política de roles, hace que sync la respete.**
 
 ### 1. El pull devuelve datos sin tipo
 
@@ -90,6 +115,58 @@ Corregir el nombre de una obra o el teléfono de un cliente sin señal no tiene
 cómo encolarse. Hacen falta `customer.update` y `project.update`, con su DTO de
 payload validado igual que las demás.
 
+**Y falta `site.create`.** Lo encontraron dos revisores por separado: agregar una
+propiedad a un cliente **que ya existe** no tiene camino offline. El único modo es
+`POST /customers/:id/sites`, que no pasa por la bandeja, y `CustomersService.update()`
+descarta el `site` anidado a propósito:
+
+```ts
+const { site: _site, id: _id, ...rest } = dto;
+```
+
+Es el caso de todos los días: William ya cargó a Martínez y arranca un segundo
+trabajo en otra dirección del mismo cliente. Sin `site.create` no se puede crear
+esa obra sin señal, porque no hay `site_id` que ponerle.
+
+`site.update` entra también si se va a poder corregir una dirección — hoy no
+existe ni siquiera un `PATCH` REST para eso.
+
+### 3. La idempotencia se apoya en que el recurso no exista
+
+`alreadyApplied()` decide "ya aplicado" preguntando si **ya hay una fila con ese
+id**. Funciona para los `create` porque el id lo genera el dispositivo. Para un
+`update` el recurso **siempre** existe, así que ese mismo criterio devolvería
+`duplicate` sin aplicar nunca la corrección.
+
+Arreglo: una tabla de operaciones aplicadas, con el `clientId` del dispositivo
+como clave. Sirve igual para altas y correcciones, y no depende de si el recurso
+está. Es la regla 19, que este spec cita como no negociable.
+
+### 4. `deleted[]` no emite bajas de `site` ni de `project_assignment`
+
+`pull()` los trae vivos pero no los incluye en `deleted{}`, y las dos entidades
+tienen `deleted_at`. Este spec declara las dos como tablas locales con borrado
+suave, así que su criterio de *"un borrado en el servidor llega como marca"* no se
+puede verificar para ellas: el servidor nunca las emite.
+
+### 5. No hay forma de distinguir un conflicto de una falla
+
+`SyncResultDto.status` admite `applied | duplicate | failed`, nada más. Pero la
+regla 12 exige que un conflicto de `time_entry` se marque y **lo mire un humano**,
+que es otra cosa que un fallo reintentable.
+
+Lo que sí existe son códigos concretos. **Estos y solo estos** pasan una fila de
+`time_entry` a `CONFLICT`:
+
+| `code` | Qué pasó |
+|---|---|
+| `TIME_ENTRY_ALREADY_OPEN` | Ya había una entrada abierta para esa persona |
+| `TIME_ENTRY_ALREADY_CLOSED` | La salida llegó a un registro ya cerrado |
+
+Cualquier otro código es un `failed` reintentable y **no** marca conflicto. Sin
+esta tabla, cada implementador decide distinto qué es un conflicto — justo en el
+agregado donde la regla 12 no lo permite.
+
 ## Alcance
 
 ### Entra
@@ -102,7 +179,7 @@ payload validado igual que las demás.
   pantallas conocen**.
 - Sincronizador: pull incremental con cursor, push de la bandeja, reintento.
 - `sync_status` por fila: `PENDING | SYNCING | SYNCED | CONFLICT`.
-- Los dos arreglos de contrato de arriba.
+- Los cinco arreglos de contrato de arriba, incluido el de permisos.
 
 ### No entra
 
@@ -166,7 +243,8 @@ devuelve. El sincronizador es el único que habla con la red.
 
 ## Contrato de API
 
-Ya existe y no cambia de forma, solo de tipos:
+El endpoint ya existe. Cambian sus tipos, su lista de operaciones, cómo autoriza
+cada una y qué emite en `deleted`:
 
 ```http
 GET  /api/sync?since=2026-08-09T12:00:00Z
@@ -181,8 +259,18 @@ en el cliente.
 
 - [ ] `openapi.json` declara el tipo real de cada colección del pull, y el
       cliente Dart generado las expone tipadas y no como `dynamic`.
-- [ ] `customer.update` y `project.update` existen en `SYNC_OPERATIONS`, validan
-      su payload y tienen su caso en `edge-cases/`.
+- [ ] Un `WORKER` que manda `customer.create` o `project.create` por `/sync`
+      recibe `failed` con `FORBIDDEN`, y las demás operaciones de su lote se
+      aplican igual.
+- [ ] `customer.update`, `project.update` y `site.create` existen en
+      `SYNC_OPERATIONS`, validan su payload y tienen su caso en `edge-cases/`.
+- [ ] Crear una propiedad para un cliente **que ya sincronizó**, sin señal, llega
+      al servidor y queda colgada de ese cliente.
+- [ ] Mandar dos veces el mismo `customer.update` lo aplica una sola vez, y la
+      segunda vuelve `duplicate`.
+- [ ] `pull().deleted` incluye `sites` y `assignments`.
+- [ ] Solo `TIME_ENTRY_ALREADY_OPEN` y `TIME_ENTRY_ALREADY_CLOSED` dejan una fila
+      en `CONFLICT`; cualquier otro código la deja reintentable.
 - [ ] `billing_address` y `site.address` salen al contrato con sus seis campos,
       no como objeto vacío, y comparten el mismo DTO.
 - [ ] Ninguna pantalla importa un cliente de `lib/api/`: se verifica con una
@@ -228,3 +316,4 @@ Regenerar es parte de esto, no un paso aparte.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. Sale de decidir offline-first de verdad en vez de leer del API con deuda registrada. Los dos prerequisitos de `apps/api` se encontraron leyendo el contrato: el pull devuelve `unknown[]` y el push no acepta correcciones. |
+| 2026-08-09 | borrador | Revisado con `spec-reviewer`. **Un hallazgo grave**: `/sync` gatea el endpoint entero con `time.clock`, así que un `WORKER` puede crear clientes y proyectos saltándose `customers.write`/`projects.write`. Sumados cuatro huecos más que no se veían leyendo el documento: falta `site.create` —lo encontraron dos revisores por separado—, la idempotencia se apoya en que el recurso no exista y por eso rompe con los `update`, `deleted[]` no emite `site` ni `project_assignment`, y no había señal para distinguir un conflicto de `time_entry` de una falla común. |

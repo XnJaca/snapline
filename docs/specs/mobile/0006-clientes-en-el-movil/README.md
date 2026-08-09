@@ -6,7 +6,7 @@ aliases:
 type: spec
 platform: mobile
 status: borrador
-goal: "William encuentra un cliente por nombre o teléfono sin señal, y da de alta uno con su propiedad parado en la obra sin esperar cobertura."
+goal: "William encuentra un cliente por nombre o teléfono sin señal, ve sus propiedades y sus obras en una sola pantalla, y da de alta o corrige un cliente con su propiedad parado en la obra sin esperar cobertura."
 apps:
   - mobile
 depends_on:
@@ -67,6 +67,8 @@ prototipo, no un caso secundario.
 - **La geocerca.** `lat`, `lng` y `geofence_radius_m` son del sitio y los usa
   asistencia; ajustarlos desde el móvil entra con el frente `campo`.
 - **Fusionar duplicados.** Va a hacer falta —ver riesgos— pero no ahora.
+- **Editar la geocerca de una propiedad.** La dirección sí se corrige; `lat`,
+  `lng` y el radio son de asistencia y entran con el frente `campo`.
 
 ## Modelo de dominio afectado
 
@@ -129,12 +131,24 @@ ya garantiza. Si esto no funciona, el prototipo no sirve.
       revocarlo desde esta pantalla.
 - [ ] Un cliente sin `email` ni `phone` se puede guardar, y la pantalla avisa que
       no va a poder entrar al portal.
-- [ ] Una propiedad nueva queda asociada a su cliente y aparece en el selector de
-      sitio del alta de obra.
+- [ ] Una propiedad nueva queda asociada a su cliente, y la consulta de sitios de
+      ese cliente la devuelve. *(Que aparezca en el selector del alta de obra lo
+      verifica SPEC-0005, que es dueño de esa pantalla.)*
+- [ ] El detalle de un cliente lista sus propiedades y sus obras, y dice qué pasa
+      cuando todavía no tiene ninguna de las dos.
+- [ ] Corregir el nombre, el teléfono o la dirección de un cliente sin señal se ve
+      al instante y llega al servidor sin duplicarse.
+- [ ] Corregir la dirección de una propiedad existente funciona sin señal.
 - [ ] Claro y oscuro correctos, y un solo naranja sólido por pantalla.
 - [ ] Cero cadenas quemadas, en `en` y `es`.
 
 ## Riesgos / consideraciones
+
+**Editar una propiedad no tiene endpoint todavía.** No hay `PATCH` de `site` ni
+online ni offline —solo `GET` y `POST` bajo `/customers/:id/sites`—, así que
+`site.create` y `site.update` son prerequisito de
+[[../0004-capa-local-y-sincronizacion/README|SPEC-0004]] antes de que este spec se
+pueda implementar. Está declarado allá.
 
 **Los duplicados van a aparecer.** Sin señal no hay forma de avisar que ese
 cliente ya existe en otro dispositivo, y "Martínez" se va a cargar dos veces. No
@@ -167,3 +181,4 @@ el mismo lugar.
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. Es prerequisito de datos de SPEC-0005: sin clientes y sitios en local, el alta de obra no tiene de dónde elegir. Queda abierta la forma de `billing_address`, que hay que cerrar antes de implementar. |
 | 2026-08-09 | borrador | Cerrada la forma de la dirección: seis campos, la misma para `billing_address` y `site.address`, documentada en la ficha de cliente y pendiente de declararse como DTO en el API. Los formularios mínimos de alta pasan a ser de este spec, para que SPEC-0005 los reutilice en vez de copiarlos. |
+| 2026-08-09 | borrador | Revisado con `spec-reviewer`. Confirmó por su cuenta el mismo agujero que encontró el revisor de SPEC-0005 —no existe `site.create`, y tampoco ningún `PATCH` de `site`—, que pasó a prerequisito de SPEC-0004. El goal se amplió para cubrir detalle y edición, que estaban en Alcance sin nada contra qué medirlos, y el criterio del selector de sitio se reformuló sobre algo que este spec controla. |

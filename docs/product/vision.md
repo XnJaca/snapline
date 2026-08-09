@@ -197,3 +197,28 @@ Dos señales que no requieren escribir código:
    es el problema difícil del producto.
 
 Un sí por chat es una opinión. Estas dos son evidencia.
+
+## Preguntas abiertas para William
+
+Cosas que decidimos **no** resolver razonando de este lado, porque se contestan en
+cinco minutos con él y cualquier respuesta nuestra sería una suposición cara.
+
+**¿Hay alguien más que administre, además de vos?**
+
+El rol `ADMIN` está definido como *"la persona de oficina"*, y este documento dice
+que el problema de William es justamente que el software existente está hecho
+**para empresas con oficina**. La contradicción es real.
+
+Existe igual porque el dominio fija *"una empresa tiene exactamente un `OWNER`
+activo"*: si aparece una segunda persona con poderes administrativos, hoy `ADMIN`
+es el único camino. Mientras no se sepa, el rol queda **definido pero sin usar** —
+el seed no crea ninguno. Sacarlo del enum después, con datos adentro, cuesta una
+migración; dejarlo sin usar no cuesta nada.
+
+**¿Tus cuadrillas tienen un encargado fijo?**
+
+El `FOREMAN` no es decorativo: su poder real es **fichar por su gente**, que ya
+existe en `time-entries.service.ts` (`method: 'FOREMAN'` cuando el marcaje es por
+otro). Sirve cuando el capataz llega con cuatro personas y alguna no tiene
+smartphone. Si en la práctica cada quien marca lo suyo, el rol sobra y hay que
+sacarlo del móvil antes de construirle pantallas.
