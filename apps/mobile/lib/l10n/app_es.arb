@@ -74,12 +74,13 @@
   "projectStatusCompleted": "Terminado",
   "projectStatusCancelled": "Cancelado",
 
-  "projectsTabInProgress": "En proceso",
-  "projectsTabAll": "Todas",
-  "projectsFilterAll": "Todas",
-  "projectsEmptyActive": "Ninguna obra en proceso ahora",
+  "projectsInProgressTitle": "En progreso",
+  "projectsViewAll": "Ver todos",
+  "projectsAllTitle": "Todos los proyectos",
+  "projectsNew": "Nueva obra",
+  "projectsEmptyInProgress": "Ningún proyecto en progreso ahora",
+  "projectsFilterAll": "Todos",
   "projectsEmptyFiltered": "Ningún proyecto con este estado",
-  "projectsCount": "{count, plural, =0{Ningún proyecto} =1{1 proyecto} other{{count} proyectos}}",
   "projectPhotoCount": "{count, plural, =0{Sin fotos} =1{1 foto} other{{count} fotos}}",
   "projectNoCrew": "Sin cuadrilla asignada",
 

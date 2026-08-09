@@ -104,6 +104,13 @@ abstract final class AppTheme {
       tabBarTheme: _tabBarTheme(scheme),
       chipTheme: _chipTheme(scheme),
       segmentedButtonTheme: _segmentedButtonTheme(scheme),
+      // Un FAB es la acción primaria de su pantalla, así que le toca el naranja
+      // sólido. Material lo pinta en `primaryContainer`, que es el tratamiento
+      // de lo que destaca sin ser la acción.
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
+      ),
       extensions: [const AppSpacing.standard(), status],
     );
   }

@@ -40,6 +40,37 @@ void main() {
     );
   }
 
+  /// Abre la pantalla de toda la cartera y, si se pide, selecciona el estado.
+  ///
+  /// Las pestañas de ahí llevan el conteo pegado —"Cancelado  1"—, así que se
+  /// buscan por texto contenido y acotadas a la `TabBar`: el nombre del estado
+  /// aparece también en el chip de cada card.
+  Future<void> elegirEstado(WidgetTester tester, String estado) async {
+    final pestanas = find.byType(TabBar);
+    final pestana = find.descendant(
+      of: pestanas,
+      matching: find.textContaining(estado),
+    );
+    // Son ocho y se desplazan: la que se busca puede no estar construida.
+    await tester.scrollUntilVisible(
+      pestana,
+      200,
+      scrollable: find
+          .descendant(of: pestanas, matching: find.byType(Scrollable))
+          .first,
+    );
+    await tester.ensureVisible(pestana.first);
+    await tester.pumpAndSettle();
+    await tester.tap(pestana.first);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> verTodos(WidgetTester tester, {String? estado}) async {
+    await tester.tap(find.text('Ver todos'));
+    await tester.pumpAndSettle();
+    if (estado != null) await elegirEstado(tester, estado);
+  }
+
   /// Los labels de la barra inferior, en el orden en que se dibujan.
   List<String> ejes(WidgetTester tester) {
     return tester
@@ -162,15 +193,14 @@ void main() {
     });
 
     // El timeline no cambia de forma: simplemente termina. Una obra terminada
-    // no está en la lista principal, así que se llega por "ver todas".
+    // no entra en el filtro por defecto, así que se llega por "Todos".
     testWidgets('un proyecto terminado muestra las mismas cuatro tabs', (
       tester,
     ) async {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(Tab, 'Todas'));
-      await tester.pumpAndSettle();
+      await verTodos(tester, estado: 'Terminado');
       final obra = find.text('Front porch repair');
       await tester.scrollUntilVisible(
         obra,
@@ -188,13 +218,14 @@ void main() {
       }
     });
 
-    testWidgets('las tabs se desplazan, nunca se apilan en dos filas', (
-      tester,
-    ) async {
+    // Son cuatro y entran siempre: alineadas a la izquierda dejaban un hueco
+    // muerto a la derecha que se leía como que faltaba algo.
+    testWidgets('las cuatro tabs se reparten el ancho', (tester) async {
       await abrirProyecto(tester, 'Kitchen remodel');
 
       final barra = tester.widget<TabBar>(find.byType(TabBar));
-      expect(barra.isScrollable, isTrue);
+      expect(barra.isScrollable, isFalse);
+      expect(barra.tabs.length, 4);
     });
 
     // De qué obra se trata tiene que quedar a la vista al cambiar de pestaña.
@@ -209,8 +240,8 @@ void main() {
   });
 
   group('la cartera muestra lo vivo', () {
-    // Solo lo que está en obra ahora. Lo agendado, lo pausado y lo cerrado se
-    // consulta desde "ver todas".
+    // Abre en lo que está en obra ahora. Lo agendado, lo pausado y lo cerrado
+    // se consulta cambiando de filtro.
     testWidgets('la lista principal muestra solo lo que está en proceso', (
       tester,
     ) async {
@@ -230,71 +261,34 @@ void main() {
       expect(find.text('Window replacement'), findsNothing);
     });
 
-    // El carrusel de filtros, identificado por los chips que contiene: en esta
-    // pantalla hay varios scrollables y el orden no es de fiar.
-    Finder carruselDeFiltros() => find
-        .ancestor(
-          of: find.byType(FilterChip).first,
-          matching: find.byType(Scrollable),
-        )
-        .first;
 
-    Future<void> filtrar(WidgetTester tester, String estado) async {
-      final chip = find.widgetWithText(FilterChip, estado);
-      // El carrusel de filtros virtualiza: el chip no existe hasta que se
-      // desplaza hasta él, y queda pegado al borde si no se centra después.
-      await tester.scrollUntilVisible(
-        chip,
-        200,
-        scrollable: carruselDeFiltros(),
-      );
-      await tester.ensureVisible(chip);
-      await tester.pumpAndSettle();
-      await tester.tap(chip);
-      await tester.pumpAndSettle();
-    }
-
-    /// Abre "ver todas" y deja seleccionado el filtro pedido.
-    Future<void> verTodas(WidgetTester tester, {String? filtro}) async {
+    // Lo cerrado no desaparece: vive detrás de "ver todos", que es la pantalla
+    // dedicada con una pestaña por estado.
+    testWidgets('"ver todos" llega a lo terminado', (tester) async {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(Tab, 'Todas'));
-      await tester.pumpAndSettle();
+      await verTodos(tester, estado: 'Terminado');
 
-      if (filtro != null) await filtrar(tester, filtro);
-    }
-
-    testWidgets('"ver todas" sí las muestra', (tester) async {
-      await verTodas(tester);
-      final lista = find.byType(Scrollable).last;
-
-      await tester.scrollUntilVisible(
-        find.text('Front porch repair'),
-        300,
-        scrollable: lista,
-      );
       expect(find.text('Front porch repair'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('Window replacement'),
-        300,
-        scrollable: lista,
-      );
-      expect(find.text('Window replacement'), findsOneWidget);
+      expect(find.text('Kitchen remodel'), findsNothing);
     });
 
-    testWidgets('filtrar por estado recorta la lista', (tester) async {
-      await verTodas(tester, filtro: 'Cancelado');
+    testWidgets('cada pestaña recorta por su estado', (tester) async {
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await verTodos(tester, estado: 'Cancelado');
 
       expect(find.text('Window replacement'), findsOneWidget);
       expect(find.text('Kitchen remodel'), findsNothing);
     });
 
-    testWidgets('cambiar de filtro cambia lo que se lista', (tester) async {
-      await verTodas(tester, filtro: 'Prospecto');
+    testWidgets('cambiar de pestaña cambia lo que se lista', (tester) async {
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await verTodos(tester, estado: 'Prospecto');
       expect(find.text('Garage conversion'), findsOneWidget);
 
-      await filtrar(tester, 'Estimado');
+      await elegirEstado(tester, 'Estimado');
       expect(find.text('Garage conversion'), findsNothing);
       expect(find.text('Siding replacement'), findsOneWidget);
     });

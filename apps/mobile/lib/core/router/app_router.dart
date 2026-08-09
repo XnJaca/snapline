@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/account/account_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/dev/theme_preview_screen.dart';
+import '../../features/projects/all_projects_screen.dart';
 import '../../features/projects/project_screen.dart';
 import '../../features/projects/projects_screen.dart';
 import '../../features/shell/role_shell.dart';
@@ -140,6 +141,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'account',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AccountScreen(),
+      ),
+      // Antes que `/projects/:projectId`, o "all" entraría como id de obra.
+      GoRoute(
+        path: AllProjectsScreen.route,
+        name: 'allProjects',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AllProjectsScreen(),
       ),
       GoRoute(
         path: Routes.project,

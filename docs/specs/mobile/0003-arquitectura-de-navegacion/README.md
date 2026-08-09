@@ -199,8 +199,10 @@ a pasar: el guard del API verifica cada request al sincronizar.
   "＋ Nuevo proyecto", por ejemplo— y entonces ninguno de los dos sería la acción.
   El par `container` es justamente el tratamiento que ese ADR define para lo que
   debe destacarse sin competir.
-- Las tabs de proyecto son superiores y desplazables si no entran, nunca apiladas
-  en dos filas.
+- Las tabs de proyecto son superiores y **se reparten el ancho**: son cuatro y
+  entran siempre. Alineadas a la izquierda dejaban un hueco muerto a la derecha
+  que se lee como que falta algo. Donde sí se desplazan es en la pantalla de
+  toda la cartera, que tiene ocho.
 - Nunca menos de dos ejes ni más de cuatro. Si un rol quedara con uno, no se
   muestra barra.
 
@@ -264,4 +266,5 @@ requiere filtrar proyectos por cuadrilla en el API. Se sabrá al usarlo.
 | 2026-08-08 | borrador | Segunda revisión, cuatro correcciones: el "Fotos" de campo queda declarado como scopeado al proyecto asignado; la falta de cartera del `FOREMAN` pasa de "lo dice el dominio" a decisión de producto; la pestaña activa usa `primaryContainer` y no `primary`, que habría roto la regla del naranja del ADR-0009; y los placeholders llevan lista sintética para poder verificar la preservación de estado. |
 | 2026-08-08 | en implementación | Aprobado tras las dos revisiones anteriores y arrancado en `feature/SPEC-0003-arquitectura-de-navegacion`. |
 | 2026-08-08 | en implementación | Implementado: `StatefulShellRoute` con una rama por destino, catálogo de ejes con su permiso, y el proyecto como contenedor con cuatro tabs. 95 tests unitarios y 4 de integración contra el API real. Queda parcial el criterio del "Fotos" del `WORKER`, que necesita datos para verificarse. Dependencia nueva: `shared_preferences`, para recordar la última pestaña. |
+| 2026-08-09 | en implementación | Tercera vuelta de diseño sobre el andamiaje, con la app en la mano: la cartera muestra **solo lo que está en obra** y todo lo demás pasa a una pantalla dedicada con una pestaña por estado y su acción de crear; la cabecera de la obra se achicó —el nombre vive en la barra, no repetido a 32px— y sus cuatro tabs se reparten el ancho. Antes se probaron dos formas que no funcionaron: un encabezado con "ver todos" al costado, que flotaba sin leerse como interfaz, y pestañas En proceso/Todos, que costaba ver. |
 | 2026-08-09 | en implementación | **El andamiaje creció más allá de este spec**, a pedido: pantalla de cuenta con selector de tema, cartera en cards con solo obras vivas más "ver todas" con filtro por estado, y cabecera de obra reestructurada. Sigue siendo andamiaje sobre datos sintéticos —no hay capa local todavía— pero el diseño ya no es descartable: lo formalizan SPEC-0005 y SPEC-0006, que se escriben antes de conectarlo a datos reales. Tres correcciones a la regla del naranja que solo se vieron en captura: los `TextButton`, los iconos de los `FilterChip` y el segmento activo del selector de tema salían en `primary`. 102 tests. |

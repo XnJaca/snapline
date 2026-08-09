@@ -106,15 +106,13 @@
   "projectStatusCompleted": "Completed",
   "projectStatusCancelled": "Cancelled",
 
-  "projectsTabInProgress": "In progress",
-  "projectsTabAll": "All",
+  "projectsInProgressTitle": "In progress",
+  "projectsViewAll": "View all",
+  "projectsAllTitle": "All projects",
+  "projectsNew": "New project",
+  "projectsEmptyInProgress": "No projects in progress right now",
   "projectsFilterAll": "All",
-  "projectsEmptyActive": "No work in progress right now",
   "projectsEmptyFiltered": "No projects with this status",
-  "projectsCount": "{count, plural, =0{No projects} =1{1 project} other{{count} projects}}",
-  "@projectsCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
   "projectPhotoCount": "{count, plural, =0{No photos} =1{1 photo} other{{count} photos}}",
   "@projectPhotoCount": {
     "placeholders": { "count": { "type": "int" } }

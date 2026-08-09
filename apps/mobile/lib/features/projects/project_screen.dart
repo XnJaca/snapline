@@ -70,9 +70,9 @@ class ProjectScreen extends ConsumerWidget {
             ? context.pop()
             : context.go(AppDestination.projects.route),
       ),
-      // Sin título: el nombre de la obra vive en la cabecera, a tamaño de
-      // lectura. Repetirlo acá lo duplicaba y no agregaba nada.
-      title: proyecto == null ? Text(l10n.projectUntitled) : null,
+      // El nombre vive acá y no repetido abajo a tamaño gigante: a 32px se
+      // llevaba toda la pantalla y dejaba el resto sin jerarquía.
+      title: Text(proyecto?.name ?? l10n.projectUntitled),
     );
 
     if (tabs.isEmpty) {
@@ -97,11 +97,9 @@ class ProjectScreen extends ConsumerWidget {
                 ),
               ),
               child: TabBar(
-                // Desplazables si no entran, nunca apiladas en dos filas.
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                // Sin este aire la pastilla del tema toca el borde de la
-                // pantalla y el divisor de abajo.
+                // Repartidas en todo el ancho: son cuatro y entran siempre, y
+                // alineadas a la izquierda dejaban un hueco muerto a la
+                // derecha que se leía como que faltaba algo.
                 padding: EdgeInsets.symmetric(horizontal: spacing.sm),
                 indicatorPadding: EdgeInsets.symmetric(
                   horizontal: spacing.xs,
@@ -143,8 +141,9 @@ class _Cabecera extends StatelessWidget {
 
     final atenuado = colors.onSurfaceVariant;
 
-    // Una sola columna de texto: todo arranca en el mismo margen. Los iconos al
-    // lado de cada dato metían una segunda sangría y el bloque se leía torcido.
+    // Compacta a propósito: el nombre de la obra ya está en la barra, así que
+    // acá solo va el contexto —de quién, en qué estado, dónde— en dos líneas.
+    // Repetirlo todo a tamaño grande dejaba la pantalla pesada y sin jerarquía.
     return Container(
       width: double.infinity,
       color: colors.surface,
@@ -152,45 +151,34 @@ class _Cabecera extends StatelessWidget {
         spacing.lg,
         0,
         spacing.lg,
-        spacing.lg,
+        spacing.md,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Primero qué obra es. El estado entra después: un chip de color
-          // arriba del título se lleva la vista antes que el nombre.
-          Text(
-            project.name,
-            style: context.texts.displaySmall,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  project.customer,
+                  style: context.texts.titleLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(width: spacing.sm),
+              StatusChip(
+                tone: project.status.tone,
+                label: project.status.label(l10n),
+                icon: project.status.icon,
+              ),
+            ],
           ),
-          SizedBox(height: spacing.xs),
+          SizedBox(height: spacing.sm),
           Text(
-            project.customer,
-            style: context.texts.bodyLarge?.copyWith(color: atenuado),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: spacing.md),
-          StatusChip(
-            tone: project.status.tone,
-            label: project.status.label(l10n),
-            icon: project.status.icon,
-          ),
-          SizedBox(height: spacing.md),
-          Text(
-            project.site,
+            '${project.site} · ${project.crew ?? l10n.projectNoCrew}',
             style: context.texts.bodySmall?.copyWith(color: atenuado),
             maxLines: 2,
-          ),
-          SizedBox(height: spacing.xs),
-          Text(
-            '${project.crew ?? l10n.projectNoCrew} · '
-            '${l10n.projectPhotoCount(project.photoCount)}',
-            style: context.texts.bodySmall?.copyWith(color: atenuado),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
