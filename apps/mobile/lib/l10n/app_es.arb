@@ -1,0 +1,35 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "Snapline",
+  "devThemeTitle": "Tokens del tema",
+  "devThemeColors": "Colores",
+  "devThemeStatus": "Estado",
+  "devThemePrimaryAction": "Acción primaria",
+  "devThemeTypography": "Tipografía",
+  "devThemeSpacing": "Espaciado",
+
+  "themeModeSystem": "Sistema",
+  "themeModeLight": "Claro",
+  "themeModeDark": "Oscuro",
+
+  "localeEnglish": "Inglés",
+  "localeSpanish": "Español",
+
+  "authLoginIdentifierLabel": "Teléfono o correo",
+  "authLoginIdentifierRequired": "Escriba su teléfono o correo",
+  "authLoginPasswordLabel": "Contraseña",
+  "authLoginPasswordRequired": "Escriba su contraseña",
+  "authLoginShowPassword": "Mostrar contraseña",
+  "authLoginHidePassword": "Ocultar contraseña",
+  "authLoginSubmit": "Entrar",
+
+  "authLoginErrorCredentials": "Teléfono, correo o contraseña incorrectos",
+  "authLoginErrorNoConnection": "Sin conexión. Revise su señal e intente de nuevo.",
+  "authLoginErrorServer": "El servidor no responde. Intente más tarde.",
+  "authLoginErrorUnknown": "No se pudo entrar. Intente de nuevo.",
+
+  "authSignOut": "Cerrar sesión",
+  "homeWelcome": "Sesión de {name}",
+  "homeCompany": "Empresa: {company}"
+}

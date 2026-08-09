@@ -1,0 +1,52 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Snapline",
+  "@appTitle": {
+    "description": "Nombre de la app. No se traduce, pero pasa por i18n igual."
+  },
+
+  "devThemeTitle": "Theme tokens",
+  "@devThemeTitle": {
+    "description": "Título de la pantalla de verificación de tema"
+  },
+
+  "devThemeColors": "Colors",
+  "devThemeStatus": "Status",
+  "devThemePrimaryAction": "Primary action",
+  "devThemeTypography": "Typography",
+  "devThemeSpacing": "Spacing",
+
+  "themeModeSystem": "System",
+  "themeModeLight": "Light",
+  "themeModeDark": "Dark",
+
+  "localeEnglish": "English",
+  "localeSpanish": "Spanish",
+
+  "authLoginIdentifierLabel": "Phone or email",
+  "@authLoginIdentifierLabel": {
+    "description": "Un solo campo: el servidor resuelve contra ambos. Muchos trabajadores no tienen correo."
+  },
+  "authLoginIdentifierRequired": "Enter your phone or email",
+  "authLoginPasswordLabel": "Password",
+  "authLoginPasswordRequired": "Enter your password",
+  "authLoginShowPassword": "Show password",
+  "authLoginHidePassword": "Hide password",
+  "authLoginSubmit": "Sign in",
+
+  "authLoginErrorCredentials": "Incorrect phone, email or password",
+  "authLoginErrorNoConnection": "No connection. Check your signal and try again.",
+  "authLoginErrorServer": "The server is not responding. Try again later.",
+  "authLoginErrorUnknown": "Could not sign in. Try again.",
+
+  "authSignOut": "Sign out",
+  "homeWelcome": "Signed in as {name}",
+  "@homeWelcome": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "homeCompany": "Company: {company}",
+  "@homeCompany": {
+    "placeholders": { "company": { "type": "String" } }
+  }
+}

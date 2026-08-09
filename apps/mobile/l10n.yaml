@@ -1,0 +1,8 @@
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+# Deja por escrito qué claves faltan en algún idioma. Sin esto la app se publica
+# a medio traducir sin que nadie lo note.
+untranslated-messages-file: l10n-faltantes.txt

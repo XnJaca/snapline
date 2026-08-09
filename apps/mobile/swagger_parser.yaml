@@ -1,0 +1,24 @@
+# Genera el cliente Dart desde el contrato. Ver ADR-0007 y ADR-0008.
+#
+#   dart run swagger_parser
+#
+# `openapi.json` de la raíz es la fuente: lo emite el API desde sus DTOs. Nada de
+# lib/api se edita a mano.
+swagger_parser:
+  schema_path: ../../openapi.json
+  output_directory: lib/api
+  name: snapline
+  language: dart
+  json_serializer: json_serializable
+
+  root_client: true
+  root_client_name: SnaplineApi
+  client_postfix: Client
+  put_clients_in_folder: true
+  export_file: true
+  mark_files_as_generated: true
+
+  # El teléfono de un trabajador se actualiza cuando quiere, no cuando sale el
+  # release: un valor de enum nuevo en el servidor no puede tumbar la versión
+  # que ya tiene instalada.
+  unknown_enum_value: true
