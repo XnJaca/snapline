@@ -1,0 +1,6 @@
+packages:
+  - 'apps/api'
+  - 'packages/*'
+
+# apps/web (Angular), apps/site (Astro) y apps/mobile (Flutter) se agregan al
+# scaffoldearlas. apps/mobile NUNCA entra acá: pub y pnpm no se mezclan.

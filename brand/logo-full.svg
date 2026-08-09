@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 32" fill="none" role="img" aria-label="Snapline">
+  <title>Snapline</title>
+  <path d="M7 9 Q 16 27 25 23"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+  <path d="M7 9 L25 23"
+        stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="7" cy="9" r="3.25" fill="currentColor"/>
+  <circle cx="25" cy="23" r="3.25" fill="currentColor"/>
+  <!-- Bricolage Grotesque 800, la familia de marca. Para distribución fuera del
+       repo, convertir a outlines: si la fuente no está disponible el wordmark cae
+       a otra tipografía y deja de ser la marca. -->
+  <text x="40" y="23"
+        font-family="'Bricolage Grotesque', system-ui, sans-serif"
+        font-size="21" font-weight="800"
+        letter-spacing="-0.5" fill="currentColor">Snapline</text>
+</svg>

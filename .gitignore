@@ -1,0 +1,32 @@
+# Obsidian — layout local por usuario, se regenera solo
+docs/.obsidian/workspace.json
+docs/.obsidian/workspace-mobile.json
+docs/.obsidian/plugins/
+docs/.obsidian/themes/
+
+# Claude Code — permisos y estado local
+.claude/settings.local.json
+
+# Sistema
+.DS_Store
+
+# Dependencias y builds (por app, cuando existan)
+node_modules/
+dist/
+build/
+.dart_tool/
+
+# Brief comercial — documento interno, fuera de git a propósito.
+# Contiene estrategia de precios y notas que no se comparten con el design partner.
+docs/product/brief.md
+
+# Turborepo
+.turbo/
+
+# Flutter
+apps/mobile/.dart_tool/
+apps/mobile/build/
+apps/mobile/.flutter-plugins*
+apps/mobile/ios/Pods/
+apps/mobile/android/.gradle/
+apps/mobile/*.iml
