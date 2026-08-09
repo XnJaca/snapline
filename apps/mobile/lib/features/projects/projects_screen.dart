@@ -12,10 +12,10 @@ import 'project_card.dart';
 import 'project_status_display.dart';
 import 'sample_projects.dart';
 
-/// La cartera del dueño: **solo las obras vivas**.
+/// La cartera del dueño: **solo lo que está en obra ahora**.
 ///
-/// Lo terminado y lo cancelado se consulta, no se vigila, así que sale de la
-/// pantalla principal y vive detrás de "ver todas". Andamiaje hasta que la
+/// Lo agendado, lo pausado y lo cerrado se consulta, no se vigila, así que sale
+/// de la pantalla principal y vive detrás de "ver todas". Andamiaje hasta que la
 /// lista tenga sus datos.
 class ProjectsScreen extends StatelessWidget {
   const ProjectsScreen({super.key});
@@ -24,11 +24,11 @@ class ProjectsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final spacing = context.spacing;
-    final activas = activeSampleProjects;
+    final enProceso = inProgressSampleProjects;
 
     return AppScaffold(
       title: AppDestination.projects.label(l10n),
-      body: activas.isEmpty
+      body: enProceso.isEmpty
           ? EmptyState(
               icon: AppDestination.projects.icon,
               message: l10n.projectsEmptyActive,
@@ -44,11 +44,11 @@ class ProjectsScreen extends StatelessWidget {
               children: [
                 SectionHeader(
                   title: l10n.projectsActiveTitle,
-                  subtitle: l10n.projectsCount(activas.length),
+                  subtitle: l10n.projectsCount(enProceso.length),
                   action: _VerTodas(compacto: true),
                 ),
                 SizedBox(height: spacing.md),
-                for (final proyecto in activas) ...[
+                for (final proyecto in enProceso) ...[
                   ProjectCard(
                     project: proyecto,
                     onTap: () => context.push(proyecto.location),

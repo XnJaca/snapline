@@ -6,7 +6,7 @@ aliases:
 type: spec
 platform: mobile
 status: borrador
-goal: "William ve sus obras vivas y abre cualquiera sin señal, y da de alta o corrige una parado en la obra sin esperar cobertura."
+goal: "William ve las obras en proceso y abre cualquiera sin señal, y da de alta una —con su cliente y su propiedad si hacen falta— parado en la obra sin esperar cobertura."
 apps:
   - mobile
 depends_on:
@@ -48,32 +48,30 @@ ciclo y vuelve al cuaderno.
 
 ### Entra
 
-- **Lista de obras vivas** —ni `COMPLETED` ni `CANCELLED`— leída de local.
+- **Lista de obras en proceso** —solo `IN_PROGRESS`— leída de local.
 - **Ver todas**, con filtro por los siete estados del dominio.
 - **Detalle**: la tab `Detalle` del contenedor que SPEC-0003 dejó vacía.
 - **Alta de obra** desde el teléfono, con UUIDv7 local.
 - **Edición** de los campos que el dominio marca editables.
 - **Cambio de estado** por la escalera del dominio.
 - Buscar por nombre de obra o por cliente.
+- **Crear cliente y propiedad sin salir del alta**, en línea. Ver abajo.
 
 ### No entra
 
 - **El timeline de Avance.** Qué eventos entran y cómo se ordenan es su spec.
 - **Fotos y Horas de la obra.** Cada una con el suyo.
-- **Crear el cliente desde el alta de obra.** Se elige uno existente; darlo de
-  alta es [[../0006-clientes-en-el-movil/README|SPEC-0006]]. Si al construirlo
-  resulta que el flujo se corta feo, se resuelve ahí y no acá.
-- **Crear el `site`.** Un proyecto necesita `site_id`, así que en esta versión se
-  elige entre los sitios existentes del cliente. Dar de alta una propiedad nueva
-  entra en el spec de Clientes, que es de quien cuelga.
+- **La ficha completa de cliente.** El alta en línea pide lo mínimo; el resto se
+  llena desde [[../0006-clientes-en-el-movil/README|SPEC-0006]], que es dueño de
+  esa pantalla.
 - **Publicar.** Es el frente `publicidad`.
 - **Asignar cuadrilla.** Vive en el frente `campo`.
 
 ## Modelo de dominio afectado
 
 - [[../../../domain/proyecto|proyecto]] — se implementa su ficha tal cual está.
-- [[../../../domain/cliente|cliente]] — solo se lee, para elegir el cliente y su
-  sitio.
+- [[../../../domain/cliente|cliente]] — se lee para elegir cliente y sitio, y se
+  escribe en el alta en línea, con las mismas reglas que SPEC-0006.
 
 No se agrega nada al modelo.
 
@@ -85,7 +83,7 @@ No se agrega nada al modelo.
 - **`client_visibility_mode` arranca en `etapas`.** Pasar a `avance` es acción
   explícita, no un default de formulario.
 - **`CANCELLED` no borra nada.** Cancelar una obra no la saca de la base ni toca
-  sus horas: solo cambia el estado y deja de listarse en lo vivo.
+  sus horas: solo cambia el estado y deja de listarse en la principal.
 - **La transición de estado retrocedente que llega tarde se descarta.** Lo dice
   la ficha, y es lo único de `project` que no es última escritura gana.
 - **Un `WORKER` solo ve proyectos donde tiene asignación vigente.** No aplica a
@@ -120,21 +118,41 @@ Sobre lo que SPEC-0003 dejó armado:
 - Los campos obligatorios del dominio son `customer_id`, `site_id`, `name` y
   `status`. Nada más se pide en el alta; el resto se completa editando.
 
+### El alta no manda a otra pantalla
+
+Los campos **Cliente** y **Propiedad** son buscadores con "＋ crear nuevo" en
+línea: abren una hoja de dos o tres campos y vuelven con el registro ya elegido.
+
+Es la decisión de producto de esta pantalla, y tiene una razón concreta: William
+está parado en la obra **con el cliente al lado**, y ese es el único momento en
+que tiene los datos. Mandarlo a tres pantallas distintas es exactamente cuando la
+gente deja de cargar y vuelve al cuaderno.
+
+El cliente creado así lleva `display_name` y un contacto; la propiedad, su
+dirección. Nada más — pedir la ficha completa parado en un techo es el otro modo
+de que no se cargue nada. Se completan después desde Clientes.
+
+**El formulario es el mismo de SPEC-0006, en versión mínima.** No se copian los
+campos: si se duplican, divergen.
+
 ## Criterios de aceptación
 
 - [ ] La lista sale de la base local: apagando la red, la pantalla muestra lo
       mismo.
 - [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`.
-- [ ] La lista principal excluye `COMPLETED` y `CANCELLED`; "ver todas" las
-      incluye y el filtro por estado las encuentra.
+- [ ] La lista principal muestra solo `IN_PROGRESS`: una obra agendada o en
+      pausa **no** aparece ahí, y sí en "ver todas".
 - [ ] Crear una obra sin señal la deja visible al instante, marcada como
       pendiente, y llega al servidor al volver la red sin duplicarse.
 - [ ] El id de la obra creada en el móvil es el mismo con el que queda en el
       servidor.
 - [ ] El selector de sitio solo ofrece sitios del cliente elegido, y cambiar de
       cliente lo vacía.
+- [ ] Se puede crear cliente, propiedad y obra **sin salir del alta y sin
+      señal**, y las tres llegan al servidor en ese orden.
 - [ ] Una obra nueva nace con `client_visibility_mode = etapas`.
-- [ ] Cancelar una obra la saca de lo vivo y **no** borra sus horas ni sus fotos.
+- [ ] Cancelar una obra la saca de la principal y **no** borra sus horas ni sus
+      fotos.
 - [ ] Editar sin señal aplica local y encola una sola operación por edición.
 - [ ] La pantalla se ve correcta en claro y en oscuro, y la única cosa naranja
       sólida es "nueva obra".
@@ -142,15 +160,14 @@ Sobre lo que SPEC-0003 dejó armado:
 
 ## Riesgos / consideraciones
 
-**Elegir cliente y sitio puede volverse el cuello de botella.** El alta depende
-de que el cliente ya exista. Si al usarlo resulta que William casi siempre crea
-la obra y el cliente juntos, hay que unir los dos flujos — se sabrá al probarlo
-con él, y la salida está en el spec de Clientes.
+**El alta en línea duplica superficie con SPEC-0006.** Dos lugares crean un
+cliente, y si divergen, uno de los dos va a quedar mal. Se evita con un solo
+formulario compartido —el de SPEC-0006 en versión mínima— y no copiando campos.
 
-**"Vivo" es una decisión de producto, no del dominio.** El dominio tiene siete
-estados y ninguno se llama activo. Acá se define como *ni terminado ni
-cancelado*. Si William dice que solo le importa lo que está en obra hoy, es
-cambiar un predicado, pero conviene preguntárselo antes de la demo.
+**Una obra en pausa desaparece de la principal.** Es consecuencia de mostrar solo
+`IN_PROGRESS`, y una obra trabada suele ser justamente la que necesita atención.
+Queda a un toque en "ver todas". Vale la pena mirar con William si prefiere que
+`ON_HOLD` vuelva a la principal; es cambiar un predicado.
 
 **El estado tiene una escalera y el formulario puede romperla.** La ficha define
 transiciones; un selector que ofrezca los siete estados sueltos deja pasar saltos
@@ -169,3 +186,4 @@ estado actual.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. El diseño de la cartera y del detalle ya existe como andamiaje de SPEC-0003; este spec lo formaliza y le pone datos reales. |
+| 2026-08-09 | borrador | Dos decisiones de producto cerradas: la principal muestra solo `IN_PROGRESS` —no "todo lo no cerrado"—, y el alta crea cliente y propiedad en línea en vez de mandar a tres pantallas. |

@@ -72,6 +72,12 @@ Arreglo: declarar el tipo real de cada colección (`Customer[]`, `Site[]`,
 `Project[]`, `ProjectAssignment[]`, `MediaAsset[]`, `TimeEntry[]`) y regenerar
 `openapi.json`.
 
+**Lo mismo pasa con las direcciones.** `customer.billing_address` y
+`site.address` son `jsonb` sin forma declarada, así que llegan a Flutter como
+`dynamic`. Su forma ya está definida en
+[[../../../domain/cliente|la ficha de cliente]] y hay que declararla como DTO
+—uno solo, compartido por los dos campos— en el mismo pasaje.
+
 ### 2. El push no acepta correcciones
 
 `SYNC_OPERATIONS` tiene cinco operaciones y **todas son altas**:
@@ -177,6 +183,8 @@ en el cliente.
       cliente Dart generado las expone tipadas y no como `dynamic`.
 - [ ] `customer.update` y `project.update` existen en `SYNC_OPERATIONS`, validan
       su payload y tienen su caso en `edge-cases/`.
+- [ ] `billing_address` y `site.address` salen al contrato con sus seis campos,
+      no como objeto vacío, y comparten el mismo DTO.
 - [ ] Ninguna pantalla importa un cliente de `lib/api/`: se verifica con una
       prueba que recorre `lib/features/` y falla si aparece.
 - [ ] Una escritura con la red caída queda visible en la UI al instante y con

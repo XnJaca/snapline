@@ -43,6 +43,29 @@ trabaja.
 | `lat` / `lng` | numeric | no | Centro de la geocerca |
 | `geofence_radius_m` | int | no | Default de la empresa si es nulo |
 
+### `address` — la forma del `jsonb`
+
+**La misma para `customer.billing_address` y `site.address`.** Un solo tipo, un
+solo formulario, un solo modelo en los tres consumidores.
+
+| Campo | Tipo | Obligatorio | Notas |
+|---|---|---|---|
+| `line1` | string | sí | Calle y número |
+| `line2` | string | no | Apartamento, unidad, suite |
+| `city` | string | sí | |
+| `state` | string | sí | Código de dos letras: `MD` |
+| `postal_code` | string | sí | |
+| `country` | string | sí | ISO de dos letras, default `US` |
+
+Es el mínimo que imprime una factura correcta en Estados Unidos. `country` está
+desde el principio por la misma razón que la moneda no se concatena a mano: sale
+gratis hoy y es caro después.
+
+**Va declarado como DTO en el API**, no como `jsonb` suelto: si el contrato no
+declara su forma, `openapi.json` lo emite vacío y el cliente generado lo tipa
+`dynamic` — parsea la dirección, la descarta y no falla. Ver ADR-0007 y la
+regla 8.
+
 ## Invariantes
 
 - **`photo_release_granted_at` es lo único que habilita `PUBLIC`** en

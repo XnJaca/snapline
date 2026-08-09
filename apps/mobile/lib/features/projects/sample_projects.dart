@@ -29,10 +29,9 @@ class SampleProject {
 
   String get location => '/projects/$id';
 
-  /// Una obra viva: ni terminada ni cancelada. Es lo que el dueño necesita ver
-  /// al abrir la app — lo cerrado se consulta, no se vigila.
-  bool get isActive =>
-      status != ProjectStatus.completed && status != ProjectStatus.cancelled;
+  /// La obra está en proceso. Es lo que el dueño necesita ver al abrir la app;
+  /// todo lo demás —agendado, en pausa, cerrado— se consulta desde "ver todas".
+  bool get isInProgress => status == ProjectStatus.inProgress;
 }
 
 const sampleProjects = <SampleProject>[
@@ -113,8 +112,8 @@ const sampleProjects = <SampleProject>[
   ),
 ];
 
-List<SampleProject> get activeSampleProjects =>
-    sampleProjects.where((proyecto) => proyecto.isActive).toList();
+List<SampleProject> get inProgressSampleProjects =>
+    sampleProjects.where((proyecto) => proyecto.isInProgress).toList();
 
 SampleProject? sampleProjectById(String id) {
   for (final proyecto in sampleProjects) {

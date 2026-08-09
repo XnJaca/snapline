@@ -51,8 +51,10 @@ prototipo, no un caso secundario.
   teléfono.
 - **Detalle**: sus datos, sus propiedades y sus obras.
 - **Alta de cliente**, con UUIDv7 local.
-- **Alta de propiedad (`site`)** dentro del cliente — es de donde cuelga, y es lo
-  que SPEC-0005 necesita para poder crear una obra.
+- **Alta de propiedad (`site`)** dentro del cliente — es de donde cuelga.
+- **Los formularios mínimos de alta**, que [[../0005-proyectos-en-el-movil/README|SPEC-0005]]
+  reutiliza dentro del alta de obra. Se definen acá una sola vez; si se copian
+  allá, divergen.
 - **Edición** de los campos editables del dominio.
 
 ### No entra
@@ -144,10 +146,13 @@ de los casos.
 apellido, así que el alta puede pedir un solo campo y quedarse ahí. Pedir la
 ficha completa parado en un techo es lo que hace que la gente no cargue nada.
 
-**La dirección es `jsonb`.** El dominio no fija su forma. Antes de implementar
-hay que decidir qué campos tiene y dejarlo escrito, o cada consumidor —móvil,
-Angular, el sitio público— va a inventar el suyo. **Esto se resuelve antes de
-codear esta pantalla.**
+**La dirección ya tiene forma, pero todavía no está en el contrato.** Quedó
+definida en [[../../../domain/cliente|la ficha de cliente]] —`line1`, `line2`,
+`city`, `state`, `postal_code`, `country`— y es la misma para `billing_address` y
+`site.address`. Falta declararla como DTO en `apps/api`: mientras siga siendo un
+`jsonb` sin forma en el contrato, el cliente Dart la recibe como `dynamic` y la
+descarta en silencio. Es el mismo problema del pull de SPEC-0004 y se arregla en
+el mismo lugar.
 
 ## ADRs relacionados
 
@@ -161,3 +166,4 @@ codear esta pantalla.**
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. Es prerequisito de datos de SPEC-0005: sin clientes y sitios en local, el alta de obra no tiene de dónde elegir. Queda abierta la forma de `billing_address`, que hay que cerrar antes de implementar. |
+| 2026-08-09 | borrador | Cerrada la forma de la dirección: seis campos, la misma para `billing_address` y `site.address`, documentada en la ficha de cliente y pendiente de declararse como DTO en el API. Los formularios mínimos de alta pasan a ser de este spec, para que SPEC-0005 los reutilice en vez de copiarlos. |

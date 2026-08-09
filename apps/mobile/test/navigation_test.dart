@@ -214,13 +214,23 @@ void main() {
   });
 
   group('la cartera muestra lo vivo', () {
-    testWidgets('la lista principal deja fuera lo terminado y lo cancelado', (
+    // Solo lo que está en obra ahora. Lo agendado, lo pausado y lo cerrado se
+    // consulta desde "ver todas".
+    testWidgets('la lista principal muestra solo lo que está en proceso', (
       tester,
     ) async {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
 
       expect(find.text('Kitchen remodel'), findsOneWidget);
+      expect(find.text('Roof replacement'), findsOneWidget);
+
+      expect(find.text('Deck rebuild'), findsNothing, reason: 'está en pausa');
+      expect(
+        find.text('Bathroom addition'),
+        findsNothing,
+        reason: 'está agendada, no en obra',
+      );
       expect(find.text('Front porch repair'), findsNothing);
       expect(find.text('Window replacement'), findsNothing);
     });
