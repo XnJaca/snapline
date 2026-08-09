@@ -38,14 +38,26 @@
   "authLoginErrorUnknown": "Could not sign in. Try again.",
 
   "authSignOut": "Sign out",
-  "homeWelcome": "Signed in as {name}",
-  "@homeWelcome": {
-    "placeholders": { "name": { "type": "String" } }
+
+  "accountTitle": "Account",
+  "accountCompanyName": "Name",
+  "accountSectionCompany": "Company",
+  "accountSectionContact": "Contact",
+  "accountSectionAppearance": "Appearance",
+  "accountRole": "Role",
+  "accountEmail": "Email",
+  "accountPhone": "Phone",
+  "accountNoEmail": "Not set",
+  "accountTheme": "Theme",
+
+  "roleOwner": "Owner",
+  "@roleOwner": {
+    "description": "Los roles de membresía. El cliente final no es un rol: entra por token."
   },
-  "homeCompany": "Company: {company}",
-  "@homeCompany": {
-    "placeholders": { "company": { "type": "String" } }
-  },
+  "roleAdmin": "Administrator",
+  "roleForeman": "Foreman",
+  "roleWorker": "Worker",
+  "roleAccountant": "Accountant",
 
   "languageSpanish": "Español",
   "@languageSpanish": {
@@ -59,16 +71,65 @@
 
   "navToday": "Today",
   "navPhotos": "Photos",
-  "navMyHours": "My hours",
   "navHours": "Hours",
   "navCrew": "Crew",
   "navProjects": "Projects",
   "navCustomers": "Customers",
   "navReports": "Reports",
   "navBilling": "Billing",
+  "navNoAccess": "This account has no sections available. Ask your administrator to review its permissions.",
+  "@navNoAccess": {
+    "description": "Rol cuyos permisos no dejan ningún eje en pie. No pasa con los roles del contrato."
+  },
+
+  "projectTabProgress": "Progress",
+  "@projectTabProgress": {
+    "description": "Timeline de la obra. Se llama Avance y no Hoy: Hoy es la jornada del trabajador."
+  },
+  "projectTabPhotos": "Photos",
+  "projectTabHours": "Hours",
+  "projectTabDetails": "Details",
+
+  "projectUntitled": "Project",
+  "@projectUntitled": {
+    "description": "Título cuando se llega a un proyecto que no está en local."
+  },
+
+  "projectStatusLead": "Lead",
+  "@projectStatusLead": {
+    "description": "Los siete estados internos de docs/domain/proyecto.md. El cliente ve un mapeo de tres, que no es este."
+  },
+  "projectStatusEstimated": "Estimated",
+  "projectStatusScheduled": "Scheduled",
+  "projectStatusInProgress": "In progress",
+  "projectStatusOnHold": "On hold",
+  "projectStatusCompleted": "Completed",
+  "projectStatusCancelled": "Cancelled",
+
+  "projectsInProgressTitle": "In progress",
+  "projectsViewAll": "View all",
+  "projectsAllTitle": "All projects",
+  "projectsNew": "New project",
+  "projectsEmptyInProgress": "No projects in progress right now",
+  "projectsFilterAll": "All",
+  "projectsEmptyFiltered": "No projects with this status",
+  "projectPhotoCount": "{count, plural, =0{No photos} =1{1 photo} other{{count} photos}}",
+  "@projectPhotoCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "projectNoCrew": "No crew assigned",
 
   "comingSoon": "Coming soon",
   "@comingSoon": {
     "description": "Placeholder de pestaña sin implementar. Se borra cuando cada pantalla tenga su spec."
+  },
+
+  "placeholderItem": "Sample item {index}",
+  "@placeholderItem": {
+    "description": "Fila de la lista sintética del placeholder. Existe para poder verificar que el scroll se conserva al cambiar de pestaña.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "@placeholderProject": {
+    "placeholders": { "index": { "type": "int" } }
   }
 }

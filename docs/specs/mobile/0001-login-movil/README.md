@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0001: Login en la app móvil"
 type: spec
 platform: mobile
-status: en implementación
+status: implementado
 goal: "El trabajador entra con su teléfono o su email indistintamente, la app queda en el idioma de su usuario, y al reabrirla sigue adentro sin escribir nada."
 apps:
   - mobile
@@ -18,7 +18,7 @@ created: 2026-08-08
 updated: 2026-08-08
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -123,9 +123,14 @@ válida es **sincronizar**, no **capturar**.
 
 ### Token vencido a mitad de sesión
 
-La renovación silenciosa no ocurre solo al abrir la app. Cualquier respuesta `401`
-de cualquier endpoint dispara un intento de refresh en el interceptor de Dio, y la
-petición original se reintenta una vez con el token nuevo.
+**La renovación es reactiva, no programada.** No hay un temporizador que refresque
+al abrir la app: cualquier respuesta `401` de cualquier endpoint dispara el intento
+de refresh en el interceptor de Dio, y la petición original se reintenta una vez con
+el token nuevo.
+
+La consecuencia de elegirlo así: mientras la app no haga ninguna llamada al API, un
+token vencido no se renueva —y no hace falta que lo haga, porque no hay nada que
+autorizar—. La primera petición real lo resuelve sin que el usuario note nada.
 
 Si el refresh también falla, se aplica la tabla de arriba según haya red o no. En
 ningún caso un `401` interrumpe al usuario con una pantalla de login encima de lo
@@ -136,7 +141,7 @@ que estaba haciendo.
 ```
 abre la app
      │
-     ├── hay sesión guardada ──▶ entra directo (renueva token en segundo plano)
+     ├── hay sesión guardada ──▶ entra directo
      │
      └── no hay sesión
               ▼
@@ -153,8 +158,14 @@ abre la app
               └── sin red ──▶ "No hay conexión. Probá de nuevo."
 ```
 
-El teclado se adapta a lo que se está escribiendo: si el identificador empieza con
-un dígito, teclado numérico; si no, teclado de texto con autocorrección apagada.
+El campo de identificación usa **teclado de correo**, con autocorrección apagada y
+`autofillHints` de usuario, teléfono y email para que el gestor de contraseñas
+ayude.
+
+*Se evaluó cambiar el teclado según lo escrito —numérico si empieza con un dígito—
+y se descartó: en iOS cambiar `keyboardType` con el teclado ya abierto no lo
+redibuja, así que el efecto llegaría tarde o no llegaría. El teclado de correo trae
+letras y números, que es lo que ambos casos necesitan.*
 
 ## Contrato de API
 
@@ -246,8 +257,11 @@ Verificados con `flutter test` o en simulador:
 - [x] Los tokens no aparecen en el texto de la sesión, que es lo que termina en
       logs y reportes de error.
 - [x] Con los campos vacíos no se llama al API.
-- [x] La pantalla se ve correcta en claro y en oscuro. Contraste AA verificado
-      sobre `design-tokens.json` para los 34 pares.
+- [x] La pantalla se ve correcta en claro y en oscuro. El contraste AA de los 36
+      pares se verifica en `test/design_tokens_test.dart`, que además detecta si
+      `tokens.dart` se separó del JSON.
+- [x] Un fallo de refresh **por falta de red** se reporta como falta de red y no
+      como credenciales inválidas.
 - [x] No hay ninguna cadena de texto quemada: todo pasa por i18n en `en` y `es`.
 
 Verificados contra el API real, en `integration_test/login_test.dart`:
@@ -320,4 +334,6 @@ trabajo de `apps/api`.
 | 2026-08-08 | borrador | Creado |
 | 2026-08-08 | review | Revisado con `spec-reviewer`. Dos bloqueantes resueltos: el contrato pasa a prerequisito declarado, y el almacenamiento seguro se movió al ADR-0008. Sumados el caso de más de 30 días sin cobertura y el 401 a mitad de sesión. |
 | 2026-08-08 | en implementación | Aprobado. El prerequisito del contrato quedó resuelto en `apps/api`: `AuthResultDto` documentado y `authLogin` ya devuelve tipo. Contrato actualizado con `expiresInSeconds` y `memberships[]`. |
-| 2026-08-08 | en implementación | Implementado y verificado: 27 tests unitarios y 5 de integración contra el API real. Queda un solo criterio abierto, y depende de la captura offline. |
+| 2026-08-08 | en implementación | Implementado y verificado: 27 tests unitarios y 5 de integración contra el API real. |
+| 2026-08-08 | implementado | Cerrado. Todos los criterios en `[x]` y revisión de código aplicada. **Se commiteó directo a `main`, sin rama ni PR** — contra la regla 25; queda dicho para que el próximo spec no lo tome de precedente. |
+| 2026-08-08 | en implementación | Revisado con `code-reviewer`. Un hallazgo GRAVE: al fallar el refresh por red se propagaba el `401` original, así que un trabajador sin cobertura leía "credenciales incorrectas" — lo contrario de lo que este spec promete. Corregido con dos tests. Además: el almacén de sesión ahora se autorrepara ante un Keystore invalidado, se quitó código muerto, y el contraste pasó de verificarse con un script suelto a `test/design_tokens_test.dart`. 67 tests. |

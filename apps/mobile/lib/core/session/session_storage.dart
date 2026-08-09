@@ -14,16 +14,26 @@ class SessionStorage {
   final FlutterSecureStorage _storage;
 
   Future<Session?> read() async {
-    final raw = await _storage.read(key: _key);
-    if (raw == null) return null;
+    // Cualquier fallo acá deja la app trabada en el arranque, así que se
+    // descarta lo guardado y se pide login: JSON corrupto, un modelo viejo, o
+    // el propio almacén nativo caído —el Keystore de Android se invalida al
+    // cambiar el bloqueo de pantalla, y ahí `read` lanza, no devuelve null—.
     try {
+      final raw = await _storage.read(key: _key);
+      if (raw == null) return null;
       return Session.decode(raw);
-    } on FormatException {
-      // Un guardado corrupto o de una versión vieja del modelo no puede dejar la
-      // app trabada en un arranque fallido: se descarta y se pide login.
-      await clear();
+    } catch (_) {
+      await _clearSilencioso();
       return null;
     }
+  }
+
+  /// Si el almacén está roto, borrar también puede fallar. No hay nada más que
+  /// hacer, y no puede impedir que la app arranque.
+  Future<void> _clearSilencioso() async {
+    try {
+      await clear();
+    } catch (_) {}
   }
 
   Future<void> write(Session session) =>

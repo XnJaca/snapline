@@ -27,8 +27,23 @@
   "authLoginErrorUnknown": "No se pudo entrar. Intente de nuevo.",
 
   "authSignOut": "Cerrar sesión",
-  "homeWelcome": "Sesión de {name}",
-  "homeCompany": "Empresa: {company}",
+
+  "accountTitle": "Cuenta",
+  "accountCompanyName": "Nombre",
+  "accountSectionCompany": "Empresa",
+  "accountSectionContact": "Contacto",
+  "accountSectionAppearance": "Apariencia",
+  "accountRole": "Rol",
+  "accountEmail": "Correo",
+  "accountPhone": "Teléfono",
+  "accountNoEmail": "Sin registrar",
+  "accountTheme": "Tema",
+
+  "roleOwner": "Dueño",
+  "roleAdmin": "Administrador",
+  "roleForeman": "Capataz",
+  "roleWorker": "Trabajador",
+  "roleAccountant": "Contador",
 
   "languageSpanish": "Español",
   "languageEnglish": "English",
@@ -36,13 +51,41 @@
 
   "navToday": "Hoy",
   "navPhotos": "Fotos",
-  "navMyHours": "Mis horas",
   "navHours": "Horas",
   "navCrew": "Cuadrilla",
   "navProjects": "Proyectos",
   "navCustomers": "Clientes",
   "navReports": "Reportes",
   "navBilling": "Facturación",
+  "navNoAccess": "Esta cuenta no tiene secciones disponibles. Pida a su administrador que revise sus permisos.",
 
-  "comingSoon": "Próximamente"
+  "projectTabProgress": "Avance",
+  "projectTabPhotos": "Fotos",
+  "projectTabHours": "Horas",
+  "projectTabDetails": "Detalle",
+
+  "projectUntitled": "Proyecto",
+
+  "projectStatusLead": "Prospecto",
+  "projectStatusEstimated": "Estimado",
+  "projectStatusScheduled": "Agendado",
+  "projectStatusInProgress": "En proceso",
+  "projectStatusOnHold": "En pausa",
+  "projectStatusCompleted": "Terminado",
+  "projectStatusCancelled": "Cancelado",
+
+  "projectsInProgressTitle": "En progreso",
+  "projectsViewAll": "Ver todos",
+  "projectsAllTitle": "Todos los proyectos",
+  "projectsNew": "Nueva obra",
+  "projectsEmptyInProgress": "Ningún proyecto en progreso ahora",
+  "projectsFilterAll": "Todos",
+  "projectsEmptyFiltered": "Ningún proyecto con este estado",
+  "projectPhotoCount": "{count, plural, =0{Sin fotos} =1{1 foto} other{{count} fotos}}",
+  "projectNoCrew": "Sin cuadrilla asignada",
+
+  "comingSoon": "Próximamente",
+
+  "placeholderItem": "Elemento de ejemplo {index}",
+  "placeholderProject": "Obra de ejemplo {index}"
 }

@@ -64,24 +64,6 @@ class Session {
   /// almacenamiento cuando llegue el cambio de empresa. Ver SPEC-0001.
   final List<AuthMembershipDto> memberships;
 
-  bool get isAccessTokenExpired =>
-      DateTime.now().isAfter(accessTokenExpiresAt);
-
-  Session copyWith({
-    String? accessToken,
-    String? refreshToken,
-    DateTime? accessTokenExpiresAt,
-  }) {
-    return Session(
-      accessToken: accessToken ?? this.accessToken,
-      refreshToken: refreshToken ?? this.refreshToken,
-      accessTokenExpiresAt: accessTokenExpiresAt ?? this.accessTokenExpiresAt,
-      user: user,
-      membership: membership,
-      memberships: memberships,
-    );
-  }
-
   Map<String, Object?> toJson() => {
     'accessToken': accessToken,
     'refreshToken': refreshToken,

@@ -39,7 +39,7 @@ El orden importa: `swagger_parser` primero, porque `build_runner` genera los
 
 ```
 lib/
-├── core/            tema, i18n, router, db, red, errores
+├── core/            tema, i18n, router, navegación, db, red, errores
 ├── api/             generado — no se edita
 ├── data/            tablas Drift, repositorios, sincronizador y bandeja de salida
 └── features/        una carpeta por frente del producto
@@ -134,6 +134,46 @@ para banderas.
 - Login y refresh usan `bareDioProvider`, sin interceptor: si no, un login fallido
   dispararía un refresh sobre sí mismo.
 
+### Navegación
+
+`core/navigation/` es el catálogo, no el router. Un eje nuevo se agrega ahí y en
+las ramas del `StatefulShellRoute`, en el mismo commit.
+
+- **Cada destino declara su permiso** y se oculta si no está en
+  `membership.permissions`. El móvil nunca replica la tabla de roles: qué ejes ve
+  cada rol es decisión de producto y vive en `_byRole`; quién puede qué lo dice
+  el servidor.
+- El orden de `AppDestination.values` **es** el orden de las ramas. Meter uno en
+  el medio mueve todas las de abajo.
+- El índice visible y el de rama no coinciden: un `WORKER` ve dos pestañas que
+  son las ramas 0 y 3. Siempre navegar con `goBranch(destino.index)`.
+- **La pestaña activa nunca usa `primary`.** Va en `primaryContainer` /
+  `onPrimaryContainer`, y lo mismo las tabs de un proyecto. Ver la regla del
+  naranja arriba; hay tests que lo verifican en los dos temas.
+- La última pestaña se guarda en `SharedPreferences`, **no** en el almacén
+  seguro: es preferencia de interfaz, no credencial. Se valida contra los
+  destinos del rol al restaurarla — el teléfono es de la empresa y lo usa más de
+  una persona.
+
+Las pantallas de eje usan `AppScaffold`, que ya trae la barra y el botón de
+cuenta. `PlaceholderScreen` es andamiaje: cada una se reemplaza cuando su spec
+llegue.
+
+**Lo que se abre con `push` deja la pantalla anterior en el árbol**, con su
+propio scroll. En un test, `scrollUntilVisible` sin `scrollable:` toma el
+primero que encuentra —el de atrás— y desplaza la pantalla equivocada. Hay que
+acotarlo con `find.descendant(of: find.byType(LaPantalla), ...)`. Y si el
+objetivo vive en una lista horizontal virtualizada, después del scroll va un
+`ensureVisible`, o el toque cae en el borde y no pasa nada.
+
+### Dónde puede colarse el naranja sin que se note
+
+Material pinta varios controles con `primary` por defecto, y cada uno de esos es
+un naranja saturado que compite con la acción de la pantalla. Ya están cubiertos
+en `AppTheme` — `TextButton`, `Chip`, `SegmentedButton`, `NavigationBar` y
+`TabBar`—, pero **un control nuevo probablemente traiga el suyo**: se revisa en
+captura, no leyendo el código.
+
 ### Tipografía y tamaño de toque
 
 Dos familias, y no se cruzan:
@@ -211,7 +251,12 @@ pnpm api:db:up && pnpm api:migrate && pnpm api:seed && pnpm api:dev
 
 # en otra terminal
 flutter test integration_test/login_test.dart -d <id-del-simulador>
+flutter test integration_test/navigation_test.dart -d <id-del-simulador>
 ```
+
+`integration_test/support/arranque.dart` tiene el arranque limpio, el login y el
+menú de cuenta. **Cada caso limpia también la última pestaña guardada**: si no,
+abre donde lo dejó el caso anterior y la afirmación se cae sin motivo.
 
 Usuarios del seed: `william@pcdmv.com` (locale `en`, OWNER) y `+15551234567`
 (locale `es`, WORKER). Contraseña `Snapline123!` para los dos.

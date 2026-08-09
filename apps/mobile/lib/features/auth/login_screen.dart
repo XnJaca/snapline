@@ -5,7 +5,6 @@ import '../../core/brand/snapline_backdrop.dart';
 import '../../core/brand/snapline_logo.dart';
 import '../../core/network/api_failure.dart';
 import '../../core/theme/theme_extensions.dart';
-import '../../core/theme/tokens.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../l10n/app_localizations.dart';
 import 'login_controller.dart';
@@ -124,9 +123,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     FilledButton(
                       onPressed: enviando ? null : _submit,
                       child: enviando
-                          ? const SizedBox.square(
-                              dimension: Tokens.fontSizeTitle,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                          ? SizedBox.square(
+                              dimension: spacing.xl,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             )
                           : Text(l10n.authLoginSubmit),
                     ),

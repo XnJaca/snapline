@@ -63,10 +63,19 @@ class AuthInterceptor extends Interceptor {
         ..extra['snapline.retried'] = true;
 
       handler.resolve(await _bare.fetch<dynamic>(options));
+    } on DioException catch (fallo) {
+      // Cuál error se propaga importa: el original es SIEMPRE un 401, porque es
+      // lo que entra a esta rama. Si el refresh falló por falta de señal y se
+      // reenvía el 401, aguas arriba se lee como credenciales inválidas y se
+      // manda a revisar la contraseña a alguien que solo está sin cobertura —
+      // justo lo que este interceptor existe para evitar.
+      final esCredenciales = fallo.response?.statusCode == 401;
+      handler.next(esCredenciales ? err : fallo);
     } catch (_) {
-      // El refresh falló: se propaga el error original. La sesión NO se borra.
       handler.next(err);
     } finally {
+      // La sesión NO se borra en ningún caso: sin ella el trabajador no puede
+      // seguir capturando.
       _inFlight = null;
     }
   }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snapline/core/network/api_failure.dart';
 import 'package:snapline/core/network/auth_interceptor.dart';
 import 'package:snapline/core/session/session.dart';
 
@@ -136,6 +137,44 @@ void main() {
       throwsA(isA<DioException>()),
     );
     expect(refrescos, 1);
+  });
+
+  // El error que se propaga decide qué lee el usuario. Si el refresh falla sin
+  // señal y se reenvía el 401 original, la app le dice que su contraseña está
+  // mal a alguien que solo está sin cobertura.
+  test('si el refresh falla por red, el error es de red y no de credenciales', () async {
+    montar((options) {
+      if (options.path.contains('/auth/refresh')) {
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionError,
+        );
+      }
+      return _json({'message': 'expirado'}, 401);
+    });
+
+    try {
+      await dio.get<dynamic>('/projects');
+      fail('debería haber lanzado');
+    } on DioException catch (error) {
+      expect(ApiFailure.from(error).kind, ApiFailureKind.noConnection);
+    }
+  });
+
+  test('si el refresh falla con 401, sí es de credenciales', () async {
+    montar((options) {
+      if (options.path.contains('/auth/refresh')) {
+        return _json({'message': 'refresh vencido'}, 401);
+      }
+      return _json({'message': 'expirado'}, 401);
+    });
+
+    try {
+      await dio.get<dynamic>('/projects');
+      fail('debería haber lanzado');
+    } on DioException catch (error) {
+      expect(ApiFailure.from(error).kind, ApiFailureKind.invalidCredentials);
+    }
   });
 
   // Un trabajador sin cobertura tiene que poder seguir capturando aunque su

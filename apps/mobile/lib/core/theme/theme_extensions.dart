@@ -19,6 +19,8 @@ class AppSpacing extends ThemeExtension<AppSpacing> {
     required this.radiusMd,
     required this.radiusLg,
     required this.radiusFull,
+    required this.touchTargetMin,
+    required this.touchTargetPrimary,
   });
 
   const AppSpacing.standard()
@@ -31,7 +33,9 @@ class AppSpacing extends ThemeExtension<AppSpacing> {
       radiusSm = Tokens.radiusSm,
       radiusMd = Tokens.radiusMd,
       radiusLg = Tokens.radiusLg,
-      radiusFull = Tokens.radiusFull;
+      radiusFull = Tokens.radiusFull,
+      touchTargetMin = Tokens.touchTargetMin,
+      touchTargetPrimary = Tokens.touchTargetPrimary;
 
   final double xs;
   final double sm;
@@ -43,6 +47,13 @@ class AppSpacing extends ThemeExtension<AppSpacing> {
   final double radiusMd;
   final double radiusLg;
   final double radiusFull;
+
+  /// El mínimo de Material. Para controles secundarios.
+  final double touchTargetMin;
+
+  /// Lo que se pulsa con guante de trabajo: la acción primaria y las filas de
+  /// una lista que se toca en la obra.
+  final double touchTargetPrimary;
 
   @override
   AppSpacing copyWith({
@@ -56,6 +67,8 @@ class AppSpacing extends ThemeExtension<AppSpacing> {
     double? radiusMd,
     double? radiusLg,
     double? radiusFull,
+    double? touchTargetMin,
+    double? touchTargetPrimary,
   }) {
     return AppSpacing(
       xs: xs ?? this.xs,
@@ -68,6 +81,8 @@ class AppSpacing extends ThemeExtension<AppSpacing> {
       radiusMd: radiusMd ?? this.radiusMd,
       radiusLg: radiusLg ?? this.radiusLg,
       radiusFull: radiusFull ?? this.radiusFull,
+      touchTargetMin: touchTargetMin ?? this.touchTargetMin,
+      touchTargetPrimary: touchTargetPrimary ?? this.touchTargetPrimary,
     );
   }
 
@@ -85,6 +100,12 @@ class AppSpacing extends ThemeExtension<AppSpacing> {
       radiusMd: lerpDouble(radiusMd, other.radiusMd, t)!,
       radiusLg: lerpDouble(radiusLg, other.radiusLg, t)!,
       radiusFull: lerpDouble(radiusFull, other.radiusFull, t)!,
+      touchTargetMin: lerpDouble(touchTargetMin, other.touchTargetMin, t)!,
+      touchTargetPrimary: lerpDouble(
+        touchTargetPrimary,
+        other.touchTargetPrimary,
+        t,
+      )!,
     );
   }
 }
