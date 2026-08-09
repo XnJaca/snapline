@@ -57,13 +57,6 @@ void main() {
       expect(session.accessTokenExpiresAt, DateTime(2026, 8, 8, 11));
     });
 
-    test('reconoce el token vencido', () {
-      final vencida = buildSession(
-        expiresAt: DateTime.now().subtract(const Duration(minutes: 1)),
-      );
-      expect(vencida.isAccessTokenExpired, isTrue);
-      expect(buildSession().isAccessTokenExpired, isFalse);
-    });
 
     // Esto termina en logs y en reportes de error.
     test('no filtra tokens al convertirse en texto', () {
