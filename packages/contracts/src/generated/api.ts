@@ -872,6 +872,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Sync_pull"];
+        put?: never;
+        post: operations["Sync_push"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1731,6 +1747,62 @@ export interface components {
             /** Format: uuid */
             offerId: string;
             notes?: string;
+        };
+        SyncPullResponseDto: {
+            /**
+             * Format: date-time
+             * @description Cursor para el próximo pull. Lo da el servidor: el reloj del dispositivo no es confiable.
+             */
+            serverTime: string;
+            customers: Record<string, never>[];
+            sites: Record<string, never>[];
+            projects: Record<string, never>[];
+            assignments: Record<string, never>[];
+            mediaAssets: Record<string, never>[];
+            timeEntries: Record<string, never>[];
+            /** @description Ids borrados desde el cursor, por recurso. */
+            deleted: {
+                [key: string]: string[];
+            };
+        };
+        SyncOperationDto: {
+            /**
+             * Format: uuid
+             * @description UUIDv7 generado en el dispositivo. Es la clave de idempotencia del lote.
+             */
+            clientId: string;
+            /** @enum {string} */
+            type: "customer.create" | "project.create" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            /**
+             * Format: uuid
+             * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.
+             */
+            targetId: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            /** @description Cuándo lo hizo el usuario. Ordena el lote y viaja como device_recorded_at. */
+            occurredAt: string;
+        };
+        SyncPushDto: {
+            operations: components["schemas"]["SyncOperationDto"][];
+        };
+        SyncResultDto: {
+            /** Format: uuid */
+            clientId: string;
+            /**
+             * @description `duplicate` es éxito: la operación ya se había aplicado en un intento anterior.
+             * @enum {string}
+             */
+            status: "applied" | "duplicate" | "failed";
+            resourceId: string | null;
+            code: string | null;
+            message: string | null;
+        };
+        SyncPushResponseDto: {
+            results: components["schemas"]["SyncResultDto"][];
+            /** @description Cuántas fallaron. Si es 0, la bandeja se puede vaciar entera. */
+            failed: number;
         };
         FieldErrorDto: {
             field: string;
@@ -7255,6 +7327,159 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Sync_pull: {
+        parameters: {
+            query?: {
+                /** @description Cursor: `updated_at` del último registro traído. Sin él, trae todo. */
+                since?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncPullResponseDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Sync_push: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncPushDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncPushResponseDto"];
+                };
             };
             /** @description Error */
             400: {

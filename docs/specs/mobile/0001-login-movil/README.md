@@ -269,12 +269,14 @@ Verificados en `test/auth_interceptor_test.dart`:
 - [x] Varias peticiones en paralelo con el token vencido comparten un solo
       refresh, en vez de rotar el token una vez por petición.
 
-Bloqueado por otra feature:
+- [x] Con el refresh token vencido, la sesión **no se borra** y la app no expulsa
+      al usuario: es la condición que hace posible seguir capturando sin red.
+      Verificado en `test/auth_interceptor_test.dart`.
 
-- [ ] Con el refresh token vencido y sin red, se puede marcar entrada y la marca
-      queda `PENDING`; al reautenticar, sincroniza. **La sesión ya no se borra al
-      fallar el refresh, que es la mitad que corresponde a este spec; la otra
-      mitad necesita la captura offline, que todavía no existe.**
+**Lo que este spec no verifica, porque no le toca:** que con esa sesión vencida se
+pueda efectivamente marcar entrada y la marca quede `PENDING`. Eso es la captura
+offline y va al spec de asistencia — acá solo se garantiza que la sesión no
+desaparezca debajo. Estaba mal ubicado como criterio de login.
 
 ## Riesgos / consideraciones
 

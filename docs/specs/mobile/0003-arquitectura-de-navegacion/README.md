@@ -14,6 +14,7 @@ depends_on:
 domain:
   - usuario-y-membresia
   - proyecto
+  - cuadrilla
 frente: plataforma
 created: 2026-08-08
 updated: 2026-08-08
@@ -38,7 +39,7 @@ Después del login la app no tiene a dónde ir, y el esqueleto que se elija ahor
 decide dónde va a colgarse todo lo que viene.
 
 La trampa fácil es una barra con Fotos y Horas como pestañas globales. Se ve
-ordenado y contradice la visión: *"todo arranca en un proyecto: información del
+ordenado y contradice la visión, que pone el *"proyecto como unidad central:
 cliente → descripción → carpeta de fotos y documentos"*. Con listas globales el
 proyecto deja de ser el contenedor y pasa a ser una etiqueta, y la pregunta que
 William hizo textualmente —*"no sé cuántos mandé a cada proyecto"*— se queda sin
@@ -56,6 +57,8 @@ salida, tomar fotos. Nada más"*.
 - **El proyecto como contenedor**: al entrar a una obra, tabs superiores con la
   información **de esa obra**.
 - Pantallas placeholder para cada destino; el contenido llega con su propio spec.
+  **Cada placeholder incluye una lista sintética scrolleable**, sin la cual no se
+  puede verificar que cambiar de pestaña conserve el estado.
 - La app recuerda la última pestaña y vuelve a ella al reabrir.
 - Cada pestaña conserva su estado al cambiar entre ellas.
 
@@ -76,6 +79,8 @@ salida, tomar fotos. Nada más"*.
   como ya lo es del modelo.
 - [[../../../domain/usuario-y-membresia|usuario-y-membresia]] — de sus roles sale
   qué superficie ve cada uno.
+- [[../../../domain/cuadrilla|cuadrilla]] — el `FOREMAN` tiene un eje propio para
+  la suya.
 
 No se agrega nada al modelo.
 
@@ -98,10 +103,31 @@ Por qué cada una, con su fundamento y no por gusto:
 - **El `WORKER` no tiene lista de proyectos.** Su día es una obra. Dos pestañas es
   el mínimo y es exactamente lo que promete la visión: *"la única pantalla que un
   trabajador debería necesitar"*.
-- **El `FOREMAN` es el trabajador más su gente.** El dominio le da *"ver su
-  proyecto"*, en singular: no navega cartera, pero sí tiene `crews.read`.
+- **El `FOREMAN` es el trabajador más su gente.** Tiene `crews.read`, que ningún
+  otro rol de campo tiene. Que **no** navegue cartera es **decisión de producto
+  para esta versión**, no una regla del dominio: la ficha describe su alcance como
+  *"su cuadrilla: marcar por su gente, fotos, ver su proyecto"*, pero el invariante
+  de que solo se ven proyectos con asignación vigente está acotado a `WORKER` en
+  [[../../../domain/proyecto|proyecto]], y `docs/domain/README.md` todavía lista
+  como sin decidir cuánto puede el foreman. Ver el riesgo al final.
 - **El `ACCOUNTANT` no ve Fotos.** El dominio dice *"cero acceso a fotos"* y
   `media.read` no lo incluye.
+
+### El "Fotos" de campo está scopeado, no es una lista global
+
+`WORKER` y `FOREMAN` tienen Fotos como eje, y eso parece contradecir el goal —que
+dice que las fotos se leen dentro de la obra— pero no lo hace: **muestra las de su
+proyecto asignado del día, sin selector**, porque no hay entre qué elegir. Es un
+atajo a la obra en la que están, no un agregado entre proyectos.
+
+Si un trabajador tuviera dos asignaciones el mismo día, esa pestaña necesita
+resolver cuál muestra. **Queda fuera de esta versión** y se declara acá para que no
+se resuelva por accidente al implementar: hasta entonces, muestra el proyecto de la
+asignación vigente y, si hubiera más de una, la más reciente.
+
+Al `OWNER` no se le da ese atajo porque para él sí habría entre qué elegir: su
+cartera son varias obras, y una lista global de todas las fotos sueltas es
+exactamente lo que rompe al proyecto como contenedor.
 
 ### Dentro de un proyecto
 
@@ -120,6 +146,9 @@ Por qué cada una, con su fundamento y no por gusto:
 │                                      │
 └──────────────────────────────────────┘
 ```
+
+*Los eventos del mockup son ilustrativos: qué entra al timeline y cómo se ordena es
+el spec de Avance, no este.*
 
 **Avance es un timeline lineal de la obra hasta su cierre.** Es la respuesta a
 "cuántos mandé y qué se hizo", y es además la fuente natural de dos cosas que la
@@ -158,9 +187,18 @@ a pasar: el guard del API verifica cada request al sincronizar.
 - **Icono y texto siempre** en la barra inferior, nunca solo icono: un icono sin
   etiqueta obliga a aprender qué significa, y la promesa es que no haga falta
   entrenamiento.
-- Alto mínimo **64dp**, igual que la acción primaria y por la misma razón.
-- La pestaña activa usa el color de marca; las demás, el atenuado. Como el texto
-  acompaña al icono, el estado no depende solo del color.
+- Alto mínimo **64dp**, igual que la acción primaria y por la misma razón — la
+  convención está en `apps/mobile/CLAUDE.md`.
+- **La pestaña activa NO usa `primary`.** Usa el par
+  `primaryContainer` / `onPrimaryContainer`: fondo tenue en el indicador y el icono
+  con su texto encima. Las inactivas van en `onSurfaceVariant`.
+
+  Esto no es preferencia: el ADR-0009 reserva el naranja saturado para la acción
+  primaria, *"un botón sólido por pantalla"*. Una pestaña activa en `primary`
+  pondría dos naranjas en cualquier pantalla que además tenga un CTA —Proyectos con
+  "＋ Nuevo proyecto", por ejemplo— y entonces ninguno de los dos sería la acción.
+  El par `container` es justamente el tratamiento que ese ADR define para lo que
+  debe destacarse sin competir.
 - Las tabs de proyecto son superiores y desplazables si no entran, nunca apiladas
   en dos filas.
 - Nunca menos de dos ejes ni más de cuatro. Si un rol quedara con uno, no se
@@ -172,6 +210,10 @@ a pasar: el guard del API verifica cada request al sincronizar.
 - [ ] Un `OWNER` **no** tiene pestañas globales de Fotos ni de Horas: solo se llega
       a ellas entrando a un proyecto.
 - [ ] Un `WORKER` ve exactamente dos: Hoy y Fotos, y **no** ve lista de proyectos.
+- [ ] El "Fotos" de un `WORKER` muestra solo las de su proyecto asignado, no un
+      agregado entre proyectos, y no ofrece selector de obra.
+- [ ] La pestaña activa **no** usa `primary`: en una pantalla con acción primaria,
+      el único naranja saturado sigue siendo el botón.
 - [ ] Un `FOREMAN` ve tres, incluida Cuadrilla.
 - [ ] Un `ACCOUNTANT` **no** ve la pestaña de Fotos.
 - [ ] Entrar a un proyecto muestra cuatro tabs: Avance, Fotos, Horas y Detalle.
@@ -179,7 +221,8 @@ a pasar: el guard del API verifica cada request al sincronizar.
 - [ ] Un destino cuyo permiso falta en `membership.permissions` no se dibuja: una
       sesión con permisos recortados a mano muestra menos entradas.
 - [ ] Ningún rol ve menos de dos ni más de cuatro ejes.
-- [ ] Cambiar de pestaña y volver conserva la posición de scroll de la anterior.
+- [ ] Cambiar de pestaña y volver conserva la posición de scroll de la anterior,
+      verificado sobre la lista sintética del placeholder.
 - [ ] Cerrar la app y reabrirla vuelve a la última pestaña usada.
 - [ ] La estructura se arma sin red, desde la sesión guardada.
 - [ ] La barra se ve correcta en claro y en oscuro, y pasa AA en los dos.
@@ -204,8 +247,8 @@ requiere filtrar proyectos por cuadrilla en el API. Se sabrá al usarlo.
 ## ADRs relacionados
 
 - [[../../../adr/0008-arquitectura-flutter/README|ADR-0008]] — go_router
-- [[../../../adr/0009-sistema-de-diseno-y-tokens/README|ADR-0009]] — el color de
-  marca en la pestaña activa, y los 64dp
+- [[../../../adr/0009-sistema-de-diseno-y-tokens/README|ADR-0009]] — la regla del
+  naranja, que es la que impide pintar la pestaña activa con `primary`
 
 ---
 
@@ -215,3 +258,4 @@ requiere filtrar proyectos por cuadrilla en el API. Se sabrá al usarlo.
 |-------|--------|------|
 | 2026-08-08 | borrador | Creado como "navegación por rol" |
 | 2026-08-08 | borrador | Reescrito: el proyecto pasa a ser el contenedor y Fotos/Horas dejan de ser ejes globales. Revisado con `spec-reviewer`, que detectó que `WORKER` no tiene `time.read`; la tabla de roles duplicada se eliminó llevando los permisos al contrato. |
+| 2026-08-08 | borrador | Segunda revisión, cuatro correcciones: el "Fotos" de campo queda declarado como scopeado al proyecto asignado; la falta de cartera del `FOREMAN` pasa de "lo dice el dominio" a decisión de producto; la pestaña activa usa `primaryContainer` y no `primary`, que habría roto la regla del naranja del ADR-0009; y los placeholders llevan lista sintética para poder verificar la preservación de estado. |

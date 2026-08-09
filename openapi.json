@@ -6687,6 +6687,186 @@
           "ClientPortal"
         ]
       }
+    },
+    "/sync": {
+      "get": {
+        "operationId": "Sync_pull",
+        "parameters": [
+          {
+            "name": "since",
+            "required": false,
+            "in": "query",
+            "description": "Cursor: `updated_at` del último registro traído. Sin él, trae todo.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPullResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Sync"
+        ]
+      },
+      "post": {
+        "operationId": "Sync_push",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPushDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPushResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Sync"
+        ]
+      }
     }
   },
   "info": {
@@ -9820,6 +10000,183 @@
         },
         "required": [
           "offerId"
+        ]
+      },
+      "SyncPullResponseDto": {
+        "type": "object",
+        "properties": {
+          "serverTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Cursor para el próximo pull. Lo da el servidor: el reloj del dispositivo no es confiable."
+          },
+          "customers": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "mediaAssets": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "timeEntries": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "deleted": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Ids borrados desde el cursor, por recurso."
+          }
+        },
+        "required": [
+          "serverTime",
+          "customers",
+          "sites",
+          "projects",
+          "assignments",
+          "mediaAssets",
+          "timeEntries",
+          "deleted"
+        ]
+      },
+      "SyncOperationDto": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "description": "UUIDv7 generado en el dispositivo. Es la clave de idempotencia del lote.",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "customer.create",
+              "project.create",
+              "media.register",
+              "timeEntry.clockIn",
+              "timeEntry.clockOut"
+            ]
+          },
+          "targetId": {
+            "type": "string",
+            "description": "Sobre qué registro opera. En los `create` coincide con el id del recurso.",
+            "format": "uuid"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "description": "Cuándo lo hizo el usuario. Ordena el lote y viaja como device_recorded_at."
+          }
+        },
+        "required": [
+          "clientId",
+          "type",
+          "targetId",
+          "payload",
+          "occurredAt"
+        ]
+      },
+      "SyncPushDto": {
+        "type": "object",
+        "properties": {
+          "operations": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncOperationDto"
+            }
+          }
+        },
+        "required": [
+          "operations"
+        ]
+      },
+      "SyncResultDto": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "duplicate",
+              "failed"
+            ],
+            "type": "string",
+            "description": "`duplicate` es éxito: la operación ya se había aplicado en un intento anterior."
+          },
+          "resourceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "clientId",
+          "status",
+          "resourceId",
+          "code",
+          "message"
+        ]
+      },
+      "SyncPushResponseDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncResultDto"
+            }
+          },
+          "failed": {
+            "type": "number",
+            "description": "Cuántas fallaron. Si es 0, la bandeja se puede vaciar entera."
+          }
+        },
+        "required": [
+          "results",
+          "failed"
         ]
       },
       "FieldErrorDto": {

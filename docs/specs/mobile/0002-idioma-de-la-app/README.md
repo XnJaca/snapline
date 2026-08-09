@@ -57,8 +57,9 @@ credenciales antes de hablarle en su idioma.
 - Propagar el idioma a la cuenta con `PATCH /auth/me/locale`, **para que las
   notificaciones push salgan en el idioma correcto**. Ver "Precedencia": no es
   para sincronizar la interfaz entre dispositivos.
-- Comparar el idioma local contra `user.locale` al iniciar sesión, y propagar si
-  difieren. Es un cambio al flujo del [[../0001-login-movil/README|SPEC-0001]].
+- Comparar el idioma local contra `user.locale` **cada vez que llega un
+  `AuthResultDto`** —login y refresh— y propagar si difieren. Es un cambio al flujo
+  del [[../0001-login-movil/README|SPEC-0001]]; ver "Qué de SPEC-0001 queda obsoleto".
 
 ### No entra
 
@@ -92,20 +93,52 @@ cuenta se entere, y eso no afecta cómo se ve la app en este dispositivo.
 
 La bandeja de salida del ADR-0008 **todavía no existe**, así que este spec no puede
 apoyarse en ella. En vez de prometer un reintento automático que nadie dispara, el
-mecanismo es explícito y acotado:
+mecanismo es explícito:
 
-**Cada vez que se inicia sesión se compara el idioma local contra el `user.locale`
-recibido, y si difieren se manda el `PATCH`.** Eso significa agregar esa comparación
-al flujo de login del [[../0001-login-movil/README|SPEC-0001]], que ya está
-implementado.
+**Cada vez que llega un `AuthResultDto` se compara el idioma local contra su
+`user.locale`, y si difieren se manda el `PATCH`.**
 
-Consecuencia aceptada: si alguien cambia el idioma sin red y no vuelve a iniciar
-sesión en semanas, sus push llegan en el idioma viejo durante ese tiempo. Es
-vivible porque el efecto es sobre notificaciones, no sobre la app, y porque el
-único caso que lo produce es cambiar de idioma justo sin cobertura.
+El disparador es la respuesta, no la pantalla: `AuthResultDto` lo devuelven **tanto
+`POST /auth/login` como `POST /auth/refresh`**, y los dos traen `user.locale`. Eso
+significa que la comparación corre también en la renovación silenciosa del
+interceptor, sin que el usuario haga nada.
+
+**Atarlo solo al login interactivo no habría servido.** `refresh()` emite un
+refresh token nuevo de 30 días en cada llamada —rotación deslizante, verificado en
+`auth.service.ts`—, así que un trabajador que abre la app con cierta regularidad
+puede **no volver a ver la pantalla de login nunca**. La sincronización habría
+quedado esperando un evento que no ocurre.
+
+Consecuencia aceptada: si alguien cambia el idioma sin red, sus push salen en el
+idioma viejo hasta la primera vez que la app hable con el servidor — en la práctica,
+hasta que recupere señal y venza el access token, o sea a lo sumo una hora de uso
+con red. Es vivible: el efecto es sobre notificaciones, no sobre la app.
 
 Cuando exista la bandeja de salida, esto pasa a ser una mutación encolada más y la
-comparación en el login deja de hacer falta.
+comparación deja de hacer falta.
+
+### Qué de SPEC-0001 queda obsoleto
+
+Este spec **cambia el comportamiento que el
+[[../0001-login-movil/README|SPEC-0001]] ya implementó y verificó**.
+
+Eso **no lo reabre**: el login funciona y su goal es cierto mientras el selector de
+idioma no exista. Lo que corresponde es **anotar en su historial qué quedó
+modificado y por cuál spec**, en el mismo cambio que implemente esta feature — no
+después. Un spec implementado con la nota de qué lo cambió sigue siendo verdad;
+uno devuelto a "en implementación" sería mentira.
+
+Lo que hay que anotar:
+
+| En SPEC-0001 | Qué pasa |
+|---|---|
+| `goal`: *"la app queda en el idioma de su usuario"* | Pasa a ser el idioma que el usuario **eligió**, que puede no ser el de su cuenta. |
+| Diagrama: `200 → guarda tokens → aplica user.locale → entra` | El paso pasa a ser: compara `user.locale` contra la elección local; si difieren, **propaga la local al servidor**. |
+| Criterio marcado: *"Un usuario con `locale: en` ve la app en inglés"* | Solo vale si esa persona no eligió otro idioma en el picker. Se reescribe como caso de instalación nueva sin elección previa. |
+
+Sin esta reconciliación, `effectiveLocaleProvider` queda con una rama muerta —la
+que lee `user.locale`— y un criterio de aceptación marcado como cumplido que dejó
+de ser cierto.
 
 ## Precedencia
 
@@ -164,6 +197,11 @@ Authorization: Bearer <token>
 
 - Permiso `profile.write`, que tienen **todos** los roles: cada persona cambia lo
   suyo.
+- **Sin clave de idempotencia, a propósito.** La regla 19 la exige "sin excepción"
+  para mutaciones desde móvil, pero apunta a los `POST` que crean: repetirlos
+  duplica. Este `PATCH` fija un valor, así que mandarlo tres veces deja lo mismo
+  que mandarlo una. Si alguna vez el endpoint pasa a hacer algo más que fijar el
+  campo, vuelve a hacer falta.
 - **El id sale del token**, nunca del cuerpo. No hay forma de cambiarle el idioma
   a otra persona.
 - `locale` fuera de `en` / `es` responde `400` con el detalle del campo.
@@ -214,6 +252,12 @@ opciones.
       app y no se muestra ningún error.
 - [ ] La elección del usuario gana sobre el `locale` de la cuenta al iniciar sesión,
       y además la corrige: tras entrar, la cuenta queda con el idioma elegido.
+- [ ] La comparación corre también en el **refresh silencioso**: con un access token
+      vencido y un `user.locale` distinto del elegido, la cuenta se corrige sin que
+      el usuario pase por la pantalla de login.
+- [ ] Los tres puntos de SPEC-0001 listados en "Qué de SPEC-0001 queda obsoleto"
+      quedaron anotados en su historial, con link a este spec, en el mismo cambio.
+      **Sin devolverlo a "en implementación".**
 - [ ] Las claves del selector **no se traducen**: "Español" y "English" se leen
       igual con la app en cualquiera de los dos idiomas.
 - [ ] `PATCH /auth/me/locale` con un valor fuera del enum responde `400`.
@@ -248,3 +292,5 @@ configurado en un idioma que la persona no lee.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-08 | borrador | Creado. El endpoint `PATCH /auth/me/locale` ya está implementado y verificado en `apps/api`. |
+| 2026-08-08 | borrador | Primera revisión: contradicción de precedencia y reintento sin mecanismo. Corregido declarando que `user.locale` no decide la UI y que el endpoint existe para las push. |
+| 2026-08-08 | borrador | Segunda revisión: las dos correcciones habían movido el problema, no resuelto. El disparador pasa a ser la llegada de cualquier `AuthResultDto` —login **y** refresh— porque `refresh()` rota el token 30 días y la pantalla de login puede no volver nunca. Y se agregó qué de SPEC-0001 queda obsoleto. |

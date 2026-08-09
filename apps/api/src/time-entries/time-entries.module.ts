@@ -11,5 +11,6 @@ import { TimeEntriesController } from './time-entries.controller';
   imports: [TypeOrmModule.forFeature([TimeEntry, TimeEntryEdit, Project, Membership])],
   controllers: [TimeEntriesController],
   providers: [TimeEntriesService],
+  exports: [TimeEntriesService],
 })
 export class TimeEntriesModule {}

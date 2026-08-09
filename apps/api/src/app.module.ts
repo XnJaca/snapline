@@ -22,6 +22,7 @@ import { BillingModule } from './billing/billing.module';
 import { ReportsModule } from './reports/reports.module';
 import { PublishingModule } from './publishing/publishing.module';
 import { ClientPortalModule } from './client-portal/client-portal.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ClientPortalModule } from './client-portal/client-portal.module';
     ReportsModule,
     PublishingModule,
     ClientPortalModule,
+    SyncModule,
   ],
   providers: [
     // El throttler va primero: cortar antes de tocar la base es el punto.

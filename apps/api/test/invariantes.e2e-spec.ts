@@ -150,6 +150,12 @@ describe('invariantes del dominio (e2e)', () => {
 
       expect(res.body.flags).toContain('TIMESTAMP_OUT_OF_RANGE');
       expect(new Date(res.body.clockInAt).getFullYear()).toBeLessThan(2030);
+
+      // Cerrarlo: un registro abierto bloquea el siguiente clock-in y acopla
+      // este bloque con los que vienen después.
+      await request(app.getHttpServer())
+        .post(`/api/time-entries/${res.body.id}/clock-out`).set('Authorization', `Bearer ${workerA}`)
+        .send({ deviceRecordedAt: new Date().toISOString() }).expect(200);
     });
 
     it('nadie aprueba sus propias horas', async () => {
@@ -256,6 +262,79 @@ describe('invariantes del dominio (e2e)', () => {
         .send({ amountCents: 99_999_999, method: 'CASH', receivedAt: new Date().toISOString() })
         .expect(400);
       expect(res.body.code).toBe('PAYMENT_EXCEEDS_BALANCE');
+    });
+  });
+
+  // ------------------------------------------------------ sincronización
+
+  describe('sincronización offline', () => {
+    const uid = () => crypto.randomUUID();
+    const hace = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+
+    it('sube una jornada entera en una llamada, en el orden en que ocurrió', async () => {
+      const entry = uid();
+      const res = await request(app.getHttpServer())
+        .post('/api/sync').set('Authorization', `Bearer ${workerA}`)
+        .send({ operations: [
+          // A propósito desordenadas: el servidor las ordena por occurredAt.
+          { clientId: uid(), type: 'timeEntry.clockOut', targetId: entry, occurredAt: hace(10),
+            payload: { lat: 39.2904, lng: -76.6122, breakMinutes: 30 } },
+          { clientId: uid(), type: 'timeEntry.clockIn', targetId: entry, occurredAt: hace(480),
+            payload: { projectId: a.projectId, lat: 39.2904, lng: -76.6122 } },
+          { clientId: uid(), type: 'media.register', targetId: uid(), occurredAt: hace(300),
+            payload: { projectId: a.projectId, kind: 'PHOTO', mime: 'image/jpeg', checksum: uid() } },
+        ] })
+        .expect(200);
+
+      expect(res.body.failed).toBe(0);
+      expect(res.body.results.every((r: { status: string }) => r.status === 'applied')).toBe(true);
+    });
+
+    it('reintentar el mismo lote no duplica nada', async () => {
+      const entry = uid();
+      const lote = { operations: [
+        { clientId: uid(), type: 'timeEntry.clockIn', targetId: entry, occurredAt: hace(200),
+          payload: { projectId: a.projectId } },
+        { clientId: uid(), type: 'timeEntry.clockOut', targetId: entry, occurredAt: hace(20),
+          payload: {} },
+      ] };
+
+      await request(app.getHttpServer())
+        .post('/api/sync').set('Authorization', `Bearer ${workerA}`).send(lote).expect(200);
+      const dos = await request(app.getHttpServer())
+        .post('/api/sync').set('Authorization', `Bearer ${workerA}`).send(lote).expect(200);
+
+      expect(dos.body.failed).toBe(0);
+      expect(dos.body.results.every((r: { status: string }) => r.status === 'duplicate')).toBe(true);
+    });
+
+    it('una operación inválida no tira abajo el resto del lote', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/sync').set('Authorization', `Bearer ${workerA}`)
+        .send({ operations: [
+          { clientId: uid(), type: 'media.register', targetId: uid(), occurredAt: hace(5),
+            payload: { projectId: a.projectId, kind: 'PHOTO', mime: 'image/jpeg', checksum: uid() } },
+          { clientId: uid(), type: 'media.register', targetId: uid(), occurredAt: hace(4),
+            payload: { projectId: a.projectId, kind: 'PHOTO' } },   // sin mime ni checksum
+        ] })
+        .expect(200);
+
+      expect(res.body.failed).toBe(1);
+      expect(res.body.results[0].status).toBe('applied');
+      expect(res.body.results[1].code).toBe('VALIDATION_FAILED');
+    });
+
+    it('el pull con cursor solo trae lo nuevo', async () => {
+      const uno = await request(app.getHttpServer())
+        .get('/api/sync').set('Authorization', `Bearer ${ownerA}`).expect(200);
+      expect(uno.body.serverTime).toBeDefined();
+
+      const dos = await request(app.getHttpServer())
+        .get(`/api/sync?since=${encodeURIComponent(uno.body.serverTime)}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      expect(dos.body.customers).toHaveLength(0);
+      expect(dos.body.timeEntries).toHaveLength(0);
     });
   });
 
