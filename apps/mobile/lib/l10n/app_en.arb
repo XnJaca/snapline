@@ -40,14 +40,24 @@
   "authSignOut": "Sign out",
 
   "accountTitle": "Account",
-  "accountSignedInAs": "Signed in as {name}",
-  "@accountSignedInAs": {
-    "placeholders": { "name": { "type": "String" } }
+  "accountCompanyName": "Name",
+  "accountSectionCompany": "Company",
+  "accountSectionContact": "Contact",
+  "accountSectionAppearance": "Appearance",
+  "accountRole": "Role",
+  "accountEmail": "Email",
+  "accountPhone": "Phone",
+  "accountNoEmail": "Not set",
+  "accountTheme": "Theme",
+
+  "roleOwner": "Owner",
+  "@roleOwner": {
+    "description": "Los roles de membresía. El cliente final no es un rol: entra por token."
   },
-  "accountCompany": "Company: {company}",
-  "@accountCompany": {
-    "placeholders": { "company": { "type": "String" } }
-  },
+  "roleAdmin": "Administrator",
+  "roleForeman": "Foreman",
+  "roleWorker": "Worker",
+  "roleAccountant": "Accountant",
 
   "languageSpanish": "Español",
   "@languageSpanish": {
@@ -61,7 +71,6 @@
 
   "navToday": "Today",
   "navPhotos": "Photos",
-  "navMyHours": "My hours",
   "navHours": "Hours",
   "navCrew": "Crew",
   "navProjects": "Projects",
@@ -85,8 +94,36 @@
   "@projectUntitled": {
     "description": "Título cuando se llega a un proyecto que no está en local."
   },
+
+  "projectStatusLead": "Lead",
+  "@projectStatusLead": {
+    "description": "Los siete estados internos de docs/domain/proyecto.md. El cliente ve un mapeo de tres, que no es este."
+  },
+  "projectStatusEstimated": "Estimated",
+  "projectStatusScheduled": "Scheduled",
   "projectStatusInProgress": "In progress",
+  "projectStatusOnHold": "On hold",
   "projectStatusCompleted": "Completed",
+  "projectStatusCancelled": "Cancelled",
+
+  "projectsActiveTitle": "Active work",
+  "@projectsActiveTitle": {
+    "description": "Encabezado de la lista principal: las obras vivas, ni terminadas ni canceladas."
+  },
+  "projectsViewAll": "View all",
+  "projectsAllTitle": "All projects",
+  "projectsFilterAll": "All",
+  "projectsEmptyActive": "No active work right now",
+  "projectsEmptyFiltered": "No projects with this status",
+  "projectsCount": "{count, plural, =0{No projects} =1{1 project} other{{count} projects}}",
+  "@projectsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "projectPhotoCount": "{count, plural, =0{No photos} =1{1 photo} other{{count} photos}}",
+  "@projectPhotoCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "projectNoCrew": "No crew assigned",
 
   "comingSoon": "Coming soon",
   "@comingSoon": {
@@ -98,7 +135,6 @@
     "description": "Fila de la lista sintética del placeholder. Existe para poder verificar que el scroll se conserva al cambiar de pestaña.",
     "placeholders": { "index": { "type": "int" } }
   },
-  "placeholderProject": "Sample project {index}",
   "@placeholderProject": {
     "placeholders": { "index": { "type": "int" } }
   }

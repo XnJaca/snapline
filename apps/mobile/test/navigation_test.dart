@@ -7,6 +7,7 @@ import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/navigation/last_destination_store.dart';
 import 'package:snapline/core/session/session_storage.dart';
 import 'package:snapline/core/theme/app_theme.dart';
+import 'package:snapline/features/projects/projects_screen.dart';
 import 'package:snapline/main.dart';
 
 import 'support/fakes.dart';
@@ -141,6 +142,7 @@ void main() {
   });
 
   group('el proyecto es el contenedor', () {
+    // Los nombres de obra son datos, no interfaz: no pasan por i18n.
     Future<void> abrirProyecto(WidgetTester tester, String nombre) async {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
@@ -151,7 +153,7 @@ void main() {
     testWidgets('entrar a una obra muestra Avance, Fotos, Horas y Detalle', (
       tester,
     ) async {
-      await abrirProyecto(tester, 'Obra de ejemplo 1');
+      await abrirProyecto(tester, 'Kitchen remodel');
 
       expect(find.byType(TabBar), findsOneWidget);
       for (final tab in ['Avance', 'Fotos', 'Horas', 'Detalle']) {
@@ -159,11 +161,31 @@ void main() {
       }
     });
 
-    // El timeline no cambia de forma: simplemente termina.
+    // El timeline no cambia de forma: simplemente termina. Una obra terminada
+    // no está en la lista principal, así que se llega por "ver todas".
     testWidgets('un proyecto terminado muestra las mismas cuatro tabs', (
       tester,
     ) async {
-      await abrirProyecto(tester, 'Obra de ejemplo 4');
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Ver todas'));
+      await tester.pumpAndSettle();
+      final obra = find.text('Front porch repair');
+      await tester.scrollUntilVisible(
+        obra,
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(AllProjectsScreen),
+              matching: find.byType(Scrollable),
+            )
+            .last,
+      );
+      await tester.ensureVisible(obra);
+      await tester.pumpAndSettle();
+      await tester.tap(obra);
+      await tester.pumpAndSettle();
 
       expect(find.text('Terminado'), findsOneWidget);
       for (final tab in ['Avance', 'Fotos', 'Horas', 'Detalle']) {
@@ -174,10 +196,155 @@ void main() {
     testWidgets('las tabs se desplazan, nunca se apilan en dos filas', (
       tester,
     ) async {
-      await abrirProyecto(tester, 'Obra de ejemplo 1');
+      await abrirProyecto(tester, 'Kitchen remodel');
 
       final barra = tester.widget<TabBar>(find.byType(TabBar));
       expect(barra.isScrollable, isTrue);
+    });
+
+    // De qué obra se trata tiene que quedar a la vista al cambiar de pestaña.
+    testWidgets('la cabecera se queda al cambiar de tab', (tester) async {
+      await abrirProyecto(tester, 'Kitchen remodel');
+
+      expect(find.text('Martínez family'), findsOneWidget);
+      await tester.tap(find.widgetWithText(Tab, 'Horas'));
+      await tester.pumpAndSettle();
+      expect(find.text('Martínez family'), findsOneWidget);
+    });
+  });
+
+  group('la cartera muestra lo vivo', () {
+    testWidgets('la lista principal deja fuera lo terminado y lo cancelado', (
+      tester,
+    ) async {
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kitchen remodel'), findsOneWidget);
+      expect(find.text('Front porch repair'), findsNothing);
+      expect(find.text('Window replacement'), findsNothing);
+    });
+
+    // "Ver todas" se abre con `push`, así que la cartera sigue en el árbol y
+    // sus scrollables también: hay que buscar dentro de la pantalla nueva.
+    Finder scrollablesDeTodas() => find.descendant(
+      of: find.byType(AllProjectsScreen),
+      matching: find.byType(Scrollable),
+    );
+
+    Future<void> filtrar(WidgetTester tester, String estado) async {
+      final chip = find.widgetWithText(FilterChip, estado);
+      // El carrusel de filtros virtualiza: el chip no existe hasta que se
+      // desplaza hasta él, y queda pegado al borde si no se centra después.
+      await tester.scrollUntilVisible(
+        chip,
+        200,
+        scrollable: scrollablesDeTodas().first,
+      );
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    /// Abre "ver todas" y deja seleccionado el filtro pedido.
+    Future<void> verTodas(WidgetTester tester, {String? filtro}) async {
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ver todas'));
+      await tester.pumpAndSettle();
+
+      if (filtro != null) await filtrar(tester, filtro);
+    }
+
+    testWidgets('"ver todas" sí las muestra', (tester) async {
+      await verTodas(tester);
+      final lista = scrollablesDeTodas().last;
+
+      await tester.scrollUntilVisible(
+        find.text('Front porch repair'),
+        300,
+        scrollable: lista,
+      );
+      expect(find.text('Front porch repair'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Window replacement'),
+        300,
+        scrollable: lista,
+      );
+      expect(find.text('Window replacement'), findsOneWidget);
+    });
+
+    testWidgets('filtrar por estado recorta la lista', (tester) async {
+      await verTodas(tester, filtro: 'Cancelado');
+
+      expect(find.text('Window replacement'), findsOneWidget);
+      expect(find.text('Kitchen remodel'), findsNothing);
+    });
+
+    testWidgets('cambiar de filtro cambia lo que se lista', (tester) async {
+      await verTodas(tester, filtro: 'Prospecto');
+      expect(find.text('Garage conversion'), findsOneWidget);
+
+      await filtrar(tester, 'Estimado');
+      expect(find.text('Garage conversion'), findsNothing);
+      expect(find.text('Siding replacement'), findsOneWidget);
+    });
+  });
+
+  group('la cuenta', () {
+    Future<void> abrirCuenta(WidgetTester tester) async {
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('es una pantalla, no una hoja', (tester) async {
+      await abrirCuenta(tester);
+
+      expect(find.widgetWithText(AppBar, 'Cuenta'), findsOneWidget);
+      expect(find.text('William Ferman'), findsOneWidget);
+      expect(find.text('Professional Construction LLC'), findsOneWidget);
+      expect(find.text('Dueño'), findsWidgets);
+
+      // Salir vive al final, que es donde va una acción destructiva.
+      await tester.scrollUntilVisible(find.text('Cerrar sesión'), 200);
+      expect(find.text('Cerrar sesión'), findsOneWidget);
+    });
+
+    // Salir dispara el redirect del router, que reconstruye el árbol entero.
+    // Hacerlo sin cerrar antes esta pantalla rompía con `setState` durante el
+    // build, y solo se veía corriendo la app de verdad.
+    testWidgets('salir vuelve al login sin romper el árbol', (tester) async {
+      await abrirCuenta(tester);
+
+      await tester.scrollUntilVisible(find.byIcon(Icons.logout), 200);
+      await tester.tap(find.byIcon(Icons.logout));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(TextFormField), findsNWidgets(2));
+      expect(find.byType(NavigationBar), findsNothing);
+    });
+
+    // No es cosmético: la misma app se usa en un techo con sol directo y en un
+    // sótano sin luz.
+    testWidgets('el tema se elige a mano', (tester) async {
+      await abrirCuenta(tester);
+
+      await tester.scrollUntilVisible(
+        find.byType(SegmentedButton<ThemeMode>),
+        200,
+      );
+      await tester.tap(find.text('Oscuro'));
+      await tester.pumpAndSettle();
+
+      final selector = tester.widget<SegmentedButton<ThemeMode>>(
+        find.byType(SegmentedButton<ThemeMode>),
+      );
+      expect(selector.selected, {ThemeMode.dark});
     });
   });
 
@@ -348,7 +515,7 @@ void main() {
     testWidgets('las tabs de la obra también', (tester) async {
       await tester.pumpWidget(app(locale: AuthUserDtoLocale.en));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Sample project 1'));
+      await tester.tap(find.text('Kitchen remodel'));
       await tester.pumpAndSettle();
 
       for (final tab in ['Progress', 'Photos', 'Hours', 'Details']) {

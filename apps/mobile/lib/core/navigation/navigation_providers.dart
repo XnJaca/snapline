@@ -37,10 +37,15 @@ final lastDestinationProvider =
 /// La validación importa porque el teléfono es de la empresa y lo usa más de
 /// una persona: William deja abierto Facturación, entra Carlos y esa pestaña ya
 /// no existe para él.
-final initialDestinationProvider = Provider<AppDestination?>((ref) {
-  final destinos = ref.watch(destinationsProvider);
-  if (destinos.isEmpty) return null;
-
-  final ultima = ref.watch(lastDestinationProvider).value;
-  return destinos.contains(ultima) ? ultima : destinos.first;
-});
+///
+/// Es una función y no un provider derivado a propósito. El router la llama
+/// desde su `redirect`, que corre en pleno build; un provider que observe a
+/// otro se invalida en cascada justo ahí y termina programando un refresh del
+/// scope en medio del build.
+AppDestination? initialDestination({
+  required List<AppDestination> destinations,
+  required AppDestination? last,
+}) {
+  if (destinations.isEmpty) return null;
+  return destinations.contains(last) ? last : destinations.first;
+}

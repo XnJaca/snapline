@@ -60,9 +60,9 @@ void main() {
       expect(find.widgetWithText(AppBar, 'Projects'), findsOneWidget);
     });
 
-    // Quién está adentro dejó de estar en una pantalla y pasó al menú de
-    // cuenta, que es de donde ahora se sale.
-    testWidgets('el menú de cuenta muestra la persona y su empresa', (
+    // Quién está adentro dejó de estar en la pantalla de inicio y pasó a la
+    // pantalla de cuenta, que es de donde ahora se sale.
+    testWidgets('la pantalla de cuenta muestra la persona y su empresa', (
       tester,
     ) async {
       await tester.pumpWidget(_app(FakeSessionStorage(buildSession())));
@@ -76,6 +76,8 @@ void main() {
         find.textContaining('Professional Construction LLC'),
         findsOneWidget,
       );
+
+      await tester.scrollUntilVisible(find.text('Cerrar sesión'), 200);
       expect(find.text('Cerrar sesión'), findsOneWidget);
     });
   });

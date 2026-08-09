@@ -15,6 +15,23 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-08-09
+
+- **La cartera muestra solo obras vivas.** Lo terminado y lo cancelado se
+  consulta, no se vigila: sale de la pantalla principal y vive detrás de "ver
+  todas", con filtro por los siete estados del dominio. "Activo" no existe como
+  estado — es todo lo que no está `COMPLETED` ni `CANCELLED`.
+- **La cuenta es una pantalla, no una hoja**, con el selector de tema adentro.
+  Ahí van a entrar las configuraciones que falten cuando tengan su spec.
+- **Tres fugas de naranja que solo se vieron en captura**: Material pinta con
+  `primary` los `TextButton`, los iconos de `FilterChip` y el segmento activo de
+  un `SegmentedButton`. Los tres quedaban compitiendo con la acción primaria.
+  Corregido en el tema, que es donde tenía que estar.
+- **Decidido: offline-first de verdad, sin parche.** Proyectos y Clientes van a
+  leer de Drift y no del API directo, así que la capa local (`lib/data/`) se
+  construye antes que las pantallas. Sin deuda registrada porque no se posterga
+  nada.
+
 ## 2026-08-08 — sesión de móvil
 
 - **La app tiene esqueleto** ([[specs/mobile/0003-arquitectura-de-navegacion/README|SPEC-0003]]):

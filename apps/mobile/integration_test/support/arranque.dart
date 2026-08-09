@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:snapline/features/account/account_screen.dart';
 import 'package:snapline/main.dart';
 
 const password = 'Snapline123!';
@@ -34,8 +35,28 @@ Future<void> entrar(WidgetTester tester, String identificador) async {
   await tester.pumpAndSettle(const Duration(seconds: 5));
 }
 
-/// Quién está adentro vive en el menú de cuenta, que es de donde se sale.
+/// Quién está adentro vive en la pantalla de cuenta, que es de donde se sale.
 Future<void> abrirCuenta(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
   await tester.pumpAndSettle();
+}
+
+/// Salir vive al final de la pantalla de cuenta.
+///
+/// La cuenta se abre con `push`, así que la pantalla de atrás sigue en el árbol
+/// con su propio scroll: hay que decirle a `scrollUntilVisible` cuál usar, o
+/// desplaza la de abajo y nunca encuentra el botón.
+Future<void> cerrarSesion(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.byIcon(Icons.logout),
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byType(AccountScreen),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.tap(find.byIcon(Icons.logout));
+  await tester.pumpAndSettle(const Duration(seconds: 3));
 }

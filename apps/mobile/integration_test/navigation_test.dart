@@ -43,7 +43,7 @@ void main() {
     await arrancarLimpio(tester);
     await entrar(tester, 'william@pcdmv.com');
 
-    await tester.tap(find.text('Sample project 1'));
+    await tester.tap(find.text('Kitchen remodel'));
     await tester.pumpAndSettle();
 
     for (final tab in ['Progress', 'Photos', 'Hours', 'Details']) {

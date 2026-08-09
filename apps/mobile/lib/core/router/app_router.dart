@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/account/account_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/dev/theme_preview_screen.dart';
 import '../../features/projects/project_screen.dart';
@@ -25,13 +28,38 @@ abstract final class Routes {
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Rutas que existen con sesión pero no pertenecen a ningún eje de la barra.
+/// Sin esta lista el redirect las trata como desconocidas y las devuelve al
+/// primer destino.
+const _sinEje = {AccountScreen.route};
+
 /// Vuelve a evaluar las rutas cada vez que cambia la sesión o se termina de
 /// leer la última pestaña, así entrar y salir no necesitan que ninguna pantalla
 /// navegue a mano.
+///
+/// La notificación se difiere un microtask: el cambio de sesión puede llegar
+/// mientras se está construyendo el árbol —cerrar sesión desde una pantalla que
+/// justo se desmonta— y avisarle a `GoRouter` en ese momento lo hace reconstruir
+/// en medio de un build.
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
-    ref.listen(sessionControllerProvider, (_, _) => notifyListeners());
-    ref.listen(lastDestinationProvider, (_, _) => notifyListeners());
+    ref.listen(sessionControllerProvider, (_, _) => _notificarDiferido());
+    ref.listen(lastDestinationProvider, (_, _) => _notificarDiferido());
+  }
+
+  bool _dispuesto = false;
+
+  void _notificarDiferido() {
+    scheduleMicrotask(() {
+      if (_dispuesto) return;
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _dispuesto = true;
+    super.dispose();
   }
 }
 
@@ -63,7 +91,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return ubicacion == Routes.login ? null : Routes.login;
       }
 
-      final inicial = ref.read(initialDestinationProvider);
+      // Directo de la sesión, con funciones puras: leer un provider derivado
+      // desde acá lo recalcula en pleno build y termina en un refresh del
+      // scope a destiempo.
+      final permitidos = destinationsFor(session.value!.membership);
+      final inicial = initialDestination(
+        destinations: permitidos,
+        last: ultima.value,
+      );
       // Sin ningún eje en pie igual hay que aterrizar en una rama válida:
       // `RoleShell` explica lo que pasa y deja cerrar sesión.
       final entrada = (inicial ?? AppDestination.values.first).route;
@@ -72,11 +107,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return entrada;
       }
 
+      // Pantallas que cuelgan de la sesión pero no de ningún eje.
+      if (_sinEje.contains(ubicacion)) return null;
+
       final destino = AppDestination.forLocation(ubicacion);
       if (destino == null) return entrada;
 
       // Un eje que este rol no tiene no se alcanza ni por enlace directo.
-      final permitidos = ref.read(destinationsProvider);
       if (permitidos.isNotEmpty && !permitidos.contains(destino)) {
         return entrada;
       }
@@ -97,6 +134,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.themePreview,
         name: 'themePreview',
         builder: (context, state) => const ThemePreviewScreen(),
+      ),
+      GoRoute(
+        path: AccountScreen.route,
+        name: 'account',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AccountScreen(),
+      ),
+      // Antes que `/projects/:projectId`, o "all" entraría como un id de obra.
+      GoRoute(
+        path: AllProjectsScreen.route,
+        name: 'allProjects',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AllProjectsScreen(),
       ),
       GoRoute(
         path: Routes.project,

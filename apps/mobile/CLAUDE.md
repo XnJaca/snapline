@@ -155,9 +155,24 @@ las ramas del `StatefulShellRoute`, en el mismo commit.
   destinos del rol al restaurarla — el teléfono es de la empresa y lo usa más de
   una persona.
 
-Las pantallas de eje usan `AppScaffold`, que ya trae la barra y el menú de
+Las pantallas de eje usan `AppScaffold`, que ya trae la barra y el botón de
 cuenta. `PlaceholderScreen` es andamiaje: cada una se reemplaza cuando su spec
 llegue.
+
+**Lo que se abre con `push` deja la pantalla anterior en el árbol**, con su
+propio scroll. En un test, `scrollUntilVisible` sin `scrollable:` toma el
+primero que encuentra —el de atrás— y desplaza la pantalla equivocada. Hay que
+acotarlo con `find.descendant(of: find.byType(LaPantalla), ...)`. Y si el
+objetivo vive en una lista horizontal virtualizada, después del scroll va un
+`ensureVisible`, o el toque cae en el borde y no pasa nada.
+
+### Dónde puede colarse el naranja sin que se note
+
+Material pinta varios controles con `primary` por defecto, y cada uno de esos es
+un naranja saturado que compite con la acción de la pantalla. Ya están cubiertos
+en `AppTheme` — `TextButton`, `Chip`, `SegmentedButton`, `NavigationBar` y
+`TabBar`—, pero **un control nuevo probablemente traiga el suyo**: se revisa en
+captura, no leyendo el código.
 
 ### Tipografía y tamaño de toque
 

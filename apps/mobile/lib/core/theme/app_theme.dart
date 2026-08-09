@@ -98,9 +98,12 @@ abstract final class AppTheme {
       fontFamily: Tokens.fontFamily,
       textTheme: _textTheme,
       filledButtonTheme: _primaryActionTheme,
+      textButtonTheme: _textButtonTheme(scheme),
       inputDecorationTheme: _inputTheme(scheme),
       navigationBarTheme: _navigationBarTheme(scheme),
       tabBarTheme: _tabBarTheme(scheme),
+      chipTheme: _chipTheme(scheme),
+      segmentedButtonTheme: _segmentedButtonTheme(scheme),
       extensions: [const AppSpacing.standard(), status],
     );
   }
@@ -161,6 +164,66 @@ abstract final class AppTheme {
         fontFamily: Tokens.fontFamily,
         fontSize: Tokens.fontSizeCaption,
         fontWeight: Tokens.weightRegular,
+      ),
+    );
+  }
+
+  /// Material pinta los `TextButton` con `primary`. Acá eso pondría un naranja
+  /// saturado al lado de cada lista, compitiendo con la acción de la pantalla:
+  /// un botón de texto es siempre secundario, y se lee por su forma.
+  static TextButtonThemeData _textButtonTheme(ColorScheme scheme) {
+    return TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: scheme.onSurface,
+        minimumSize: Size(0, Tokens.touchTargetMin),
+        textStyle: const TextStyle(
+          fontFamily: Tokens.fontFamily,
+          fontSize: Tokens.fontSizeBody,
+          fontWeight: Tokens.weightMedium,
+        ),
+      ),
+    );
+  }
+
+  /// Un filtro seleccionado recibe el mismo trato que una pestaña activa. Sin
+  /// esto Material lo pinta con `secondaryContainer`, que en esta paleta lleva
+  /// `primary` encima — el naranja saturado que es solo de la acción.
+  static ChipThemeData _chipTheme(ColorScheme scheme) {
+    return ChipThemeData(
+      backgroundColor: scheme.surface,
+      selectedColor: scheme.primaryContainer,
+      checkmarkColor: scheme.onPrimaryContainer,
+      side: BorderSide(color: scheme.outline),
+      labelStyle: TextStyle(
+        fontFamily: Tokens.fontFamily,
+        fontSize: Tokens.fontSizeCaption,
+        fontWeight: Tokens.weightMedium,
+        color: scheme.onSurface,
+      ),
+      secondaryLabelStyle: TextStyle(
+        fontFamily: Tokens.fontFamily,
+        fontSize: Tokens.fontSizeCaption,
+        fontWeight: Tokens.weightMedium,
+        color: scheme.onPrimaryContainer,
+      ),
+    );
+  }
+
+  /// Lo mismo para el selector de tema: el segmento activo va en `container`.
+  static SegmentedButtonThemeData _segmentedButtonTheme(ColorScheme scheme) {
+    return SegmentedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.primaryContainer
+              : scheme.surface,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurfaceVariant,
+        ),
+        side: WidgetStatePropertyAll(BorderSide(color: scheme.outline)),
       ),
     );
   }

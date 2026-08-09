@@ -52,7 +52,7 @@ void main() {
 
     await abrirCuenta(tester);
     expect(find.textContaining('William Ferman'), findsOneWidget);
-    expect(find.textContaining('Signed in as'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Account'), findsOneWidget);
   });
 
   testWidgets('una contraseña incorrecta no se confunde con falta de red', (
@@ -79,8 +79,7 @@ void main() {
     await abrirCuenta(tester);
     expect(find.textContaining('William Ferman'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.logout));
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    await cerrarSesion(tester);
 
     // Sin sesión no hay `user.locale`, así que la app vuelve al idioma del
     // dispositivo: el texto del botón depende de eso y no sirve para afirmar.
