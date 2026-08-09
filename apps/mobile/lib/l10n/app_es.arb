@@ -27,8 +27,10 @@
   "authLoginErrorUnknown": "No se pudo entrar. Intente de nuevo.",
 
   "authSignOut": "Cerrar sesión",
-  "homeWelcome": "Sesión de {name}",
-  "homeCompany": "Empresa: {company}",
+
+  "accountTitle": "Cuenta",
+  "accountSignedInAs": "Sesión de {name}",
+  "accountCompany": "Empresa: {company}",
 
   "languageSpanish": "Español",
   "languageEnglish": "English",
@@ -43,6 +45,19 @@
   "navCustomers": "Clientes",
   "navReports": "Reportes",
   "navBilling": "Facturación",
+  "navNoAccess": "Esta cuenta no tiene secciones disponibles. Pida a su administrador que revise sus permisos.",
 
-  "comingSoon": "Próximamente"
+  "projectTabProgress": "Avance",
+  "projectTabPhotos": "Fotos",
+  "projectTabHours": "Horas",
+  "projectTabDetails": "Detalle",
+
+  "projectUntitled": "Proyecto",
+  "projectStatusInProgress": "En proceso",
+  "projectStatusCompleted": "Terminado",
+
+  "comingSoon": "Próximamente",
+
+  "placeholderItem": "Elemento de ejemplo {index}",
+  "placeholderProject": "Obra de ejemplo {index}"
 }

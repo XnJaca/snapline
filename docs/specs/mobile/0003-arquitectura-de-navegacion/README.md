@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0003: Arquitectura de navegación: el proyecto como contenedor"
 type: spec
 platform: mobile
-status: borrador
+status: en-implementacion
 goal: "Cada rol entra a la superficie que le corresponde, y toda la información de una obra —avance, fotos y horas— se lee dentro de esa obra y no en listas globales."
 apps:
   - mobile
@@ -20,7 +20,7 @@ created: 2026-08-08
 updated: 2026-08-08
 tags:
   - spec
-  - spec/borrador
+  - spec/en-implementacion
   - mobile
 ---
 
@@ -206,27 +206,30 @@ a pasar: el guard del API verifica cada request al sincronizar.
 
 ## Criterios de aceptación
 
-- [ ] Un `OWNER` ve cuatro ejes: Proyectos, Clientes, Reportes y Facturación.
-- [ ] Un `OWNER` **no** tiene pestañas globales de Fotos ni de Horas: solo se llega
+- [x] Un `OWNER` ve cuatro ejes: Proyectos, Clientes, Reportes y Facturación.
+- [x] Un `OWNER` **no** tiene pestañas globales de Fotos ni de Horas: solo se llega
       a ellas entrando a un proyecto.
-- [ ] Un `WORKER` ve exactamente dos: Hoy y Fotos, y **no** ve lista de proyectos.
+- [x] Un `WORKER` ve exactamente dos: Hoy y Fotos, y **no** ve lista de proyectos.
 - [ ] El "Fotos" de un `WORKER` muestra solo las de su proyecto asignado, no un
       agregado entre proyectos, y no ofrece selector de obra.
-- [ ] La pestaña activa **no** usa `primary`: en una pantalla con acción primaria,
+      *Parcial: hoy es un placeholder sin selector, que es lo que esta estructura
+      puede garantizar. Que muestre las de su asignación vigente se verifica
+      cuando la pantalla tenga sus datos.*
+- [x] La pestaña activa **no** usa `primary`: en una pantalla con acción primaria,
       el único naranja saturado sigue siendo el botón.
-- [ ] Un `FOREMAN` ve tres, incluida Cuadrilla.
-- [ ] Un `ACCOUNTANT` **no** ve la pestaña de Fotos.
-- [ ] Entrar a un proyecto muestra cuatro tabs: Avance, Fotos, Horas y Detalle.
-- [ ] Un proyecto terminado muestra las mismas cuatro tabs.
-- [ ] Un destino cuyo permiso falta en `membership.permissions` no se dibuja: una
+- [x] Un `FOREMAN` ve tres, incluida Cuadrilla.
+- [x] Un `ACCOUNTANT` **no** ve la pestaña de Fotos.
+- [x] Entrar a un proyecto muestra cuatro tabs: Avance, Fotos, Horas y Detalle.
+- [x] Un proyecto terminado muestra las mismas cuatro tabs.
+- [x] Un destino cuyo permiso falta en `membership.permissions` no se dibuja: una
       sesión con permisos recortados a mano muestra menos entradas.
-- [ ] Ningún rol ve menos de dos ni más de cuatro ejes.
-- [ ] Cambiar de pestaña y volver conserva la posición de scroll de la anterior,
+- [x] Ningún rol ve menos de dos ni más de cuatro ejes.
+- [x] Cambiar de pestaña y volver conserva la posición de scroll de la anterior,
       verificado sobre la lista sintética del placeholder.
-- [ ] Cerrar la app y reabrirla vuelve a la última pestaña usada.
-- [ ] La estructura se arma sin red, desde la sesión guardada.
-- [ ] La barra se ve correcta en claro y en oscuro, y pasa AA en los dos.
-- [ ] Ningún título está quemado: todos pasan por i18n en `en` y `es`.
+- [x] Cerrar la app y reabrirla vuelve a la última pestaña usada.
+- [x] La estructura se arma sin red, desde la sesión guardada.
+- [x] La barra se ve correcta en claro y en oscuro, y pasa AA en los dos.
+- [x] Ningún título está quemado: todos pasan por i18n en `en` y `es`.
 
 ## Riesgos / consideraciones
 
@@ -259,3 +262,5 @@ requiere filtrar proyectos por cuadrilla en el API. Se sabrá al usarlo.
 | 2026-08-08 | borrador | Creado como "navegación por rol" |
 | 2026-08-08 | borrador | Reescrito: el proyecto pasa a ser el contenedor y Fotos/Horas dejan de ser ejes globales. Revisado con `spec-reviewer`, que detectó que `WORKER` no tiene `time.read`; la tabla de roles duplicada se eliminó llevando los permisos al contrato. |
 | 2026-08-08 | borrador | Segunda revisión, cuatro correcciones: el "Fotos" de campo queda declarado como scopeado al proyecto asignado; la falta de cartera del `FOREMAN` pasa de "lo dice el dominio" a decisión de producto; la pestaña activa usa `primaryContainer` y no `primary`, que habría roto la regla del naranja del ADR-0009; y los placeholders llevan lista sintética para poder verificar la preservación de estado. |
+| 2026-08-08 | en implementación | Aprobado tras las dos revisiones anteriores y arrancado en `feature/SPEC-0003-arquitectura-de-navegacion`. |
+| 2026-08-08 | en implementación | Implementado: `StatefulShellRoute` con una rama por destino, catálogo de ejes con su permiso, y el proyecto como contenedor con cuatro tabs. 95 tests unitarios y 4 de integración contra el API real. Queda parcial el criterio del "Fotos" del `WORKER`, que necesita datos para verificarse. Dependencia nueva: `shared_preferences`, para recordar la última pestaña. |

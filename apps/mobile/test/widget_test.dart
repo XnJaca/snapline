@@ -35,7 +35,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sign in'), findsNothing);
-      expect(find.textContaining('William Ferman'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Proyectos'), findsOneWidget);
     });
 
     // Reabrir sin red conserva el idioma del último login, porque sale de la
@@ -48,7 +48,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Sesión de'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Proyectos'), findsOneWidget);
     });
 
     testWidgets('un usuario en inglés ve la app en inglés', (tester) async {
@@ -57,7 +57,26 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Signed in as'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Projects'), findsOneWidget);
+    });
+
+    // Quién está adentro dejó de estar en una pantalla y pasó al menú de
+    // cuenta, que es de donde ahora se sale.
+    testWidgets('el menú de cuenta muestra la persona y su empresa', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(FakeSessionStorage(buildSession())));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('William Ferman'), findsOneWidget);
+      expect(
+        find.textContaining('Professional Construction LLC'),
+        findsOneWidget,
+      );
+      expect(find.text('Cerrar sesión'), findsOneWidget);
     });
   });
 

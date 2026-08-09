@@ -17,6 +17,24 @@ Se agrega con `/changelog <descripción>`.
 
 ## 2026-08-08 — sesión de móvil
 
+- **La app tiene esqueleto** ([[specs/mobile/0003-arquitectura-de-navegacion/README|SPEC-0003]]):
+  barra inferior por rol y el proyecto como contenedor, con Avance, Fotos, Horas
+  y Detalle adentro de cada obra. El dueño ve ejes de negocio; el trabajador, dos
+  pestañas. Todo son placeholders a propósito: la estructura primero, para que
+  cada spec de pantalla llegue a un lugar ya definido.
+- **Fotos y Horas dejaron de ser pestañas globales.** Viven dentro de la obra,
+  que es donde significan algo. Una lista global de fotos sueltas es exactamente
+  lo que rompe al proyecto como contenedor.
+- **Cada destino declara su permiso y el servidor dice cuáles tiene.** Un permiso
+  que cambia en el servidor no deja una pestaña que lleve a un `403`, y el móvil
+  no replica la tabla de roles en ningún lado.
+- **La pestaña activa no usa `primary`.** Va en `primaryContainer`, y las tabs de
+  proyecto igual: con el naranja saturado, cualquier pantalla con CTA tendría dos
+  naranjas y ninguno sería la acción. Verificado en los dos temas.
+- **`shared_preferences` entra al proyecto**, solo para recordar la última
+  pestaña. La sesión sigue siendo lo único que vive en Keychain.
+- **`HomeScreen` se fue.** Quién está adentro y cómo salir pasaron al menú de
+  cuenta de la barra.
 - **`apps/mobile` existe.** Flutter con Riverpod 3, Drift, go_router, Dio y cliente
   generado desde `openapi.json`. Decidido en [[adr/0008-arquitectura-flutter/README|ADR-0008]],
   que también corrige el generador de ADR-0007: `swagger_parser` en vez de

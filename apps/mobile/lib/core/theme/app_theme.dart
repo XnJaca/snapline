@@ -99,7 +99,69 @@ abstract final class AppTheme {
       textTheme: _textTheme,
       filledButtonTheme: _primaryActionTheme,
       inputDecorationTheme: _inputTheme(scheme),
+      navigationBarTheme: _navigationBarTheme(scheme),
+      tabBarTheme: _tabBarTheme(scheme),
       extensions: [const AppSpacing.standard(), status],
+    );
+  }
+
+  /// La pestaña activa **no** usa `primary`: el naranja saturado está reservado
+  /// a la acción primaria, y una pestaña naranja en una pantalla con CTA dejaría
+  /// dos naranjas compitiendo. El par `container` destaca sin competir.
+  ///
+  /// El icono lleno de la pestaña activa hace que la selección no dependa solo
+  /// del color, y el label va siempre visible: un icono sin etiqueta obliga a
+  /// aprender qué significa.
+  static NavigationBarThemeData _navigationBarTheme(ColorScheme scheme) {
+    return NavigationBarThemeData(
+      backgroundColor: scheme.surface,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: scheme.primaryContainer,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurfaceVariant,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          fontFamily: Tokens.fontFamily,
+          fontSize: Tokens.fontSizeCaption,
+          fontWeight: states.contains(WidgetState.selected)
+              ? Tokens.weightMedium
+              : Tokens.weightRegular,
+          color: states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  /// Las tabs de un proyecto reciben el mismo tratamiento que la barra inferior,
+  /// y por la misma razón: una pastilla tenue, nunca el naranja de la acción.
+  static TabBarThemeData _tabBarTheme(ColorScheme scheme) {
+    return TabBarThemeData(
+      labelColor: scheme.onPrimaryContainer,
+      unselectedLabelColor: scheme.onSurfaceVariant,
+      indicatorSize: TabBarIndicatorSize.tab,
+      dividerColor: scheme.outline,
+      indicator: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(Tokens.radiusMd),
+      ),
+      labelStyle: const TextStyle(
+        fontFamily: Tokens.fontFamily,
+        fontSize: Tokens.fontSizeCaption,
+        fontWeight: Tokens.weightMedium,
+      ),
+      unselectedLabelStyle: const TextStyle(
+        fontFamily: Tokens.fontFamily,
+        fontSize: Tokens.fontSizeCaption,
+        fontWeight: Tokens.weightRegular,
+      ),
     );
   }
 

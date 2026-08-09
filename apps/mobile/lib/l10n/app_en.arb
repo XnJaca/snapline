@@ -38,12 +38,14 @@
   "authLoginErrorUnknown": "Could not sign in. Try again.",
 
   "authSignOut": "Sign out",
-  "homeWelcome": "Signed in as {name}",
-  "@homeWelcome": {
+
+  "accountTitle": "Account",
+  "accountSignedInAs": "Signed in as {name}",
+  "@accountSignedInAs": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "homeCompany": "Company: {company}",
-  "@homeCompany": {
+  "accountCompany": "Company: {company}",
+  "@accountCompany": {
     "placeholders": { "company": { "type": "String" } }
   },
 
@@ -66,9 +68,38 @@
   "navCustomers": "Customers",
   "navReports": "Reports",
   "navBilling": "Billing",
+  "navNoAccess": "This account has no sections available. Ask your administrator to review its permissions.",
+  "@navNoAccess": {
+    "description": "Rol cuyos permisos no dejan ningún eje en pie. No pasa con los roles del contrato."
+  },
+
+  "projectTabProgress": "Progress",
+  "@projectTabProgress": {
+    "description": "Timeline de la obra. Se llama Avance y no Hoy: Hoy es la jornada del trabajador."
+  },
+  "projectTabPhotos": "Photos",
+  "projectTabHours": "Hours",
+  "projectTabDetails": "Details",
+
+  "projectUntitled": "Project",
+  "@projectUntitled": {
+    "description": "Título cuando se llega a un proyecto que no está en local."
+  },
+  "projectStatusInProgress": "In progress",
+  "projectStatusCompleted": "Completed",
 
   "comingSoon": "Coming soon",
   "@comingSoon": {
     "description": "Placeholder de pestaña sin implementar. Se borra cuando cada pantalla tenga su spec."
+  },
+
+  "placeholderItem": "Sample item {index}",
+  "@placeholderItem": {
+    "description": "Fila de la lista sintética del placeholder. Existe para poder verificar que el scroll se conserva al cambiar de pestaña.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "placeholderProject": "Sample project {index}",
+  "@placeholderProject": {
+    "placeholders": { "index": { "type": "int" } }
   }
 }
