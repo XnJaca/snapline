@@ -1,0 +1,16 @@
+meta { name: Proyectos — sitio que no es del cliente
+  type: http
+  seq: 7
+}
+post { url: {{base_url}}/projects
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "customerId": "{{customer_id}}",
+    "siteId": "{{site_id_de_otro_cliente}}",
+    "name": "No debe crearse"
+  }
+}
+assert { res.status: eq 404 }

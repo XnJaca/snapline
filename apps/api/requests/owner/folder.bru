@@ -1,0 +1,25 @@
+meta {
+  name: Owner
+}
+
+script:pre-request {
+  const token = bru.getVar("owner_token");
+
+  if (!token) {
+    const res = await fetch(`${bru.getEnvVar("base_url")}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: bru.getEnvVar("owner_identifier"),
+        password: bru.getEnvVar("owner_password"),
+      }),
+    });
+    const data = await res.json();
+    if (data.accessToken) {
+      bru.setVar("owner_token", data.accessToken);
+      req.setHeader("Authorization", `Bearer ${data.accessToken}`);
+    }
+  } else {
+    req.setHeader("Authorization", `Bearer ${token}`);
+  }
+}

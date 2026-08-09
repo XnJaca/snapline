@@ -1,0 +1,10 @@
+meta { name: Reportes — costo por proyecto
+  type: http
+  seq: 31
+}
+get { url: {{base_url}}/reports/job-cost
+  body: none
+  auth: none
+}
+docs { Mano de obra real contra lo facturado y lo cotizado. }
+assert { res.status: eq 200 }

@@ -1,0 +1,16 @@
+meta { name: Estimado — enviar (asigna número)
+  type: http
+  seq: 21
+}
+post { url: {{base_url}}/estimates/{{estimate_id}}/send
+  body: none
+  auth: none
+}
+docs {
+  El número lo asigna el servidor con next_document_number(), que toma lock de
+  fila. Contador por empresa: los números de una no saltan porque otra insertó.
+}
+assert { res.status: eq 200
+  res.body.status: eq SENT
+  res.body.number: isString
+}

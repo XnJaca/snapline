@@ -1,0 +1,21 @@
+meta { name: Pago reintentado con la misma idempotencyKey
+  type: http
+  seq: 11
+}
+post { url: {{base_url}}/invoices/{{invoice_id}}/payments
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "amountCents": 50000,
+    "method": "CHECK",
+    "receivedAt": "2026-08-20T00:00:00Z",
+    "idempotencyKey": "chq-1042"
+  }
+}
+docs {
+  La red se cae después del POST y el móvil reintenta. Cobrar dos veces sería el
+  peor bug del módulo: el saldo no debe moverse.
+}
+assert { res.status: eq 201 }

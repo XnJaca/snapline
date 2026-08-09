@@ -1,0 +1,15 @@
+meta { name: Cuadrillas — crear
+  type: http
+  seq: 15
+}
+post { url: {{base_url}}/crews
+  body: json
+  auth: none
+}
+body:json {
+  { "name": "Cuadrilla A", "color": "#1971c2" }
+}
+script:post-response {
+  if (res.body.id) bru.setVar("crew_id", res.body.id);
+}
+assert { res.status: eq 201 }

@@ -1,0 +1,16 @@
+meta { name: Pago mayor que el saldo
+  type: http
+  seq: 10
+}
+post { url: {{base_url}}/invoices/{{invoice_id}}/payments
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "amountCents": 99999999,
+    "method": "CASH",
+    "receivedAt": "2026-08-21T00:00:00Z"
+  }
+}
+assert { res.status: eq 400 }

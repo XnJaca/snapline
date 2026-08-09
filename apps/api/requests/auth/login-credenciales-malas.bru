@@ -1,0 +1,27 @@
+meta {
+  name: Login con credenciales malas
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "identifier": "{{owner_identifier}}",
+    "password": "contrasena-incorrecta"
+  }
+}
+
+docs {
+  Mismo mensaje que para un usuario inexistente: no se revela cuál de los dos falló.
+}
+
+assert {
+  res.status: eq 401
+  res.body.message: eq Credenciales inválidas
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Worker
+}
+
+script:pre-request {
+  const token = bru.getVar("worker_token");
+
+  if (!token) {
+    const res = await fetch(`${bru.getEnvVar("base_url")}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: bru.getEnvVar("worker_identifier"),
+        password: bru.getEnvVar("worker_password"),
+      }),
+    });
+    const data = await res.json();
+    if (data.accessToken) {
+      bru.setVar("worker_token", data.accessToken);
+      req.setHeader("Authorization", `Bearer ${data.accessToken}`);
+    }
+  } else {
+    req.setHeader("Authorization", `Bearer ${token}`);
+  }
+}

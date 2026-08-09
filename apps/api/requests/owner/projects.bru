@@ -1,0 +1,12 @@
+meta { name: Proyectos — listar
+  type: http
+  seq: 5
+}
+get { url: {{base_url}}/projects
+  body: none
+  auth: none
+}
+script:post-response {
+  if (res.body[0]) bru.setVar("project_id", res.body[0].id);
+}
+assert { res.status: eq 200 }

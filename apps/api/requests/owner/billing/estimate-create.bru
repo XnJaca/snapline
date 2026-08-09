@@ -1,0 +1,30 @@
+meta { name: Estimado — crear
+  type: http
+  seq: 20
+}
+post { url: {{base_url}}/estimates
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "customerId": "{{customer_id}}",
+    "projectId": "{{project_id}}",
+    "lines": [
+      { "serviceItemId": "{{service_item_id}}", "qty": 200 },
+      { "name": "Retiro de escombros", "qty": 1, "unitPriceCentsOverride": 35000 }
+    ]
+  }
+}
+script:post-response {
+  if (res.body.id) bru.setVar("estimate_id", res.body.id);
+}
+docs {
+  Las líneas copian nombre, unidad y precio del catálogo. Los totales los calcula
+  el servidor: mandar subtotal o total en el body no tiene efecto.
+}
+assert { res.status: eq 201
+  res.body.status: eq DRAFT
+  res.body.number: isNull
+  res.body.totalCents: isNumber
+}

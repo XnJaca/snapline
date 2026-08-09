@@ -1,0 +1,20 @@
+meta { name: Reportes — timesheet para el contador
+  type: http
+  seq: 30
+}
+get { url: {{base_url}}/reports/timesheet?from=2026-08-01&to=2026-09-01
+  body: none
+  auth: none
+}
+params:query {
+  from: 2026-08-01
+  to: 2026-09-01
+}
+docs {
+  El paquete que hoy William arma a mano. Solo horas APROBADAS, con la tarifa
+  congelada en el registro — no la vigente.
+
+  Devuelve horas y bruto. Retenciones e impuestos los hace el contador: esa línea
+  no se cruza.
+}
+assert { res.status: eq 200 }

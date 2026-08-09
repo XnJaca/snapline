@@ -1,0 +1,22 @@
+meta { name: Marcar entrada sin GPS (sótano)
+  type: http
+  seq: 2
+}
+post { url: {{base_url}}/time-entries/clock-in
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{project_id}}",
+    "deviceRecordedAt": "{{$isoTimestamp}}",
+    "recordedOffline": true
+  }
+}
+docs {
+  Un trabajador que no puede fichar deja de usar la app el primer día. Se
+  registra con NO_LOCATION y NO_PHOTO, y el admin decide al aprobar.
+}
+assert { res.status: eq 201
+  res.body.clockInWithinGeofence: isNull
+}

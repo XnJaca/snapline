@@ -1,0 +1,17 @@
+meta {
+  name: Edge cases
+}
+
+script:pre-request {
+  const which = req.getUrl().includes("clock-in") || req.getUrl().includes("projects")
+    ? "worker" : "owner";
+  const token = bru.getVar(`${which}_token`);
+  if (token) req.setHeader("Authorization", `Bearer ${token}`);
+}
+
+docs {
+  Cada request de esta carpeta corresponde a un invariante del dominio. Si alguno
+  empieza a pasar cuando debería fallar, se rompió una regla dura del CLAUDE.md.
+
+  Correr después de auth/ para que los tokens estén cargados.
+}

@@ -1,0 +1,9 @@
+meta { name: Mis proyectos
+  type: http
+  seq: 6
+}
+get { url: {{base_url}}/projects
+  body: none
+  auth: none
+}
+assert { res.status: eq 200 }

@@ -1,0 +1,16 @@
+meta { name: Estimado — aceptar
+  type: http
+  seq: 22
+}
+post { url: {{base_url}}/estimates/{{estimate_id}}/accept
+  body: json
+  auth: none
+}
+body:json {
+  {}
+}
+docs { Registra fecha e IP: es lo que lo vuelve exigible. }
+assert { res.status: eq 200
+  res.body.status: eq ACCEPTED
+  res.body.acceptedAt: isString
+}

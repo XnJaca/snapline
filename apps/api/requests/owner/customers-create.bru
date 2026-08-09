@@ -1,0 +1,32 @@
+meta { name: Clientes — crear (con sitio)
+  type: http
+  seq: 2
+}
+post { url: {{base_url}}/customers
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "displayName": "Johnson Residence",
+    "email": "johnson@example.com",
+    "phone": "+15551112222",
+    "source": "WEB",
+    "site": {
+      "address": { "line1": "42 Oak Ave", "city": "Baltimore", "state": "MD", "zip": "21202" },
+      "lat": 39.2905,
+      "lng": -76.6125,
+      "geofenceRadiusM": 150
+    }
+  }
+}
+script:post-response {
+  if (res.body.id) bru.setVar("customer_id", res.body.id);
+}
+docs {
+  El `id` es opcional: si el móvil lo manda (UUIDv7 generado offline) se respeta.
+}
+assert { res.status: eq 201
+  res.body.displayName: eq Johnson Residence
+  res.body.photoReleaseGrantedAt: isNull
+}

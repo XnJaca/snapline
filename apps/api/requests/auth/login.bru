@@ -1,0 +1,29 @@
+meta {
+  name: Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "identifier": "{{owner_identifier}}",
+    "password": "{{owner_password}}"
+  }
+}
+
+script:post-response {
+  if (res.body.accessToken) bru.setVar("owner_token", res.body.accessToken);
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isString
+  res.body.refreshToken: isString
+  res.body.membership.role: eq OWNER
+}

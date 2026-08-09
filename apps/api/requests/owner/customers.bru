@@ -1,0 +1,9 @@
+meta { name: Clientes — listar
+  type: http
+  seq: 1
+}
+get { url: {{base_url}}/customers
+  body: none
+  auth: none
+}
+assert { res.status: eq 200 }

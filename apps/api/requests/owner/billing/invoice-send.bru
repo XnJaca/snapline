@@ -1,0 +1,12 @@
+meta { name: Factura — enviar
+  type: http
+  seq: 24
+}
+post { url: {{base_url}}/invoices/{{invoice_id}}/send
+  body: none
+  auth: none
+}
+assert { res.status: eq 200
+  res.body.status: eq SENT
+  res.body.number: isString
+}

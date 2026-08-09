@@ -1,0 +1,19 @@
+meta { name: Marcar salida
+  type: http
+  seq: 3
+}
+post { url: {{base_url}}/time-entries/{{time_entry_id}}/clock-out
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "deviceRecordedAt": "{{$isoTimestamp}}",
+    "lat": 39.2904,
+    "lng": -76.6122,
+    "breakMinutes": 30
+  }
+}
+assert { res.status: eq 200
+  res.body.clockOutAt: isString
+}

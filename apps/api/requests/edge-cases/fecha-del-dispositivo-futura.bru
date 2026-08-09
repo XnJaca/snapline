@@ -1,0 +1,21 @@
+meta { name: Fecha del dispositivo en el futuro
+  type: http
+  seq: 2
+}
+post { url: {{base_url}}/time-entries/clock-in
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{project_id}}",
+    "deviceRecordedAt": "2030-01-01T10:00:00Z",
+    "lat": 39.2904,
+    "lng": -76.6122
+  }
+}
+docs {
+  device_recorded_at lo provee el dispositivo: es dato del atacante. El servidor
+  lo acota a "ahora" y marca TIMESTAMP_OUT_OF_RANGE.
+}
+assert { res.status: eq 201 }

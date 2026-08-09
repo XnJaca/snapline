@@ -1,0 +1,20 @@
+meta { name: WORKER intenta crear proyecto
+  type: http
+  seq: 7
+}
+post { url: {{base_url}}/projects
+  body: json
+  auth: none
+}
+headers { Authorization: Bearer {{worker_token}} }
+body:json {
+  {
+    "customerId": "{{customer_id}}",
+    "siteId": "{{site_id}}",
+    "name": "No debe crearse"
+  }
+}
+docs {
+  Default deny: el rol WORKER no tiene projects.write.
+}
+assert { res.status: eq 403 }

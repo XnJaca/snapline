@@ -1,0 +1,12 @@
+meta { name: Facturar dos veces el mismo estimado
+  type: http
+  seq: 12
+}
+post { url: {{base_url}}/estimates/{{estimate_id}}/invoice
+  body: json
+  auth: none
+}
+body:json {
+  {}
+}
+assert { res.status: eq 409 }

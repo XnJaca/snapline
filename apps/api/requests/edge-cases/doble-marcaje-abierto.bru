@@ -1,0 +1,19 @@
+meta { name: Dos entradas abiertas de la misma persona
+  type: http
+  seq: 6
+}
+post { url: {{base_url}}/time-entries/clock-in
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{project_id}}",
+    "deviceRecordedAt": "{{$isoTimestamp}}"
+  }
+}
+docs {
+  Además del chequeo en el servicio, hay un índice único parcial en la base
+  (uq_time_entry_single_open).
+}
+assert { res.status: eq 409 }

@@ -1,0 +1,19 @@
+meta { name: Misma persona en dos cuadrillas a la vez
+  type: http
+  seq: 13
+}
+post { url: {{base_url}}/crews/{{crew_id_b}}/members
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "membershipId": "{{worker_membership_id}}",
+    "fromDate": "2026-08-01"
+  }
+}
+docs {
+  La base tiene un constraint de exclusión (crew_member_no_overlap) sobre el rango
+  de fechas. La gente rota entre cuadrillas, pero no está en dos a la vez.
+}
+assert { res.status: eq 409 }

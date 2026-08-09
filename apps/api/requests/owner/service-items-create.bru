@@ -1,0 +1,20 @@
+meta { name: Catálogo — crear ítem
+  type: http
+  seq: 13
+}
+post { url: {{base_url}}/service-items
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "name": "Limpieza de canoas",
+    "unit": "LINEAR_FT",
+    "unitPriceCents": 320,
+    "costCents": 140,
+    "taxable": false,
+    "category": "mantenimiento"
+  }
+}
+docs { costCents habilita ver margen, que es lo que hoy no existe al estimar a mano. }
+assert { res.status: eq 201 }

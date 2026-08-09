@@ -1,0 +1,19 @@
+meta { name: Horas — aprobar (congela la tarifa)
+  type: http
+  seq: 10
+}
+post { url: {{base_url}}/time-entries/{{time_entry_id}}/approve
+  body: json
+  auth: none
+}
+body:json {
+  { "reason": "turno normal" }
+}
+docs {
+  Al aprobar se copia pay_rate_cents al registro. Si la tarifa sube después, las
+  horas ya aprobadas no se recalculan.
+}
+assert { res.status: eq 200
+  res.body.status: eq APPROVED
+  res.body.payRateCentsSnapshot: isNumber
+}

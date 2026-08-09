@@ -1,0 +1,12 @@
+meta { name: Catálogo — listar
+  type: http
+  seq: 12
+}
+get { url: {{base_url}}/service-items
+  body: none
+  auth: none
+}
+script:post-response {
+  if (res.body[0]) bru.setVar("service_item_id", res.body[0].id);
+}
+assert { res.status: eq 200 }

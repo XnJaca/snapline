@@ -1,0 +1,23 @@
+meta { name: Reintento de subida con el mismo checksum
+  type: http
+  seq: 8
+}
+post { url: {{base_url}}/media
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{project_id}}",
+    "kind": "PHOTO",
+    "mime": "image/jpeg",
+    "checksum": "sha256-de-la-foto"
+  }
+}
+docs {
+  La red se cae a mitad de la subida y el móvil reintenta. Devuelve el asset
+  existente, no duplica.
+}
+assert { res.status: eq 201
+  res.body.asset.id: eq {{asset_id}}
+}

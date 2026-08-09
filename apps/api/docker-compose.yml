@@ -1,0 +1,28 @@
+# Nombre de proyecto explícito. Sin esto Docker usa el nombre de la carpeta
+# ("api"), que colisiona con acdemic/apps/api y hace que un `compose up` acá
+# recree los contenedores del otro proyecto. Ya pasó una vez.
+name: snapline
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: snapline-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: snapline_migrator
+      POSTGRES_PASSWORD: snapline_dev
+      POSTGRES_DB: snapline
+    ports:
+      - "5544:5432"
+    volumes:
+      # Postgres 18+: el mount va en /var/lib/postgresql, no en .../data.
+      # Con el path viejo el contenedor arranca en loop.
+      - snapline-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snapline_migrator -d snapline"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  snapline-pgdata:

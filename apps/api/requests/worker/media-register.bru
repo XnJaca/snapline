@@ -1,0 +1,34 @@
+meta { name: Registrar foto del proyecto
+  type: http
+  seq: 4
+}
+post { url: {{base_url}}/media
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{project_id}}",
+    "kind": "PHOTO",
+    "mime": "image/jpeg",
+    "checksum": "sha256-de-la-foto",
+    "bytes": 2450000,
+    "width": 4032,
+    "height": 3024,
+    "capturedAt": "{{$isoTimestamp}}",
+    "deviceLat": 39.2904,
+    "deviceLng": -76.6122
+  }
+}
+script:post-response {
+  if (res.body.asset) bru.setVar("asset_id", res.body.asset.id);
+}
+docs {
+  Registra primero y devuelve dónde subir: el asset existe desde el disparo de la
+  foto, no desde que terminó de subir. Reintentar con el mismo checksum devuelve
+  el asset existente en vez de duplicar.
+}
+assert { res.status: eq 201
+  res.body.asset.uploadStatus: eq PENDING
+  res.body.uploadUrl: isString
+}

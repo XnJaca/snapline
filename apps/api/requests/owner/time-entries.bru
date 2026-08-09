@@ -1,0 +1,13 @@
+meta { name: Horas — listar pendientes
+  type: http
+  seq: 9
+}
+get { url: {{base_url}}/time-entries
+  body: none
+  auth: none
+}
+script:post-response {
+  const pending = res.body.find((e) => e.status === "PENDING" && e.clockOutAt);
+  if (pending) bru.setVar("time_entry_id", pending.id);
+}
+assert { res.status: eq 200 }

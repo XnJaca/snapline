@@ -1,0 +1,16 @@
+meta { name: Aprobar las horas propias
+  type: http
+  seq: 3
+}
+post { url: {{base_url}}/time-entries/{{time_entry_id}}/approve
+  body: json
+  auth: none
+}
+body:json {
+  {}
+}
+docs {
+  Ni siquiera un OWNER puede aprobar sus propias horas. Un WORKER ni llega:
+  el guard lo corta antes por no tener time.approve.
+}
+assert { res.status: eq 403 }

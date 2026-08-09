@@ -1,0 +1,20 @@
+meta { name: Proyectos — asignar cuadrilla por fecha
+  type: http
+  seq: 8
+}
+post { url: {{base_url}}/projects/{{project_id}}/assignments
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "crewId": "{{crew_id}}",
+    "workDate": "2026-08-10",
+    "plannedHeadcount": 4
+  }
+}
+docs {
+  Lo planeado contra lo que realmente marcó asistencia. Va cuadrilla O persona,
+  nunca las dos.
+}
+assert { res.status: eq 201 }

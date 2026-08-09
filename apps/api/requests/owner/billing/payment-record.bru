@@ -1,0 +1,24 @@
+meta { name: Pago — registrar
+  type: http
+  seq: 25
+}
+post { url: {{base_url}}/invoices/{{invoice_id}}/payments
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "amountCents": 50000,
+    "method": "CHECK",
+    "receivedAt": "2026-08-20T00:00:00Z",
+    "reference": "cheque 1042",
+    "idempotencyKey": "chq-1042"
+  }
+}
+docs {
+  El saldo es derivado: se recalcula desde los pagos, no se edita. Reintentar con
+  la misma idempotencyKey no vuelve a cobrar.
+}
+assert { res.status: eq 201
+  res.body.status: eq PARTIAL
+}

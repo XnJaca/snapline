@@ -1,0 +1,16 @@
+meta { name: PUBLIC sin limpiar EXIF
+  type: http
+  seq: 5
+}
+post { url: {{base_url}}/media/{{asset_id}}/visibility
+  body: json
+  auth: none
+}
+body:json {
+  { "visibility": "PUBLIC" }
+}
+docs {
+  Las fotos llevan coordenadas GPS. Publicarlas con EXIF expone la dirección
+  exacta de la vivienda del cliente.
+}
+assert { res.status: eq 400 }
