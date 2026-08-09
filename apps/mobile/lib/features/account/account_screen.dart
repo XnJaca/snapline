@@ -82,6 +82,11 @@ class AccountScreen extends ConsumerWidget {
                 ),
                 SizedBox(height: spacing.xl),
 
+                SectionHeader(title: l10n.settingsLanguage),
+                SizedBox(height: spacing.sm),
+                const _SelectorDeIdioma(),
+                SizedBox(height: spacing.xl),
+
                 SectionHeader(title: l10n.accountSectionAppearance),
                 SizedBox(height: spacing.sm),
                 const _SelectorDeTema(),
@@ -210,6 +215,37 @@ class _Ficha extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// El idioma es **por persona**, no por empresa: William administra en inglés y
+/// sus trabajadores probablemente usen la app en español, en la misma cuenta.
+///
+/// Cada opción se escribe en su propio idioma, nunca traducida: es lo único que
+/// se puede leer sin saber ya el idioma de la app.
+class _SelectorDeIdioma extends ConsumerWidget {
+  const _SelectorDeIdioma();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final spacing = context.spacing;
+    // El que se está viendo, haya salido de una elección o del dispositivo.
+    final actual = Localizations.localeOf(context).languageCode;
+
+    return SegmentedButton<String>(
+      segments: [
+        ButtonSegment(value: 'es', label: Text(l10n.languageSpanish)),
+        ButtonSegment(value: 'en', label: Text(l10n.languageEnglish)),
+      ],
+      selected: {actual},
+      showSelectedIcon: false,
+      style: SegmentedButton.styleFrom(
+        minimumSize: Size.fromHeight(spacing.touchTargetMin),
+      ),
+      onSelectionChanged: (seleccion) =>
+          ref.read(localeProvider.notifier).select(Locale(seleccion.first)),
     );
   }
 }

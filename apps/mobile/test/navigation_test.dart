@@ -6,6 +6,7 @@ import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/navigation/last_destination_store.dart';
 import 'package:snapline/core/session/session_storage.dart';
+import 'package:snapline/core/theme/locale_store.dart';
 import 'package:snapline/core/theme/app_theme.dart';
 import 'package:snapline/main.dart';
 
@@ -333,6 +334,36 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.byType(TextFormField), findsNWidgets(2));
       expect(find.byType(NavigationBar), findsNothing);
+    });
+
+    // El idioma es por persona, y la elección tiene que sobrevivir a cerrar la
+    // app: sin persistirla, al reabrir vuelve al de la cuenta.
+    testWidgets('el idioma se elige y se guarda', (tester) async {
+      final store = FakeLocaleStore();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sessionStorageProvider.overrideWithValue(
+              FakeSessionStorage(buildSession()),
+            ),
+            lastDestinationStoreProvider.overrideWithValue(
+              FakeLastDestinationStore(),
+            ),
+            localeStoreProvider.overrideWithValue(store),
+          ],
+          child: const SnaplineApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(find.text('English'), 200);
+      await tester.tap(find.text('English'));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(AppBar, 'Account'), findsOneWidget);
+      expect(store.locale?.languageCode, 'en');
     });
 
     // No es cosmético: la misma app se usa en un techo con sol directo y en un

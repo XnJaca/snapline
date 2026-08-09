@@ -47,8 +47,9 @@ Future<void> abrirCuenta(WidgetTester tester) async {
 /// con su propio scroll: hay que decirle a `scrollUntilVisible` cuál usar, o
 /// desplaza la de abajo y nunca encuentra el botón.
 Future<void> cerrarSesion(WidgetTester tester) async {
+  final salir = find.byIcon(Icons.logout);
   await tester.scrollUntilVisible(
-    find.byIcon(Icons.logout),
+    salir,
     200,
     scrollable: find
         .descendant(
@@ -57,6 +58,9 @@ Future<void> cerrarSesion(WidgetTester tester) async {
         )
         .first,
   );
-  await tester.tap(find.byIcon(Icons.logout));
+  // Sin esto queda pegado al borde de la pantalla y el toque cae afuera.
+  await tester.ensureVisible(salir);
+  await tester.pumpAndSettle();
+  await tester.tap(salir);
   await tester.pumpAndSettle(const Duration(seconds: 3));
 }

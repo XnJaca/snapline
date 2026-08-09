@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../session/session_controller.dart';
+import 'locale_store.dart';
 
 /// Preferencia de tema. Arranca en `system` porque la app se usa tanto en un
 /// techo con sol como en un sótano.
@@ -22,11 +23,22 @@ final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
 ///
 /// El locale es por usuario y no por empresa: William administra en inglés y sus
 /// trabajadores probablemente usen la app en español, en la misma cuenta.
+///
+/// El valor inicial se lee del disco **antes** de montar la app, en `main`: leerlo
+/// después dejaría la primera pantalla en el idioma equivocado por un frame.
 class LocaleNotifier extends Notifier<Locale?> {
-  @override
-  Locale? build() => null;
+  LocaleNotifier([this._inicial]);
 
-  void select(Locale? locale) => state = locale;
+  final Locale? _inicial;
+
+  @override
+  Locale? build() => _inicial;
+
+  void select(Locale? locale) {
+    state = locale;
+    // No se espera: lo que la persona pidió ya pasó en pantalla.
+    ref.read(localeStoreProvider).write(locale);
+  }
 }
 
 final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(

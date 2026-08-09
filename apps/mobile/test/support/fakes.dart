@@ -1,3 +1,5 @@
+import 'dart:ui' show Locale;
+
 import 'package:snapline/api/models/auth_membership_dto.dart';
 import 'package:snapline/api/models/auth_membership_dto_role.dart';
 import 'package:snapline/api/models/auth_user_dto.dart';
@@ -6,6 +8,7 @@ import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/navigation/last_destination_store.dart';
 import 'package:snapline/core/session/session.dart';
 import 'package:snapline/core/session/session_storage.dart';
+import 'package:snapline/core/theme/locale_store.dart';
 
 /// Almacenamiento en memoria: el Keychain no existe en un test de unidad.
 class FakeSessionStorage implements SessionStorage {
@@ -38,6 +41,19 @@ class FakeLastDestinationStore implements LastDestinationStore {
 
   @override
   Future<void> clear() async => destination = null;
+}
+
+/// El idioma elegido, en memoria.
+class FakeLocaleStore implements LocaleStore {
+  FakeLocaleStore([this.locale]);
+
+  Locale? locale;
+
+  @override
+  Future<Locale?> read() async => locale;
+
+  @override
+  Future<void> write(Locale? value) async => locale = value;
 }
 
 /// Los mismos que devuelve el API para cada rol. Ver `permissionsForRole` en
