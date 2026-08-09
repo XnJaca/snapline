@@ -13,7 +13,7 @@ depends_on: []
 domain:
   - usuario-y-membresia
   - empresa
-frente: campo
+frente: plataforma
 created: 2026-08-08
 updated: 2026-08-08
 tags:
@@ -27,7 +27,7 @@ tags:
 > **Meta**
 > - Apps afectadas: `mobile`
 > - Depende de: —
-> - Frente: `campo`
+> - Frente: `plataforma`
 >
 > _Estado, goal, tags y resto de metadata viven en el frontmatter arriba._
 

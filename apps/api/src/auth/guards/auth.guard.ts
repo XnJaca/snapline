@@ -63,6 +63,7 @@ export class AuthGuard implements CanActivate {
       companyId: payload.companyId,
       membershipId: payload.membershipId,
       userId: payload.sub,
+      role: payload.role,
     };
     return true;
   }

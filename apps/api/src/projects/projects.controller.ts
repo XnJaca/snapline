@@ -13,14 +13,14 @@ export class ProjectsController {
 
   @RequirePermission('projects.read')
   @Get()
-  list(): Promise<Project[]> {
-    return this.service.list();
+  list(@CurrentTenant() tenant: TenantContext): Promise<Project[]> {
+    return this.service.list(tenant);
   }
 
   @RequirePermission('projects.read')
   @Get(':id')
-  get(@Param('id', ParseUUIDPipe) id: string): Promise<Project> {
-    return this.service.get(id);
+  get(@Param('id', ParseUUIDPipe) id: string, @CurrentTenant() tenant: TenantContext): Promise<Project> {
+    return this.service.get(id, tenant);
   }
 
   @RequirePermission('projects.write')

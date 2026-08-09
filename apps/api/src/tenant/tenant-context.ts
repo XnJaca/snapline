@@ -1,9 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { MembershipRole } from '../auth/entities/membership.entity';
 
 export interface TenantContext {
   companyId: string;
   membershipId: string;
   userId: string;
+  role: MembershipRole;
 }
 
 export const tenantStorage = new AsyncLocalStorage<TenantContext>();

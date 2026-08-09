@@ -18,6 +18,7 @@ export interface Fixture {
   siteId: string;
   projectId: string;
   serviceItemId: string;
+  workerMembershipId: string;
 }
 
 /**
@@ -67,6 +68,7 @@ export async function seedCompany(ds: DataSource, label: string): Promise<Fixtur
     projectId: newId(),
     serviceItemId: newId(),
     userIds: [],
+    workerMembershipId: '',
   };
   const hash = await AuthService.hashPassword(f.password);
   const ownerUser = newId();
@@ -74,6 +76,7 @@ export async function seedCompany(ds: DataSource, label: string): Promise<Fixtur
   f.userIds = [ownerUser, workerUser];
   const ownerMem = newId();
   const workerMem = newId();
+  f.workerMembershipId = workerMem;
 
   await ds.query(`INSERT INTO company (id,name,public_site_slug) VALUES ($1,$2,$3)`,
     [f.companyId, `Test ${label}`, `test-${label}-${Date.now()}`]);

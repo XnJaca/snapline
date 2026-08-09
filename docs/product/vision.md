@@ -68,7 +68,9 @@ del cliente no es cortesía: es el canal de venta cruzada.
 
 ## Los cinco frentes
 
-Todo spec declara a cuál pertenece, en el campo `frente` del frontmatter.
+Todo spec declara a cuál pertenece, en el campo `frente` del frontmatter. Lo que no
+cabe en ninguno porque es cimiento va a `plataforma` — ver más abajo, y leer antes
+de usarlo.
 
 ### 1. Administrativo — `administrativo`
 
@@ -116,6 +118,23 @@ abierto sobre este frente, más abajo.
 - Pares antes/después como pieza de primera clase, no una foto suelta
 - Feed consultable por servicio, ciudad y fecha para producir redes
 - Reseñas del cliente enganchadas al proyecto que las originó
+
+## Lo que sostiene a los cinco — `plataforma`
+
+**No es un sexto frente.** Los cinco de arriba describen el producto: lo que se le
+vende a un contratista. Nada de `plataforma` se factura, y por sí solo no le
+resuelve un problema a nadie.
+
+Existe porque hay trabajo sin el cual ningún frente funciona y que no pertenece a
+ninguno: iniciar sesión, elegir idioma, el tema, y la estructura de navegación
+sobre la que cuelgan todas las pantallas. Antes de tener esta categoría esos specs
+se declaraban `campo` por descarte, que era mentira y hacía que el índice por
+frente no significara nada.
+
+**Un spec va acá solo si no puede ir a ninguno de los cinco.** Si sirve a un frente
+concreto, es de ese frente aunque tenga trabajo de base adentro. La pregunta que lo
+decide: *¿se le podría cobrar a William por esto?* Si la respuesta es sí, no es
+`plataforma`.
 
 ## Qué NO somos
 

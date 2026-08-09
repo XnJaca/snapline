@@ -14,7 +14,7 @@ depends_on:
   - "0001-login-movil"
 domain:
   - usuario-y-membresia
-frente: campo
+frente: plataforma
 created: 2026-08-08
 updated: 2026-08-08
 tags:
@@ -29,7 +29,7 @@ tags:
 > **Meta**
 > - Apps afectadas: `mobile`, `api`
 > - Depende de: [[../0001-login-movil/README|SPEC-0001]]
-> - Frente: `campo`
+> - Frente: `plataforma`
 
 ---
 

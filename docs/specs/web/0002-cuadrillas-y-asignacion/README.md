@@ -60,6 +60,9 @@ POST /api/projects/:id/assignments
       exclusión en la base, no validación de formulario
 - [x] La asignación acepta cuadrilla **o** persona, nunca ambas
 - [x] La pertenencia histórica no se altera al mover a alguien de cuadrilla
+- [x] **Un `WORKER` solo ve proyectos donde tiene asignación** — directa o por la
+      cuadrilla a la que pertenecía en esa fecha. Pedir uno ajeno por id devuelve
+      404, no 403: no se confirma que exista
 
 ## Riesgos / consideraciones
 

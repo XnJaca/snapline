@@ -59,6 +59,27 @@ describe('invariantes del dominio (e2e)', () => {
       expect(res.body.every((p: { companyId: string }) => p.companyId === a.companyId)).toBe(true);
     });
 
+    it('el WORKER solo ve proyectos donde tiene asignación', async () => {
+      // Sin asignación no ve nada, aunque el proyecto exista en su empresa.
+      const sinAsignar = await request(app.getHttpServer())
+        .get('/api/projects').set('Authorization', `Bearer ${workerA}`).expect(200);
+      expect(sinAsignar.body).toHaveLength(0);
+
+      // Y pedirlo por id da 404, no 403: no se confirma que exista.
+      await request(app.getHttpServer())
+        .get(`/api/projects/${a.projectId}`).set('Authorization', `Bearer ${workerA}`)
+        .expect(404);
+
+      await request(app.getHttpServer())
+        .post(`/api/projects/${a.projectId}/assignments`).set('Authorization', `Bearer ${ownerA}`)
+        .send({ membershipId: a.workerMembershipId, workDate: '2026-08-08' })
+        .expect(201);
+
+      const conAsignacion = await request(app.getHttpServer())
+        .get('/api/projects').set('Authorization', `Bearer ${workerA}`).expect(200);
+      expect(conAsignacion.body).toHaveLength(1);
+    });
+
     it('no se puede crear apuntando a un cliente de otra empresa', async () => {
       await request(app.getHttpServer())
         .post('/api/projects').set('Authorization', `Bearer ${ownerA}`)

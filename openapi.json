@@ -6862,12 +6862,23 @@
           "userId": {
             "type": "string",
             "format": "uuid"
+          },
+          "role": {
+            "enum": [
+              "OWNER",
+              "ADMIN",
+              "FOREMAN",
+              "WORKER",
+              "ACCOUNTANT"
+            ],
+            "type": "string"
           }
         },
         "required": [
           "companyId",
           "membershipId",
-          "userId"
+          "userId",
+          "role"
         ]
       },
       "UpdateLocaleDto": {

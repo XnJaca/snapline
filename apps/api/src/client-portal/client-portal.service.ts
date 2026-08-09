@@ -130,8 +130,10 @@ export class ClientPortalService {
   async view(rawToken: string): Promise<ClientProjectViewDto[]> {
     const access = await this.resolveToken(rawToken);
 
+    // El visitante del portal no es miembro: no tiene rol ni membresía. Solo se
+    // usa para abrir el scope de tenant de esa empresa.
     const tenant: TenantContext = {
-      companyId: access.companyId, membershipId: '', userId: '',
+      companyId: access.companyId, membershipId: '', userId: '', role: 'WORKER',
     };
 
     return this.tenants.runAs(tenant, async () => {
@@ -157,7 +159,7 @@ export class ClientPortalService {
   async requestOffer(rawToken: string, dto: RequestOfferDto): Promise<{ leadId: string }> {
     const access = await this.resolveToken(rawToken);
 
-    const tenant: TenantContext = { companyId: access.companyId, membershipId: '', userId: '' };
+    const tenant: TenantContext = { companyId: access.companyId, membershipId: '', userId: '', role: 'WORKER' };
     return this.tenants.runAs(tenant, async () => {
       const id = newId();
       await this.leads.save(this.leads.create({

@@ -50,6 +50,11 @@ GROUP BY status
 
 Un frente sin specs es un frente que nadie está construyendo.
 
+**`plataforma` no cuenta para esa lectura**: no es un frente de producto sino lo que
+los sostiene —login, idioma, tema, navegación— y nada de eso se le factura a nadie.
+Ver [[product/vision#Lo que sostiene a los cinco — `plataforma`|vision]]. Si todos
+los specs están ahí, el producto todavía no empezó.
+
 ```dataview
 TABLE WITHOUT ID
   frente AS "Frente",

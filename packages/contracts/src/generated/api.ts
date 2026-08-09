@@ -921,6 +921,8 @@ export interface components {
             membershipId: string;
             /** Format: uuid */
             userId: string;
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
         };
         UpdateLocaleDto: {
             /** @enum {string} */

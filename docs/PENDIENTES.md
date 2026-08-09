@@ -74,6 +74,15 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
 
 ## 🟠 Antes de que crezca la superficie
 
+- [ ] **Endpoint de sincronización para el móvil.** El diseño contempla offline
+      —UUIDv7 del cliente, idempotencia, borrado suave, `updated_at` como cursor—
+      pero **no hay un endpoint de sync**: la bandeja de salida tiene que hacer una
+      llamada por registro. Con 40 fotos de una obra son 40 llamadas.
+
+      Para el prototipo alcanza. **Trigger:** cuando una jornada sin señal empiece
+      a tardar en subir.
+
+
 - [x] ~~**Envelope canónico de errores.**~~ Hecho el 2026-08-08, ADR-0011.
       `{statusCode, code, message, details[], path, timestamp}` en toda respuesta de
       error. **`code` es estable y no se traduce** — es contra lo que ramifica el
