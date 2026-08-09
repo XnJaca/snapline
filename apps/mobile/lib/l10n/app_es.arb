@@ -13,9 +13,6 @@
   "themeModeLight": "Claro",
   "themeModeDark": "Oscuro",
 
-  "localeEnglish": "Inglés",
-  "localeSpanish": "Español",
-
   "authLoginIdentifierLabel": "Teléfono o correo",
   "authLoginIdentifierRequired": "Escriba su teléfono o correo",
   "authLoginPasswordLabel": "Contraseña",
@@ -31,5 +28,21 @@
 
   "authSignOut": "Cerrar sesión",
   "homeWelcome": "Sesión de {name}",
-  "homeCompany": "Empresa: {company}"
+  "homeCompany": "Empresa: {company}",
+
+  "languageSpanish": "Español",
+  "languageEnglish": "English",
+  "settingsLanguage": "Idioma",
+
+  "navToday": "Hoy",
+  "navPhotos": "Fotos",
+  "navMyHours": "Mis horas",
+  "navHours": "Horas",
+  "navCrew": "Cuadrilla",
+  "navProjects": "Proyectos",
+  "navCustomers": "Clientes",
+  "navReports": "Reportes",
+  "navBilling": "Facturación",
+
+  "comingSoon": "Próximamente"
 }

@@ -897,6 +897,8 @@ export interface components {
             companyName: string;
             /** @enum {string} */
             role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
+            /** @description Lo que este rol puede hacer. El cliente dibuja su interfaz con esto en vez de replicar la tabla de roles; el guard sigue siendo quien autoriza. */
+            permissions: string[];
         };
         AuthResultDto: {
             accessToken: string;

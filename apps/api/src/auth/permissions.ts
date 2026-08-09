@@ -42,3 +42,16 @@ export type Permission = keyof typeof PERMISSIONS;
 export function roleHasPermission(role: MembershipRole, permission: Permission): boolean {
   return (PERMISSIONS[permission] as readonly MembershipRole[]).includes(role);
 }
+
+/**
+ * Los permisos de un rol, para que el cliente dibuje su interfaz sin replicar
+ * esta tabla. Viaja en el login: así un permiso nuevo llega a un teléfono que no
+ * se actualizó, y el móvil nunca decide por su cuenta qué puede hacer un rol.
+ *
+ * Sigue siendo el guard el que autoriza; esto es solo para la UI.
+ */
+export function permissionsForRole(role: MembershipRole): Permission[] {
+  return (Object.keys(PERMISSIONS) as Permission[]).filter((permission) =>
+    roleHasPermission(role, permission),
+  );
+}

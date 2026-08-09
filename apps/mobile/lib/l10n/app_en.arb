@@ -21,9 +21,6 @@
   "themeModeLight": "Light",
   "themeModeDark": "Dark",
 
-  "localeEnglish": "English",
-  "localeSpanish": "Spanish",
-
   "authLoginIdentifierLabel": "Phone or email",
   "@authLoginIdentifierLabel": {
     "description": "Un solo campo: el servidor resuelve contra ambos. Muchos trabajadores no tienen correo."
@@ -48,5 +45,30 @@
   "homeCompany": "Company: {company}",
   "@homeCompany": {
     "placeholders": { "company": { "type": "String" } }
+  },
+
+  "languageSpanish": "Español",
+  "@languageSpanish": {
+    "description": "Cada idioma se escribe en el suyo, nunca traducido: es lo único legible para alguien que todavía no eligió."
+  },
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "Ver languageSpanish. No se traduce en ningún locale."
+  },
+  "settingsLanguage": "Language",
+
+  "navToday": "Today",
+  "navPhotos": "Photos",
+  "navMyHours": "My hours",
+  "navHours": "Hours",
+  "navCrew": "Crew",
+  "navProjects": "Projects",
+  "navCustomers": "Customers",
+  "navReports": "Reports",
+  "navBilling": "Billing",
+
+  "comingSoon": "Coming soon",
+  "@comingSoon": {
+    "description": "Placeholder de pestaña sin implementar. Se borra cuando cada pantalla tenga su spec."
   }
 }

@@ -6779,13 +6779,21 @@
               "ACCOUNTANT"
             ],
             "type": "string"
+          },
+          "permissions": {
+            "description": "Lo que este rol puede hacer. El cliente dibuja su interfaz con esto en vez de replicar la tabla de roles; el guard sigue siendo quien autoriza.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "companyId",
           "companyName",
-          "role"
+          "role",
+          "permissions"
         ]
       },
       "AuthResultDto": {

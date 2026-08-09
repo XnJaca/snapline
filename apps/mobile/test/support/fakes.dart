@@ -21,12 +21,57 @@ class FakeSessionStorage implements SessionStorage {
   Future<void> clear() async => session = null;
 }
 
+/// Los mismos que devuelve el API para cada rol. Ver `permissionsForRole` en
+/// `apps/api/src/auth/permissions.ts`.
+const permisosWorker = [
+  'projects.read',
+  'time.clock',
+  'media.capture',
+  'media.read',
+  'profile.write',
+];
+
+const permisosOwner = [
+  'customers.read',
+  'customers.write',
+  'projects.read',
+  'projects.write',
+  'projects.publish',
+  'crews.read',
+  'crews.write',
+  'time.clock',
+  'time.read',
+  'time.approve',
+  'media.capture',
+  'media.read',
+  'media.visibility',
+  'catalog.read',
+  'catalog.write',
+  'billing.read',
+  'billing.write',
+  'reports.read',
+  'members.manage',
+  'profile.write',
+];
+
 Session buildSession({
   String name = 'William Ferman',
   AuthUserDtoLocale locale = AuthUserDtoLocale.es,
   String companyName = 'Professional Construction LLC',
+  AuthMembershipDtoRole role = AuthMembershipDtoRole.owner,
+  List<String>? permissions,
   DateTime? expiresAt,
 }) {
+  final membership = AuthMembershipDto(
+    id: 'm1',
+    companyId: 'c1',
+    companyName: companyName,
+    role: role,
+    permissions:
+        permissions ??
+        (role == AuthMembershipDtoRole.worker ? permisosWorker : permisosOwner),
+  );
+
   return Session(
     accessToken: 'access',
     refreshToken: 'refresh',
@@ -39,19 +84,7 @@ Session buildSession({
       email: 'w@example.com',
       phone: '+13015550142',
     ),
-    membership: AuthMembershipDto(
-      id: 'm1',
-      companyId: 'c1',
-      companyName: companyName,
-      role: AuthMembershipDtoRole.owner,
-    ),
-    memberships: [
-      AuthMembershipDto(
-        id: 'm1',
-        companyId: 'c1',
-        companyName: companyName,
-        role: AuthMembershipDtoRole.owner,
-      ),
-    ],
+    membership: membership,
+    memberships: [membership],
   );
 }

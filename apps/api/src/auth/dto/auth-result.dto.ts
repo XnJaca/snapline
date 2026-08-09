@@ -31,6 +31,13 @@ export class AuthMembershipDto {
 
   @ApiProperty({ enum: ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER', 'ACCOUNTANT'] })
   role!: MembershipRole;
+
+  @ApiProperty({
+    type: [String],
+    description:
+      'Lo que este rol puede hacer. El cliente dibuja su interfaz con esto en vez de replicar la tabla de roles; el guard sigue siendo quien autoriza.',
+  })
+  permissions!: string[];
 }
 
 export class AuthResultDto {

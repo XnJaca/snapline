@@ -47,6 +47,7 @@ void main() {
             companyId: 'c',
             companyName: 'co',
             role: AuthMembershipDtoRole.worker,
+            permissions: permisosWorker,
           ),
           memberships: const [],
         ),

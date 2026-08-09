@@ -9,6 +9,7 @@ import { Membership } from './entities/membership.entity';
 import { AccessTokenPayload } from './guards/auth.guard';
 import { AuthResultDto, AuthMembershipDto, AuthUserDto } from './dto/auth-result.dto';
 import { normalizeIdentifier } from './phone';
+import { permissionsForRole } from './permissions';
 
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 60;
 
@@ -95,6 +96,7 @@ export class AuthService {
     };
     const toDto = (m: SessionMembership): AuthMembershipDto => ({
       id: m.id, companyId: m.companyId, companyName: m.companyName, role: m.role,
+      permissions: permissionsForRole(m.role),
     });
 
     return {

@@ -129,9 +129,16 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
       credenciales sin autenticación previa** — login, refresh y el portal del
       cliente. Verificado: al cuarto intento contra `/p/:token` responde 429.
 
-- [ ] **Tests e2e contra Postgres.** Los 15 actuales son unitarios y de
-      arquitectura. Los invariantes de base (RLS, triggers, numeración) se
-      probaron a mano y esa verificación no quedó automatizada.
+- [x] ~~**Tests e2e contra Postgres.**~~ Hecho el 2026-08-08: 21 tests en
+      `apps/api/test/`, con `pnpm test:e2e`. Cubren lo que se venía verificando a
+      mano con curl —aislamiento entre dos empresas reales, geocerca recalculada,
+      tarifa congelada, snapshot de precios, idempotencia de pagos, token del
+      portal hasheado— contra el Postgres real, porque los invariantes viven en
+      triggers, índices parciales y RLS que un mock no ejercita.
+
+      El seed usa el rol migrador aparte: sembrar con el rol de runtime falla por
+      RLS, que es exactamente lo que debe pasar. Y limpiar exige desactivar a
+      propósito el trigger que bloquea el borrado de horas.
 
 ## ⚪ Higiene
 

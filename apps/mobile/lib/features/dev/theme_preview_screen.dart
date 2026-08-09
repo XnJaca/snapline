@@ -28,7 +28,7 @@ class ThemePreviewScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.translate),
-            tooltip: l10n.localeSpanish,
+            tooltip: l10n.settingsLanguage,
             onPressed: () {
               final current = Localizations.localeOf(context).languageCode;
               ref

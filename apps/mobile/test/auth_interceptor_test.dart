@@ -53,6 +53,7 @@ Map<String, Object?> _authResult(String token) => {
     'companyId': 'c1',
     'companyName': 'PC LLC',
     'role': 'WORKER',
+    'permissions': ['time.clock', 'media.capture'],
   },
   'memberships': const [],
 };

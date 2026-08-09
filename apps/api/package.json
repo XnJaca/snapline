@@ -18,7 +18,8 @@
     "db:reset": "docker compose down -v && docker compose up -d && sleep 4 && pnpm migration:run",
     "check:drift": "bash scripts/check-column-drift.sh",
     "seed": "ts-node -r tsconfig-paths/register src/database/seeds/dev.seed.ts",
-    "openapi:generate": "nest build && node dist/openapi.generate.js"
+    "openapi:generate": "nest build && node dist/openapi.generate.js",
+    "test:e2e": "jest --config jest-e2e.config.js --runInBand"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",
@@ -51,8 +52,10 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.1",
     "dotenv": "^17.4.2",
     "jest": "^29.7.0",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
