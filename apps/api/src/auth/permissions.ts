@@ -30,6 +30,11 @@ export const PERMISSIONS = {
 
   'reports.read': ['OWNER', 'ADMIN', 'ACCOUNTANT'],
   'members.manage': ['OWNER', 'ADMIN'],
+
+  // Cambiar lo propio: el idioma de la persona. Todos los roles, porque cada
+  // uno solo puede tocar su propio usuario — el servicio usa el id de la sesión
+  // y nunca uno recibido del cliente.
+  'profile.write': ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER', 'ACCOUNTANT'],
 } as const satisfies Record<string, readonly MembershipRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

@@ -15,6 +15,9 @@ kanban-plugin: board
 
 ## ✏️ Borrador (escribiendo el spec)
 
+- [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
+- [ ] [[specs/mobile/0003-navegacion-por-rol/README|SPEC-0003: Navegación por rol]]
+
 
 ## 🔍 Review (listo para revisar)
 

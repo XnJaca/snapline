@@ -1,13 +1,13 @@
 import { ApiError } from '../common/errors/api-error';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { AppUser } from './entities/app-user.entity';
+import { AppUser, Locale } from './entities/app-user.entity';
 import { Membership } from './entities/membership.entity';
 import { AccessTokenPayload } from './guards/auth.guard';
-import { AuthResultDto, AuthMembershipDto } from './dto/auth-result.dto';
+import { AuthResultDto, AuthMembershipDto, AuthUserDto } from './dto/auth-result.dto';
 import { normalizeIdentifier } from './phone';
 
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 60;
@@ -107,6 +107,21 @@ export class AuthService {
       },
       membership: toDto(membership),
       memberships: all.map(toDto),
+    };
+  }
+
+  /**
+   * El id sale de la sesión, nunca del cuerpo: así nadie puede cambiarle el
+   * idioma a otra persona.
+   */
+  async updateLocale(userId: string, locale: Locale): Promise<AuthUserDto> {
+    const result = await this.users.update({ id: userId, deletedAt: IsNull() }, { locale });
+    if (!result.affected) throw new NotFoundException('Usuario no encontrado');
+
+    const user = await this.users.findOneOrFail({ where: { id: userId } });
+    return {
+      id: user.id, name: user.name, locale: user.locale,
+      email: user.email, phone: user.phone,
     };
   }
 

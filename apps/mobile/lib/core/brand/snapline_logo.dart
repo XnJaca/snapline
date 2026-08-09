@@ -76,11 +76,21 @@ class _MarkPainter extends CustomPainter {
 /// El wordmark es la **única** cosa de la app en Bricolage Grotesque; todo el
 /// resto del texto es Inter. Ver ADR-0009.
 class SnaplineLogo extends StatelessWidget {
-  const SnaplineLogo({super.key, this.color, this.markSize = 24});
+  const SnaplineLogo({
+    super.key,
+    this.color,
+    this.markColor,
+    this.markSize = 24,
+  });
 
   /// Por defecto va en el color atenuado: en una pantalla de trabajo la marca
   /// acompaña. Pasar `context.colors.onSurface` donde deba tener presencia.
   final Color? color;
+
+  /// Solo el símbolo. Sirve para destacarlo en el color de marca dejando el
+  /// nombre en el color de texto.
+  final Color? markColor;
+
   final double markSize;
 
   @override
@@ -102,7 +112,7 @@ class SnaplineLogo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SnaplineMark(size: markSize, color: resolved),
+        SnaplineMark(size: markSize, color: markColor ?? resolved),
         SizedBox(width: context.spacing.sm * (markSize / 24)),
         // Sin esto, un tamaño grande desborda en pantallas angostas.
         Flexible(child: FittedBox(child: nombre)),

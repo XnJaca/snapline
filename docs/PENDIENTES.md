@@ -99,9 +99,15 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
       La orientación se aplica **antes** de borrar el EXIF: sin eso, quitar los
       metadatos deja las fotos verticales acostadas.
 
-- [ ] **Módulo `client-portal`.** Tablas y entities listas, sin controller.
-      Necesita definir la vía de auth por token público (magic link), que toca el
-      `AuthGuard`. Ver ADR-0004.
+- [x] ~~**Módulo `client-portal`.**~~ Hecho el 2026-08-08. Magic link con token
+      hasheado (en la base nunca queda en claro), `GET /p/:token` anónimo con rate
+      limit, y el default **STAGES** verificado: el cliente ve la etapa y nada más
+      hasta que la empresa lo pase a PROGRESS.
+
+      Salió un bug de fondo: **`runUnscoped()` no bypassaba RLS** — solo logueaba.
+      El rol de runtime no puede saltársela, que es el punto del ADR-0006. Se
+      renombró a `runWithoutTenant()` con la doc corregida, y el token se canjea
+      por `client_access_by_token()`, tercera y última función SECURITY DEFINER.
 
 ## 🟡 Cuando corresponda
 
@@ -118,7 +124,10 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
 - [ ] **Cobro con tarjeta.** Hoy solo se registra el pago recibido. Fuera de
       alcance a propósito — ver "Qué NO somos" en [[product/vision]].
 
-- [ ] **Rate limit** en los endpoints públicos y en login. Hoy no hay ninguno.
+- [x] ~~**Rate limit** en endpoints públicos y login.~~ Hecho el 2026-08-08 con
+      `@nestjs/throttler`: 120 req/min general, y **8/min en lo que acepta
+      credenciales sin autenticación previa** — login, refresh y el portal del
+      cliente. Verificado: al cuarto intento contra `/p/:token` responde 429.
 
 - [ ] **Tests e2e contra Postgres.** Los 15 actuales son unitarios y de
       arquitectura. Los invariantes de base (RLS, triggers, numeración) se
@@ -126,8 +135,13 @@ Marcar con `[x]` al completar y borrar la línea cuando ya no aporte contexto.
 
 ## ⚪ Higiene
 
-- [ ] **Commitear.** Al 2026-08-08 el repo no tiene un solo commit y todo está sin
-      trackear. Es el riesgo más tonto de la lista.
+- [x] ~~**Commitear.**~~ Hecho el 2026-08-08: repo en
+      github.com/XnJaca/snapline, **público por ahora**. Auditada toda la historia
+      antes de publicar — sin `.env`, sin `brief.md`, sin llaves.
+
+      **Pendiente de decisión:** `DECISIONES.md` quedó público con la estrategia
+      de precios y la nota de no mencionarle a William la fase 1. Pasar el repo a
+      privado no deshace la exposición: sirve para adelante, no para atrás.
 
 - [ ] **`apps/web` y `apps/site`** sin scaffold. Al crearlas, agregarlas a
       `pnpm-workspace.yaml` — hoy solo lista `apps/api` y `packages/*`.

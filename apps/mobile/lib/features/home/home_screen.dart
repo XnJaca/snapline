@@ -19,7 +19,13 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const SnaplineLogo(),
+        titleSpacing: spacing.lg,
+        title: SnaplineLogo(
+          // El símbolo en el color de marca; el nombre en color de texto, para
+          // que la barra no compita con la acción primaria de la pantalla.
+          markColor: context.colors.primary,
+          color: context.colors.onSurface,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
