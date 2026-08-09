@@ -141,13 +141,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AccountScreen(),
       ),
-      // Antes que `/projects/:projectId`, o "all" entraría como un id de obra.
-      GoRoute(
-        path: AllProjectsScreen.route,
-        name: 'allProjects',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AllProjectsScreen(),
-      ),
       GoRoute(
         path: Routes.project,
         name: 'project',

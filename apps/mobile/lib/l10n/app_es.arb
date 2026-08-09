@@ -74,9 +74,8 @@
   "projectStatusCompleted": "Terminado",
   "projectStatusCancelled": "Cancelado",
 
-  "projectsActiveTitle": "En proceso",
-  "projectsViewAll": "Ver todas",
-  "projectsAllTitle": "Todos los proyectos",
+  "projectsTabInProgress": "En proceso",
+  "projectsTabAll": "Todas",
   "projectsFilterAll": "Todas",
   "projectsEmptyActive": "Ninguna obra en proceso ahora",
   "projectsEmptyFiltered": "Ningún proyecto con este estado",

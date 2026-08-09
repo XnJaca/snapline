@@ -106,12 +106,8 @@
   "projectStatusCompleted": "Completed",
   "projectStatusCancelled": "Cancelled",
 
-  "projectsActiveTitle": "In progress",
-  "@projectsActiveTitle": {
-    "description": "Encabezado de la lista principal: las obras vivas, ni terminadas ni canceladas."
-  },
-  "projectsViewAll": "View all",
-  "projectsAllTitle": "All projects",
+  "projectsTabInProgress": "In progress",
+  "projectsTabAll": "All",
   "projectsFilterAll": "All",
   "projectsEmptyActive": "No work in progress right now",
   "projectsEmptyFiltered": "No projects with this status",

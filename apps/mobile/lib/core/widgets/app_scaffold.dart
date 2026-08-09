@@ -12,11 +12,16 @@ class AppScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.actions = const [],
+    this.bottom,
   });
 
   final String title;
   final Widget body;
   final List<Widget> actions;
+
+  /// Va pegado bajo el título, dentro de la barra. Para tabs: colgadas del
+  /// `AppBar` quedan ancladas, sueltas sobre el fondo flotan.
+  final PreferredSizeWidget? bottom;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +33,7 @@ class AppScaffold extends StatelessWidget {
         backgroundColor: colors.surface,
         foregroundColor: colors.onSurface,
         actions: [...actions, const AccountButton()],
+        bottom: bottom,
       ),
       body: body,
     );

@@ -141,26 +141,24 @@ class _Cabecera extends StatelessWidget {
     final spacing = context.spacing;
     final colors = context.colors;
 
+    final atenuado = colors.onSurfaceVariant;
+
+    // Una sola columna de texto: todo arranca en el mismo margen. Los iconos al
+    // lado de cada dato metían una segunda sangría y el bloque se leía torcido.
     return Container(
       width: double.infinity,
       color: colors.surface,
       padding: EdgeInsets.fromLTRB(
         spacing.lg,
-        spacing.sm,
+        0,
         spacing.lg,
         spacing.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StatusChip(
-            tone: project.status.tone,
-            label: project.status.label(l10n),
-            icon: project.status.icon,
-          ),
-          SizedBox(height: spacing.lg),
-
-          // Qué obra es: lo más grande de la pantalla.
+          // Primero qué obra es. El estado entra después: un chip de color
+          // arriba del título se lleva la vista antes que el nombre.
           Text(
             project.name,
             style: context.texts.displaySmall,
@@ -170,54 +168,32 @@ class _Cabecera extends StatelessWidget {
           SizedBox(height: spacing.xs),
           Text(
             project.customer,
-            style: context.texts.bodyLarge?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
+            style: context.texts.bodyLarge?.copyWith(color: atenuado),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-
-          SizedBox(height: spacing.lg),
-          Divider(height: 1, color: colors.outline),
           SizedBox(height: spacing.md),
-
-          // Dónde y con quién: el bloque de apoyo, separado del título.
-          _Dato(icon: Icons.place_outlined, text: project.site),
-          SizedBox(height: spacing.sm),
-          _Dato(
-            icon: Icons.groups_outlined,
-            text: project.crew ?? l10n.projectNoCrew,
+          StatusChip(
+            tone: project.status.tone,
+            label: project.status.label(l10n),
+            icon: project.status.icon,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Dato extends StatelessWidget {
-  const _Dato({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final spacing = context.spacing;
-    final atenuado = context.colors.onSurfaceVariant;
-
-    return Row(
-      children: [
-        Icon(icon, size: spacing.lg, color: atenuado),
-        SizedBox(width: spacing.sm),
-        Expanded(
-          child: Text(
-            text,
+          SizedBox(height: spacing.md),
+          Text(
+            project.site,
+            style: context.texts.bodySmall?.copyWith(color: atenuado),
+            maxLines: 2,
+          ),
+          SizedBox(height: spacing.xs),
+          Text(
+            '${project.crew ?? l10n.projectNoCrew} · '
+            '${l10n.projectPhotoCount(project.photoCount)}',
             style: context.texts.bodySmall?.copyWith(color: atenuado),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

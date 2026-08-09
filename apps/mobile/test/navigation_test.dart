@@ -7,7 +7,6 @@ import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/navigation/last_destination_store.dart';
 import 'package:snapline/core/session/session_storage.dart';
 import 'package:snapline/core/theme/app_theme.dart';
-import 'package:snapline/features/projects/projects_screen.dart';
 import 'package:snapline/main.dart';
 
 import 'support/fakes.dart';
@@ -169,18 +168,13 @@ void main() {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Ver todas'));
+      await tester.tap(find.widgetWithText(Tab, 'Todas'));
       await tester.pumpAndSettle();
       final obra = find.text('Front porch repair');
       await tester.scrollUntilVisible(
         obra,
         300,
-        scrollable: find
-            .descendant(
-              of: find.byType(AllProjectsScreen),
-              matching: find.byType(Scrollable),
-            )
-            .last,
+        scrollable: find.byType(Scrollable).last,
       );
       await tester.ensureVisible(obra);
       await tester.pumpAndSettle();
@@ -235,12 +229,14 @@ void main() {
       expect(find.text('Window replacement'), findsNothing);
     });
 
-    // "Ver todas" se abre con `push`, así que la cartera sigue en el árbol y
-    // sus scrollables también: hay que buscar dentro de la pantalla nueva.
-    Finder scrollablesDeTodas() => find.descendant(
-      of: find.byType(AllProjectsScreen),
-      matching: find.byType(Scrollable),
-    );
+    // El carrusel de filtros, identificado por los chips que contiene: en esta
+    // pantalla hay varios scrollables y el orden no es de fiar.
+    Finder carruselDeFiltros() => find
+        .ancestor(
+          of: find.byType(FilterChip).first,
+          matching: find.byType(Scrollable),
+        )
+        .first;
 
     Future<void> filtrar(WidgetTester tester, String estado) async {
       final chip = find.widgetWithText(FilterChip, estado);
@@ -249,7 +245,7 @@ void main() {
       await tester.scrollUntilVisible(
         chip,
         200,
-        scrollable: scrollablesDeTodas().first,
+        scrollable: carruselDeFiltros(),
       );
       await tester.ensureVisible(chip);
       await tester.pumpAndSettle();
@@ -261,7 +257,7 @@ void main() {
     Future<void> verTodas(WidgetTester tester, {String? filtro}) async {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ver todas'));
+      await tester.tap(find.widgetWithText(Tab, 'Todas'));
       await tester.pumpAndSettle();
 
       if (filtro != null) await filtrar(tester, filtro);
@@ -269,7 +265,7 @@ void main() {
 
     testWidgets('"ver todas" sí las muestra', (tester) async {
       await verTodas(tester);
-      final lista = scrollablesDeTodas().last;
+      final lista = find.byType(Scrollable).last;
 
       await tester.scrollUntilVisible(
         find.text('Front porch repair'),

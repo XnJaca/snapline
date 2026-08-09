@@ -6,87 +6,141 @@ import '../../core/navigation/app_destination.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/section_header.dart';
 import '../../l10n/app_localizations.dart';
 import 'project_card.dart';
 import 'project_status_display.dart';
 import 'sample_projects.dart';
 
-/// La cartera del dueño: **solo lo que está en obra ahora**.
+/// La cartera del dueño, en dos pestañas: **lo que está en obra ahora** y todo
+/// lo demás.
 ///
-/// Lo agendado, lo pausado y lo cerrado se consulta, no se vigila, así que sale
-/// de la pantalla principal y vive detrás de "ver todas". Andamiaje hasta que la
-/// lista tenga sus datos.
+/// Son tabs y no un encabezado con un botón al costado porque un botón suelto
+/// sobre el fondo no se lee como parte de la interfaz — flota. Las tabs anclan,
+/// y además son el mismo lenguaje que ya usa el contenedor de una obra.
 class ProjectsScreen extends StatelessWidget {
   const ProjectsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final spacing = context.spacing;
-    final enProceso = inProgressSampleProjects;
+    final colors = context.colors;
 
-    return AppScaffold(
-      title: AppDestination.projects.label(l10n),
-      body: enProceso.isEmpty
-          ? EmptyState(
-              icon: AppDestination.projects.icon,
-              message: l10n.projectsEmptyActive,
-              action: const _VerTodas(),
-            )
-          : ListView(
-              padding: EdgeInsets.fromLTRB(
-                spacing.lg,
-                spacing.md,
-                spacing.lg,
-                spacing.xxl,
-              ),
-              children: [
-                SectionHeader(
-                  title: l10n.projectsActiveTitle,
-                  subtitle: l10n.projectsCount(enProceso.length),
-                  action: _VerTodas(compacto: true),
-                ),
-                SizedBox(height: spacing.md),
-                for (final proyecto in enProceso) ...[
-                  ProjectCard(
-                    project: proyecto,
-                    onTap: () => context.push(proyecto.location),
-                  ),
-                  SizedBox(height: spacing.md),
-                ],
-              ],
-            ),
+    return DefaultTabController(
+      length: 2,
+      child: AppScaffold(
+        title: AppDestination.projects.label(l10n),
+        bottom: TabBar(
+          // Con dos pestañas cada una se lleva media pantalla, y la pastilla a
+          // ese tamaño pesa más que el contenido. El aire la ajusta al texto.
+          indicatorPadding: EdgeInsets.symmetric(
+            horizontal: context.spacing.xxl,
+            vertical: context.spacing.sm,
+          ),
+          tabs: [
+            Tab(text: l10n.projectsTabInProgress),
+            Tab(text: l10n.projectsTabAll),
+          ],
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: colors.outline)),
+          ),
+          child: const TabBarView(
+            children: [_EnProceso(), _Todas()],
+          ),
+        ),
+      ),
     );
   }
 }
 
-/// Secundario a propósito: la acción primaria de esta pantalla va a ser crear
-/// una obra, y el naranja sólido es de una sola cosa por pantalla.
-class _VerTodas extends StatelessWidget {
-  const _VerTodas({this.compacto = false});
+class _EnProceso extends StatelessWidget {
+  const _EnProceso();
 
-  /// Junto al encabezado va compacto; en el estado vacío ocupa el ancho, que
-  /// ahí sí es la única cosa que se puede hacer.
-  final bool compacto;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final enProceso = inProgressSampleProjects;
+
+    if (enProceso.isEmpty) {
+      return EmptyState(
+        icon: AppDestination.projects.icon,
+        message: l10n.projectsEmptyActive,
+      );
+    }
+    return _ListaDeObras(
+      storageKey: 'projects.inProgress',
+      projects: enProceso,
+    );
+  }
+}
+
+class _Todas extends StatefulWidget {
+  const _Todas();
+
+  @override
+  State<_Todas> createState() => _TodasState();
+}
+
+class _TodasState extends State<_Todas> {
+  /// `null` es "todas": el filtro arranca sin recortar nada.
+  ProjectStatus? _filtro;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
+    final visibles = _filtro == null
+        ? sampleProjects
+        : sampleProjects.where((p) => p.status == _filtro).toList();
+
+    return Column(
+      children: [
+        _Filtros(
+          seleccionado: _filtro,
+          onChanged: (estado) => setState(() => _filtro = estado),
+        ),
+        Divider(height: 1, color: colors.outline),
+        Expanded(
+          child: visibles.isEmpty
+              ? EmptyState(
+                  icon: Icons.filter_list_off,
+                  message: l10n.projectsEmptyFiltered,
+                )
+              : _ListaDeObras(
+                  storageKey: 'projects.all',
+                  projects: visibles,
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ListaDeObras extends StatelessWidget {
+  const _ListaDeObras({required this.storageKey, required this.projects});
+
+  final String storageKey;
+  final List<SampleProject> projects;
 
   @override
   Widget build(BuildContext context) {
     final spacing = context.spacing;
-    final label = Text(AppLocalizations.of(context).projectsViewAll);
-    void abrir() => context.push(AllProjectsScreen.route);
 
-    if (compacto) {
-      return TextButton(onPressed: abrir, child: label);
-    }
-
-    return OutlinedButton.icon(
-      icon: const Icon(Icons.filter_list),
-      label: label,
-      style: OutlinedButton.styleFrom(
-        minimumSize: Size.fromHeight(spacing.touchTargetMin),
+    return ListView.separated(
+      key: PageStorageKey<String>(storageKey),
+      padding: EdgeInsets.fromLTRB(
+        spacing.lg,
+        spacing.lg,
+        spacing.lg,
+        spacing.xxl,
       ),
-      onPressed: abrir,
+      itemCount: projects.length,
+      separatorBuilder: (_, _) => SizedBox(height: spacing.md),
+      itemBuilder: (context, index) => ProjectCard(
+        project: projects[index],
+        onTap: () => context.push(projects[index].location),
+      ),
     );
   }
 }
@@ -138,70 +192,6 @@ class _Filtros extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Todas las obras, filtrables por estado. Acá sí aparecen las terminadas y las
-/// canceladas, que es de lo que esta pantalla existe.
-class AllProjectsScreen extends StatefulWidget {
-  const AllProjectsScreen({super.key});
-
-  static const route = '/projects/all';
-
-  @override
-  State<AllProjectsScreen> createState() => _AllProjectsScreenState();
-}
-
-class _AllProjectsScreenState extends State<AllProjectsScreen> {
-  /// `null` es "todas": el filtro arranca sin recortar nada.
-  ProjectStatus? _filtro;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final spacing = context.spacing;
-    final colors = context.colors;
-    final visibles = _filtro == null
-        ? sampleProjects
-        : sampleProjects.where((p) => p.status == _filtro).toList();
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: colors.surface,
-        foregroundColor: colors.onSurface,
-        title: Text(l10n.projectsAllTitle),
-      ),
-      body: Column(
-        children: [
-          _Filtros(
-            seleccionado: _filtro,
-            onChanged: (estado) => setState(() => _filtro = estado),
-          ),
-          Divider(height: 1, color: colors.outline),
-          Expanded(
-            child: visibles.isEmpty
-                ? EmptyState(
-                    icon: Icons.filter_list_off,
-                    message: l10n.projectsEmptyFiltered,
-                  )
-                : ListView.separated(
-                    padding: EdgeInsets.fromLTRB(
-                      spacing.lg,
-                      spacing.lg,
-                      spacing.lg,
-                      spacing.xxl,
-                    ),
-                    itemCount: visibles.length,
-                    separatorBuilder: (_, _) => SizedBox(height: spacing.md),
-                    itemBuilder: (context, index) => ProjectCard(
-                      project: visibles[index],
-                      onTap: () => context.push(visibles[index].location),
-                    ),
-                  ),
-          ),
         ],
       ),
     );
