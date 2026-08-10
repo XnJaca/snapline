@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0004: Capa local y sincronización"
 type: spec
 platform: mobile
-status: borrador
+status: en-implementacion
 goal: "Ninguna pantalla lee de la red —todas observan la base local— y toda escritura hecha sin señal llega al servidor sola cuando vuelve, exactamente una vez."
 apps:
   - mobile
@@ -22,7 +22,7 @@ created: 2026-08-09
 updated: 2026-08-09
 tags:
   - spec
-  - spec/borrador
+  - spec/en-implementacion
   - mobile
 ---
 
@@ -257,35 +257,35 @@ en el cliente.
 
 ## Criterios de aceptación
 
-- [ ] `openapi.json` declara el tipo real de cada colección del pull, y el
+- [x] `openapi.json` declara el tipo real de cada colección del pull, y el
       cliente Dart generado las expone tipadas y no como `dynamic`.
-- [ ] Un `WORKER` que manda `customer.create` o `project.create` por `/sync`
+- [x] Un `WORKER` que manda `customer.create` o `project.create` por `/sync`
       recibe `failed` con `FORBIDDEN`, y las demás operaciones de su lote se
       aplican igual.
-- [ ] `customer.update`, `project.update` y `site.create` existen en
+- [x] `customer.update`, `project.update` y `site.create` existen en
       `SYNC_OPERATIONS`, validan su payload y tienen su caso en `edge-cases/`.
-- [ ] Crear una propiedad para un cliente **que ya sincronizó**, sin señal, llega
+- [x] Crear una propiedad para un cliente **que ya sincronizó**, sin señal, llega
       al servidor y queda colgada de ese cliente.
-- [ ] Mandar dos veces el mismo `customer.update` lo aplica una sola vez, y la
+- [x] Mandar dos veces el mismo `customer.update` lo aplica una sola vez, y la
       segunda vuelve `duplicate`.
-- [ ] `pull().deleted` incluye `sites` y `assignments`.
+- [x] `pull().deleted` incluye `sites` y `assignments`.
 - [ ] Solo `TIME_ENTRY_ALREADY_OPEN` y `TIME_ENTRY_ALREADY_CLOSED` dejan una fila
       en `CONFLICT`; cualquier otro código la deja reintentable.
-- [ ] `billing_address` y `site.address` salen al contrato con sus seis campos,
+- [x] `billing_address` y `site.address` salen al contrato con sus seis campos,
       no como objeto vacío, y comparten el mismo DTO.
-- [ ] Ninguna pantalla importa un cliente de `lib/api/`: se verifica con una
+- [x] Ninguna pantalla importa un cliente de `lib/api/`: se verifica con una
       prueba que recorre `lib/features/` y falla si aparece.
-- [ ] Una escritura con la red caída queda visible en la UI al instante y con
+- [x] Una escritura con la red caída queda visible en la UI al instante y con
       `sync_status = PENDING`.
-- [ ] Reenviar la misma operación dos veces deja **una** fila en el servidor, y
+- [x] Reenviar la misma operación dos veces deja **una** fila en el servidor, y
       la segunda vuelve `duplicate`.
-- [ ] Matar la app con la bandeja llena y reabrirla no pierde ninguna operación.
+- [x] Matar la app con la bandeja llena y reabrirla no pierde ninguna operación.
 - [ ] Un `time_entry` con escritura concurrente queda `CONFLICT` y **no** se
       sobrescribe solo.
-- [ ] Un borrado en el servidor llega al dispositivo como marca, no como
+- [x] Un borrado en el servidor llega al dispositivo como marca, no como
       `DELETE`, y la fila deja de listarse.
-- [ ] El cursor que se guarda es el `serverTime` de la respuesta.
-- [ ] Una operación que falla no impide que las demás del lote se apliquen.
+- [x] El cursor que se guarda es el `serverTime` de la respuesta.
+- [x] Una operación que falla no impide que las demás del lote se apliquen.
 
 ## Riesgos / consideraciones
 
@@ -317,3 +317,5 @@ Regenerar es parte de esto, no un paso aparte.
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. Sale de decidir offline-first de verdad en vez de leer del API con deuda registrada. Los dos prerequisitos de `apps/api` se encontraron leyendo el contrato: el pull devuelve `unknown[]` y el push no acepta correcciones. |
 | 2026-08-09 | borrador | Revisado con `spec-reviewer`. **Un hallazgo grave**: `/sync` gatea el endpoint entero con `time.clock`, así que un `WORKER` puede crear clientes y proyectos saltándose `customers.write`/`projects.write`. Sumados cuatro huecos más que no se veían leyendo el documento: falta `site.create` —lo encontraron dos revisores por separado—, la idempotencia se apoya en que el recurso no exista y por eso rompe con los `update`, `deleted[]` no emite `site` ni `project_assignment`, y no había señal para distinguir un conflicto de `time_entry` de una falla común. |
+| 2026-08-09 | en implementación | Primera mitad, PR #2 mergeado: los cinco arreglos de contrato —incluido el agujero de permisos— y la capa local leyendo de Drift. Verificado en teléfono real con el internet apagado. |
+| 2026-08-09 | en implementación | Bandeja de salida: encolar, empujar el lote, y el resultado de vuelta a la fila local. Verificado contra el API que una escritura encolada llega **exactamente una vez** aunque se reintente. Queda sin cerrar el criterio de `CONFLICT` de `time_entry`: los códigos están mapeados, pero no hay forma de producir uno hasta que exista el marcaje desde el móvil. |

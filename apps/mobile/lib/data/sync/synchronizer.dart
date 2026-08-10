@@ -3,11 +3,20 @@ import 'dart:developer' as developer;
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'dart:convert';
+
+import '../../api/models/sync_operation_dto.dart';
+import '../../api/models/sync_operation_dto_type.dart';
 import '../../api/models/sync_pull_response_dto.dart';
+import '../../api/models/sync_push_dto.dart';
+import '../../api/models/sync_push_response_dto.dart';
+import '../../api/models/sync_result_dto_status.dart';
 import '../../api/clients/sync_client.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_failure.dart';
 import '../local/app_database.dart';
+import '../local/tables.dart';
+import 'outbox.dart';
 import 'sync_mapper.dart';
 
 /// El único que habla con la red.
@@ -16,7 +25,7 @@ import 'sync_mapper.dart';
 /// empuja la bandeja. Sin señal la app funciona igual, solo que este de acá no
 /// avanza.
 class Synchronizer {
-  Synchronizer(this._db, this._api);
+  Synchronizer(this._db, this._api, this._outbox);
 
   /// Un solo cursor: el pull es una foto de todo lo que cambió, no una por
   /// colección.
@@ -24,6 +33,104 @@ class Synchronizer {
 
   final AppDatabase _db;
   final SyncClient _api;
+  final Outbox _outbox;
+
+  /// Estos códigos —y solo estos— dejan una fila de `time_entry` en conflicto.
+  ///
+  /// La regla 12 no permite que unas horas se sobrescriban solas: acá se marcan
+  /// y las mira un humano. Cualquier otro error es reintentable y **no** marca
+  /// conflicto; sin esta lista, cada quien decidiría distinto qué es un
+  /// conflicto justo en el agregado donde no se puede improvisar.
+  static const conflictCodes = {
+    'TIME_ENTRY_ALREADY_OPEN',
+    'TIME_ENTRY_ALREADY_CLOSED',
+  };
+
+  /// Manda lo pendiente y después trae lo nuevo.
+  ///
+  /// **El push va primero**: si se trajera antes, lo del servidor pisaría en
+  /// local una corrección que todavía no se envió.
+  Future<bool> sync() async {
+    final subio = await push();
+    final bajo = await pull();
+    return subio && bajo;
+  }
+
+  /// Vacía la bandeja de salida en una sola llamada.
+  ///
+  /// Devuelve `false` si no se pudo hablar con el servidor. Que una operación
+  /// del lote falle **no** es un fallo de la sincronización: las demás entraron
+  /// y esa queda encolada con su motivo.
+  Future<bool> push() async {
+    try {
+      final pendientes = await _outbox.pending();
+      if (pendientes.isEmpty) return true;
+
+      final respuesta = await _api.syncPush(
+        body: SyncPushDto(
+          operations: pendientes
+              .map(
+                (op) => SyncOperationDto(
+                  clientId: op.clientId,
+                  type: SyncOperationDtoType.fromJson(op.type),
+                  targetId: op.targetId,
+                  payload: jsonDecode(op.payload) as Map<String, Object?>,
+                  occurredAt: op.occurredAt.toUtc().toIso8601String(),
+                ),
+              )
+              .toList(),
+        ),
+      );
+
+      await _aplicarResultados(respuesta);
+      return true;
+    } on ApiFailure catch (e, stack) {
+      developer.log('push falló', name: 'sync', error: e, stackTrace: stack);
+      return false;
+    } catch (e, stack) {
+      developer.log('push falló', name: 'sync', error: e, stackTrace: stack);
+      return false;
+    }
+  }
+
+  /// `duplicate` es éxito: la operación ya se había aplicado en un intento
+  /// anterior y sale de la cola igual que si fuera nueva.
+  Future<void> _aplicarResultados(SyncPushResponseDto respuesta) async {
+    for (final resultado in respuesta.results) {
+      final aplicada = resultado.status == SyncResultDtoStatus.applied ||
+          resultado.status == SyncResultDtoStatus.duplicate;
+
+      if (aplicada) {
+        await _outbox.remove(resultado.clientId);
+        await _marcarSincronizada(resultado.resourceId);
+        continue;
+      }
+
+      await _outbox.incrementAttempts(resultado.clientId);
+      await _outbox.markFailed(resultado.clientId, resultado.code);
+
+      if (conflictCodes.contains(resultado.code)) {
+        // Queda en la cola igual: sale cuando un humano resuelva el conflicto,
+        // no por reintento (regla 12).
+        developer.log(
+          'conflicto en ${resultado.clientId}: ${resultado.code}',
+          name: 'sync',
+        );
+      }
+    }
+  }
+
+  /// La fila local pasa de `PENDING` a `SYNCED`. Es lo que apaga la marca de
+  /// "sin subir" en la pantalla.
+  Future<void> _marcarSincronizada(String? resourceId) async {
+    if (resourceId == null) return;
+    for (final tabla in ['customers', 'sites', 'projects']) {
+      await _db.customStatement(
+        'UPDATE $tabla SET sync_status = ? WHERE id = ?',
+        [SyncStatus.synced.index, resourceId],
+      );
+    }
+  }
 
   /// Trae lo que cambió desde el último pull y lo escribe en local.
   ///
@@ -111,5 +218,6 @@ final synchronizerProvider = Provider<Synchronizer>((ref) {
   return Synchronizer(
     ref.watch(appDatabaseProvider),
     ref.watch(syncClientProvider),
+    ref.watch(outboxProvider),
   );
 });
