@@ -313,6 +313,33 @@ void main() {
       );
     });
 
+    // La columna guarda segundos enteros, no milisegundos: el desempate avanza de
+    // a un segundo. Con paso de milisegundo el valor persistido no cambiaba y el
+    // bucle daba mil vueltas por colisión — casi un segundo de espera en el
+    // camino más común del spec.
+    test('el desempate avanza en segundos, que es lo que la base guarda', () async {
+      final momento = DateTime(2026, 8, 9, 14);
+      final customerId = await repo.create(
+        const CustomerInput(displayName: 'Martínez'),
+        occurredAt: momento,
+      );
+      await repo.addSite(customerId, direccion, occurredAt: momento);
+
+      final crudo = await db
+          .customSelect(
+            'SELECT occurred_at FROM outbox_operations ORDER BY occurred_at',
+          )
+          .get();
+      final segundos = crudo.map((f) => f.data['occurred_at'] as int).toList();
+
+      expect(segundos, hasLength(2));
+      expect(
+        segundos[1] - segundos[0],
+        1,
+        reason: 'un segundo de diferencia, no cero ni mil pasos intermedios',
+      );
+    });
+
     test('el cliente recién creado ya sirve para colgarle una propiedad', () async {
       final customerId = await repo.create(
         const CustomerInput(displayName: 'Martínez'),

@@ -71,13 +71,23 @@ class Outbox {
   /// inexistente. Un desempate local no alcanzaría, porque el que ordena de
   /// verdad es el otro lado.
   ///
+  /// **El paso es de un segundo porque la columna guarda segundos enteros.**
+  /// Drift persiste un `DateTime` como epoch en segundos, así que sumar
+  /// milisegundos deja el mismo valor guardado: el bucle tenía que dar hasta mil
+  /// vueltas —medidas 916ms para tres operaciones del mismo toque— para cruzar al
+  /// segundo siguiente. Con paso de un segundo son tres consultas.
+  ///
   /// Solo se toca el empate exacto: una operación que ocurrió antes que otra ya
   /// encolada conserva su instante y se aplica primero, que es lo que hace que
   /// una salida no pueda aplicarse antes que su entrada.
+  ///
+  /// El corrimiento llega al `deviceRecordedAt` de un marcaje, que va con este
+  /// mismo campo. Es aceptable porque solo se corre lo que ya estaba empatado al
+  /// segundo, y dos cosas que una persona hizo de verdad no caen en el mismo.
   Future<DateTime> _instanteMonotono(DateTime propuesto) async {
     var candidato = propuesto;
     while (await _ocupado(candidato)) {
-      candidato = candidato.add(const Duration(milliseconds: 1));
+      candidato = candidato.add(const Duration(seconds: 1));
     }
     return candidato;
   }
