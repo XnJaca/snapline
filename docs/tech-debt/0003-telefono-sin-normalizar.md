@@ -119,3 +119,16 @@ falta: normalizar en el registro, y una migración que arregle lo existente.
 
 Asume país por defecto **US**, que es donde opera el design partner. El día que haya
 usuarios fuera, el país sale de la empresa y el prefijo pasa a ser obligatorio.
+
+### Actualización — 2026-08-10
+
+El alta de **cliente** desde el móvil ya manda E.164: el campo de teléfono pide su
+país y guarda `+13015550142` sin importar cómo se teclee
+([[../specs/mobile/0006-clientes-en-el-movil/README|SPEC-0006]]). El país no es
+cosmético — es lo que permite validar, porque diez dígitos son un número correcto
+en Estados Unidos y no en Guatemala.
+
+**Lo que sigue pendiente es lo de esta deuda, que es otra cosa:** el alta de
+`user` en `apps/api` no normaliza al escribir, y las filas ya guardadas no se
+migraron. Un cliente bien normalizado no ayuda a un trabajador que no puede entrar.
+El trigger no se movió.

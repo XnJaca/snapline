@@ -15,6 +15,82 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-08-10
+
+- **El teléfono ahora sabe de qué país es**, y no es un adorno: es lo único que
+  permite validarlo. Diez dígitos son un número correcto en Estados Unidos y no
+  en Guatemala, así que sin país lo único comprobable era que hubiera algo
+  escrito. Entra `phone_form_field`, con los datos de libphonenumber portados a
+  **Dart puro** —valida sin señal— y sus textos ya en `en` y `es`. Se guarda
+  E.164, que cierra desde el cliente la mitad del alta que
+  [[tech-debt/0003-telefono-sin-normalizar|DEBT-0003]] había dejado abierta. Lo
+  que sigue pendiente es el alta de `user` en el API, que es otra cosa.
+- **El país de la dirección se elige, no se teclea.** El contrato lo quiere en
+  ISO de dos letras: quien escribía "Mexico" a mano mandaba algo que el servidor
+  rechaza al sincronizar. La lista es corta a propósito —Estados Unidos, Canadá y
+  América Latina—: 240 países obligan a buscar en un selector que se usa en cada
+  alta.
+- **Lo obligatorio se dice con palabras, no con un asterisco.** "Nombre
+  (obligatorio)" en el propio label. Un asterisco lo entiende quien ya conoce la
+  convención, y la promesa es que la app se usa sin entrenamiento.
+- **`showHelpSheet` es un componente**, no un modal suelto. El primero explica
+  qué es el portal del cliente, porque el aviso de "sin correo ni teléfono no se
+  puede invitar" daba una noticia sobre algo que nunca se había nombrado.
+- **Tres arreglos de forma que se ven en el teléfono y no en captura.** El pie de
+  los formularios respeta el área segura de abajo: sin eso el botón queda bajo la
+  barra gestual, se ve entero, y el toque en su mitad inferior se lo lleva el
+  sistema — parece que la app ignora el tap. Los campos bajaron de 72 a 56 de
+  alto, que era lo que hacía entrar un formulario de diez a la mitad de pantalla.
+- **Los 64dp de ADR-0009 no se fueron, se movieron de lugar.** Eran la altura de
+  todo botón sólido y su razón es del marcaje —"un dedo con guante no acierta un
+  botón de 48"—, que no aplica al "Guardar" de un formulario de oficina. Ahora se
+  piden con `FieldActionButton`, donde valen.
+- **Un test de migración de la base local.** Subir el esquema de v1 a v2 corre en
+  el teléfono al abrir la app: si la migración recreara las tablas en vez de
+  agregar columnas, **se llevaría la bandeja con la jornada sin sincronizar**.
+  Verificado que las filas y la bandeja sobreviven.
+
+## 2026-08-09 — clientes en el móvil
+
+- **Clientes dejó de ser un placeholder** ([[specs/mobile/0006-clientes-en-el-movil/README|SPEC-0006]]):
+  se busca por nombre, empresa o teléfono sobre la base local, la ficha muestra
+  sus datos con sus propiedades y sus obras, y se da de alta o se corrige un
+  cliente con su propiedad sin esperar cobertura.
+- **SPEC-0006 va antes que SPEC-0005, y no al revés.** El alta de obra reutiliza
+  los formularios mínimos de cliente y propiedad, que son de este spec: sin
+  ellos, "crear cliente, propiedad y obra sin salir del alta" no se puede
+  cumplir. Los formularios quedan como `CustomerFields(minimal:)` y
+  `showSiteFormSheet`, definidos una vez para que no divergan.
+- **El bug que apareció escribiendo el caso crítico del spec.** El servidor
+  ordena el lote por `occurredAt`, y crear un cliente con su propiedad **en el
+  mismo toque las empataba al milisegundo**: con empate, la propiedad podía
+  aplicarse antes que su cliente y el servidor la rechaza por cliente
+  inexistente. El primer intento fue desempatar en el móvil por `clientId`, y el
+  test lo tumbó — tres UUIDv7 del mismo milisegundo comparten el prefijo de
+  tiempo y el resto es aleatorio. Se arregla donde importa: `enqueue` corre el
+  empate exacto un milisegundo, así el orden le llega bien al que de verdad
+  ordena. Una operación anterior encolada después conserva su instante, que es lo
+  que hace que una salida no pueda aplicarse antes que su entrada.
+- **`site.update` existe.** SPEC-0004 lo nombró sin criterio y sin implementar,
+  así que corregir una dirección no tenía camino ni por REST ni por la bandeja.
+  Entra con su `PATCH /customers/:id/sites/:siteId`, su operación de sync y sus
+  dos requests de Bruno.
+- **Dos criterios de SPEC-0004 estaban marcados `[x]` sin estarlo**, encontrados
+  verificando el código y no el changelog: no existía el test que recorre
+  `lib/features/` buscando imports de `lib/api/clients/`, y la colección de
+  Bruno no tiene **ninguna** request de `/sync`. El test ya existe; el criterio
+  de Bruno volvió a `[ ]` con la nota de qué falta.
+- **El photo release se ve, no se toca.** Es lo único que habilita publicar
+  (regla 17) y otorgarlo necesita el documento firmado, así que la pantalla lo
+  muestra con su chip y no ofrece ni otorgarlo ni revocarlo — revocar despublica
+  en cascada, y eso no está implementado.
+- **Un desborde de 32px que solo se vio en test.** Un `StatusChip` impone su
+  ancho intrínseco y no cede, así que en la misma fila que el contacto reventaba
+  con los textos en español. Los chips de la card pasaron a `Wrap`: si no
+  entran, bajan de línea.
+- **El botón de guardar quedó fijo al pie del formulario.** Al final de quince
+  campos hay que ir a buscarlo scrolleando, y esta app se usa con guantes.
+
 ## 2026-08-09
 
 - **La app funciona sin señal, de verdad.** Verificado en un teléfono real con
