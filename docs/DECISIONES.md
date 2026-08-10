@@ -17,11 +17,21 @@ Ninguna de las dos toca el modelo: `crew.foreman_membership_id` ya apunta a
 cualquier membresía, y la ficha de cuadrilla dice que ser encargado *"no es un rol
 ni un permiso"*. Un `OWNER` que sea `crew_member` puede liderar su cuadrilla.
 
-**Lo que quedó abierto, y salió de verificar esto:** `assertCanRecordForOthers`
-autoriza por rol de membresía y no por ser encargado de la cuadrilla de esa
-persona, así que cualquier `FOREMAN` puede fichar por cualquiera de la empresa.
-Puede ser deseable —encargados que se cubren— o una puerta abierta a horas cargadas
-por quien no estuvo. Ver `product/vision.md`.
+### Quién ficha por otra persona
+
+| Quién | Decisión |
+|---|---|
+| `OWNER` y `ADMIN` | **Sin acotar.** William va a la obra a cargo de una cuadrilla; hacerlo depender de estar cargado como miembro de una cuadrilla formal es la burocracia que este producto no puede pedir. |
+| `FOREMAN` | **Criterio: la obra, no la cuadrilla.** Quien fue a la obra ese día ficha por quien también fue — `project_assignment` con su `work_date`. Resuelve sola la cobertura entre encargados. |
+| Cómo se aplica | **Bandera, no bloqueo.** Una asignación sin cargar dejaría a la cuadrilla sin fichar, y la regla 9 no lo permite. Se registra igual y se marca; la aprobación del dueño —que el `FOREMAN` nunca tuvo— recibe algo concreto que mirar. |
+
+Se puede endurecer a bloqueo cuando la asignación del día se cargue de rutina. **Al
+revés no se puede**, y de ahí el orden. Va al spec de asistencia, que no existe aún.
+
+**Dos cosas del rastro que quedaron anotadas** en `product/vision.md`, las dos
+afectan a la regla 12: `method` dice `FOREMAN` aunque fiche el dueño, y el pull de
+`/sync` acota solo al `WORKER` — un `FOREMAN` baja todas las horas de la empresa con
+la tarifa de cada uno.
 
 ## Reunión con William — 2026-08-08
 
