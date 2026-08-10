@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0006: Clientes en el móvil"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "William encuentra un cliente por nombre o teléfono sin señal, ve sus propiedades y sus obras en una sola pantalla, y da de alta o corrige un cliente con su propiedad parado en la obra sin esperar cobertura."
 apps:
   - mobile
@@ -20,7 +20,7 @@ created: 2026-08-09
 updated: 2026-08-09
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -191,6 +191,7 @@ la consume; no la vuelve a definir.
 | 2026-08-09 | review | Verificados los prerequisitos contra el código, no contra el changelog: `AddressDto` y `site.create` están; `site.update` **no**, quedó nombrado en SPEC-0004 sin criterio. Pasa a Alcance de este spec y `apps` suma `api`. |
 | 2026-08-09 | aprobado | Aprobado el orden de trabajo: este spec va antes de SPEC-0005 porque es su prerequisito declarado, y sus formularios mínimos de cliente y propiedad son los que el alta de obra reutiliza. |
 | 2026-08-09 | en-implementacion | Arranca la implementación. |
+| 2026-08-10 | implementado | PR #4 mergeado con los quince criterios en `[x]`. Revisado con `code-reviewer`: encontró que el desempate de la bandeja avanzaba en milisegundos cuando la columna guarda segundos —916ms medidos en el camino más común— y lo corrigió el mismo PR. Encontró además un **GRAVE preexistente en `main`**: el pull de `/sync` baja la cartera completa de clientes a un `WORKER` sin `customers.read`. No es regresión de este spec y va por su propia rama. |
 | 2026-08-10 | en-implementacion | **Los tres criterios que faltaban, verificados contra el API corriendo.** `integration_test/customers_test.dart` pasa en simulador, y comprobado por fuera del test consultando el servidor: la propiedad quedó colgada de su cliente, la corrección de dirección se aplicó encima —412 Ellsworth Dr, no una segunda fila—, y los ids son los UUIDv7 que generó el teléfono. Todos los criterios en `[x]`; queda el PR. |
 | 2026-08-10 | en-implementacion | Pasada de interfaz sobre lo implementado. El teléfono pide su país —`phone_form_field`, datos de libphonenumber en Dart puro, valida sin señal— y guarda E.164, que cierra desde el cliente la mitad del alta que [[../../../tech-debt/0003-telefono-sin-normalizar\|DEBT-0003]] dejó abierta. El país de la dirección se elige de lista en vez de teclearse. Lo obligatorio se dice en el label con palabras. El aviso del portal trae ayuda: `showHelpSheet` queda como componente reutilizable. Y tres arreglos de forma: el pie de los formularios respeta el área segura de abajo, los campos bajaron de 72 a 56 de alto, y los 64dp de ADR-0009 pasaron de ser la altura de todo botón sólido a pedirse solo en la acción de campo. |
 | 2026-08-09 | en-implementacion | Lista, ficha, alta y corrección de cliente y propiedad, con `site.update` y su `PATCH` en el API. 48 tests nuevos. Un bug de la bandeja apareció escribiendo el caso crítico del spec: **el servidor ordena el lote por `occurredAt` y crear un cliente con su propiedad en el mismo toque las empataba al milisegundo**, así que la propiedad podía aplicarse antes que su cliente. `enqueue` corre el empate un milisegundo. Faltan los tres criterios que solo se cierran corriendo `integration_test/customers_test.dart` contra el API. |
