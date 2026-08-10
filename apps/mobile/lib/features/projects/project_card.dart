@@ -11,9 +11,9 @@ import 'project_status_display.dart';
 /// El orden es el de la pregunta que se hace quien mira: qué obra, de quién, de
 /// qué se trata, dónde queda y en qué anda.
 ///
-/// El estado va al final y **sin relleno**: repetido en cada card, un chip
-/// sólido se vuelve una mancha de color que cansa la vista tanto en claro como
-/// en oscuro. El contorno y el icono dicen lo mismo con menos tinta.
+/// El estado va arriba, en la fila del título: es lo primero que se busca al
+/// escanear la cartera, y al pie de la card quedaba sin peso. El título es
+/// flexible, así que un nombre largo no lo aplasta.
 class ProjectCard extends StatelessWidget {
   const ProjectCard({super.key, required this.project, required this.onTap});
 
@@ -44,11 +44,24 @@ class ProjectCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  project.name,
-                  style: context.texts.titleLarge,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        project.name,
+                        style: context.texts.titleLarge,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: spacing.sm),
+                    StatusChip(
+                      tone: project.status.tone,
+                      icon: project.status.icon,
+                      label: project.status.label(l10n),
+                    ),
+                  ],
                 ),
                 SizedBox(height: spacing.xs),
                 Text(
@@ -82,17 +95,6 @@ class ProjectCard extends StatelessWidget {
                     text: l10n.projectPendingSync,
                   ),
                 ],
-
-                SizedBox(height: spacing.md),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: StatusChip(
-                    tone: project.status.tone,
-                    icon: project.status.icon,
-                    label: project.status.label(l10n),
-                    subtle: true,
-                  ),
-                ),
               ],
             ),
           ),
