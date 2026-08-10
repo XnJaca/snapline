@@ -47,7 +47,7 @@ async function seed(): Promise<void> {
   await ds.query(
     `INSERT INTO site (id, company_id, customer_id, address, lat, lng, geofence_radius_m)
      VALUES ($1,$2,$3,$4,39.290385,-76.612189,150)`,
-    [siteId, companyId, customerId, JSON.stringify({ line1: '100 Main St', city: 'Baltimore', state: 'MD', zip: '21201' })],
+    [siteId, companyId, customerId, JSON.stringify({ line1: '100 Main St', city: 'Baltimore', state: 'MD', postalCode: '21201', country: 'US' })],
   );
   await ds.query(
     `INSERT INTO project (id, company_id, customer_id, site_id, name, service_type, status)

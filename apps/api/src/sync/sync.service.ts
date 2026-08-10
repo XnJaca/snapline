@@ -12,12 +12,16 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { ApiError, FieldError } from '../common/errors/api-error';
 import { defaultCodeFor } from '../common/errors/error-codes';
-import { CreateCustomerDto } from '../customers/dto/customer.dto';
-import { CreateProjectDto } from '../projects/dto/project.dto';
+import { CreateCustomerDto, UpdateCustomerDto } from '../customers/dto/customer.dto';
+import { CreateProjectDto, UpdateProjectDto } from '../projects/dto/project.dto';
+import { roleHasPermission } from '../auth/permissions';
+import { newId } from '../common/entities/base.entity';
 import { RegisterAssetDto } from '../media/dto/media.dto';
 import { ClockInDto, ClockOutDto } from '../time-entries/dto/time-entry.dto';
 import {
+  OPERATION_PERMISSION,
   SyncOperationDto, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto, SyncResultDto,
+  SyncSiteCreateDto,
 } from './dto/sync.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +29,10 @@ type Ctor<T> = new (...args: any[]) => T;
 
 const PAYLOAD_DTO = {
   'customer.create': CreateCustomerDto,
+  'customer.update': UpdateCustomerDto,
+  'site.create': SyncSiteCreateDto,
   'project.create': CreateProjectDto,
+  'project.update': UpdateProjectDto,
   'media.register': RegisterAssetDto,
   'timeEntry.clockIn': ClockInDto,
   'timeEntry.clockOut': ClockOutDto,
@@ -92,36 +99,30 @@ export class SyncService {
       ({ clientId: op.clientId, status, resourceId, code: null, message: null });
 
     try {
+      // El endpoint entra con `time.clock`, pero adentro del lote viajan
+      // operaciones que por la puerta REST piden mucho más. Sin esto un WORKER
+      // daba de alta clientes y proyectos sin tener `customers.write` (regla 7).
+      if (!roleHasPermission(tenant.role, OPERATION_PERMISSION[op.type])) {
+        this.logger.warn(`sync ${op.type} ${op.clientId}: sin permiso para ${tenant.role}`);
+        return {
+          clientId: op.clientId,
+          status: 'failed',
+          resourceId: null,
+          code: 'FORBIDDEN',
+          message: 'El rol de la sesión no puede aplicar esta operación',
+        };
+      }
+
       // Ya se aplicó en un intento anterior: la red se cortó después de escribir.
-      if (await this.alreadyApplied(op)) return ok(op.targetId, 'duplicate');
+      const yaAplicada = await this.alreadyApplied(op, tenant);
+      if (yaAplicada) return ok(yaAplicada, 'duplicate');
 
       return await runInTransaction(async () => {
-        switch (op.type) {
-          case 'customer.create': {
-            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
-            return ok((await this.customers.create(dto, tenant)).id);
-          }
-          case 'project.create': {
-            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
-            return ok((await this.projects.create(dto, tenant)).id);
-          }
-          case 'media.register': {
-            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
-            return ok((await this.media.register(dto, tenant)).asset.id);
-          }
-          case 'timeEntry.clockIn': {
-            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {
-              id: op.targetId, deviceRecordedAt: op.occurredAt, recordedOffline: true,
-            });
-            return ok((await this.timeEntries.clockIn(dto, tenant)).id);
-          }
-          case 'timeEntry.clockOut': {
-            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {
-              deviceRecordedAt: op.occurredAt,
-            });
-            return ok((await this.timeEntries.clockOut(op.targetId, dto, tenant)).id);
-          }
-        }
+        const resultado = await this.aplicar(op, tenant, ok);
+        // En la misma transacción que la operación: si algo falla, no queda
+        // registrada como aplicada y el reintento la vuelve a intentar.
+        await this.registrar(op, tenant, resultado.resourceId);
+        return resultado;
       });
     } catch (e) {
       const http = e instanceof HttpException ? e : null;
@@ -142,30 +143,85 @@ export class SyncService {
     }
   }
 
+  private async aplicar(
+    op: SyncOperationDto,
+    tenant: TenantContext,
+    ok: (resourceId: string, status?: SyncResultDto['status']) => SyncResultDto,
+  ): Promise<SyncResultDto> {
+    switch (op.type) {
+          case 'customer.create': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
+            return ok((await this.customers.create(dto, tenant)).id);
+          }
+          case 'customer.update': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
+            return ok((await this.customers.update(op.targetId, dto)).id);
+          }
+          // `targetId` es el id de la propiedad; de qué cliente cuelga viaja en
+          // el payload, porque una propiedad no existe suelta.
+          case 'site.create': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
+            const { customerId, ...site } = dto;
+            return ok((await this.customers.addSite(customerId, site, tenant)).id);
+          }
+          case 'project.create': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
+            return ok((await this.projects.create(dto, tenant)).id);
+          }
+          case 'project.update': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
+            return ok((await this.projects.update(op.targetId, dto)).id);
+          }
+          case 'media.register': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
+            return ok((await this.media.register(dto, tenant)).asset.id);
+          }
+          case 'timeEntry.clockIn': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {
+              id: op.targetId, deviceRecordedAt: op.occurredAt, recordedOffline: true,
+            });
+            return ok((await this.timeEntries.clockIn(dto, tenant)).id);
+          }
+          case 'timeEntry.clockOut': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {
+              deviceRecordedAt: op.occurredAt,
+            });
+            return ok((await this.timeEntries.clockOut(op.targetId, dto, tenant)).id);
+          }
+        }
+  }
+
   /**
-   * Los ids los genera el dispositivo (UUIDv7), así que reintentar un `create`
-   * choca contra la clave primaria. Verificarlo antes convierte ese choque en un
-   * `duplicate` limpio en vez de un error que el dispositivo reintentaría para siempre.
+   * El id del recurso si esta operación ya se aplicó, `null` si es nueva.
+   *
+   * La clave es el `client_id` que generó el dispositivo, no la existencia del
+   * recurso: en un `update` el recurso siempre existe, así que ese criterio
+   * habría devuelto `duplicate` sin aplicar nunca la corrección.
    */
-  private async alreadyApplied(op: SyncOperationDto): Promise<boolean> {
-    const TABLAS: Partial<Record<SyncOperationDto['type'], string>> = {
-      'customer.create': 'customer',
-      'project.create': 'project',
-      'media.register': 'media_asset',
-      'timeEntry.clockIn': 'time_entry',
-    };
-    const tabla = TABLAS[op.type];
+  private async alreadyApplied(
+    op: SyncOperationDto, tenant: TenantContext,
+  ): Promise<string | null> {
+    const [row] = await this.dataSource.query<{ resource_id: string | null }[]>(
+      `SELECT resource_id FROM sync_operation WHERE company_id = $1 AND client_id = $2`,
+      [tenant.companyId, op.clientId],
+    );
+    if (!row) return null;
+    return row.resource_id ?? op.targetId;
+  }
 
-    if (!tabla) {
-      // clockOut no crea nada: ya aplicado significa que el registro está cerrado.
-      const [row] = await this.dataSource.query<{ closed: boolean }[]>(
-        `SELECT clock_out_at IS NOT NULL AS closed FROM time_entry WHERE id = $1`, [op.targetId]);
-      return row?.closed ?? false;
-    }
-
-    const [row] = await this.dataSource.query<{ exists: boolean }[]>(
-      `SELECT true AS exists FROM ${tabla} WHERE id = $1`, [op.targetId]);
-    return Boolean(row);
+  /**
+   * `ON CONFLICT DO NOTHING` por si dos lotes con la misma clave entran a la vez:
+   * el índice único es la garantía real, esto solo evita que reviente.
+   */
+  private async registrar(
+    op: SyncOperationDto, tenant: TenantContext, resourceId: string | null,
+  ): Promise<void> {
+    await this.dataSource.query(
+      `INSERT INTO sync_operation (id, company_id, client_id, type, target_id, resource_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (company_id, client_id) DO NOTHING`,
+      [newId(), tenant.companyId, op.clientId, op.type, op.targetId, resourceId],
+    );
   }
 
   /**

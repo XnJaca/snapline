@@ -7076,9 +7076,61 @@
           "locale"
         ]
       },
+      "AddressDto": {
+        "type": "object",
+        "properties": {
+          "line1": {
+            "type": "string",
+            "example": "412 Ellsworth Dr"
+          },
+          "line2": {
+            "type": "string",
+            "example": "Apt 3",
+            "description": "Unidad, suite, piso."
+          },
+          "city": {
+            "type": "string",
+            "example": "Silver Spring"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2,
+            "example": "MD",
+            "description": "Código de dos letras."
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "20910"
+          },
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2,
+            "example": "US",
+            "default": "US",
+            "description": "ISO de dos letras. Está desde el principio por la misma razón que la moneda no se concatena a mano: sale gratis hoy y es caro después."
+          }
+        },
+        "required": [
+          "line1",
+          "city",
+          "state",
+          "postalCode"
+        ]
+      },
       "Customer": {
         "type": "object",
         "properties": {
+          "billingAddress": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AddressDto"
+              }
+            ]
+          },
           "displayName": {
             "type": "string"
           },
@@ -7100,11 +7152,6 @@
           },
           "phone": {
             "type": "string",
-            "nullable": true
-          },
-          "billingAddress": {
-            "type": "object",
-            "additionalProperties": true,
             "nullable": true
           },
           "source": {
@@ -7152,13 +7199,13 @@
           }
         },
         "required": [
+          "billingAddress",
           "displayName",
           "firstName",
           "lastName",
           "companyName",
           "email",
           "phone",
-          "billingAddress",
           "source",
           "notes",
           "photoReleaseGrantedAt",
@@ -7178,8 +7225,7 @@
             "format": "uuid"
           },
           "address": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/AddressDto"
           },
           "lat": {
             "type": "number",
@@ -7227,8 +7273,7 @@
             "type": "string"
           },
           "billingAddress": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/AddressDto"
           },
           "source": {
             "type": "string",
@@ -7278,8 +7323,7 @@
             "type": "string"
           },
           "billingAddress": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/AddressDto"
           },
           "source": {
             "enum": [
@@ -7305,15 +7349,14 @@
       "Site": {
         "type": "object",
         "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
           "customer": {
             "$ref": "#/components/schemas/Customer"
           },
           "customerId": {
             "type": "string"
-          },
-          "address": {
-            "type": "object",
-            "additionalProperties": true
           },
           "lat": {
             "type": "number",
@@ -7348,9 +7391,9 @@
           }
         },
         "required": [
+          "address",
           "customer",
           "customerId",
-          "address",
           "lat",
           "lng",
           "geofenceRadiusM",
@@ -10080,7 +10123,10 @@
             "type": "string",
             "enum": [
               "customer.create",
+              "customer.update",
+              "site.create",
               "project.create",
+              "project.update",
               "media.register",
               "timeEntry.clockIn",
               "timeEntry.clockOut"

@@ -944,16 +944,38 @@ export interface components {
             /** @enum {string} */
             locale: "en" | "es";
         };
+        AddressDto: {
+            /** @example 412 Ellsworth Dr */
+            line1: string;
+            /**
+             * @description Unidad, suite, piso.
+             * @example Apt 3
+             */
+            line2?: string;
+            /** @example Silver Spring */
+            city: string;
+            /**
+             * @description Código de dos letras.
+             * @example MD
+             */
+            state: string;
+            /** @example 20910 */
+            postalCode: string;
+            /**
+             * @description ISO de dos letras. Está desde el principio por la misma razón que la moneda no se concatena a mano: sale gratis hoy y es caro después.
+             * @default US
+             * @example US
+             */
+            country: string;
+        };
         Customer: {
+            billingAddress: components["schemas"]["AddressDto"] | null;
             displayName: string;
             firstName: string | null;
             lastName: string | null;
             companyName: string | null;
             email: string | null;
             phone: string | null;
-            billingAddress: {
-                [key: string]: unknown;
-            } | null;
             /** @enum {string|null} */
             source: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER" | null;
             notes: string | null;
@@ -972,9 +994,7 @@ export interface components {
         SiteInputDto: {
             /** Format: uuid */
             id?: string;
-            address: {
-                [key: string]: unknown;
-            };
+            address: components["schemas"]["AddressDto"];
             lat?: number;
             lng?: number;
             geofenceRadiusM?: number;
@@ -989,9 +1009,7 @@ export interface components {
             /** Format: email */
             email?: string;
             phone?: string;
-            billingAddress?: {
-                [key: string]: unknown;
-            };
+            billingAddress?: components["schemas"]["AddressDto"];
             /** @enum {string} */
             source?: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER";
             notes?: string;
@@ -1007,20 +1025,16 @@ export interface components {
             /** Format: email */
             email?: string;
             phone?: string;
-            billingAddress?: {
-                [key: string]: unknown;
-            };
+            billingAddress?: components["schemas"]["AddressDto"];
             /** @enum {string} */
             source?: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER";
             notes?: string;
             site?: components["schemas"]["SiteInputDto"];
         };
         Site: {
+            address: components["schemas"]["AddressDto"];
             customer: components["schemas"]["Customer"];
             customerId: string;
-            address: {
-                [key: string]: unknown;
-            };
             lat: number | null;
             lng: number | null;
             geofenceRadiusM: number | null;
@@ -1772,7 +1786,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "customer.create" | "project.create" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            type: "customer.create" | "customer.update" | "site.create" | "project.create" | "project.update" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.

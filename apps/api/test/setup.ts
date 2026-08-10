@@ -90,8 +90,13 @@ export async function seedCompany(ds: DataSource, label: string): Promise<Fixtur
     [workerMem, f.companyId, workerUser]);
   await ds.query(`INSERT INTO customer (id,company_id,display_name) VALUES ($1,$2,'Cliente Test')`,
     [f.customerId, f.companyId]);
+  // La forma canónica de `AddressDto`: el fixture tiene que verse como lo que
+  // el contrato promete, o los tests pasan sobre datos que la app no aceptaría.
   await ds.query(`INSERT INTO site (id,company_id,customer_id,address,lat,lng,geofence_radius_m)
-    VALUES ($1,$2,$3,'{}',39.290385,-76.612189,150)`, [f.siteId, f.companyId, f.customerId]);
+    VALUES ($1,$2,$3,$4,39.290385,-76.612189,150)`,
+    [f.siteId, f.companyId, f.customerId, JSON.stringify({
+      line1: '1 Test St', city: 'Baltimore', state: 'MD', postalCode: '21201', country: 'US',
+    })]);
   await ds.query(`INSERT INTO project (id,company_id,customer_id,site_id,name,status)
     VALUES ($1,$2,$3,$4,'Obra Test','IN_PROGRESS')`, [f.projectId, f.companyId, f.customerId, f.siteId]);
   await ds.query(`INSERT INTO service_item (id,company_id,name,unit,unit_price_cents,cost_cents,taxable)
@@ -126,7 +131,8 @@ async function deleteFixtures(ds: DataSource, fixtures: Fixture[]): Promise<void
       'client_access', 'lead', 'service_offer', 'testimonial', 'social_post',
       'before_after_pair', 'media_tag', 'media_asset', 'payment', 'invoice_line', 'invoice',
       'estimate_line', 'estimate', 'document_counter', 'service_item', 'tax_rate',
-      'project_assignment', 'project', 'site', 'customer', 'crew_member', 'crew', 'audit_log']) {
+      'project_assignment', 'project', 'site', 'customer', 'crew_member', 'crew', 'audit_log',
+      'sync_operation']) {
       // Sin catch: si una limpieza falla hay que verlo, no taparlo.
       await ds.query(`DELETE FROM ${t} WHERE company_id = $1`, [id]);
     }
