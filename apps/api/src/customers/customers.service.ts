@@ -7,7 +7,7 @@ import { newId } from '../common/entities/base.entity';
 import { TenantContext } from '../tenant/tenant-context';
 import { Customer } from './entities/customer.entity';
 import { Site } from './entities/site.entity';
-import { CreateCustomerDto, SiteInputDto, UpdateCustomerDto } from './dto/customer.dto';
+import { CreateCustomerDto, SiteInputDto, UpdateCustomerDto, UpdateSiteDto } from './dto/customer.dto';
 
 @Injectable()
 export class CustomersService {
@@ -56,6 +56,27 @@ export class CustomersService {
 
   listSites(customerId: string): Promise<Site[]> {
     return this.sites.find({ where: { customer: { id: customerId }, deletedAt: IsNull() } });
+  }
+
+  /**
+   * `customerId` se valida cuando viene: una ruta que dice de quién es la
+   * propiedad no puede devolver la de otro cliente. Por la bandeja llega solo el
+   * id de la propiedad, que es lo único que el dispositivo tiene.
+   */
+  async getSite(id: string, customerId?: string): Promise<Site> {
+    const found = await this.sites.findOne({
+      where: { id, deletedAt: IsNull(), ...(customerId ? { customer: { id: customerId } } : {}) },
+    });
+    if (!found) throw new NotFoundException('Propiedad no encontrada');
+    return found;
+  }
+
+  @Transactional()
+  async updateSite(id: string, dto: UpdateSiteDto, customerId?: string): Promise<Site> {
+    await this.getSite(id, customerId);
+    // Cast: QueryDeepPartialEntity no resuelve bien las columnas jsonb.
+    await this.sites.update({ id }, dto as QueryDeepPartialEntity<Site>);
+    return this.getSite(id);
   }
 
   async addSite(customerId: string, dto: SiteInputDto, tenant: TenantContext): Promise<Site> {

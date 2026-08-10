@@ -27,7 +27,21 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
+  /// con la jornada sin sincronizar no puede perder la bandeja de salida.
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(customers, customers.firstName);
+        await m.addColumn(customers, customers.lastName);
+        await m.addColumn(customers, customers.source);
+        await m.addColumn(customers, customers.notes);
+      }
+    },
+  );
 
   /// Todo lo local, sin excepción.
   ///

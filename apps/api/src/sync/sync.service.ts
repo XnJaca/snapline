@@ -18,7 +18,7 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { ApiError, FieldError } from '../common/errors/api-error';
 import { defaultCodeFor } from '../common/errors/error-codes';
-import { CreateCustomerDto, UpdateCustomerDto } from '../customers/dto/customer.dto';
+import { CreateCustomerDto, UpdateCustomerDto, UpdateSiteDto } from '../customers/dto/customer.dto';
 import { CreateProjectDto, UpdateProjectDto } from '../projects/dto/project.dto';
 import { roleHasPermission } from '../auth/permissions';
 import { newId } from '../common/entities/base.entity';
@@ -26,8 +26,8 @@ import { RegisterAssetDto } from '../media/dto/media.dto';
 import { ClockInDto, ClockOutDto } from '../time-entries/dto/time-entry.dto';
 import {
   OPERATION_PERMISSION,
-  SyncOperationDto, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto, SyncResultDto,
-  SyncSiteCreateDto,
+  SyncOperationDto, SyncOperationType, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto,
+  SyncResultDto, SyncSiteCreateDto,
 } from './dto/sync.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,12 +37,15 @@ const PAYLOAD_DTO = {
   'customer.create': CreateCustomerDto,
   'customer.update': UpdateCustomerDto,
   'site.create': SyncSiteCreateDto,
+  'site.update': UpdateSiteDto,
   'project.create': CreateProjectDto,
   'project.update': UpdateProjectDto,
   'media.register': RegisterAssetDto,
   'timeEntry.clockIn': ClockInDto,
   'timeEntry.clockOut': ClockOutDto,
-} as const;
+  // El `satisfies` es el que obliga: una operación agregada a `SYNC_OPERATIONS`
+  // sin su DTO de payload no compila, en vez de entrar al lote sin validar.
+} as const satisfies Record<SyncOperationType, Ctor<object>>;
 
 @Injectable()
 export class SyncService {
@@ -169,6 +172,12 @@ export class SyncService {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
             const { customerId, ...site } = dto;
             return ok((await this.customers.addSite(customerId, site, tenant)).id);
+          }
+          // Sin `customerId`: una propiedad no cambia de cliente, y el
+          // dispositivo solo tiene el id de la propiedad que está corrigiendo.
+          case 'site.update': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
+            return ok((await this.customers.updateSite(op.targetId, dto)).id);
           }
           case 'project.create': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });

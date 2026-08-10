@@ -33,9 +33,17 @@ mixin SyncedTable on Table {
 @DataClassName('LocalCustomer')
 class Customers extends Table with SyncedTable {
   TextColumn get displayName => text()();
+  TextColumn get firstName => text().nullable()();
+  TextColumn get lastName => text().nullable()();
   TextColumn get companyName => text().nullable()();
   TextColumn get email => text().nullable()();
   TextColumn get phone => text().nullable()();
+
+  /// Uno de `CustomerSource` del contrato. Se guarda el texto y no el índice de
+  /// un enum: un valor nuevo en el servidor llega y no rompe la base local.
+  TextColumn get source => text().nullable()();
+
+  TextColumn get notes => text().nullable()();
 
   /// La dirección entera como JSON. Se guarda tal cual llega para no perder
   /// campos que el servidor agregue antes de que la app los conozca.

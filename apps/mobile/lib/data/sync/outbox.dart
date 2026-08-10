@@ -12,6 +12,7 @@ abstract final class SyncOp {
   static const customerCreate = 'customer.create';
   static const customerUpdate = 'customer.update';
   static const siteCreate = 'site.create';
+  static const siteUpdate = 'site.update';
   static const projectCreate = 'project.create';
   static const projectUpdate = 'project.update';
 }
@@ -43,24 +44,73 @@ class Outbox {
     // misma clave, así que el servidor lo reconoce como repetido en vez de
     // aplicarlo dos veces.
     final clave = clientId ?? _uuid.v7();
-    await _db.into(_db.outboxOperations).insert(
-      OutboxOperationsCompanion.insert(
-        clientId: clave,
-        type: type,
-        targetId: targetId,
-        payload: jsonEncode(payload),
-        // Cuándo lo hizo la persona, no cuándo se manda: el servidor ordena el
-        // lote con esto, y una salida no puede aplicarse antes que su entrada.
-        occurredAt: occurredAt ?? DateTime.now(),
-      ),
-    );
+
+    await _db.transaction(() async {
+      await _db.into(_db.outboxOperations).insert(
+        OutboxOperationsCompanion.insert(
+          clientId: clave,
+          type: type,
+          targetId: targetId,
+          payload: jsonEncode(payload),
+          // Cuándo lo hizo la persona, no cuándo se manda: el servidor ordena el
+          // lote con esto, y una salida no puede aplicarse antes que su entrada.
+          occurredAt: await _instanteMonotono(occurredAt ?? DateTime.now()),
+        ),
+      );
+    });
+
     return clave;
   }
 
+  /// El instante de la operación, corrido lo mínimo para que no empate con otra
+  /// que ya esté en la cola.
+  ///
+  /// Crear un cliente y su propiedad en el mismo toque las deja en el mismo
+  /// milisegundo, y **el servidor ordena el lote por `occurredAt`**: con empate
+  /// puede aplicar la propiedad antes que su cliente y rechazarla por cliente
+  /// inexistente. Un desempate local no alcanzaría, porque el que ordena de
+  /// verdad es el otro lado.
+  ///
+  /// **El paso es de un segundo porque la columna guarda segundos enteros.**
+  /// Drift persiste un `DateTime` como epoch en segundos, así que sumar
+  /// milisegundos deja el mismo valor guardado: el bucle tenía que dar hasta mil
+  /// vueltas —medidas 916ms para tres operaciones del mismo toque— para cruzar al
+  /// segundo siguiente. Con paso de un segundo son tres consultas.
+  ///
+  /// Solo se toca el empate exacto: una operación que ocurrió antes que otra ya
+  /// encolada conserva su instante y se aplica primero, que es lo que hace que
+  /// una salida no pueda aplicarse antes que su entrada.
+  ///
+  /// El corrimiento llega al `deviceRecordedAt` de un marcaje, que va con este
+  /// mismo campo. Es aceptable porque solo se corre lo que ya estaba empatado al
+  /// segundo, y dos cosas que una persona hizo de verdad no caen en el mismo.
+  Future<DateTime> _instanteMonotono(DateTime propuesto) async {
+    var candidato = propuesto;
+    while (await _ocupado(candidato)) {
+      candidato = candidato.add(const Duration(seconds: 1));
+    }
+    return candidato;
+  }
+
+  Future<bool> _ocupado(DateTime instante) async {
+    final fila = await (_db.select(_db.outboxOperations)
+          ..where((o) => o.occurredAt.equals(instante))
+          ..limit(1))
+        .getSingleOrNull();
+    return fila != null;
+  }
+
   /// Lo pendiente, en el orden en que ocurrió.
+  ///
+  /// No hay dos filas con el mismo `occurredAt` —lo garantiza `enqueue`— así que
+  /// este orden es total. El `clientId` queda como desempate por si una fila
+  /// vieja de antes de esa garantía sigue en la cola.
   Future<List<OutboxOperation>> pending() {
     return (_db.select(_db.outboxOperations)
-          ..orderBy([(o) => OrderingTerm.asc(o.occurredAt)]))
+          ..orderBy([
+            (o) => OrderingTerm.asc(o.occurredAt),
+            (o) => OrderingTerm.asc(o.clientId),
+          ]))
         .get();
   }
 

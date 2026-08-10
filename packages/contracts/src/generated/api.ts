@@ -120,6 +120,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/customers/{id}/sites/{siteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["Customers_updateSite"];
+        trace?: never;
+    };
     "/customers/{id}/photo-release": {
         parameters: {
             query?: never;
@@ -1047,6 +1063,12 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        UpdateSiteDto: {
+            address?: components["schemas"]["AddressDto"];
+            lat?: number;
+            lng?: number;
+            geofenceRadiusM?: number;
+        };
         Project: {
             customer?: components["schemas"]["Customer"];
             site?: components["schemas"]["Site"];
@@ -1786,7 +1808,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "customer.create" | "customer.update" | "site.create" | "project.create" | "project.update" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            type: "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.
@@ -2619,6 +2641,86 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Site"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Customers_updateSite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSiteDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

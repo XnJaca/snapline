@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/project_status.dart';
+import '../local/address_json.dart';
 import '../local/app_database.dart';
 import '../local/tables.dart';
 
@@ -52,7 +51,15 @@ class ProjectRepository {
   Stream<List<ProjectSummary>> watchAll({ProjectStatus? status}) =>
       _watch(status: status);
 
-  Stream<List<ProjectSummary>> _watch({ProjectStatus? status}) {
+  /// Las obras de un cliente, en cualquier estado: la ficha del cliente las
+  /// muestra todas, incluidas las cerradas.
+  Stream<List<ProjectSummary>> watchByCustomer(String customerId) =>
+      _watch(customerId: customerId);
+
+  Stream<List<ProjectSummary>> _watch({
+    ProjectStatus? status,
+    String? customerId,
+  }) {
     final consulta = _db.select(_db.projects).join([
       leftOuterJoin(
         _db.customers,
@@ -67,6 +74,9 @@ class ProjectRepository {
     if (status != null) {
       consulta.where(_db.projects.status.equals(status.json!));
     }
+    if (customerId != null) {
+      consulta.where(_db.projects.customerId.equals(customerId));
+    }
     consulta.orderBy([OrderingTerm.desc(_db.projects.updatedAt)]);
 
     return consulta.watch().map(
@@ -80,7 +90,7 @@ class ProjectRepository {
           name: proyecto.name,
           description: proyecto.description,
           customerName: cliente?.displayName ?? '',
-          site: _direccion(sitio?.address),
+          site: AddressJson.oneLine(AddressJson.decode(sitio?.address)),
           status: ProjectStatus.fromJson(proyecto.status),
           pending: proyecto.syncStatus != SyncStatus.synced,
         );
@@ -90,21 +100,6 @@ class ProjectRepository {
 
   Stream<ProjectSummary?> watchOne(String id) =>
       _watch().map((todos) => todos.where((p) => p.id == id).firstOrNull);
-
-  /// La dirección se guarda como el JSON que mandó el servidor. Una línea sola
-  /// alcanza para la card; el detalle completo lo arma quien lo necesite.
-  static String _direccion(String? json) {
-    if (json == null) return '';
-    try {
-      final mapa = jsonDecode(json) as Map<String, Object?>;
-      final partes = [mapa['line1'], mapa['city'], mapa['state']]
-          .whereType<String>()
-          .where((p) => p.isNotEmpty);
-      return partes.join(', ');
-    } catch (_) {
-      return '';
-    }
-  }
 }
 
 final projectRepositoryProvider = Provider<ProjectRepository>((ref) {
@@ -125,4 +120,10 @@ final projectByIdProvider = StreamProvider.family<ProjectSummary?, String>((
 final allProjectsProvider =
     StreamProvider.family<List<ProjectSummary>, ProjectStatus?>((ref, status) {
       return ref.watch(projectRepositoryProvider).watchAll(status: status);
+    });
+
+/// Las obras de un cliente. Las usa su ficha.
+final projectsByCustomerProvider =
+    StreamProvider.family<List<ProjectSummary>, String>((ref, customerId) {
+      return ref.watch(projectRepositoryProvider).watchByCustomer(customerId);
     });

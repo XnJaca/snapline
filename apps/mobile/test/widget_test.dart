@@ -5,6 +5,7 @@ import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/core/theme/app_theme.dart';
 import 'package:snapline/core/theme/theme_extensions.dart';
 import 'package:snapline/core/theme/tokens.dart';
+import 'package:snapline/core/widgets/field_action_button.dart';
 
 import 'support/fakes.dart';
 
@@ -147,12 +148,36 @@ void main() {
       }
     });
 
-    // La regla de 64dp vive en el tema y no en la disciplina de quien programa.
-    test('la acción primaria mide 64dp de alto', () {
+    // La acción primaria no baja del mínimo táctil de Material, y eso vive en el
+    // tema y no en la disciplina de quien programa.
+    test('la acción primaria no baja de 48dp de alto', () {
       for (final theme in [AppTheme.light, AppTheme.dark]) {
         final size = theme.filledButtonTheme.style?.minimumSize?.resolve({});
-        expect(size?.height, 64.0);
+        expect(size?.height, Tokens.touchTargetPrimary);
+        expect(
+          size!.height,
+          greaterThanOrEqualTo(Tokens.touchTargetMin),
+          reason: 'ningún botón sólido puede quedar bajo el mínimo táctil',
+        );
       }
+    });
+
+    // Los 64dp de ADR-0009 no se fueron: dejaron de ser la altura de todo botón
+    // sólido y pasaron a pedirse donde valen, que es la acción de campo. En un
+    // formulario de quince campos, 64 se come el espacio de los campos.
+    testWidgets('la acción de campo sí mide 64dp', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: FieldActionButton(onPressed: () {}, label: 'Marcar entrada'),
+          ),
+        ),
+      );
+
+      final alto = tester.getSize(find.byType(FilledButton)).height;
+      expect(alto, Tokens.touchTargetField);
+      expect(Tokens.touchTargetField, greaterThan(Tokens.touchTargetPrimary));
     });
 
     test('los estados tienen su par container', () {

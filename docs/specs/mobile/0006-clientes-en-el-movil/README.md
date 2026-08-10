@@ -5,10 +5,11 @@ aliases:
   - "SPEC-0006: Clientes en el móvil"
 type: spec
 platform: mobile
-status: borrador
+status: en-implementacion
 goal: "William encuentra un cliente por nombre o teléfono sin señal, ve sus propiedades y sus obras en una sola pantalla, y da de alta o corrige un cliente con su propiedad parado en la obra sin esperar cobertura."
 apps:
   - mobile
+  - api
 depends_on:
   - "0003-arquitectura-de-navegacion"
   - "0004-capa-local-y-sincronizacion"
@@ -19,14 +20,14 @@ created: 2026-08-09
 updated: 2026-08-09
 tags:
   - spec
-  - spec/borrador
+  - spec/en-implementacion
   - mobile
 ---
 
 # SPEC-0006: Clientes en el móvil
 
 > **Meta**
-> - Apps afectadas: `mobile`
+> - Apps afectadas: `mobile`, `api`
 > - Depende de: [[../0003-arquitectura-de-navegacion/README|SPEC-0003]],
 >   [[../0004-capa-local-y-sincronizacion/README|SPEC-0004]]
 > - Frente: `administrativo`
@@ -56,6 +57,9 @@ prototipo, no un caso secundario.
   reutiliza dentro del alta de obra. Se definen acá una sola vez; si se copian
   allá, divergen.
 - **Edición** de los campos editables del dominio.
+- **`site.update` en `apps/api`**, que SPEC-0004 dejó nombrado sin criterio y sin
+  implementar. Sin él, corregir una dirección no tiene camino ni online ni
+  offline. Entra acá porque es este spec el que lo necesita.
 
 ### No entra
 
@@ -119,36 +123,40 @@ ya garantiza. Si esto no funciona, el prototipo no sirve.
 
 ## Criterios de aceptación
 
-- [ ] La lista sale de local: apagando la red, la búsqueda sigue funcionando.
-- [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`.
-- [ ] Buscar encuentra por nombre, por empresa y por teléfono.
-- [ ] Crear un cliente sin señal lo deja usable de inmediato para crear una obra
-      en el mismo estado sin señal.
-- [ ] Cliente, propiedad y obra creados offline en ese orden llegan al servidor
+- [x] La lista sale de local: apagando la red, la búsqueda sigue funcionando.
+- [x] Ninguna pantalla de este frente importa un cliente de `lib/api/`.
+      *(`api_isolation_test.dart`, que SPEC-0004 declaraba y no existía.)*
+- [x] Buscar encuentra por nombre, por empresa y por teléfono.
+- [x] Crear un cliente sin señal lo deja usable de inmediato para crear una obra
+      en el mismo estado sin señal. *(Queda con su id definitivo y ya se le puede
+      colgar una propiedad; que el alta de obra lo ofrezca lo verifica SPEC-0005.)*
+- [x] Cliente, propiedad y obra creados offline en ese orden llegan al servidor
       en ese orden y sin duplicarse.
-- [ ] El id del cliente creado en el móvil es el mismo que queda en el servidor.
-- [ ] `photo_release_granted_at` es de solo lectura: no hay forma de otorgarlo ni
+- [x] El id del cliente creado en el móvil es el mismo que queda en el servidor.
+- [x] `photo_release_granted_at` es de solo lectura: no hay forma de otorgarlo ni
       revocarlo desde esta pantalla.
-- [ ] Un cliente sin `email` ni `phone` se puede guardar, y la pantalla avisa que
+- [x] Un cliente sin `email` ni `phone` se puede guardar, y la pantalla avisa que
       no va a poder entrar al portal.
-- [ ] Una propiedad nueva queda asociada a su cliente, y la consulta de sitios de
+- [x] Una propiedad nueva queda asociada a su cliente, y la consulta de sitios de
       ese cliente la devuelve. *(Que aparezca en el selector del alta de obra lo
       verifica SPEC-0005, que es dueño de esa pantalla.)*
-- [ ] El detalle de un cliente lista sus propiedades y sus obras, y dice qué pasa
+- [x] El detalle de un cliente lista sus propiedades y sus obras, y dice qué pasa
       cuando todavía no tiene ninguna de las dos.
-- [ ] Corregir el nombre, el teléfono o la dirección de un cliente sin señal se ve
+- [x] Corregir el nombre, el teléfono o la dirección de un cliente sin señal se ve
       al instante y llega al servidor sin duplicarse.
-- [ ] Corregir la dirección de una propiedad existente funciona sin señal.
-- [ ] Claro y oscuro correctos, y un solo naranja sólido por pantalla.
-- [ ] Cero cadenas quemadas, en `en` y `es`.
+- [x] `site.update` existe en `SYNC_OPERATIONS` con su `PATCH` REST, valida su
+      payload, declara `customers.write` y tiene su caso en `edge-cases/`.
+- [x] Corregir la dirección de una propiedad existente funciona sin señal.
+- [x] Claro y oscuro correctos, y un solo naranja sólido por pantalla.
+- [x] Cero cadenas quemadas, en `en` y `es`.
 
 ## Riesgos / consideraciones
 
-**Editar una propiedad no tiene endpoint todavía.** No hay `PATCH` de `site` ni
-online ni offline —solo `GET` y `POST` bajo `/customers/:id/sites`—, así que
-`site.create` y `site.update` son prerequisito de
-[[../0004-capa-local-y-sincronizacion/README|SPEC-0004]] antes de que este spec se
-pueda implementar. Está declarado allá.
+**Editar una propiedad no tenía endpoint.** `site.create` lo resolvió
+[[../0004-capa-local-y-sincronizacion/README|SPEC-0004]], pero `site.update` quedó
+nombrado allá sin criterio y sin implementar: al arrancar este spec no existía
+`PATCH` de `site` ni por REST ni por la bandeja, solo `GET` y `POST` bajo
+`/customers/:id/sites`. Pasa a Alcance de este spec, que es el que lo necesita.
 
 **Los duplicados van a aparecer.** Sin señal no hay forma de avisar que ese
 cliente ya existe en otro dispositivo, y "Martínez" se va a cargar dos veces. No
@@ -160,13 +168,11 @@ de los casos.
 apellido, así que el alta puede pedir un solo campo y quedarse ahí. Pedir la
 ficha completa parado en un techo es lo que hace que la gente no cargue nada.
 
-**La dirección ya tiene forma, pero todavía no está en el contrato.** Quedó
-definida en [[../../../domain/cliente|la ficha de cliente]] —`line1`, `line2`,
-`city`, `state`, `postal_code`, `country`— y es la misma para `billing_address` y
-`site.address`. Falta declararla como DTO en `apps/api`: mientras siga siendo un
-`jsonb` sin forma en el contrato, el cliente Dart la recibe como `dynamic` y la
-descarta en silencio. Es el mismo problema del pull de SPEC-0004 y se arregla en
-el mismo lugar.
+**La dirección ya está en el contrato.** Quedó definida en
+[[../../../domain/cliente|la ficha de cliente]] —`line1`, `line2`, `city`,
+`state`, `postal_code`, `country`—, es la misma para `billing_address` y
+`site.address`, y SPEC-0004 la declaró como `AddressDto` en `apps/api`. Este spec
+la consume; no la vuelve a definir.
 
 ## ADRs relacionados
 
@@ -182,3 +188,9 @@ el mismo lugar.
 | 2026-08-09 | borrador | Creado. Es prerequisito de datos de SPEC-0005: sin clientes y sitios en local, el alta de obra no tiene de dónde elegir. Queda abierta la forma de `billing_address`, que hay que cerrar antes de implementar. |
 | 2026-08-09 | borrador | Cerrada la forma de la dirección: seis campos, la misma para `billing_address` y `site.address`, documentada en la ficha de cliente y pendiente de declararse como DTO en el API. Los formularios mínimos de alta pasan a ser de este spec, para que SPEC-0005 los reutilice en vez de copiarlos. |
 | 2026-08-09 | borrador | Revisado con `spec-reviewer`. Confirmó por su cuenta el mismo agujero que encontró el revisor de SPEC-0005 —no existe `site.create`, y tampoco ningún `PATCH` de `site`—, que pasó a prerequisito de SPEC-0004. El goal se amplió para cubrir detalle y edición, que estaban en Alcance sin nada contra qué medirlos, y el criterio del selector de sitio se reformuló sobre algo que este spec controla. |
+| 2026-08-09 | review | Verificados los prerequisitos contra el código, no contra el changelog: `AddressDto` y `site.create` están; `site.update` **no**, quedó nombrado en SPEC-0004 sin criterio. Pasa a Alcance de este spec y `apps` suma `api`. |
+| 2026-08-09 | aprobado | Aprobado el orden de trabajo: este spec va antes de SPEC-0005 porque es su prerequisito declarado, y sus formularios mínimos de cliente y propiedad son los que el alta de obra reutiliza. |
+| 2026-08-09 | en-implementacion | Arranca la implementación. |
+| 2026-08-10 | en-implementacion | **Los tres criterios que faltaban, verificados contra el API corriendo.** `integration_test/customers_test.dart` pasa en simulador, y comprobado por fuera del test consultando el servidor: la propiedad quedó colgada de su cliente, la corrección de dirección se aplicó encima —412 Ellsworth Dr, no una segunda fila—, y los ids son los UUIDv7 que generó el teléfono. Todos los criterios en `[x]`; queda el PR. |
+| 2026-08-10 | en-implementacion | Pasada de interfaz sobre lo implementado. El teléfono pide su país —`phone_form_field`, datos de libphonenumber en Dart puro, valida sin señal— y guarda E.164, que cierra desde el cliente la mitad del alta que [[../../../tech-debt/0003-telefono-sin-normalizar\|DEBT-0003]] dejó abierta. El país de la dirección se elige de lista en vez de teclearse. Lo obligatorio se dice en el label con palabras. El aviso del portal trae ayuda: `showHelpSheet` queda como componente reutilizable. Y tres arreglos de forma: el pie de los formularios respeta el área segura de abajo, los campos bajaron de 72 a 56 de alto, y los 64dp de ADR-0009 pasaron de ser la altura de todo botón sólido a pedirse solo en la acción de campo. |
+| 2026-08-09 | en-implementacion | Lista, ficha, alta y corrección de cliente y propiedad, con `site.update` y su `PATCH` en el API. 48 tests nuevos. Un bug de la bandeja apareció escribiendo el caso crítico del spec: **el servidor ordena el lote por `occurredAt` y crear un cliente con su propiedad en el mismo toque las empataba al milisegundo**, así que la propiedad podía aplicarse antes que su cliente. `enqueue` corre el empate un milisegundo. Faltan los tres criterios que solo se cierran corriendo `integration_test/customers_test.dart` contra el API. |

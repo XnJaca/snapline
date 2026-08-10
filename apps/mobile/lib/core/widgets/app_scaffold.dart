@@ -14,6 +14,7 @@ class AppScaffold extends StatelessWidget {
     required this.body,
     this.actions = const [],
     this.bottom,
+    this.floatingActionButton,
   });
 
   final String title;
@@ -23,6 +24,9 @@ class AppScaffold extends StatelessWidget {
   /// Va pegado bajo el título, dentro de la barra. Para tabs: colgadas del
   /// `AppBar` quedan ancladas, sueltas sobre el fondo flotan.
   final PreferredSizeWidget? bottom;
+
+  /// La acción primaria de la pantalla, y la única naranja sólida.
+  final Widget? floatingActionButton;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +45,7 @@ class AppScaffold extends StatelessWidget {
       body: Column(
         children: [const OfflineBanner(), Expanded(child: body)],
       ),
+      floatingActionButton: floatingActionButton,
     );
   }
 }

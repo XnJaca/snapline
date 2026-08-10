@@ -16,8 +16,7 @@ kanban-plugin: board
 ## ✏️ Borrador (escribiendo el spec)
 
 - [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
-- [ ] [[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005: Proyectos en el móvil]] — revisado; depende de 0004 y 0006
-- [ ] [[specs/mobile/0006-clientes-en-el-movil/README|SPEC-0006: Clientes en el móvil]] — revisado; espera los prerequisitos de contrato de SPEC-0004
+- [ ] [[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005: Proyectos en el móvil]] — revisado; espera los formularios mínimos de SPEC-0006
 
 
 ## 🔍 Review (listo para revisar)
@@ -29,6 +28,7 @@ kanban-plugin: board
 ## 🛠️ En implementación
 
 - [ ] [[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004: Capa local y sincronización]] — contrato, capa local y bandeja listos; faltan los dos criterios de `CONFLICT`, que dependen del marcaje
+- [ ] [[specs/mobile/0006-clientes-en-el-movil/README|SPEC-0006: Clientes en el móvil]] — **todos los criterios en `[x]`**, verificados contra el API; falta el PR
 
 
 ## 🎉 Implementado

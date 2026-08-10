@@ -246,10 +246,16 @@ abstract final class AppTheme {
     return InputDecorationTheme(
       filled: true,
       fillColor: scheme.surfaceContainerHighest,
+      // A 24 de alto cada campo medía 72 y un formulario de diez entraba a la
+      // mitad en pantalla. Con 14 el campo queda en ~56, arriba del mínimo
+      // táctil de 48 y sin comerse el resto del formulario.
       contentPadding: const EdgeInsets.symmetric(
         horizontal: Tokens.space4,
-        vertical: Tokens.space5,
+        vertical: Tokens.space3 + 2,
       ),
+      // Sin esto, dos campos en un `Row` con distinto largo de error quedan a
+      // distinta altura y la fila se ve torcida.
+      isDense: true,
       border: borde(scheme.outline, 1),
       enabledBorder: borde(scheme.outline, 1),
       focusedBorder: borde(scheme.primary, 2),
@@ -260,15 +266,19 @@ abstract final class AppTheme {
     );
   }
 
-  /// El mínimo táctil de Material son 48dp. Acá la acción primaria mide 64 y
-  /// ocupa el ancho: un dedo con guante de trabajo no acierta un botón de 48, y
-  /// marcar asistencia es lo que no puede fallar.
+  /// La acción primaria: ancho completo y 52 de alto, arriba del mínimo táctil
+  /// de Material.
+  ///
+  /// **La acción de campo es más grande y no sale de acá**: se pide con
+  /// `FieldActionButton`, que sube a 64 porque se pulsa con guantes de trabajo.
+  /// Poner los 64 en el tema hacía que un "Guardar" de formulario se comiera el
+  /// espacio de los campos. Ver ADR-0009.
   static final _primaryActionTheme = FilledButtonThemeData(
     style: FilledButton.styleFrom(
       minimumSize: const Size.fromHeight(Tokens.touchTargetPrimary),
       textStyle: const TextStyle(
         fontFamily: Tokens.fontFamily,
-        fontSize: Tokens.fontSizeTitle,
+        fontSize: Tokens.fontSizeBody,
         fontWeight: Tokens.weightMedium,
       ),
       shape: RoundedRectangleBorder(

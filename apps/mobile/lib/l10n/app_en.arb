@@ -120,6 +120,84 @@
   "projectPendingSync": "Not uploaded yet",
   "projectNoCrew": "No crew assigned",
 
+  "customersSearchHint": "Search by name, company or phone",
+  "@customersSearchHint": {
+    "description": "Siempre visible: el caso real es buscar, no navegar una lista."
+  },
+  "customersNew": "New customer",
+  "customersEmpty": "No customers yet. Add the first one to start a project.",
+  "customersEmptySearch": "No customers match that search",
+  "customerPendingSync": "Not uploaded yet",
+
+  "customerSectionDetails": "Details",
+  "customerSectionSites": "Properties",
+  "customerSectionProjects": "Projects",
+  "customerSectionBillingAddress": "Billing address",
+  "customerNoSites": "No properties yet. Add one to be able to create a project here.",
+  "customerNoProjects": "No projects for this customer yet",
+  "customerAddSite": "Add property",
+  "customerEdit": "Edit",
+  "customerNotFound": "This customer is not on this phone",
+
+  "customerPhotoReleaseGranted": "Photo release signed",
+  "@customerPhotoReleaseGranted": {
+    "description": "Regla 17: es lo único que habilita publicar. El móvil lo muestra, no lo decide."
+  },
+  "customerPhotoReleaseMissing": "No photo release",
+  "customerPhotoReleaseHelp": "Without the signed release, this customer's work cannot be published. It is granted from the office, with the document attached.",
+  "customerNoPortalAccess": "Without an email or a phone this customer cannot be invited to the client portal.",
+
+  "customerNewTitle": "New customer",
+  "customerEditTitle": "Edit customer",
+  "customerFieldDisplayName": "Name",
+  "customerFieldDisplayNameHelp": "A name you can identify this customer by.",
+  "customerFieldDisplayNameRequired": "Enter a name",
+  "customerFieldFirstName": "First name",
+  "customerFieldLastName": "Last name",
+  "customerFieldCompanyName": "Company",
+  "customerFieldEmail": "Email",
+  "customerFieldEmailInvalid": "Enter a valid email",
+  "customerFieldPhone": "Phone",
+  "customerFieldSource": "How they found you",
+  "customerFieldNotes": "Notes",
+  "customerFirstSite": "Property",
+  "customerFirstSiteHelp": "Where the work is. You can add more properties later.",
+
+  "customerSourceNone": "Not set",
+  "customerSourceReferral": "Referral",
+  "customerSourceWeb": "Website",
+  "customerSourceSocial": "Social media",
+  "customerSourceRepeat": "Repeat customer",
+  "customerSourceOther": "Other",
+
+  "siteNewTitle": "New property",
+  "siteEditTitle": "Edit property",
+  "addressLine1": "Street address",
+  "addressLine2": "Apt, suite, unit",
+  "addressCity": "City",
+  "addressState": "State",
+  "addressPostalCode": "ZIP code",
+  "addressCountry": "Country",
+  "addressLine1Required": "Enter the street address",
+  "addressCityRequired": "Enter the city",
+  "addressStateRequired": "Two-letter code, like MD",
+  "addressPostalCodeRequired": "Enter the ZIP code",
+
+  "fieldRequiredLabel": "{label} (required)",
+  "@fieldRequiredLabel": {
+    "description": "Marca un campo obligatorio en su propio label. Se dice con palabras y no con un asterisco: un asterisco solo lo entiende quien ya conoce la convención, y esta app se usa sin entrenamiento.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+
+  "helpMoreInfo": "Learn more",
+  "helpClose": "Got it",
+  "helpPortalTitle": "The client portal",
+  "helpPortalBody": "The portal is the web page where your customer follows their own job: the stages it went through, the photos you shared with them, and their estimates and invoices. They do not need an account — they get in through a private link you send them.\n\nThat link travels by email or by text message, so a customer with neither cannot be invited. Everything else about them works the same: you can create the job, log hours and take photos.\n\nYou can add the email or the phone later, whenever they give it to you.",
+
+  "actionSave": "Save",
+  "actionCancel": "Cancel",
+  "actionAdd": "Add",
+
   "syncInProgress": "Syncing…",
   "syncDone": "Up to date",
   "syncOffline": "No connection. What you do is saved and sent when the signal comes back.",
