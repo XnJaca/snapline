@@ -183,9 +183,14 @@ export class SyncService {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
             return ok((await this.projects.create(dto, tenant)).id);
           }
+          // Llega de un dispositivo que pudo estar días sin señal: si mientras
+          // tanto la obra avanzó, la transición retrocedente se descarta en vez
+          // de fallar, o se quedaría en su bandeja para siempre.
           case 'project.update': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
-            return ok((await this.projects.update(op.targetId, dto)).id);
+            return ok(
+              (await this.projects.update(op.targetId, dto, { discardBackwards: true })).id,
+            );
           }
           case 'media.register': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });

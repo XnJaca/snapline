@@ -11,6 +11,7 @@ import '../../features/customers/customer_screen.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/dev/theme_preview_screen.dart';
 import '../../features/projects/all_projects_screen.dart';
+import '../../features/projects/project_form_screen.dart';
 import '../../features/projects/project_screen.dart';
 import '../../features/projects/projects_screen.dart';
 import '../../features/shell/role_shell.dart';
@@ -28,6 +29,7 @@ abstract final class Routes {
   /// El detalle vive fuera del shell: la obra es un contenedor propio, con sus
   /// tabs, y encima de la barra de ejes no cabrían las dos.
   static const project = '/projects/:projectId';
+  static const projectEdit = '/projects/:projectId/edit';
 
   /// Igual que la obra: la ficha del cliente es su propia pantalla, con sus
   /// secciones, y no una pestaña más.
@@ -150,12 +152,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AccountScreen(),
       ),
-      // Antes que `/projects/:projectId`, o "all" entraría como id de obra.
+      // Antes que `/projects/:projectId`, o "all" y "new" entrarían como id de
+      // obra.
       GoRoute(
         path: AllProjectsScreen.route,
         name: 'allProjects',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AllProjectsScreen(),
+      ),
+      GoRoute(
+        path: ProjectFormScreen.newRoute,
+        name: 'newProject',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ProjectFormScreen(),
+      ),
+      GoRoute(
+        path: Routes.projectEdit,
+        name: 'editProject',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => ProjectFormScreen(
+          projectId: state.pathParameters['projectId']!,
+        ),
       ),
       GoRoute(
         path: Routes.project,

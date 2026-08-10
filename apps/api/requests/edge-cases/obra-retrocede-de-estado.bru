@@ -1,0 +1,28 @@
+meta { name: Obra que retrocede de estado por REST
+  type: http
+  seq: 16
+}
+patch { url: {{base_url}}/projects/{{project_id}}
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "status": "LEAD"
+  }
+}
+docs {
+  La escalera de `docs/domain/proyecto.md` no retrocede ni salta etapas. El proyecto
+  del seed está en `IN_PROGRESS`, así que volver a `LEAD` no tiene camino.
+
+  El selector del móvil ofrece solo las transiciones válidas, pero una versión vieja
+  de la app puede mandar cualquier cosa por la bandeja: **la escalera la valida el
+  servidor**. Antes de esto, `update({ id }, dto)` no comparaba contra el estado
+  anterior y aceptaba cualquier salto.
+
+  Por REST esto **falla**. Por la bandeja de salida el mismo retroceso se
+  **descarta sin fallar** — ver `sync-retroceso-descartado`.
+}
+assert { res.status: eq 409
+  res.body.code: eq PROJECT_INVALID_TRANSITION
+}

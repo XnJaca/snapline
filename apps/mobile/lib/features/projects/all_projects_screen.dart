@@ -8,6 +8,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'project_card.dart';
+import 'project_form_screen.dart';
 import 'project_status_display.dart';
 
 /// Toda la cartera, con una pestaña por estado. Acá viven las obras cerradas,
@@ -60,9 +61,7 @@ class AllProjectsScreen extends ConsumerWidget {
         floatingActionButton: FloatingActionButton.extended(
           icon: const Icon(Icons.add),
           label: Text(l10n.projectsNew),
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.comingSoon)),
-          ),
+          onPressed: () => context.push(ProjectFormScreen.newRoute),
         ),
       ),
     );

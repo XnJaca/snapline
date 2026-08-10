@@ -117,7 +117,47 @@
   "@projectPhotoCount": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "projectsSearchHint": "Search by project or customer",
+  "projectsEmptySearch": "No projects match that search",
   "projectPendingSync": "Not uploaded yet",
+
+  "projectNewTitle": "New project",
+  "projectEditTitle": "Edit project",
+  "projectFieldName": "Project name",
+  "projectFieldNameHelp": "How you call this job. \"Martinez roof\" is enough.",
+  "projectFieldNameRequired": "Enter a name for the project",
+  "projectFieldCustomer": "Customer",
+  "projectFieldCustomerRequired": "Pick the customer",
+  "projectFieldSite": "Property",
+  "projectFieldSiteRequired": "Pick the property",
+  "projectFieldSitePickCustomerFirst": "Choose the customer first",
+  "projectFieldSiteNoneForCustomer": "This customer has no properties yet. Add one.",
+  "projectFieldStatus": "Status",
+  "projectFieldDescription": "Description",
+  "projectFieldServiceType": "Type of work",
+  "projectFieldStartDate": "Start date",
+  "projectFieldTargetEndDate": "Target end date",
+  "projectFieldDateNotSet": "Not set",
+  "projectFieldDateClear": "Clear date",
+
+  "projectPickCustomerTitle": "Choose a customer",
+  "projectPickSiteTitle": "Choose a property",
+  "projectPickCustomerNew": "New customer",
+  "projectPickSiteNew": "New property",
+  "projectPickEmpty": "Nothing on this phone yet",
+
+  "projectChangeStatus": "Change status",
+  "projectChangeStatusFrom": "Now: {status}",
+  "@projectChangeStatusFrom": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "projectStatusTerminal": "A finished or cancelled project does not change status again",
+  "projectVisibilityStages": "The customer sees stages",
+  "projectDetailSectionWhat": "The job",
+  "projectDetailSectionWhen": "Dates",
+  "projectDetailSectionWho": "Customer and property",
+  "projectDetailEdit": "Edit",
+  "projectNotFound": "This project is not on this phone",
   "projectNoCrew": "No crew assigned",
 
   "customersSearchHint": "Search by name, company or phone",

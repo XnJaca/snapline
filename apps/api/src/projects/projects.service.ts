@@ -9,6 +9,7 @@ import { Site } from '../customers/entities/site.entity';
 import { Project } from './entities/project.entity';
 import { ProjectAssignment } from './entities/project-assignment.entity';
 import { AssignCrewDto, CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { canTransition, isBackwards } from './project-status';
 
 @Injectable()
 export class ProjectsService {
@@ -99,9 +100,35 @@ export class ProjectsService {
     return this.get(id);
   }
 
-  async update(id: string, dto: UpdateProjectDto): Promise<Project> {
-    await this.get(id);
-    await this.projects.update({ id }, dto);
+  /**
+   * `discardBackwards` lo pone la bandeja de salida, nunca la puerta REST.
+   *
+   * Una transición retrocedente que llega tarde **se descarta y no falla**: el
+   * dispositivo no puede saber si su estado es viejo, así que si respondiéramos
+   * error la operación se quedaría en su cola para siempre. Se aplica el resto de
+   * los campos y el estado se ignora. Es lo único de `project` que no es última
+   * escritura gana.
+   */
+  async update(
+    id: string,
+    dto: UpdateProjectDto,
+    opciones?: { discardBackwards?: boolean },
+  ): Promise<Project> {
+    const actual = await this.get(id);
+    const cambios: UpdateProjectDto = { ...dto };
+
+    if (cambios.status && cambios.status !== actual.status) {
+      if (opciones?.discardBackwards && isBackwards(actual.status, cambios.status)) {
+        delete cambios.status;
+      } else if (!canTransition(actual.status, cambios.status)) {
+        throw ApiError.conflict(
+          'PROJECT_INVALID_TRANSITION',
+          `Una obra en ${actual.status} no puede pasar a ${cambios.status}`,
+        );
+      }
+    }
+
+    await this.projects.update({ id }, cambios);
     return this.get(id);
   }
 

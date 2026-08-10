@@ -10,6 +10,7 @@ import '../../core/widgets/placeholder_list.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
+import 'project_details_tab.dart';
 import 'project_status_display.dart';
 
 /// Las tabs de una obra. Igual que los ejes de la barra, cada una declara su
@@ -115,7 +116,11 @@ class ProjectScreen extends ConsumerWidget {
               child: TabBarView(
                 children: [
                   for (final tab in tabs)
-                    PlaceholderList(storageKey: '$projectId.${tab.name}'),
+                    if (tab == ProjectTab.details)
+                      ProjectDetailsTab(projectId: projectId)
+                    else
+                      // Cada una se reemplaza cuando su spec llegue.
+                      PlaceholderList(storageKey: '$projectId.${tab.name}'),
                 ],
               ),
             ),

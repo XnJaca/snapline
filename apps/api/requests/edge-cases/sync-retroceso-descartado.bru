@@ -1,0 +1,47 @@
+meta { name: Retroceso que llega tarde por la bandeja se descarta
+  type: http
+  seq: 17
+}
+post { url: {{base_url}}/sync
+  body: json
+  auth: none
+}
+script:pre-request {
+  bru.setVar("retroceso_client_id", crypto.randomUUID());
+}
+body:json {
+  {
+    "operations": [
+      {
+        "clientId": "{{retroceso_client_id}}",
+        "type": "project.update",
+        "targetId": "{{project_id}}",
+        "payload": {
+          "status": "LEAD",
+          "serviceType": "roofing"
+        },
+        "occurredAt": "2026-08-10T10:00:00.000Z"
+      }
+    ]
+  }
+}
+docs {
+  El caso que separa a `project` de todo lo demás: **el estado no es última
+  escritura gana.**
+
+  Un teléfono estuvo días sin señal creyendo que la obra estaba en `LEAD`. Cuando
+  sincroniza, la obra ya avanzó. El dispositivo **no puede saberlo**, así que el
+  descarte lo hace el servidor, que es el único que ve los dos estados.
+
+  Y se descarta **sin fallar**: `applied`, no `failed`. Si devolviera error, la
+  operación se quedaría en la bandeja de ese teléfono para siempre reintentándose.
+
+  El resto del payload sí se aplica —acá `serviceType`—: lo que llegó tarde es la
+  orden de cambiar el estado, no las demás correcciones.
+
+  Por REST el mismo retroceso **falla con 409**. Ver `obra-retrocede-de-estado`.
+}
+assert { res.status: eq 201
+  res.body.failed: eq 0
+  res.body.results[0].status: eq applied
+}

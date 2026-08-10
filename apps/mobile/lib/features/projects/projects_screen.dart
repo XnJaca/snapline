@@ -6,25 +6,42 @@ import '../../core/navigation/app_destination.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/search_field.dart';
 import '../../core/widgets/sync_button.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../data/sync/sync_controller.dart';
 import '../../l10n/app_localizations.dart';
 import 'all_projects_screen.dart';
 import 'project_card.dart';
+import 'project_form_screen.dart';
 
 /// La primera pantalla del dueño: **solo lo que está en obra ahora**.
 ///
 /// Lee de la base local y nunca de la red. El sincronizador escribe en Drift y
 /// esta lista se actualiza sola; sin señal muestra lo mismo que con señal.
-class ProjectsScreen extends ConsumerWidget {
+class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
+}
+
+class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
+  final _buscador = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _buscador.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final spacing = context.spacing;
-    final obras = ref.watch(inProgressProjectsProvider);
+    final obras = ref.watch(inProgressProjectsProvider(_query));
+    final buscando = _query.trim().isNotEmpty;
 
     return AppScaffold(
       title: AppDestination.projects.label(l10n),
@@ -32,6 +49,11 @@ class ProjectsScreen extends ConsumerWidget {
       body: Column(
         children: [
           const _Encabezado(),
+          SearchField(
+            controller: _buscador,
+            hint: l10n.projectsSearchHint,
+            onChanged: (valor) => setState(() => _query = valor),
+          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () =>
@@ -49,8 +71,15 @@ class ProjectsScreen extends ConsumerWidget {
                         children: [
                           SizedBox(height: spacing.xxl * 3),
                           EmptyState(
-                            icon: AppDestination.projects.icon,
-                            message: l10n.projectsEmptyInProgress,
+                            icon: buscando
+                                ? Icons.search_off
+                                : AppDestination.projects.icon,
+                            // Dos vacíos distintos: no hay obras en proceso, o la
+                            // búsqueda no encontró. El mismo mensaje manda a
+                            // revisar el lugar equivocado.
+                            message: buscando
+                                ? l10n.projectsEmptySearch
+                                : l10n.projectsEmptyInProgress,
                           ),
                         ],
                       )
@@ -77,6 +106,13 @@ class ProjectsScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+      // La acción primaria del eje, y lo único naranja sólido: "ver todas" se
+      // queda en texto.
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: Text(l10n.projectsNew),
+        onPressed: () => context.push(ProjectFormScreen.newRoute),
       ),
     );
   }

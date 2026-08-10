@@ -36,9 +36,38 @@ horas, estimados, publicación.
 
 ```
 LEAD → ESTIMATED → SCHEDULED → IN_PROGRESS → COMPLETED
-                        ↓            ↓
-                    ON_HOLD      CANCELLED
+                                   ⇅
+                                ON_HOLD
+
+CANCELLED ← desde cualquier estado vivo
 ```
+
+**Las transiciones válidas, completas.** El diagrama de arriba muestra el camino
+normal; esta tabla es la que vale, y es la que valida el servidor:
+
+| Desde | Puede pasar a |
+|---|---|
+| `LEAD` | `ESTIMATED`, `CANCELLED` |
+| `ESTIMATED` | `SCHEDULED`, `CANCELLED` |
+| `SCHEDULED` | `IN_PROGRESS`, `ON_HOLD`, `CANCELLED` |
+| `IN_PROGRESS` | `COMPLETED`, `ON_HOLD`, `CANCELLED` |
+| `ON_HOLD` | `IN_PROGRESS`, `CANCELLED` |
+| `COMPLETED` | — final |
+| `CANCELLED` | — final |
+
+Tres cosas que la tabla decide y el diagrama no decía:
+
+- **De `ON_HOLD` se vuelve.** Llueve una semana y la obra se pausa; después se
+  reanuda. Sin esta transición una obra en pausa quedaba trabada para siempre.
+- **Se cancela desde cualquier estado vivo**, no solo desde `IN_PROGRESS`. El caso
+  más común es el más temprano: el cliente no acepta el estimado.
+- **No se retrocede y no se salta.** Terminada no se reabre —si se reabriera,
+  "terminada" dejaría de ser confiable para el reporte y para publicar— y no se
+  puede ir de `LEAD` a `IN_PROGRESS` sin pasar por el medio.
+
+Decidido el 2026-08-10, al implementar
+[[../specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005]]: el selector del
+móvil necesitaba la tabla y el diagrama no alcanzaba para derivarla.
 
 Lo que ve el cliente es un mapeo de tres, no estos:
 
