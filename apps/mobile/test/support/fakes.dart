@@ -2,16 +2,19 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:snapline/core/navigation/last_destination_store.dart';
 import 'package:snapline/core/session/session_storage.dart';
 import 'package:snapline/core/theme/locale_store.dart';
+import 'package:snapline/core/theme/theme_store.dart';
 import 'package:snapline/main.dart';
 import 'package:snapline/api/models/project_status.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/local/tables.dart';
+import 'package:snapline/data/sync/connectivity.dart';
 import 'package:snapline/data/sync/sync_controller.dart';
 
 import 'package:snapline/api/models/auth_membership_dto.dart';
@@ -65,6 +68,19 @@ class FakeLocaleStore implements LocaleStore {
 
   @override
   Future<void> write(Locale? value) async => locale = value;
+}
+
+/// El tema elegido, en memoria.
+class FakeThemeStore implements ThemeStore {
+  FakeThemeStore([this.mode]);
+
+  ThemeMode? mode;
+
+  @override
+  Future<ThemeMode?> read() async => mode;
+
+  @override
+  Future<void> write(ThemeMode value) async => mode = value;
 }
 
 /// Los mismos que devuelve el API para cada rol. Ver `permissionsForRole` en
@@ -182,6 +198,7 @@ Widget testApp({
   AppDestination? lastDestination,
   FakeLastDestinationStore? lastDestinationStore,
   LocaleStore? localeStore,
+  ThemeStore? themeStore,
 }) {
   return ProviderScope(
     overrides: [
@@ -194,6 +211,10 @@ Widget testApp({
         lastDestinationStore ?? FakeLastDestinationStore(lastDestination),
       ),
       localeStoreProvider.overrideWithValue(localeStore ?? FakeLocaleStore()),
+      // El plugin de conectividad no existe en un test: su stream se quedaría
+      // abierto y el árbol nunca terminaría de desmontarse.
+      connectivityProvider.overrideWith((ref) => Stream.value(true)),
+      themeStoreProvider.overrideWithValue(themeStore ?? FakeThemeStore()),
     ],
     child: const SnaplineApp(),
   );
@@ -250,15 +271,35 @@ Future<void> seedProject(
 }
 
 
-/// Monta la app y deja programado su desmontaje **dentro** del test.
+/// Monta la app para un test.
 ///
-/// Drift crea un timer al cancelar sus streams. Si el árbol se desmonta recién
-/// cuando el caso terminó, ese timer queda pendiente y el framework lo reporta
-/// como error aunque no haya nada roto.
+/// Hay que cerrarla con [disposeApp] antes de que el caso termine: Drift crea un
+/// timer al cancelar sus streams, y el framework verifica que no queden timers
+/// **antes** de correr los `tearDown`. Desmontar ahí llega tarde.
 Future<void> pumpApp(WidgetTester tester, Widget app) async {
   await tester.pumpWidget(app);
-  addTearDown(() async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
+}
+
+/// Desmonta el árbol y deja correr el timer que Drift agenda al cancelar sus
+/// streams. Sin esto el caso termina en "A Timer is still pending".
+Future<void> disposeApp(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  // El timer nace durante el desmontaje, así que hace falta un frame más para
+  // que llegue a ejecutarse. Sin esto el caso termina con él todavía en cola.
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
+/// `testWidgets` que desmonta el árbol al terminar, pase lo que pase.
+///
+/// Se usa en todo caso que monte la app. Dejarlo a cargo de cada test es
+/// olvidarse en uno y perseguir un "A Timer is still pending" que no dice de
+/// dónde salió.
+void testWithApp(String description, Future<void> Function(WidgetTester) body) {
+  testWidgets(description, (tester) async {
+    try {
+      await body(tester);
+    } finally {
+      await disposeApp(tester);
+    }
   });
 }

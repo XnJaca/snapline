@@ -21,7 +21,7 @@ void main() {
   tearDown(() => _db.close());
 
   group('arranque', () {
-    testWidgets('sin sesión guardada abre el login', (tester) async {
+    testWithApp('sin sesión guardada abre el login', (tester) async {
       await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
@@ -30,7 +30,7 @@ void main() {
     });
 
     // El criterio del spec: cerrar la app y reabrirla entra directo.
-    testWidgets('con sesión guardada entra sin pedir credenciales', (
+    testWithApp('con sesión guardada entra sin pedir credenciales', (
       tester,
     ) async {
       await pumpApp(tester, _app(FakeSessionStorage(buildSession())));
@@ -42,7 +42,7 @@ void main() {
 
     // Reabrir sin red conserva el idioma del último login, porque sale de la
     // sesión guardada y no de una llamada al servidor.
-    testWidgets('aplica el idioma del usuario sin consultar al servidor', (
+    testWithApp('aplica el idioma del usuario sin consultar al servidor', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -53,7 +53,7 @@ void main() {
       expect(find.widgetWithText(AppBar, 'Proyectos'), findsOneWidget);
     });
 
-    testWidgets('un usuario en inglés ve la app en inglés', (tester) async {
+    testWithApp('un usuario en inglés ve la app en inglés', (tester) async {
       await tester.pumpWidget(
         _app(FakeSessionStorage(buildSession(locale: AuthUserDtoLocale.en))),
       );
@@ -64,7 +64,7 @@ void main() {
 
     // Quién está adentro dejó de estar en la pantalla de inicio y pasó a la
     // pantalla de cuenta, que es de donde ahora se sale.
-    testWidgets('la pantalla de cuenta muestra la persona y su empresa', (
+    testWithApp('la pantalla de cuenta muestra la persona y su empresa', (
       tester,
     ) async {
       await pumpApp(tester, _app(FakeSessionStorage(buildSession())));
@@ -85,7 +85,7 @@ void main() {
   });
 
   group('login', () {
-    testWidgets('no llama al API con los campos vacíos', (tester) async {
+    testWithApp('no llama al API con los campos vacíos', (tester) async {
       await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
@@ -96,7 +96,7 @@ void main() {
       expect(find.text('Enter your password'), findsOneWidget);
     });
 
-    testWidgets('la contraseña se puede mostrar y ocultar', (tester) async {
+    testWithApp('la contraseña se puede mostrar y ocultar', (tester) async {
       await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
@@ -124,7 +124,7 @@ void main() {
 
     // La familia de marca no puede filtrarse al texto de interfaz: una display a
     // tamaño de lectura cansa y compite con el contenido.
-    testWidgets('la familia de marca se usa solo en el wordmark', (
+    testWithApp('la familia de marca se usa solo en el wordmark', (
       tester,
     ) async {
       await pumpApp(tester, _app(FakeSessionStorage()));

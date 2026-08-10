@@ -95,7 +95,7 @@ void main() {
   }
 
   group('barra por rol', () {
-    testWidgets('un OWNER ve cuatro ejes de negocio', (tester) async {
+    testWithApp('un OWNER ve cuatro ejes de negocio', (tester) async {
       await pumpApp(tester, app());
       await tester.pumpAndSettle();
 
@@ -108,7 +108,7 @@ void main() {
     });
 
     // Fotos y Horas viven dentro de cada obra, que es donde significan algo.
-    testWidgets('un OWNER no tiene pestañas globales de Fotos ni de Horas', (
+    testWithApp('un OWNER no tiene pestañas globales de Fotos ni de Horas', (
       tester,
     ) async {
       await pumpApp(tester, app());
@@ -119,7 +119,7 @@ void main() {
       expect(ejes(tester), isNot(contains('Mis horas')));
     });
 
-    testWidgets('un WORKER ve exactamente dos y ninguna es la cartera', (
+    testWithApp('un WORKER ve exactamente dos y ninguna es la cartera', (
       tester,
     ) async {
       await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
@@ -129,7 +129,7 @@ void main() {
       expect(ejes(tester), isNot(contains('Proyectos')));
     });
 
-    testWidgets('un FOREMAN ve tres, incluida Cuadrilla', (tester) async {
+    testWithApp('un FOREMAN ve tres, incluida Cuadrilla', (tester) async {
       await pumpApp(tester, app(role: AuthMembershipDtoRole.foreman));
       await tester.pumpAndSettle();
 
@@ -137,7 +137,7 @@ void main() {
     });
 
     // El dominio le da cero acceso a fotos, y `media.read` no lo incluye.
-    testWidgets('un ACCOUNTANT no ve la pestaña de Fotos', (tester) async {
+    testWithApp('un ACCOUNTANT no ve la pestaña de Fotos', (tester) async {
       await pumpApp(tester, app(role: AuthMembershipDtoRole.accountant));
       await tester.pumpAndSettle();
 
@@ -145,7 +145,7 @@ void main() {
       expect(ejes(tester), isNot(contains('Fotos')));
     });
 
-    testWidgets('ningún rol ve menos de dos ni más de cuatro', (tester) async {
+    testWithApp('ningún rol ve menos de dos ni más de cuatro', (tester) async {
       for (final role in AuthMembershipDtoRole.$valuesDefined) {
         await pumpApp(tester, app(role: role));
         await tester.pumpAndSettle();
@@ -163,7 +163,7 @@ void main() {
   group('los permisos filtran', () {
     // Un permiso que cambia en el servidor no puede dejar una pestaña que lleve
     // a un 403: el destino simplemente no se dibuja.
-    testWidgets('un destino sin su permiso no se dibuja', (tester) async {
+    testWithApp('un destino sin su permiso no se dibuja', (tester) async {
       await tester.pumpWidget(
         app(
           permissions: permisosOwner
@@ -176,7 +176,7 @@ void main() {
       expect(ejes(tester), ['Proyectos', 'Clientes', 'Reportes']);
     });
 
-    testWidgets('con un solo eje no se muestra barra', (tester) async {
+    testWithApp('con un solo eje no se muestra barra', (tester) async {
       await tester.pumpWidget(
         app(permissions: const ['reports.read', 'profile.write']),
       );
@@ -196,7 +196,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('entrar a una obra muestra Avance, Fotos, Horas y Detalle', (
+    testWithApp('entrar a una obra muestra Avance, Fotos, Horas y Detalle', (
       tester,
     ) async {
       await abrirProyecto(tester, 'Kitchen remodel');
@@ -209,7 +209,7 @@ void main() {
 
     // El timeline no cambia de forma: simplemente termina. Una obra terminada
     // no entra en el filtro por defecto, así que se llega por "Todos".
-    testWidgets('un proyecto terminado muestra las mismas cuatro tabs', (
+    testWithApp('un proyecto terminado muestra las mismas cuatro tabs', (
       tester,
     ) async {
       await pumpApp(tester, app());
@@ -235,7 +235,7 @@ void main() {
 
     // Son cuatro y entran siempre: alineadas a la izquierda dejaban un hueco
     // muerto a la derecha que se leía como que faltaba algo.
-    testWidgets('las cuatro tabs se reparten el ancho', (tester) async {
+    testWithApp('las cuatro tabs se reparten el ancho', (tester) async {
       await abrirProyecto(tester, 'Kitchen remodel');
 
       final barra = tester.widget<TabBar>(find.byType(TabBar));
@@ -244,7 +244,7 @@ void main() {
     });
 
     // De qué obra se trata tiene que quedar a la vista al cambiar de pestaña.
-    testWidgets('la cabecera se queda al cambiar de tab', (tester) async {
+    testWithApp('la cabecera se queda al cambiar de tab', (tester) async {
       await abrirProyecto(tester, 'Kitchen remodel');
 
       expect(find.text('Martínez family'), findsOneWidget);
@@ -257,7 +257,7 @@ void main() {
   group('la cartera muestra lo vivo', () {
     // Abre en lo que está en obra ahora. Lo agendado, lo pausado y lo cerrado
     // se consulta cambiando de filtro.
-    testWidgets('la lista principal muestra solo lo que está en proceso', (
+    testWithApp('la lista principal muestra solo lo que está en proceso', (
       tester,
     ) async {
       await pumpApp(tester, app());
@@ -279,7 +279,7 @@ void main() {
 
     // Lo cerrado no desaparece: vive detrás de "ver todos", que es la pantalla
     // dedicada con una pestaña por estado.
-    testWidgets('"ver todos" llega a lo terminado', (tester) async {
+    testWithApp('"ver todos" llega a lo terminado', (tester) async {
       await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await verTodos(tester, estado: 'Terminado');
@@ -288,7 +288,7 @@ void main() {
       expect(find.text('Kitchen remodel'), findsNothing);
     });
 
-    testWidgets('cada pestaña recorta por su estado', (tester) async {
+    testWithApp('cada pestaña recorta por su estado', (tester) async {
       await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await verTodos(tester, estado: 'Cancelado');
@@ -297,7 +297,7 @@ void main() {
       expect(find.text('Kitchen remodel'), findsNothing);
     });
 
-    testWidgets('cambiar de pestaña cambia lo que se lista', (tester) async {
+    testWithApp('cambiar de pestaña cambia lo que se lista', (tester) async {
       await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await verTodos(tester, estado: 'Prospecto');
@@ -317,7 +317,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('es una pantalla, no una hoja', (tester) async {
+    testWithApp('es una pantalla, no una hoja', (tester) async {
       await abrirCuenta(tester);
 
       expect(find.widgetWithText(AppBar, 'Cuenta'), findsOneWidget);
@@ -333,7 +333,7 @@ void main() {
     // Salir dispara el redirect del router, que reconstruye el árbol entero.
     // Hacerlo sin cerrar antes esta pantalla rompía con `setState` durante el
     // build, y solo se veía corriendo la app de verdad.
-    testWidgets('salir vuelve al login sin romper el árbol', (tester) async {
+    testWithApp('salir vuelve al login sin romper el árbol', (tester) async {
       await abrirCuenta(tester);
 
       await tester.scrollUntilVisible(find.byIcon(Icons.logout), 200);
@@ -347,7 +347,7 @@ void main() {
 
     // El idioma es por persona, y la elección tiene que sobrevivir a cerrar la
     // app: sin persistirla, al reabrir vuelve al de la cuenta.
-    testWidgets('el idioma se elige y se guarda', (tester) async {
+    testWithApp('el idioma se elige y se guarda', (tester) async {
       final store = FakeLocaleStore();
       await pumpApp(tester, testApp(db: db, localeStore: store));
       await tester.pumpAndSettle();
@@ -364,7 +364,7 @@ void main() {
 
     // No es cosmético: la misma app se usa en un techo con sol directo y en un
     // sótano sin luz.
-    testWidgets('el tema se elige a mano', (tester) async {
+    testWithApp('el tema se elige a mano', (tester) async {
       await abrirCuenta(tester);
 
       await tester.scrollUntilVisible(
@@ -382,7 +382,7 @@ void main() {
   });
 
   group('el estado se conserva', () {
-    testWidgets('cambiar de pestaña y volver conserva el scroll', (
+    testWithApp('cambiar de pestaña y volver conserva el scroll', (
       tester,
     ) async {
       await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
@@ -407,14 +407,14 @@ void main() {
       );
     });
 
-    testWidgets('reabrir vuelve a la última pestaña usada', (tester) async {
+    testWithApp('reabrir vuelve a la última pestaña usada', (tester) async {
       await pumpApp(tester, app(lastDestination: AppDestination.billing));
       await tester.pumpAndSettle();
 
       expect(find.widgetWithText(AppBar, 'Facturación'), findsOneWidget);
     });
 
-    testWidgets('tocar una pestaña la recuerda', (tester) async {
+    testWithApp('tocar una pestaña la recuerda', (tester) async {
       final store = FakeLastDestinationStore();
       await pumpApp(
         tester,
@@ -430,7 +430,7 @@ void main() {
 
     // El teléfono es de la empresa y lo usa más de una persona: la pestaña que
     // dejó el dueño no puede dejar al trabajador en una pantalla que no tiene.
-    testWidgets('una pestaña que el rol de ahora no tiene cae en la primera', (
+    testWithApp('una pestaña que el rol de ahora no tiene cae en la primera', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -490,7 +490,7 @@ void main() {
   group('la estructura no consulta al servidor', () {
     // Los permisos cacheados son conveniencia de interfaz: que el token esté
     // vencido no cambia lo que se dibuja.
-    testWidgets('con el token vencido la barra se arma igual', (tester) async {
+    testWithApp('con el token vencido la barra se arma igual', (tester) async {
       await pumpApp(
         tester,
         testApp(
@@ -507,7 +507,7 @@ void main() {
   });
 
   group('nada quemado', () {
-    testWidgets('los ejes de un usuario en inglés salen en inglés', (
+    testWithApp('los ejes de un usuario en inglés salen en inglés', (
       tester,
     ) async {
       await pumpApp(tester, app(locale: AuthUserDtoLocale.en));
@@ -516,7 +516,7 @@ void main() {
       expect(ejes(tester), ['Projects', 'Customers', 'Reports', 'Billing']);
     });
 
-    testWidgets('los de un usuario en español salen en español', (
+    testWithApp('los de un usuario en español salen en español', (
       tester,
     ) async {
       await pumpApp(tester, app(locale: AuthUserDtoLocale.es));
@@ -530,7 +530,7 @@ void main() {
       ]);
     });
 
-    testWidgets('las tabs de la obra también', (tester) async {
+    testWithApp('las tabs de la obra también', (tester) async {
       await pumpApp(tester, app(locale: AuthUserDtoLocale.en));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kitchen remodel'));
