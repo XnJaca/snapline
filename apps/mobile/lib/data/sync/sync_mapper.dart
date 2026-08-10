@@ -29,9 +29,13 @@ abstract final class SyncMapper {
     deletedAt: Value(dto.deletedAt),
     syncStatus: const Value(SyncStatus.synced),
     displayName: Value(dto.displayName),
+    firstName: Value(dto.firstName),
+    lastName: Value(dto.lastName),
     companyName: Value(dto.companyName),
     email: Value(dto.email),
     phone: Value(dto.phone),
+    source: Value(dto.source?.json),
+    notes: Value(dto.notes),
     // El objeto entero, no campo por campo: si el servidor agrega uno, no se
     // pierde por el camino hasta que la app lo conozca.
     billingAddress: Value(

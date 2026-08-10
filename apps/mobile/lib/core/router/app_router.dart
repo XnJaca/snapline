@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/account/account_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/customers/customer_form_screen.dart';
+import '../../features/customers/customer_screen.dart';
+import '../../features/customers/customers_screen.dart';
 import '../../features/dev/theme_preview_screen.dart';
 import '../../features/projects/all_projects_screen.dart';
 import '../../features/projects/project_screen.dart';
@@ -25,6 +28,11 @@ abstract final class Routes {
   /// El detalle vive fuera del shell: la obra es un contenedor propio, con sus
   /// tabs, y encima de la barra de ejes no cabrían las dos.
   static const project = '/projects/:projectId';
+
+  /// Igual que la obra: la ficha del cliente es su propia pantalla, con sus
+  /// secciones, y no una pestaña más.
+  static const customer = '/customers/:customerId';
+  static const customerEdit = '/customers/:customerId/edit';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -157,6 +165,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           projectId: state.pathParameters['projectId']!,
         ),
       ),
+      // Antes que `/customers/:customerId`, o "new" entraría como id de cliente.
+      GoRoute(
+        path: CustomerFormScreen.newRoute,
+        name: 'newCustomer',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CustomerFormScreen(),
+      ),
+      GoRoute(
+        path: Routes.customerEdit,
+        name: 'editCustomer',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => CustomerFormScreen(
+          customerId: state.pathParameters['customerId']!,
+        ),
+      ),
+      GoRoute(
+        path: Routes.customer,
+        name: 'customer',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => CustomerScreen(
+          customerId: state.pathParameters['customerId']!,
+        ),
+      ),
       // Una rama por destino, siempre las mismas: el rol decide cuáles se
       // dibujan, no cuáles existen. El orden es el de `AppDestination.values`.
       StatefulShellRoute.indexedStack(
@@ -168,9 +199,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               routes: [
                 GoRoute(
                   path: destino.route,
-                  builder: (context, state) => destino == AppDestination.projects
-                      ? const ProjectsScreen()
-                      : PlaceholderScreen(destination: destino),
+                  builder: (context, state) => switch (destino) {
+                    AppDestination.projects => const ProjectsScreen(),
+                    AppDestination.customers => const CustomersScreen(),
+                    _ => PlaceholderScreen(destination: destino),
+                  },
                 ),
               ],
             ),

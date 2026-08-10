@@ -18,6 +18,7 @@ class StatusChip extends StatelessWidget {
     this.icon,
     this.expand = false,
     this.subtle = false,
+    this.action,
   });
 
   final StatusTone tone;
@@ -29,6 +30,12 @@ class StatusChip extends StatelessWidget {
 
   /// Ancho completo, para errores de formulario. Compacto para banderas.
   final bool expand;
+
+  /// Al final del chip, para un aviso que necesita explicarse: un `HelpButton`.
+  ///
+  /// Solo tiene sentido con [expand]: en un chip compacto no queda lugar, y un
+  /// aviso que da una noticia sin explicar de qué habla no sirve de nada.
+  final Widget? action;
 
   /// Sin relleno: solo el contorno, el icono y el texto.
   ///
@@ -74,6 +81,7 @@ class StatusChip extends StatelessWidget {
                   ),
             ),
           ),
+          if (action != null) ...[SizedBox(width: spacing.xs), action!],
         ],
       ),
     );

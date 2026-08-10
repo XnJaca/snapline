@@ -271,6 +271,55 @@ Future<void> seedProject(
 }
 
 
+/// Siembra un cliente como si hubiera bajado del servidor, con su propiedad
+/// opcional. `SYNCED`, que es como entra lo que ya está allá.
+Future<void> seedCustomer(
+  AppDatabase db, {
+  required String id,
+  required String displayName,
+  String? companyName,
+  String? phone,
+  String? email,
+  DateTime? photoReleaseGrantedAt,
+  String? siteLine1,
+  SyncStatus syncStatus = SyncStatus.synced,
+}) async {
+  final ahora = DateTime.now();
+
+  await db.into(db.customers).insertOnConflictUpdate(
+    CustomersCompanion.insert(
+      id: id,
+      companyId: 'c1',
+      updatedAt: ahora,
+      displayName: displayName,
+      companyName: Value(companyName),
+      phone: Value(phone),
+      email: Value(email),
+      photoReleaseGrantedAt: Value(photoReleaseGrantedAt),
+      syncStatus: Value(syncStatus),
+    ),
+  );
+
+  if (siteLine1 != null) {
+    await db.into(db.sites).insertOnConflictUpdate(
+      SitesCompanion.insert(
+        id: 's-$id',
+        companyId: 'c1',
+        updatedAt: ahora,
+        customerId: id,
+        address: jsonEncode({
+          'line1': siteLine1,
+          'city': 'Silver Spring',
+          'state': 'MD',
+          'postalCode': '20910',
+          'country': 'US',
+        }),
+        syncStatus: Value(syncStatus),
+      ),
+    );
+  }
+}
+
 /// Monta la app para un test.
 ///
 /// Hay que cerrarla con [disposeApp] antes de que el caso termine: Drift crea un

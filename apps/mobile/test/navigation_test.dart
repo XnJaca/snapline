@@ -337,6 +337,12 @@ void main() {
       await abrirCuenta(tester);
 
       await tester.scrollUntilVisible(find.byIcon(Icons.logout), 200);
+      // `scrollUntilVisible` deja el objetivo "visible" pero puede dejarlo
+      // pasado del borde: con delta fijo, cualquier cambio de alto de los
+      // controles mueve dónde cae. Sin esto el toque va afuera y el caso falla
+      // como si salir no funcionara.
+      await tester.ensureVisible(find.byIcon(Icons.logout));
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.logout));
       await tester.pumpAndSettle();
 

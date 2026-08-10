@@ -7,6 +7,19 @@ diseño en ADR-0009.
 **Esta app está fuera del workspace de pnpm**, a propósito: pub y pnpm no se
 mezclan. No aparece en `pnpm-workspace.yaml` y no la toca `turbo`.
 
+## Dependencias no obvias
+
+| Paquete | Por qué está |
+|---|---|
+| `phone_form_field` | Un teléfono no se puede validar sin saber su país: diez dígitos son válidos en Estados Unidos y no en Guatemala. Trae los datos de libphonenumber portados a **Dart puro**, así que valida sin señal, y sus textos ya vienen en `en` y `es` |
+| `flutter_country_selector` | Viene con el anterior; se usa directo para el país de una dirección y para los nombres de país traducidos. Una sola lista de países en la app |
+
+Los dos se registran en `main.dart` vía `PhoneFieldLocalization.delegates`. Sin
+eso el selector sale en inglés con la app en español.
+
+La lista de países ofrecidos es corta a propósito y vive en
+`core/i18n/supported_countries.dart`.
+
 ## Levantar en desarrollo
 
 ```bash
@@ -107,6 +120,33 @@ Container(
   ]),
 )
 ```
+
+### Dos alturas de acción primaria, y no son intercambiables
+
+- **`FilledButton`** sale del tema a 52dp: el "Guardar" de un formulario, el
+  "Entrar" del login. Arriba del mínimo táctil de Material.
+- **`FieldActionButton`** sube a 64dp y se pide a mano: es la acción que se pulsa
+  **con guantes sobre un techo** —marcar entrada, tomar la foto—, donde fallar el
+  toque es fallar la jornada.
+
+Los 64 estuvieron en el tema y hacían que un formulario de quince campos entrara
+a la mitad en pantalla. Ver ADR-0009.
+
+### Widgets de formulario que ya existen
+
+No volver a resolverlos por pantalla:
+
+| Widget | Para qué |
+|---|---|
+| `FormFooter` | La acción al pie, **con el área segura de abajo**. Sin él el botón queda bajo la barra gestual y el toque se lo lleva el sistema |
+| `PhoneField` | Teléfono con selector de país y validación por país. Guarda E.164 |
+| `CountryField` | El país de una dirección, elegido de lista y nunca tecleado |
+| `HelpButton` / `showHelpSheet` | Explicar algo que la interfaz nombra pero no puede explicar al lado de un campo |
+| `AddressFields` | Los seis campos de una dirección, con su modo opcional |
+
+**Lo obligatorio se dice en el label, con palabras**: `l10n.fieldRequiredLabel(...)`
+produce "Nombre (obligatorio)". Un asterisco solo lo entiende quien ya conoce la
+convención, y esta app se usa sin entrenamiento.
 
 ### Los estados se muestran con `StatusChip`
 

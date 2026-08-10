@@ -12,9 +12,14 @@ abstract final class Tokens {
   static const space5 = 24.0;
   static const space6 = 32.0;
 
-  /// Material pide 48 como mínimo táctil; la acción primaria va a 64 porque se
-  /// pulsa con guantes de trabajo.
-  static const touchTargetPrimary = 64.0;
+  /// Material pide 48 como mínimo táctil; la acción de **campo** va a 64 porque
+  /// se pulsa con guantes de trabajo y marcar asistencia no puede fallar.
+  ///
+  /// No es la altura de todo botón sólido: un "Guardar" al pie de un formulario
+  /// administrativo se pulsa sentado y con el teléfono en la mano, y a 64 se
+  /// come el espacio de los campos. Ver ADR-0009.
+  static const touchTargetField = 64.0;
+  static const touchTargetPrimary = 52.0;
   static const touchTargetMin = 48.0;
 
   static const radiusSm = 4.0;
