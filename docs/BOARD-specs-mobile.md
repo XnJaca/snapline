@@ -16,6 +16,7 @@ kanban-plugin: board
 ## ✏️ Borrador (escribiendo el spec)
 
 - [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
+- [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — necesita ADR de proveedor de mapas antes de implementar
 - [ ] [[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005: Proyectos en el móvil]] — revisado; espera los formularios mínimos de SPEC-0006
 
 

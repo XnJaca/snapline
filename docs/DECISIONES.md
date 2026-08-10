@@ -1,6 +1,37 @@
-	x``x# Decisiones tomadas y pendientes
+# Decisiones tomadas y pendientes
 
-Contexto para arrancar sin repetir discusiones. Última actualización: 2026-08-08.
+Contexto para arrancar sin repetir discusiones. Última actualización: 2026-08-10.
+
+## Roles de membresía — 2026-08-10
+
+Las dos preguntas que `product/vision.md` tenía abiertas quedaron resueltas, y la
+respuesta a las dos fue la misma: **el sistema soporta las dos formas, no elige
+una.**
+
+| Pregunta | Decisión |
+|---|---|
+| ¿Hay alguien más que administre? | **`ADMIN` se queda y deja de ser un rol sin usar.** Tiene que funcionar igual si administra William solo o si aparece una segunda persona. Lo que no puede pasar es que la app **exija** un `ADMIN`. |
+| ¿Las cuadrillas tienen encargado fijo? | **`FOREMAN` se queda, y el encargado puede ser el dueño.** Se designa a alguien, o el dueño mismo lo es. |
+
+Ninguna de las dos toca el modelo: `crew.foreman_membership_id` ya apunta a
+cualquier membresía, y la ficha de cuadrilla dice que ser encargado *"no es un rol
+ni un permiso"*. Un `OWNER` que sea `crew_member` puede liderar su cuadrilla.
+
+### Quién ficha por otra persona
+
+| Quién | Decisión |
+|---|---|
+| `OWNER` y `ADMIN` | **Sin acotar.** William va a la obra a cargo de una cuadrilla; hacerlo depender de estar cargado como miembro de una cuadrilla formal es la burocracia que este producto no puede pedir. |
+| `FOREMAN` | **Criterio: la obra, no la cuadrilla.** Quien fue a la obra ese día ficha por quien también fue — `project_assignment` con su `work_date`. Resuelve sola la cobertura entre encargados. |
+| Cómo se aplica | **Bandera, no bloqueo.** Una asignación sin cargar dejaría a la cuadrilla sin fichar, y la regla 9 no lo permite. Se registra igual y se marca; la aprobación del dueño —que el `FOREMAN` nunca tuvo— recibe algo concreto que mirar. |
+
+Se puede endurecer a bloqueo cuando la asignación del día se cargue de rutina. **Al
+revés no se puede**, y de ahí el orden. Va al spec de asistencia, que no existe aún.
+
+**Dos cosas del rastro que quedaron anotadas** en `product/vision.md`, las dos
+afectan a la regla 12: `method` dice `FOREMAN` aunque fiche el dueño, y el pull de
+`/sync` acota solo al `WORKER` — un `FOREMAN` baja todas las horas de la empresa con
+la tarifa de cada uno.
 
 ## Reunión con William — 2026-08-08
 
