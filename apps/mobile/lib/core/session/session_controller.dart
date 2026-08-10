@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/login_dto.dart';
+import '../../data/local/app_database.dart';
 import '../network/api_client.dart';
 import '../network/api_failure.dart';
 import 'session.dart';
@@ -43,8 +44,12 @@ class SessionController extends AsyncNotifier<Session?> {
     state = AsyncData(session);
   }
 
+  /// Borra también lo local: dejar la cartera de una empresa en el teléfono
+  /// para que la vea la siguiente sesión es el mismo problema que un
+  /// `company_id` mal filtrado, pero del lado del dispositivo.
   Future<void> signOut() async {
     await ref.read(sessionStorageProvider).clear();
+    await ref.read(appDatabaseProvider).wipe();
     state = const AsyncData(null);
   }
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { SoftDeletableTenantEntity } from '../../common/entities/base.entity';
 import { AddressDto } from '../../common/dto/address.dto';
@@ -11,6 +11,7 @@ const numeric = {
 
 @Entity('site')
 export class Site extends SoftDeletableTenantEntity {
+  @ApiPropertyOptional()
   @ManyToOne(() => Customer, { nullable: false })
   @JoinColumn({ name: 'customer_id' })
   customer!: Customer;

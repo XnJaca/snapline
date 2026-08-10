@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
-import 'package:snapline/core/session/session_storage.dart';
+import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/core/theme/app_theme.dart';
 import 'package:snapline/core/theme/theme_extensions.dart';
 import 'package:snapline/core/theme/tokens.dart';
-import 'package:snapline/main.dart';
 
 import 'support/fakes.dart';
 
-Widget _app(FakeSessionStorage storage) {
-  return ProviderScope(
-    overrides: [sessionStorageProvider.overrideWithValue(storage)],
-    child: const SnaplineApp(),
-  );
-}
+late AppDatabase _db;
+
+Widget _app(FakeSessionStorage storage) => testApp(
+  db: _db,
+  session: storage.session,
+  sinSesion: storage.session == null,
+);
 
 void main() {
+  setUp(() => _db = testDatabase());
+  tearDown(() => _db.close());
+
   group('arranque', () {
     testWidgets('sin sesión guardada abre el login', (tester) async {
-      await tester.pumpWidget(_app(FakeSessionStorage()));
+      await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
       expect(find.text('Phone or email'), findsOneWidget);
@@ -31,7 +33,7 @@ void main() {
     testWidgets('con sesión guardada entra sin pedir credenciales', (
       tester,
     ) async {
-      await tester.pumpWidget(_app(FakeSessionStorage(buildSession())));
+      await pumpApp(tester, _app(FakeSessionStorage(buildSession())));
       await tester.pumpAndSettle();
 
       expect(find.text('Sign in'), findsNothing);
@@ -65,7 +67,7 @@ void main() {
     testWidgets('la pantalla de cuenta muestra la persona y su empresa', (
       tester,
     ) async {
-      await tester.pumpWidget(_app(FakeSessionStorage(buildSession())));
+      await pumpApp(tester, _app(FakeSessionStorage(buildSession())));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
@@ -84,7 +86,7 @@ void main() {
 
   group('login', () {
     testWidgets('no llama al API con los campos vacíos', (tester) async {
-      await tester.pumpWidget(_app(FakeSessionStorage()));
+      await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Sign in'));
@@ -95,7 +97,7 @@ void main() {
     });
 
     testWidgets('la contraseña se puede mostrar y ocultar', (tester) async {
-      await tester.pumpWidget(_app(FakeSessionStorage()));
+      await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
@@ -125,7 +127,7 @@ void main() {
     testWidgets('la familia de marca se usa solo en el wordmark', (
       tester,
     ) async {
-      await tester.pumpWidget(_app(FakeSessionStorage()));
+      await pumpApp(tester, _app(FakeSessionStorage()));
       await tester.pumpAndSettle();
 
       final conMarca = tester

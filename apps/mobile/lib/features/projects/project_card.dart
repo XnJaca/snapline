@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../l10n/app_localizations.dart';
+import '../../data/repositories/project_repository.dart';
 import 'project_status_display.dart';
-import 'sample_projects.dart';
 
 /// Una obra en la cartera.
 ///
@@ -14,7 +14,7 @@ import 'sample_projects.dart';
 class ProjectCard extends StatelessWidget {
   const ProjectCard({super.key, required this.project, required this.onTap});
 
-  final SampleProject project;
+  final ProjectSummary project;
   final VoidCallback onTap;
 
   @override
@@ -54,7 +54,7 @@ class ProjectCard extends StatelessWidget {
                 ),
                 SizedBox(height: spacing.xs),
                 Text(
-                  project.customer,
+                  project.customerName,
                   style: context.texts.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
@@ -63,24 +63,15 @@ class ProjectCard extends StatelessWidget {
                 ),
                 SizedBox(height: spacing.sm),
                 _Dato(icon: Icons.place_outlined, text: project.site),
-                SizedBox(height: spacing.md),
-                Divider(height: 1, color: colors.outline),
-                SizedBox(height: spacing.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Dato(
-                        icon: Icons.groups_outlined,
-                        text: project.crew ?? l10n.projectNoCrew,
-                      ),
-                    ),
-                    SizedBox(width: spacing.md),
-                    _Dato(
-                      icon: Icons.photo_library_outlined,
-                      text: l10n.projectPhotoCount(project.photoCount),
-                    ),
-                  ],
-                ),
+                if (project.pending) ...[
+                  SizedBox(height: spacing.md),
+                  Divider(height: 1, color: colors.outline),
+                  SizedBox(height: spacing.md),
+                  _Dato(
+                    icon: Icons.cloud_upload_outlined,
+                    text: l10n.projectPendingSync,
+                  ),
+                ],
               ],
             ),
           ),

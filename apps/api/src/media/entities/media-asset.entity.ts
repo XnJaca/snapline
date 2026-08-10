@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { SoftDeletableTenantEntity } from '../../common/entities/base.entity';
 import { Membership } from '../../auth/entities/membership.entity';
@@ -17,6 +18,7 @@ const numeric = {
 
 @Entity('media_asset')
 export class MediaAsset extends SoftDeletableTenantEntity {
+  @ApiPropertyOptional()
   @ManyToOne(() => Project, { nullable: false })
   @JoinColumn({ name: 'project_id' })
   project!: Project;
@@ -49,6 +51,7 @@ export class MediaAsset extends SoftDeletableTenantEntity {
   @Column({ type: 'timestamptz', name: 'captured_at', nullable: true })
   capturedAt!: Date | null;
 
+  @ApiPropertyOptional()
   @ManyToOne(() => Membership, { nullable: true })
   @JoinColumn({ name: 'uploaded_by_membership_id' })
   uploadedBy!: Membership | null;

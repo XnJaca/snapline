@@ -1032,8 +1032,8 @@ export interface components {
             site?: components["schemas"]["SiteInputDto"];
         };
         Site: {
+            customer?: components["schemas"]["Customer"];
             address: components["schemas"]["AddressDto"];
-            customer: components["schemas"]["Customer"];
             customerId: string;
             lat: number | null;
             lng: number | null;
@@ -1048,9 +1048,9 @@ export interface components {
             updatedAt: string;
         };
         Project: {
-            customer: components["schemas"]["Customer"];
+            customer?: components["schemas"]["Customer"];
+            site?: components["schemas"]["Site"];
             customerId: string;
-            site: components["schemas"]["Site"];
             siteId: string;
             name: string;
             description: string | null;
@@ -1162,11 +1162,11 @@ export interface components {
             updatedAt: string;
         };
         ProjectAssignment: {
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"];
+            crew?: components["schemas"]["Crew"] | null;
+            membership?: components["schemas"]["Membership"] | null;
             projectId: string;
-            crew: components["schemas"]["Crew"] | null;
             crewId: string | null;
-            membership: components["schemas"]["Membership"] | null;
             membershipId: string | null;
             workDate: string;
             plannedHeadcount: number | null;
@@ -1180,7 +1180,8 @@ export interface components {
             updatedAt: string;
         };
         MediaAsset: {
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"];
+            uploadedBy?: components["schemas"]["Membership"] | null;
             projectId: string;
             /** @enum {string} */
             kind: "PHOTO" | "VIDEO" | "DOCUMENT";
@@ -1193,7 +1194,6 @@ export interface components {
             height: number | null;
             /** Format: date-time */
             capturedAt: string | null;
-            uploadedBy: components["schemas"]["Membership"] | null;
             uploadedByMembershipId: string | null;
             deviceLat: number | null;
             deviceLng: number | null;
@@ -1234,9 +1234,11 @@ export interface components {
             visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
         };
         TimeEntry: {
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"];
+            membership?: components["schemas"]["Membership"];
+            recordedBy?: components["schemas"]["Membership"];
+            approvedBy?: components["schemas"]["Membership"] | null;
             projectId: string;
-            membership: components["schemas"]["Membership"];
             membershipId: string;
             /** Format: date-time */
             clockInAt: string;
@@ -1257,7 +1259,6 @@ export interface components {
             clockOutPhotoId: string | null;
             /** @enum {string} */
             method: "ADMIN" | "FOREMAN" | "SELF";
-            recordedBy: components["schemas"]["Membership"];
             recordedByMembershipId: string;
             deviceId: string | null;
             isMockLocation: boolean;
@@ -1268,7 +1269,6 @@ export interface components {
             serverReceivedAt: string;
             /** @enum {string} */
             status: "PENDING" | "APPROVED" | "REJECTED";
-            approvedBy: components["schemas"]["Membership"] | null;
             approvedByMembershipId: string | null;
             /** Format: date-time */
             approvedAt: string | null;

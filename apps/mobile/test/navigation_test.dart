@@ -1,42 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_membership_dto_role.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
-import 'package:snapline/core/navigation/last_destination_store.dart';
-import 'package:snapline/core/session/session_storage.dart';
-import 'package:snapline/core/theme/locale_store.dart';
 import 'package:snapline/core/theme/app_theme.dart';
-import 'package:snapline/main.dart';
+import 'package:snapline/api/models/project_status.dart';
+import 'package:snapline/data/local/app_database.dart';
 
 import 'support/fakes.dart';
 
 /// SPEC-0003. Nada de acá toca la red: la estructura sale de la sesión guardada,
 /// que es justamente lo que la hace funcionar sin señal.
 void main() {
+  late AppDatabase db;
+
+  setUp(() async {
+    db = testDatabase();
+    // Lo que antes eran obras sintéticas ahora vive en la base local, que es de
+    // donde las pantallas leen.
+    await seedProject(db, id: 'a1', name: 'Kitchen remodel',
+        customerName: 'Martínez family');
+    await seedProject(db, id: 'a2', name: 'Roof replacement',
+        customerName: 'Sandra Whitfield');
+    await seedProject(db, id: 'a3', name: 'Deck rebuild',
+        customerName: 'Thompson & Sons', status: ProjectStatus.onHold);
+    await seedProject(db, id: 'a4', name: 'Bathroom addition',
+        customerName: 'Patel residence', status: ProjectStatus.scheduled);
+    await seedProject(db, id: 'a5', name: 'Siding replacement',
+        customerName: 'Greenfield HOA', status: ProjectStatus.estimated);
+    await seedProject(db, id: 'a6', name: 'Garage conversion',
+        customerName: "O'Brien household", status: ProjectStatus.lead);
+    await seedProject(db, id: 'a7', name: 'Front porch repair',
+        customerName: 'Alicia Romero', status: ProjectStatus.completed);
+    await seedProject(db, id: 'a9', name: 'Window replacement',
+        customerName: 'Dupont rental', status: ProjectStatus.cancelled);
+  });
+
+  tearDown(() => db.close());
+
   Widget app({
     AuthMembershipDtoRole role = AuthMembershipDtoRole.owner,
     List<String>? permissions,
     AppDestination? lastDestination,
     AuthUserDtoLocale locale = AuthUserDtoLocale.es,
   }) {
-    return ProviderScope(
-      overrides: [
-        sessionStorageProvider.overrideWithValue(
-          FakeSessionStorage(
-            buildSession(
-              role: role,
-              permissions: permissions,
-              locale: locale,
-            ),
-          ),
-        ),
-        lastDestinationStoreProvider.overrideWithValue(
-          FakeLastDestinationStore(lastDestination),
-        ),
-      ],
-      child: const SnaplineApp(),
+    return testApp(
+      db: db,
+      session: buildSession(
+        role: role,
+        permissions: permissions,
+        locale: locale,
+      ),
+      lastDestination: lastDestination,
     );
   }
 
@@ -81,7 +96,7 @@ void main() {
 
   group('barra por rol', () {
     testWidgets('un OWNER ve cuatro ejes de negocio', (tester) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
 
       expect(ejes(tester), [
@@ -96,7 +111,7 @@ void main() {
     testWidgets('un OWNER no tiene pestañas globales de Fotos ni de Horas', (
       tester,
     ) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
 
       expect(ejes(tester), isNot(contains('Fotos')));
@@ -107,7 +122,7 @@ void main() {
     testWidgets('un WORKER ve exactamente dos y ninguna es la cartera', (
       tester,
     ) async {
-      await tester.pumpWidget(app(role: AuthMembershipDtoRole.worker));
+      await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
       await tester.pumpAndSettle();
 
       expect(ejes(tester), ['Hoy', 'Fotos']);
@@ -115,7 +130,7 @@ void main() {
     });
 
     testWidgets('un FOREMAN ve tres, incluida Cuadrilla', (tester) async {
-      await tester.pumpWidget(app(role: AuthMembershipDtoRole.foreman));
+      await pumpApp(tester, app(role: AuthMembershipDtoRole.foreman));
       await tester.pumpAndSettle();
 
       expect(ejes(tester), ['Hoy', 'Cuadrilla', 'Fotos']);
@@ -123,7 +138,7 @@ void main() {
 
     // El dominio le da cero acceso a fotos, y `media.read` no lo incluye.
     testWidgets('un ACCOUNTANT no ve la pestaña de Fotos', (tester) async {
-      await tester.pumpWidget(app(role: AuthMembershipDtoRole.accountant));
+      await pumpApp(tester, app(role: AuthMembershipDtoRole.accountant));
       await tester.pumpAndSettle();
 
       expect(ejes(tester), ['Reportes', 'Facturación']);
@@ -132,7 +147,7 @@ void main() {
 
     testWidgets('ningún rol ve menos de dos ni más de cuatro', (tester) async {
       for (final role in AuthMembershipDtoRole.$valuesDefined) {
-        await tester.pumpWidget(app(role: role));
+        await pumpApp(tester, app(role: role));
         await tester.pumpAndSettle();
 
         final cantidad = ejes(tester).length;
@@ -175,7 +190,7 @@ void main() {
   group('el proyecto es el contenedor', () {
     // Los nombres de obra son datos, no interfaz: no pasan por i18n.
     Future<void> abrirProyecto(WidgetTester tester, String nombre) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await tester.tap(find.text(nombre));
       await tester.pumpAndSettle();
@@ -197,7 +212,7 @@ void main() {
     testWidgets('un proyecto terminado muestra las mismas cuatro tabs', (
       tester,
     ) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
 
       await verTodos(tester, estado: 'Terminado');
@@ -245,7 +260,7 @@ void main() {
     testWidgets('la lista principal muestra solo lo que está en proceso', (
       tester,
     ) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
 
       expect(find.text('Kitchen remodel'), findsOneWidget);
@@ -265,7 +280,7 @@ void main() {
     // Lo cerrado no desaparece: vive detrás de "ver todos", que es la pantalla
     // dedicada con una pestaña por estado.
     testWidgets('"ver todos" llega a lo terminado', (tester) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await verTodos(tester, estado: 'Terminado');
 
@@ -274,7 +289,7 @@ void main() {
     });
 
     testWidgets('cada pestaña recorta por su estado', (tester) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await verTodos(tester, estado: 'Cancelado');
 
@@ -283,7 +298,7 @@ void main() {
     });
 
     testWidgets('cambiar de pestaña cambia lo que se lista', (tester) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await verTodos(tester, estado: 'Prospecto');
       expect(find.text('Garage conversion'), findsOneWidget);
@@ -296,7 +311,7 @@ void main() {
 
   group('la cuenta', () {
     Future<void> abrirCuenta(WidgetTester tester) async {
-      await tester.pumpWidget(app());
+      await pumpApp(tester, app());
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
       await tester.pumpAndSettle();
@@ -334,20 +349,7 @@ void main() {
     // app: sin persistirla, al reabrir vuelve al de la cuenta.
     testWidgets('el idioma se elige y se guarda', (tester) async {
       final store = FakeLocaleStore();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            sessionStorageProvider.overrideWithValue(
-              FakeSessionStorage(buildSession()),
-            ),
-            lastDestinationStoreProvider.overrideWithValue(
-              FakeLastDestinationStore(),
-            ),
-            localeStoreProvider.overrideWithValue(store),
-          ],
-          child: const SnaplineApp(),
-        ),
-      );
+      await pumpApp(tester, testApp(db: db, localeStore: store));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.account_circle_outlined).first);
       await tester.pumpAndSettle();
@@ -383,7 +385,7 @@ void main() {
     testWidgets('cambiar de pestaña y volver conserva el scroll', (
       tester,
     ) async {
-      await tester.pumpWidget(app(role: AuthMembershipDtoRole.worker));
+      await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
       await tester.pumpAndSettle();
 
       // Hoy arranca arriba de todo.
@@ -406,7 +408,7 @@ void main() {
     });
 
     testWidgets('reabrir vuelve a la última pestaña usada', (tester) async {
-      await tester.pumpWidget(app(lastDestination: AppDestination.billing));
+      await pumpApp(tester, app(lastDestination: AppDestination.billing));
       await tester.pumpAndSettle();
 
       expect(find.widgetWithText(AppBar, 'Facturación'), findsOneWidget);
@@ -414,16 +416,9 @@ void main() {
 
     testWidgets('tocar una pestaña la recuerda', (tester) async {
       final store = FakeLastDestinationStore();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            sessionStorageProvider.overrideWithValue(
-              FakeSessionStorage(buildSession()),
-            ),
-            lastDestinationStoreProvider.overrideWithValue(store),
-          ],
-          child: const SnaplineApp(),
-        ),
+      await pumpApp(
+        tester,
+        testApp(db: db, lastDestinationStore: store),
       );
       await tester.pumpAndSettle();
 
@@ -496,21 +491,13 @@ void main() {
     // Los permisos cacheados son conveniencia de interfaz: que el token esté
     // vencido no cambia lo que se dibuja.
     testWidgets('con el token vencido la barra se arma igual', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            sessionStorageProvider.overrideWithValue(
-              FakeSessionStorage(
-                buildSession(
-                  expiresAt: DateTime.now().subtract(const Duration(days: 3)),
-                ),
-              ),
-            ),
-            lastDestinationStoreProvider.overrideWithValue(
-              FakeLastDestinationStore(),
-            ),
-          ],
-          child: const SnaplineApp(),
+      await pumpApp(
+        tester,
+        testApp(
+          db: db,
+          session: buildSession(
+            expiresAt: DateTime.now().subtract(const Duration(days: 3)),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -523,7 +510,7 @@ void main() {
     testWidgets('los ejes de un usuario en inglés salen en inglés', (
       tester,
     ) async {
-      await tester.pumpWidget(app(locale: AuthUserDtoLocale.en));
+      await pumpApp(tester, app(locale: AuthUserDtoLocale.en));
       await tester.pumpAndSettle();
 
       expect(ejes(tester), ['Projects', 'Customers', 'Reports', 'Billing']);
@@ -532,7 +519,7 @@ void main() {
     testWidgets('los de un usuario en español salen en español', (
       tester,
     ) async {
-      await tester.pumpWidget(app(locale: AuthUserDtoLocale.es));
+      await pumpApp(tester, app(locale: AuthUserDtoLocale.es));
       await tester.pumpAndSettle();
 
       expect(ejes(tester), [
@@ -544,7 +531,7 @@ void main() {
     });
 
     testWidgets('las tabs de la obra también', (tester) async {
-      await tester.pumpWidget(app(locale: AuthUserDtoLocale.en));
+      await pumpApp(tester, app(locale: AuthUserDtoLocale.en));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kitchen remodel'));
       await tester.pumpAndSettle();

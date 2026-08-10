@@ -7349,11 +7349,11 @@
       "Site": {
         "type": "object",
         "properties": {
-          "address": {
-            "$ref": "#/components/schemas/AddressDto"
-          },
           "customer": {
             "$ref": "#/components/schemas/Customer"
+          },
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
           },
           "customerId": {
             "type": "string"
@@ -7392,7 +7392,6 @@
         },
         "required": [
           "address",
-          "customer",
           "customerId",
           "lat",
           "lng",
@@ -7410,11 +7409,11 @@
           "customer": {
             "$ref": "#/components/schemas/Customer"
           },
-          "customerId": {
-            "type": "string"
-          },
           "site": {
             "$ref": "#/components/schemas/Site"
+          },
+          "customerId": {
+            "type": "string"
           },
           "siteId": {
             "type": "string"
@@ -7487,9 +7486,7 @@
           }
         },
         "required": [
-          "customer",
           "customerId",
-          "site",
           "siteId",
           "name",
           "description",
@@ -7822,9 +7819,6 @@
           "project": {
             "$ref": "#/components/schemas/Project"
           },
-          "projectId": {
-            "type": "string"
-          },
           "crew": {
             "nullable": true,
             "type": "object",
@@ -7834,10 +7828,6 @@
               }
             ]
           },
-          "crewId": {
-            "type": "string",
-            "nullable": true
-          },
           "membership": {
             "nullable": true,
             "type": "object",
@@ -7846,6 +7836,13 @@
                 "$ref": "#/components/schemas/Membership"
               }
             ]
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "crewId": {
+            "type": "string",
+            "nullable": true
           },
           "membershipId": {
             "type": "string",
@@ -7879,11 +7876,8 @@
           }
         },
         "required": [
-          "project",
           "projectId",
-          "crew",
           "crewId",
-          "membership",
           "membershipId",
           "workDate",
           "plannedHeadcount",
@@ -7899,6 +7893,15 @@
         "properties": {
           "project": {
             "$ref": "#/components/schemas/Project"
+          },
+          "uploadedBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Membership"
+              }
+            ]
           },
           "projectId": {
             "type": "string"
@@ -7948,15 +7951,6 @@
             "format": "date-time",
             "type": "string",
             "nullable": true
-          },
-          "uploadedBy": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Membership"
-              }
-            ]
           },
           "uploadedByMembershipId": {
             "type": "string",
@@ -8016,7 +8010,6 @@
           }
         },
         "required": [
-          "project",
           "projectId",
           "kind",
           "documentKind",
@@ -8026,7 +8019,6 @@
           "width",
           "height",
           "capturedAt",
-          "uploadedBy",
           "uploadedByMembershipId",
           "deviceLat",
           "deviceLng",
@@ -8114,11 +8106,23 @@
           "project": {
             "$ref": "#/components/schemas/Project"
           },
-          "projectId": {
-            "type": "string"
-          },
           "membership": {
             "$ref": "#/components/schemas/Membership"
+          },
+          "recordedBy": {
+            "$ref": "#/components/schemas/Membership"
+          },
+          "approvedBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Membership"
+              }
+            ]
+          },
+          "projectId": {
+            "type": "string"
           },
           "membershipId": {
             "type": "string"
@@ -8191,9 +8195,6 @@
             ],
             "type": "string"
           },
-          "recordedBy": {
-            "$ref": "#/components/schemas/Membership"
-          },
           "recordedByMembershipId": {
             "type": "string"
           },
@@ -8222,15 +8223,6 @@
               "REJECTED"
             ],
             "type": "string"
-          },
-          "approvedBy": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Membership"
-              }
-            ]
           },
           "approvedByMembershipId": {
             "type": "string",
@@ -8272,9 +8264,7 @@
           }
         },
         "required": [
-          "project",
           "projectId",
-          "membership",
           "membershipId",
           "clockInAt",
           "clockOutAt",
@@ -8292,7 +8282,6 @@
           "clockOutWithinGeofence",
           "clockOutPhotoId",
           "method",
-          "recordedBy",
           "recordedByMembershipId",
           "deviceId",
           "isMockLocation",
@@ -8300,7 +8289,6 @@
           "deviceRecordedAt",
           "serverReceivedAt",
           "status",
-          "approvedBy",
           "approvedByMembershipId",
           "approvedAt",
           "payRateCentsSnapshot",

@@ -117,6 +117,7 @@
   "@projectPhotoCount": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "projectPendingSync": "Not uploaded yet",
   "projectNoCrew": "No crew assigned",
 
   "comingSoon": "Coming soon",
