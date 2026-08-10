@@ -251,7 +251,16 @@ Future<void> seedProject(
       companyId: 'c1',
       updatedAt: ahora,
       customerId: customerId,
-      address: jsonEncode({'line1': line1, 'city': city, 'state': 'MD'}),
+      // Los seis campos, no tres: `AddressDto` exige `postalCode`, así que una
+      // dirección incompleta la descartaba `AddressJson.decode` y la propiedad
+      // salía vacía en toda la app — con los tests pasando igual.
+      address: jsonEncode({
+        'line1': line1,
+        'city': city,
+        'state': 'MD',
+        'postalCode': '20910',
+        'country': 'US',
+      }),
       syncStatus: const Value(SyncStatus.synced),
     ),
   );

@@ -5,6 +5,7 @@ import 'package:snapline/api/models/project_status.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/sync/outbox.dart';
+import 'package:snapline/features/projects/project_details_tab.dart';
 import 'package:snapline/features/projects/project_form_screen.dart';
 import 'package:snapline/features/projects/project_transitions.dart';
 
@@ -404,6 +405,177 @@ void main() {
       )..where((p) => p.id.equals('p9'))).getSingle();
       expect(obra.name, 'Nombre corregido');
       expect(obra.customerId, 'c1');
+    });
+  });
+
+  group('terminar y cancelar piden confirmación', () {
+    Future<void> abrirDetalle(WidgetTester tester, ProjectStatus estado) async {
+      await seedProject(
+        db,
+        id: 'pc',
+        name: 'Obra a cerrar',
+        customerName: 'Ana Martínez',
+        status: estado,
+      );
+      await pumpApp(tester, app());
+      await tester.pumpAndSettle();
+      if (estado != ProjectStatus.inProgress) {
+        await tester.tap(find.text('Ver todos'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Obra a cerrar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Detalle'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<String> estadoEnBase() async {
+      final fila = await (db.select(
+        db.projects,
+      )..where((p) => p.id.equals('pc'))).getSingle();
+      return fila.status;
+    }
+
+    testWithApp('cancelar la confirmación no cambia nada', (tester) async {
+      await abrirDetalle(tester, ProjectStatus.inProgress);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Terminado'));
+      await tester.pumpAndSettle();
+
+      // Un toque por error en algo irreversible tiene que poder deshacerse antes
+      // de que pase.
+      expect(find.text('¿Marcar la obra como Terminado?'), findsOne);
+      await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(await estadoEnBase(), 'IN_PROGRESS');
+      expect(await db.select(db.outboxOperations).get(), isEmpty);
+    });
+
+    testWithApp('confirmar sí lo aplica', (tester) async {
+      await abrirDetalle(tester, ProjectStatus.inProgress);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Terminado'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Sí, marcar'));
+      await tester.pumpAndSettle();
+
+      expect(await estadoEnBase(), 'COMPLETED');
+    });
+
+    testWithApp('cancelar la obra también confirma, y dice que no borra nada', (
+      tester,
+    ) async {
+      await abrirDetalle(tester, ProjectStatus.inProgress);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Cancelado'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('No se borra nada'), findsOne);
+    });
+
+    testWithApp('pausar no pregunta: se hace a cada rato', (tester) async {
+      await abrirDetalle(tester, ProjectStatus.inProgress);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'En pausa'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(await estadoEnBase(), 'ON_HOLD');
+    });
+  });
+
+  group('la tab en la que abre la obra', () {
+    Future<void> abrirObra(WidgetTester tester, ProjectStatus estado) async {
+      await seedProject(
+        db,
+        id: 'pt',
+        name: 'Obra por estado',
+        customerName: 'Ana Martínez',
+        status: estado,
+      );
+      await pumpApp(tester, app());
+      await tester.pumpAndSettle();
+      if (estado != ProjectStatus.inProgress) {
+        await tester.tap(find.text('Ver todos'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Obra por estado'));
+      await tester.pumpAndSettle();
+    }
+
+    testWithApp('en proceso abre en Avance', (tester) async {
+      await abrirObra(tester, ProjectStatus.inProgress);
+
+      // El caso de todos los días: la obra que se está trabajando.
+      expect(find.byType(ProjectDetailsTab), findsNothing);
+    });
+
+    testWithApp('terminada abre directo en Detalle', (tester) async {
+      await abrirObra(tester, ProjectStatus.completed);
+
+      // El timeline de algo que no se mueve no es lo que se viene a ver.
+      expect(find.byType(ProjectDetailsTab), findsOne);
+      expect(find.text('El trabajo'), findsOne);
+    });
+
+    testWithApp('agendada también', (tester) async {
+      await abrirObra(tester, ProjectStatus.scheduled);
+
+      expect(find.byType(ProjectDetailsTab), findsOne);
+    });
+  });
+
+  group('la ficha del detalle', () {
+    testWithApp('las etiquetas no se cortan ni se apilan en tres líneas', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      await seedProject(
+        db,
+        id: 'pf',
+        name: 'Obra de la ficha',
+        customerName: 'Ana Martínez',
+      );
+      await pumpApp(tester, app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Obra de la ficha'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Detalle'));
+      await tester.pumpAndSettle();
+
+      // Con la etiqueta en una columna de ancho fijo, "Nombre de la obra" se
+      // partía en tres líneas y "Propiedad" se cortaba en "Propieda / d".
+      // Apilada, cada texto entra en una sola línea.
+      //
+      // El `ListView` no construye lo que está fuera de la vista, así que primero
+      // se baja hasta la sección del cliente.
+      await tester.scrollUntilVisible(
+        find.text('Cliente y propiedad'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ProjectDetailsTab),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+
+      // "Cliente" es una palabra corta que entra siempre: sirve de referencia de
+      // cuánto mide una línea, sin depender de la métrica interna del render.
+      final unaLinea = tester.getSize(find.text('Cliente').first).height;
+      for (final etiqueta in ['Nombre de la obra', 'Propiedad']) {
+        expect(
+          tester.getSize(find.text(etiqueta).first).height,
+          unaLinea,
+          reason: '"$etiqueta" tendría que entrar en una línea',
+        );
+      }
+      expect(tester.takeException(), isNull);
     });
   });
 

@@ -124,7 +124,7 @@
   "projectNewTitle": "New project",
   "projectEditTitle": "Edit project",
   "projectFieldName": "Project name",
-  "projectFieldNameHelp": "How you call this job. \"Martinez roof\" is enough.",
+  "projectFieldNameHelp": "A name to identify this project.",
   "projectFieldNameRequired": "Enter a name for the project",
   "projectFieldCustomer": "Customer",
   "projectFieldCustomerRequired": "Pick the customer",
@@ -152,8 +152,17 @@
   "@projectChangeStatusFrom": {
     "placeholders": { "status": { "type": "String" } }
   },
+  "projectConfirmTitle": "Mark this project as {status}?",
+  "@projectConfirmTitle": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "projectConfirmCompletedBody": "A finished project does not change status again. If there is still work left, leave it in progress or on hold.",
+  "projectConfirmCancelledBody": "A cancelled project does not change status again. Nothing is deleted: its hours and photos stay, and it stops showing in the main list.",
+  "projectConfirmAccept": "Yes, mark it",
   "projectStatusTerminal": "A finished or cancelled project does not change status again",
-  "projectVisibilityStages": "The customer sees stages",
+  "projectVisibilityStages": "The customer will see this project by stages",
+  "projectVisibilityStagesHelpTitle": "What the customer sees of the project",
+  "projectVisibilityStagesHelpBody": "Your customer gets in through a private link and sees the job summarized in three stages: Starting, In progress and Finished.\n\nThey do not see the seven statuses you work with. Lead, Estimated and Scheduled show up as Starting; In progress and On hold, as In progress. So the customer knows how it is going without finding out the job was paused for three days.\n\nThey do not see hours, costs, or any photo you have not shared with them.",
   "projectDetailSectionWhat": "The job",
   "projectDetailSectionWhen": "Dates",
   "projectDetailSectionWho": "Customer and property",

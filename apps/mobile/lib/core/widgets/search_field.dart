@@ -31,7 +31,14 @@ class SearchField extends StatelessWidget {
         color: colors.surface,
         border: Border(bottom: BorderSide(color: colors.outline)),
       ),
-      padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.md),
+      // Con 0 arriba quedaba pegado al borde de la barra y se leía como parte de
+      // ella. El mismo aire arriba y abajo lo separa de las dos cosas.
+      padding: EdgeInsets.fromLTRB(
+        spacing.lg,
+        spacing.md,
+        spacing.lg,
+        spacing.md,
+      ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,

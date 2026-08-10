@@ -6,6 +6,7 @@ import '../../api/models/project_status.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_footer.dart';
+import '../../core/widgets/help_sheet.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -292,13 +293,24 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                   ),
                   if (_esAlta) ...[
                     SizedBox(height: spacing.md),
-                    // La visibilidad nace en etapas y se cambia aparte: acá solo
-                    // se dice cuál es, para que no sea una sorpresa después.
-                    Text(
-                      l10n.projectVisibilityStages,
-                      style: context.texts.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
+                    // La visibilidad nace en etapas y se cambia aparte. Decir solo
+                    // "el cliente ve etapas" no explicaba nada: qué son las etapas
+                    // y qué no ve el cliente está en la ayuda.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.projectVisibilityStages,
+                            style: context.texts.bodySmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        HelpButton(
+                          title: l10n.projectVisibilityStagesHelpTitle,
+                          body: l10n.projectVisibilityStagesHelpBody,
+                        ),
+                      ],
                     ),
                   ],
                 ],

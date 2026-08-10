@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../api/models/project_status.dart';
 import '../../core/navigation/app_destination.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
@@ -58,7 +59,8 @@ class ProjectScreen extends ConsumerWidget {
         .where((tab) => permisos.contains(tab.permission))
         .toList(growable: false);
 
-    final proyecto = ref.watch(projectByIdProvider(projectId)).value;
+    final consulta = ref.watch(projectByIdProvider(projectId));
+    final proyecto = consulta.value;
 
     final barra = AppBar(
       backgroundColor: colors.surface,
@@ -83,8 +85,20 @@ class ProjectScreen extends ConsumerWidget {
       );
     }
 
+    // Se espera a que la obra salga de Drift antes de armar el controlador de
+    // tabs: `initialIndex` se lee **una sola vez**, al crearlo, así que con el
+    // estado todavía en null la obra terminada abría en Avance igual. Es un frame
+    // y la base local responde al instante.
+    if (proyecto == null && !consulta.hasValue) {
+      return Scaffold(appBar: barra, body: const SizedBox.shrink());
+    }
+
     return DefaultTabController(
       length: tabs.length,
+      // Una obra que no está en marcha abre en Detalle y no en Avance: el timeline
+      // de algo agendado, pausado o terminado no es lo que se viene a ver. Con la
+      // obra en proceso sí, que es el caso de todos los días.
+      initialIndex: _tabInicial(tabs, proyecto?.status),
       child: Scaffold(
         appBar: barra,
         body: Column(
@@ -129,6 +143,20 @@ class ProjectScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// En qué tab abre la obra.
+///
+/// `IN_PROGRESS` abre en la primera —Avance— porque es la obra que se está
+/// trabajando hoy. Cualquier otro estado abre en Detalle: de una obra agendada,
+/// pausada o terminada lo que se viene a ver es qué es y en qué quedó, no un
+/// timeline que no se está moviendo.
+///
+/// Cae en 0 si el rol no tiene la tab de Detalle, que es el caso del `WORKER`.
+int _tabInicial(List<ProjectTab> tabs, ProjectStatus? status) {
+  if (status == null || status == ProjectStatus.inProgress) return 0;
+  final indice = tabs.indexOf(ProjectTab.details);
+  return indice == -1 ? 0 : indice;
 }
 
 /// De qué obra se trata. Se queda fija arriba de las tabs: es el contexto de

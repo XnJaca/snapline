@@ -89,7 +89,7 @@
   "projectNewTitle": "Nueva obra",
   "projectEditTitle": "Editar obra",
   "projectFieldName": "Nombre de la obra",
-  "projectFieldNameHelp": "Como usted le dice a este trabajo. \"Techo Martínez\" alcanza.",
+  "projectFieldNameHelp": "Nombre para identificar la obra.",
   "projectFieldNameRequired": "Escriba un nombre para la obra",
   "projectFieldCustomer": "Cliente",
   "projectFieldCustomerRequired": "Falta elegir el cliente",
@@ -117,8 +117,17 @@
   "@projectChangeStatusFrom": {
     "placeholders": { "status": { "type": "String" } }
   },
+  "projectConfirmTitle": "¿Marcar la obra como {status}?",
+  "@projectConfirmTitle": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "projectConfirmCompletedBody": "Una obra terminada no vuelve a cambiar de estado. Si todavía queda trabajo, déjela en proceso o en pausa.",
+  "projectConfirmCancelledBody": "Una obra cancelada no vuelve a cambiar de estado. No se borra nada: sus horas y sus fotos quedan, y deja de aparecer en la lista principal.",
+  "projectConfirmAccept": "Sí, marcar",
   "projectStatusTerminal": "Una obra terminada o cancelada no vuelve a cambiar de estado",
-  "projectVisibilityStages": "El cliente ve etapas",
+  "projectVisibilityStages": "El cliente verá esta obra por etapas",
+  "projectVisibilityStagesHelpTitle": "Qué ve el cliente de la obra",
+  "projectVisibilityStagesHelpBody": "Su cliente entra al portal con un enlace privado y ve la obra resumida en tres etapas: Inicio, En proceso y Finalizado.\n\nNo ve los siete estados con los que usted trabaja. Prospecto, Estimado y Agendado le aparecen como Inicio; En proceso y En pausa, como En proceso. Así el cliente sabe cómo va sin enterarse de que la obra estuvo pausada tres días.\n\nTampoco ve las horas, los costos ni las fotos que usted no le haya compartido.",
   "projectDetailSectionWhat": "El trabajo",
   "projectDetailSectionWhen": "Fechas",
   "projectDetailSectionWho": "Cliente y propiedad",

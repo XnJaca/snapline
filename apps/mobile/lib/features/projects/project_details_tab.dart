@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/theme_extensions.dart';
+import '../../core/widgets/labeled_value.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_chip.dart';
+import '../../api/models/project_status.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'project_form_screen.dart';
@@ -51,12 +53,12 @@ class ProjectDetailsTab extends ConsumerWidget {
         SizedBox(height: spacing.md),
         _Ficha(
           children: [
-            _Dato(label: l10n.projectFieldName, value: obra.name),
-            _Dato(
+            LabeledValue(label: l10n.projectFieldName, value: obra.name),
+            LabeledValue(
               label: l10n.projectFieldServiceType,
               value: obra.serviceType,
             ),
-            _Dato(
+            LabeledValue(
               label: l10n.projectFieldDescription,
               value: obra.description,
             ),
@@ -67,8 +69,8 @@ class ProjectDetailsTab extends ConsumerWidget {
         SizedBox(height: spacing.md),
         _Ficha(
           children: [
-            _Dato(label: l10n.projectFieldCustomer, value: obra.customerName),
-            _Dato(label: l10n.projectFieldSite, value: obra.site),
+            LabeledValue(label: l10n.projectFieldCustomer, value: obra.customerName),
+            LabeledValue(label: l10n.projectFieldSite, value: obra.site),
           ],
         ),
         SizedBox(height: spacing.lg),
@@ -145,9 +147,7 @@ class _CambiarEstado extends ConsumerWidget {
                 OutlinedButton.icon(
                   icon: Icon(destino.icon, size: spacing.lg),
                   label: Text(destino.label(l10n)),
-                  onPressed: () => ref
-                      .read(projectRepositoryProvider)
-                      .changeStatus(project.id, destino),
+                  onPressed: () => _cambiar(context, ref, project.id, destino),
                 ),
             ],
           ),
@@ -155,6 +155,52 @@ class _CambiarEstado extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Los estados de los que no se vuelve. Tocarlos pide confirmación.
+const _terminales = [ProjectStatus.completed, ProjectStatus.cancelled];
+
+/// Cambia el estado, pidiendo confirmación si no hay vuelta atrás.
+///
+/// Terminar y cancelar son irreversibles por decisión del dominio —si se pudiera
+/// reabrir, "terminada" dejaría de ser confiable para el reporte y para
+/// publicar—, así que un toque por error deja la obra trabada. Las demás
+/// transiciones no preguntan: pausar y reanudar se hacen a cada rato y un diálogo
+/// en el medio sería un estorbo.
+Future<void> _cambiar(
+  BuildContext context,
+  WidgetRef ref,
+  String projectId,
+  ProjectStatus destino,
+) async {
+  final l10n = AppLocalizations.of(context);
+
+  if (_terminales.contains(destino)) {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogo) => AlertDialog(
+        title: Text(l10n.projectConfirmTitle(destino.label(l10n))),
+        content: Text(
+          destino == ProjectStatus.completed
+              ? l10n.projectConfirmCompletedBody
+              : l10n.projectConfirmCancelledBody,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogo).pop(false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogo).pop(true),
+            child: Text(l10n.projectConfirmAccept),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true) return;
+  }
+
+  await ref.read(projectRepositoryProvider).changeStatus(projectId, destino);
 }
 
 class _Ficha extends StatelessWidget {
@@ -177,40 +223,6 @@ class _Ficha extends StatelessWidget {
   }
 }
 
-/// Una fila de la ficha. Lo que no está no se dibuja.
-class _Dato extends StatelessWidget {
-  const _Dato({required this.label, required this.value});
-
-  final String label;
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    if (value == null || value!.isEmpty) return const SizedBox.shrink();
-    final spacing = context.spacing;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: spacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: spacing.xxl * 2,
-            child: Text(
-              label,
-              style: context.texts.bodySmall?.copyWith(
-                color: context.colors.onSurfaceVariant,
-              ),
-            ),
-          ),
-          SizedBox(width: spacing.sm),
-          Expanded(child: Text(value!, style: context.texts.bodyMedium)),
-        ],
-      ),
-    );
-  }
-}
-
 class _Fecha extends StatelessWidget {
   const _Fecha({required this.label, required this.value});
 
@@ -221,12 +233,15 @@ class _Fecha extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return _Dato(
+    return LabeledValue(
       label: label,
       // Por la capa de i18n: el formato no es el mismo en los dos idiomas.
       value: value == null
-          ? l10n.projectFieldDateNotSet
+          ? null
           : MaterialLocalizations.of(context).formatFullDate(value!),
+      // Una fecha sin definir sí se muestra: que la obra no tenga fecha de fin es
+      // información, no un campo vacío.
+      emptyPlaceholder: l10n.projectFieldDateNotSet,
     );
   }
 }

@@ -227,7 +227,10 @@ void main() {
       await tester.tap(obra);
       await tester.pumpAndSettle();
 
-      expect(find.text('Terminado'), findsOneWidget);
+      // Más de uno desde SPEC-0005: una obra que no está en marcha abre directo
+      // en Detalle, así que el estado aparece en la cabecera y también en la
+      // ficha de estado de esa tab.
+      expect(find.text('Terminado'), findsWidgets);
       for (final tab in ['Avance', 'Fotos', 'Horas', 'Detalle']) {
         expect(find.widgetWithText(Tab, tab), findsOneWidget);
       }

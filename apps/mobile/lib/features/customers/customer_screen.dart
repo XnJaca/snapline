@@ -6,6 +6,7 @@ import '../../api/models/customer_source.dart';
 import '../../core/navigation/app_destination.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/labeled_value.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/local/address_json.dart';
@@ -190,22 +191,22 @@ class _Datos extends StatelessWidget {
             ),
           ],
           SizedBox(height: spacing.md),
-          _Dato(label: l10n.customerFieldPhone, value: customer.phone),
-          _Dato(label: l10n.customerFieldEmail, value: customer.email),
-          _Dato(
+          LabeledValue(label: l10n.customerFieldPhone, value: customer.phone),
+          LabeledValue(label: l10n.customerFieldEmail, value: customer.email),
+          LabeledValue(
             label: l10n.customerFieldCompanyName,
             value: customer.companyName,
           ),
-          _Dato(label: l10n.customerFieldFirstName, value: customer.firstName),
-          _Dato(label: l10n.customerFieldLastName, value: customer.lastName),
-          _Dato(label: l10n.customerFieldSource, value: fuente),
-          _Dato(
+          LabeledValue(label: l10n.customerFieldFirstName, value: customer.firstName),
+          LabeledValue(label: l10n.customerFieldLastName, value: customer.lastName),
+          LabeledValue(label: l10n.customerFieldSource, value: fuente),
+          LabeledValue(
             label: l10n.customerSectionBillingAddress,
             value: customer.billingAddress == null
                 ? null
                 : AddressJson.oneLine(customer.billingAddress),
           ),
-          _Dato(label: l10n.customerFieldNotes, value: customer.notes),
+          LabeledValue(label: l10n.customerFieldNotes, value: customer.notes),
           if (!customer.canBeInvited) ...[
             SizedBox(height: spacing.sm),
             StatusChip(
@@ -214,41 +215,6 @@ class _Datos extends StatelessWidget {
               expand: true,
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Una fila de la ficha. Lo que no está no se dibuja: una lista de "sin definir"
-/// no dice nada y empuja hacia abajo lo que sí importa.
-class _Dato extends StatelessWidget {
-  const _Dato({required this.label, required this.value});
-
-  final String label;
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    if (value == null || value!.isEmpty) return const SizedBox.shrink();
-    final spacing = context.spacing;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: spacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: spacing.xxl * 2,
-            child: Text(
-              label,
-              style: context.texts.bodySmall?.copyWith(
-                color: context.colors.onSurfaceVariant,
-              ),
-            ),
-          ),
-          SizedBox(width: spacing.sm),
-          Expanded(child: Text(value!, style: context.texts.bodyMedium)),
         ],
       ),
     );
