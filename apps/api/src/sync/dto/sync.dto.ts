@@ -3,6 +3,12 @@ import { Type } from 'class-transformer';
 import { ArrayMaxSize, IsArray, IsDateString, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { Permission } from '../../auth/permissions';
 import { SiteInputDto } from '../../customers/dto/customer.dto';
+import { Customer } from '../../customers/entities/customer.entity';
+import { Site } from '../../customers/entities/site.entity';
+import { Project } from '../../projects/entities/project.entity';
+import { ProjectAssignment } from '../../projects/entities/project-assignment.entity';
+import { MediaAsset } from '../../media/entities/media-asset.entity';
+import { TimeEntry } from '../../time-entries/entities/time-entry.entity';
 
 export const SYNC_OPERATIONS = [
   'customer.create',
@@ -97,13 +103,20 @@ export class SyncPullResponseDto {
   })
   serverTime!: string;
 
-  @ApiProperty({ type: [Object] }) customers!: unknown[];
-  @ApiProperty({ type: [Object] }) sites!: unknown[];
-  @ApiProperty({ type: [Object] }) projects!: unknown[];
-  @ApiProperty({ type: [Object] }) assignments!: unknown[];
-  @ApiProperty({ type: [Object] }) mediaAssets!: unknown[];
-  @ApiProperty({ type: [Object] }) timeEntries!: unknown[];
+  // Tipadas de verdad: con `[Object]` salían al contrato como objeto vacío y el
+  // cliente generado las tipaba `dynamic` — parseaba la respuesta, la descartaba
+  // entera y no fallaba. Regla 8.
+  @ApiProperty({ type: [Customer] }) customers!: Customer[];
+  @ApiProperty({ type: [Site] }) sites!: Site[];
+  @ApiProperty({ type: [Project] }) projects!: Project[];
+  @ApiProperty({ type: [ProjectAssignment] }) assignments!: ProjectAssignment[];
+  @ApiProperty({ type: [MediaAsset] }) mediaAssets!: MediaAsset[];
+  @ApiProperty({ type: [TimeEntry] }) timeEntries!: TimeEntry[];
 
-  @ApiProperty({ description: 'Ids borrados desde el cursor, por recurso.' })
+  @ApiProperty({
+    description: 'Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20).',
+    type: 'object',
+    additionalProperties: { type: 'array', items: { type: 'string' } },
+  })
   deleted!: Record<string, string[]>;
 }

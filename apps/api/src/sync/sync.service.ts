@@ -1,9 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityTarget, ObjectLiteral } from 'typeorm';
 import { HttpException } from '@nestjs/common';
 import { runInTransaction } from 'typeorm-transactional';
 import { TenantContext } from '../tenant/tenant-context';
+import { Customer } from '../customers/entities/customer.entity';
+import { Site } from '../customers/entities/site.entity';
+import { Project } from '../projects/entities/project.entity';
+import { ProjectAssignment } from '../projects/entities/project-assignment.entity';
+import { MediaAsset } from '../media/entities/media-asset.entity';
+import { TimeEntry } from '../time-entries/entities/time-entry.entity';
 import { CustomersService } from '../customers/customers.service';
 import { ProjectsService } from '../projects/projects.service';
 import { MediaService } from '../media/media.service';
@@ -232,11 +238,23 @@ export class SyncService {
     const [{ now }] = await this.dataSource.query<{ now: string }[]>('SELECT now() AS now');
     const desde = since ?? '-infinity';
 
-    const vivos = async (tabla: string, extra = '', params: unknown[] = []) =>
-      this.dataSource.query(
-        `SELECT * FROM ${tabla}
-         WHERE updated_at > $1::timestamptz AND deleted_at IS NULL ${extra}
-         ORDER BY updated_at ASC LIMIT 1000`, [desde, ...params]);
+    /**
+     * Por repositorio y no con `SELECT *`: la consulta cruda devuelve las
+     * columnas como están en la base —`display_name`— y el contrato promete
+     * `displayName`. Un contrato que miente es peor que uno sin tipos: el
+     * cliente parsea, no encuentra nada y no falla.
+     */
+    const vivos = async <T extends ObjectLiteral>(
+      entity: EntityTarget<T>, alias: string, extra?: string, params: ObjectLiteral = {},
+    ): Promise<T[]> => {
+      const qb = this.dataSource.getRepository(entity).createQueryBuilder(alias)
+        .where(`${alias}.updatedAt > :desde::timestamptz`, { desde })
+        .andWhere(`${alias}.deletedAt IS NULL`)
+        .orderBy(`${alias}.updatedAt`, 'ASC')
+        .limit(1000);
+      if (extra) qb.andWhere(extra, params);
+      return qb.getMany();
+    };
 
     const borrados = async (tabla: string): Promise<string[]> => {
       const rows = await this.dataSource.query<{ id: string }[]>(
@@ -247,30 +265,37 @@ export class SyncService {
 
     // El WORKER solo sincroniza sus proyectos: bajar toda la cartera de clientes
     // al teléfono de cada trabajador sería tan malo como exponerlo por el API.
-    // Parametrizado, no interpolado: aunque el id venga de un JWT verificado,
-    // armar SQL con concatenación es el hábito que después se cuela con datos ajenos.
     const esWorker = tenant.role === 'WORKER';
     const soloAsignados = esWorker
-      ? `AND EXISTS (
+      ? `EXISTS (
            SELECT 1 FROM project_assignment a
            LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
              AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
            WHERE a.project_id = project.id AND a.deleted_at IS NULL
-             AND (a.membership_id = $2 OR cm.membership_id = $2))`
-      : '';
-    const workerParam = esWorker ? [tenant.membershipId] : [];
+             AND (a.membership_id = :membershipId OR cm.membership_id = :membershipId))`
+      : undefined;
+    const workerParam = esWorker ? { membershipId: tenant.membershipId } : {};
 
     const [customers, sites, projects, assignments, mediaAssets, timeEntries] = await Promise.all([
-      vivos('customer'), vivos('site'), vivos('project', soloAsignados, workerParam),
-      vivos('project_assignment'), vivos('media_asset'), vivos('time_entry'),
+      vivos(Customer, 'customer'),
+      vivos(Site, 'site'),
+      vivos(Project, 'project', soloAsignados, workerParam),
+      vivos(ProjectAssignment, 'project_assignment'),
+      vivos(MediaAsset, 'media_asset'),
+      vivos(TimeEntry, 'time_entry'),
     ]);
 
     return {
       serverTime: new Date(now).toISOString(),
       customers, sites, projects, assignments, mediaAssets, timeEntries,
+      // Las seis colecciones que el pull trae vivas emiten también sus bajas: si
+      // una falta, ese borrado nunca llega al dispositivo y la fila queda para
+      // siempre en la base local (regla 20).
       deleted: {
         customers: await borrados('customer'),
+        sites: await borrados('site'),
         projects: await borrados('project'),
+        assignments: await borrados('project_assignment'),
         mediaAssets: await borrados('media_asset'),
         timeEntries: await borrados('time_entry'),
       },

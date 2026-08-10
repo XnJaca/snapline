@@ -10056,37 +10056,37 @@
           "customers": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Customer"
             }
           },
           "sites": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Site"
             }
           },
           "projects": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Project"
             }
           },
           "assignments": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/ProjectAssignment"
             }
           },
           "mediaAssets": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/MediaAsset"
             }
           },
           "timeEntries": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/TimeEntry"
             }
           },
           "deleted": {
@@ -10097,7 +10097,7 @@
                 "type": "string"
               }
             },
-            "description": "Ids borrados desde el cursor, por recurso."
+            "description": "Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20)."
           }
         },
         "required": [

@@ -1768,13 +1768,13 @@ export interface components {
              * @description Cursor para el próximo pull. Lo da el servidor: el reloj del dispositivo no es confiable.
              */
             serverTime: string;
-            customers: Record<string, never>[];
-            sites: Record<string, never>[];
-            projects: Record<string, never>[];
-            assignments: Record<string, never>[];
-            mediaAssets: Record<string, never>[];
-            timeEntries: Record<string, never>[];
-            /** @description Ids borrados desde el cursor, por recurso. */
+            customers: components["schemas"]["Customer"][];
+            sites: components["schemas"]["Site"][];
+            projects: components["schemas"]["Project"][];
+            assignments: components["schemas"]["ProjectAssignment"][];
+            mediaAssets: components["schemas"]["MediaAsset"][];
+            timeEntries: components["schemas"]["TimeEntry"][];
+            /** @description Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20). */
             deleted: {
                 [key: string]: string[];
             };

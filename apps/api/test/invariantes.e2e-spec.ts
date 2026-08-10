@@ -481,5 +481,41 @@ describe('invariantes del dominio (e2e)', () => {
         `SELECT customer_id FROM site WHERE id = $1`, [siteId]);
       expect(row.customer_id).toBe(a.customerId);
     });
+
+    /**
+     * El contrato promete `displayName`. Con `SELECT *` la respuesta traía
+     * `display_name` y el cliente generado parseaba, no encontraba nada y no
+     * fallaba: descartaba la sincronización entera en silencio.
+     */
+    it('el pull devuelve lo que el contrato promete, no las columnas crudas', async () => {
+      const res = await http.get('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      // Importa la forma de la clave, no el valor: otro caso de esta suite le
+      // cambia el nombre a este mismo cliente.
+      const cliente = res.body.customers.find((c: { id: string }) => c.id === a.customerId);
+      expect(cliente).toBeDefined();
+      expect(typeof cliente.displayName).toBe('string');
+      expect(cliente).not.toHaveProperty('display_name');
+      expect(cliente).not.toHaveProperty('company_id');
+
+      const sitio = res.body.sites.find((x: { id: string }) => x.id === a.siteId);
+      expect(sitio.address.postalCode).toBe('21201');
+      expect(sitio.geofenceRadiusM).toBe(150);
+    });
+
+    it('las bajas de site y assignment también se propagan', async () => {
+      await admin.query(`UPDATE site SET deleted_at = now(), updated_at = now() WHERE id = $1`,
+        [a.siteId]);
+
+      const res = await http.get('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      expect(res.body.deleted.sites).toContain(a.siteId);
+      expect(res.body.deleted).toHaveProperty('assignments');
+      expect(res.body.sites.map((x: { id: string }) => x.id)).not.toContain(a.siteId);
+
+      await admin.query(`UPDATE site SET deleted_at = NULL WHERE id = $1`, [a.siteId]);
+    });
   });
 });
