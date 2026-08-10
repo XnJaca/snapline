@@ -198,27 +198,50 @@ Dos señales que no requieren escribir código:
 
 Un sí por chat es una opinión. Estas dos son evidencia.
 
-## Preguntas abiertas para William
+## Los dos roles que estaban en duda — resueltos el 2026-08-10
 
-Cosas que decidimos **no** resolver razonando de este lado, porque se contestan en
-cinco minutos con él y cualquier respuesta nuestra sería una suposición cara.
+Estaban acá como preguntas abiertas porque cualquier respuesta razonada de este
+lado habría sido una suposición cara. La respuesta fue **que el sistema soporte
+las dos formas**, no que elija una.
 
-**¿Hay alguien más que administre, además de vos?**
+**`ADMIN` se queda, y deja de ser un rol sin usar.**
 
-El rol `ADMIN` está definido como *"la persona de oficina"*, y este documento dice
-que el problema de William es justamente que el software existente está hecho
-**para empresas con oficina**. La contradicción es real.
+La pregunta era si hay alguien más que administre además de William, y el rol
+estaba definido como *"la persona de oficina"* mientras este documento dice que el
+problema es el software hecho **para empresas con oficina**. La contradicción se
+resuelve sin elegir: el sistema tiene que funcionar igual si administra él solo o
+si aparece una segunda persona. `ADMIN` es ese camino, porque el dominio fija *"una
+empresa tiene exactamente un `OWNER` activo"*.
 
-Existe igual porque el dominio fija *"una empresa tiene exactamente un `OWNER`
-activo"*: si aparece una segunda persona con poderes administrativos, hoy `ADMIN`
-es el único camino. Mientras no se sepa, el rol queda **definido pero sin usar** —
-el seed no crea ninguno. Sacarlo del enum después, con datos adentro, cuesta una
-migración; dejarlo sin usar no cuesta nada.
+Lo que **no** puede pasar es que la app exija un `ADMIN` para funcionar. El caso
+normal sigue siendo William solo.
 
-**¿Tus cuadrillas tienen un encargado fijo?**
+**`FOREMAN` se queda, y el encargado puede ser el dueño.**
 
-El `FOREMAN` no es decorativo: su poder real es **fichar por su gente**, que ya
-existe en `time-entries.service.ts` (`method: 'FOREMAN'` cuando el marcaje es por
-otro). Sirve cuando el capataz llega con cuatro personas y alguna no tiene
-smartphone. Si en la práctica cada quien marca lo suyo, el rol sobra y hay que
-sacarlo del móvil antes de construirle pantallas.
+La pregunta era si las cuadrillas tienen encargado fijo. La respuesta: se designa
+un encargado, o el dueño mismo lo es. Las dos formas tienen que andar.
+
+El modelo ya lo permite y no hay que tocarlo: `crew.foreman_membership_id` apunta a
+una membresía cualquiera, y la ficha de [[../domain/cuadrilla|cuadrilla]] dice
+explícitamente que ser encargado *"no es un rol ni un permiso"*. Un `OWNER` que
+además sea `crew_member` puede liderar su cuadrilla sin dejar de ser `OWNER`.
+
+## Pregunta abierta que salió de la anterior
+
+**¿Un encargado debería poder fichar por gente que no es de su cuadrilla?**
+
+Al verificar que el dueño pudiera ser encargado apareció esto:
+`assertCanRecordForOthers` en `time-entries.service.ts` autoriza **por rol de
+membresía** —`OWNER`, `ADMIN`, `FOREMAN`— y no por ser encargado de la cuadrilla
+de esa persona.
+
+La consecuencia buena es que el dueño-encargado ya puede fichar por su gente sin
+cambiar nada. La que hay que decidir es la otra: **cualquier `FOREMAN` puede fichar
+por cualquiera de la empresa**, no solo por su cuadrilla. Con un contratista y dos
+cuadrillas puede ser exactamente lo que se quiere —se cubren entre encargados
+cuando uno falta—, y con más gente es una puerta abierta a horas cargadas por quien
+no estuvo ahí, justo en el agregado donde la regla 12 exige rastro para defensa
+legal.
+
+Acotarlo a la cuadrilla es un `EXISTS` sobre `crew_member`. No se hace hasta
+saber si la cobertura entre encargados es una necesidad real.

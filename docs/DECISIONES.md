@@ -1,6 +1,27 @@
-	x``x# Decisiones tomadas y pendientes
+# Decisiones tomadas y pendientes
 
-Contexto para arrancar sin repetir discusiones. Última actualización: 2026-08-08.
+Contexto para arrancar sin repetir discusiones. Última actualización: 2026-08-10.
+
+## Roles de membresía — 2026-08-10
+
+Las dos preguntas que `product/vision.md` tenía abiertas quedaron resueltas, y la
+respuesta a las dos fue la misma: **el sistema soporta las dos formas, no elige
+una.**
+
+| Pregunta | Decisión |
+|---|---|
+| ¿Hay alguien más que administre? | **`ADMIN` se queda y deja de ser un rol sin usar.** Tiene que funcionar igual si administra William solo o si aparece una segunda persona. Lo que no puede pasar es que la app **exija** un `ADMIN`. |
+| ¿Las cuadrillas tienen encargado fijo? | **`FOREMAN` se queda, y el encargado puede ser el dueño.** Se designa a alguien, o el dueño mismo lo es. |
+
+Ninguna de las dos toca el modelo: `crew.foreman_membership_id` ya apunta a
+cualquier membresía, y la ficha de cuadrilla dice que ser encargado *"no es un rol
+ni un permiso"*. Un `OWNER` que sea `crew_member` puede liderar su cuadrilla.
+
+**Lo que quedó abierto, y salió de verificar esto:** `assertCanRecordForOthers`
+autoriza por rol de membresía y no por ser encargado de la cuadrilla de esa
+persona, así que cualquier `FOREMAN` puede fichar por cualquiera de la empresa.
+Puede ser deseable —encargados que se cubren— o una puerta abierta a horas cargadas
+por quien no estuvo. Ver `product/vision.md`.
 
 ## Reunión con William — 2026-08-08
 
