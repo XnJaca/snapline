@@ -17,6 +17,36 @@ Se agrega con `/changelog <descripción>`.
 
 ## 2026-08-09
 
+- **La app funciona sin señal, de verdad.** Verificado en un teléfono real con
+  el internet apagado: la cartera sigue ahí porque las pantallas leen de Drift y
+  nunca de la red. Falta que las escrituras tengan su pantalla, pero la capa que
+  las sostiene está ([[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004]]).
+- **Dos agujeros que estaban en `main`, encontrados verificando el código y no
+  leyéndolo.** `POST /sync` gateaba el endpoint entero con `time.clock`, así que
+  un `WORKER` daba de alta clientes y proyectos saltándose `customers.write`;
+  ahora cada operación del lote declara su permiso. Y con dos throttlers
+  declarados, `@nestjs/throttler` los evalúa los dos en cada request: el perfil
+  de 8/min pensado para login **estaba limitando la app entera**.
+- **El pull mentía dos veces.** Declaraba sus colecciones como `[Object]`, así
+  que el cliente Dart las tipaba `dynamic` y descartaba la respuesta en
+  silencio. Y aunque se tiparan, la consulta era `SELECT *` crudo: devolvía
+  `display_name` donde el contrato promete `displayName`. Un contrato que miente
+  es peor que uno sin tipos.
+- **Falta `site.create` fue el hallazgo de dos revisores por separado.** Sin él
+  no había forma de agregar una propiedad a un cliente que ya existe, que es el
+  caso de todos los días: William ya cargó a Martínez y arranca otro trabajo en
+  otra dirección.
+- **La idempotencia dejó de apoyarse en que el recurso no exista.** Ese criterio
+  funciona para las altas y **rompe con las correcciones**, donde el recurso
+  siempre está. Pasa a una tabla de operaciones aplicadas, con el id que genera
+  el dispositivo.
+- **La bandeja de salida.** Una escritura sin señal se encola en una tabla —no
+  en memoria, para sobrevivir a que maten la app— y llega al servidor
+  exactamente una vez aunque se reintente.
+- **Dos preguntas para William** en [[product/vision|vision]]: si hay alguien más
+  que administre —el rol `ADMIN` dice "la persona de oficina" y la visión dice
+  que el problema es el software hecho para empresas con oficina— y si sus
+  cuadrillas tienen encargado fijo, que es lo único que justifica al `FOREMAN`.
 - **La cartera muestra solo obras vivas.** Lo terminado y lo cancelado se
   consulta, no se vigila: sale de la pantalla principal y vive detrás de "ver
   todas", con filtro por los siete estados del dominio. "Activo" no existe como

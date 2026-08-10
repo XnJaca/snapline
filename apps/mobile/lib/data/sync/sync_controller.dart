@@ -23,13 +23,13 @@ class SyncController extends AsyncNotifier<bool> {
     final hayInterfaz = ref.watch(connectivityProvider).value ?? true;
 
     if (!haySesion || !hayInterfaz) return false;
-    return ref.read(synchronizerProvider).pull();
+    return ref.read(synchronizerProvider).sync();
   }
 
   /// Para el gesto de tirar hacia abajo. El resultado importa poco: si falla, la
   /// lista sigue mostrando lo que había.
   Future<void> refresh() async {
-    final ok = await ref.read(synchronizerProvider).pull();
+    final ok = await ref.read(synchronizerProvider).sync();
     state = AsyncData(ok);
   }
 }
