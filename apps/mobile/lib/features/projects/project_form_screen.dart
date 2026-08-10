@@ -204,16 +204,33 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                         : null,
                   ),
                   SizedBox(height: spacing.md),
-                  _Selector(
-                    label: l10n.fieldRequiredLabel(l10n.projectFieldCustomer),
-                    value: cliente?.displayName,
-                    error: _customerId == null ? l10n.projectFieldCustomerRequired : null,
-                    onTap: _elegirCliente,
-                  ),
-                  SizedBox(height: spacing.md),
-                  _Selector(
-                    label: l10n.fieldRequiredLabel(l10n.projectFieldSite),
-                    value: sitio?.oneLine,
+                  // En edición son dato y no campo: se fijan al crear (ficha de
+                  // `proyecto`). Una obra tiene horas, fotos y facturas colgando, y
+                  // cambiarle el cliente reasigna todo eso a otra persona.
+                  if (!_esAlta) ...[
+                    _SoloLectura(
+                      label: l10n.projectFieldCustomer,
+                      value: cliente?.displayName ?? '',
+                    ),
+                    SizedBox(height: spacing.md),
+                    _SoloLectura(
+                      label: l10n.projectFieldSite,
+                      value: sitio?.oneLine ?? '',
+                      hint: l10n.projectCustomerAndSiteFixed,
+                    ),
+                  ] else ...[
+                    _Selector(
+                      label: l10n.fieldRequiredLabel(l10n.projectFieldCustomer),
+                      value: cliente?.displayName,
+                      error: _customerId == null
+                          ? l10n.projectFieldCustomerRequired
+                          : null,
+                      onTap: _elegirCliente,
+                    ),
+                    SizedBox(height: spacing.md),
+                    _Selector(
+                      label: l10n.fieldRequiredLabel(l10n.projectFieldSite),
+                      value: sitio?.oneLine,
                     // Sin cliente el selector no tiene de dónde elegir, y decirlo
                     // es más útil que un campo muerto.
                     hint: _customerId == null
@@ -223,14 +240,15 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                     // que el mensaje accionable va como error: "este cliente no
                     // tiene propiedades, agregue una" sirve más que "falta elegir
                     // la propiedad" cuando no hay ninguna que elegir.
-                    error: switch ((_customerId, _siteId, sitios.isEmpty)) {
-                      (null, _, _) => null,
-                      (_, _, true) => l10n.projectFieldSiteNoneForCustomer,
-                      (_, null, false) => l10n.projectFieldSiteRequired,
-                      _ => null,
-                    },
-                    onTap: _customerId == null ? null : _elegirSitio,
-                  ),
+                      error: switch ((_customerId, _siteId, sitios.isEmpty)) {
+                        (null, _, _) => null,
+                        (_, _, true) => l10n.projectFieldSiteNoneForCustomer,
+                        (_, null, false) => l10n.projectFieldSiteRequired,
+                        _ => null,
+                      },
+                      onTap: _customerId == null ? null : _elegirSitio,
+                    ),
+                  ],
                   if (_esAlta) ...[
                     SizedBox(height: spacing.md),
                     _EstadoInicial(
@@ -355,6 +373,45 @@ class _Selector extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Un dato que no se puede cambiar, con la misma forma que un campo.
+///
+/// No es un `_Selector` deshabilitado: un campo gris que no responde se lee como
+/// que la app está trabada. Esto se lee como información.
+class _SoloLectura extends StatelessWidget {
+  const _SoloLectura({required this.label, required this.value, this.hint});
+
+  final String label;
+  final String value;
+  final String? hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = context.spacing;
+    final colors = context.colors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: context.texts.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+        ),
+        SizedBox(height: spacing.xs),
+        Text(value.isEmpty ? '—' : value, style: context.texts.bodyLarge),
+        if (hint != null) ...[
+          SizedBox(height: spacing.xs),
+          Text(
+            hint!,
+            style: context.texts.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

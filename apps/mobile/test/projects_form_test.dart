@@ -336,6 +336,77 @@ void main() {
     });
   });
 
+  group('la edición', () {
+    Future<void> abrirEdicion(WidgetTester tester) async {
+      await seedProject(
+        db,
+        id: 'p9',
+        name: 'Obra a corregir',
+        customerName: 'no se usa',
+      );
+      await db.customStatement(
+        'UPDATE projects SET customer_id = ?, site_id = ? WHERE id = ?',
+        ['c1', 's-c1', 'p9'],
+      );
+      await pumpApp(tester, app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Obra a corregir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Detalle'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar'));
+      await tester.pumpAndSettle();
+    }
+
+    testWithApp('el cliente y la propiedad no se pueden cambiar', (
+      tester,
+    ) async {
+      await abrirEdicion(tester);
+
+      expect(find.byType(ProjectFormScreen), findsOne);
+      // Se fijan al crear: ofrecerlos y descartarlos en silencio era peor que no
+      // ofrecerlos. Se muestran como dato, con el motivo.
+      expect(find.text('Cliente (obligatorio)'), findsNothing);
+      expect(find.text('Propiedad (obligatorio)'), findsNothing);
+      expect(find.text('Ana Martínez'), findsOne);
+      expect(
+        find.text(
+          'El cliente y la propiedad se fijan al crear la obra. Para cambiarlos, '
+          'cancele esta obra y cree una nueva.',
+        ),
+        findsOne,
+      );
+    });
+
+    testWithApp('el estado tampoco se edita desde el formulario', (
+      tester,
+    ) async {
+      await abrirEdicion(tester);
+
+      // Va por el detalle, con solo las transiciones válidas: el servidor puede
+      // descartarlo y mezclarlo con una corrección dejaría al dispositivo sin
+      // saber qué parte se aplicó.
+      expect(find.text('Estado (obligatorio)'), findsNothing);
+    });
+
+    testWithApp('corregir el nombre sí se aplica', (tester) async {
+      await abrirEdicion(tester);
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Nombre de la obra (obligatorio)'),
+        'Nombre corregido',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Guardar'));
+      await tester.pumpAndSettle();
+
+      final obra = await (db.select(
+        db.projects,
+      )..where((p) => p.id.equals('p9'))).getSingle();
+      expect(obra.name, 'Nombre corregido');
+      expect(obra.customerId, 'c1');
+    });
+  });
+
   group('los dos temas', () {
     for (final (nombre, oscuro) in [('claro', false), ('oscuro', true)]) {
       testWidgets('$nombre: el alta se dibuja sin desbordes', (tester) async {

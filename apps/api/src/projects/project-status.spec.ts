@@ -1,5 +1,5 @@
 import { ProjectStatus } from './entities/project.entity';
-import { PROJECT_TRANSITIONS, canTransition, isBackwards } from './project-status';
+import { PROJECT_TRANSITIONS, canTransition, shouldDiscardStatus } from './project-status';
 
 /**
  * La escalera de `docs/domain/proyecto.md`.
@@ -48,7 +48,6 @@ describe('escalera de estados del proyecto', () => {
     // Un `update` que manda el mismo estado con otros campos no debe fallar.
     for (const estado of Object.keys(PROJECT_TRANSITIONS) as ProjectStatus[]) {
       expect(canTransition(estado, estado)).toBe(true);
-      expect(isBackwards(estado, estado)).toBe(false);
     }
   });
 
@@ -60,26 +59,45 @@ describe('escalera de estados del proyecto', () => {
   });
 });
 
-describe('la transición que llega tarde', () => {
-  it('retroceder en el ciclo es hacia atrás', () => {
-    expect(isBackwards('COMPLETED', 'IN_PROGRESS')).toBe(true);
-    expect(isBackwards('IN_PROGRESS', 'SCHEDULED')).toBe(true);
-    expect(isBackwards('SCHEDULED', 'LEAD')).toBe(true);
+describe('el cambio de estado que llega tarde', () => {
+  // **El test que faltaba.** `isBackwards` clasificaba `ON_HOLD → IN_PROGRESS`
+  // como retroceso, porque comparaba índices de un orden lineal donde `ON_HOLD`
+  // va después de `IN_PROGRESS`. Reanudar una obra pausada —la transición más
+  // común del dominio— se descartaba en silencio. Recorrer todos los pares lo
+  // habría cazado antes de que llegara a una revisión.
+  it('ninguna transición válida se descarta', () => {
+    const descartadas: string[] = [];
+    for (const [from, destinos] of Object.entries(PROJECT_TRANSITIONS)) {
+      for (const to of destinos as readonly ProjectStatus[]) {
+        if (shouldDiscardStatus(from as ProjectStatus, to)) {
+          descartadas.push(`${from} -> ${to}`);
+        }
+      }
+    }
+    expect(descartadas).toEqual([]);
   });
 
-  it('avanzar no lo es', () => {
-    expect(isBackwards('LEAD', 'ESTIMATED')).toBe(false);
-    expect(isBackwards('IN_PROGRESS', 'COMPLETED')).toBe(false);
+  it('reanudar una obra pausada no se descarta', () => {
+    // El caso concreto que se perdía. Explícito además del barrido de arriba,
+    // para que se lea en el nombre del test.
+    expect(shouldDiscardStatus('ON_HOLD', 'IN_PROGRESS')).toBe(false);
+    expect(canTransition('ON_HOLD', 'IN_PROGRESS')).toBe(true);
   });
 
-  it('cancelar nunca es retroceder', () => {
-    // Es una decisión que se toma en cualquier punto, no una orden vieja.
-    expect(isBackwards('COMPLETED', 'CANCELLED')).toBe(false);
-    expect(isBackwards('LEAD', 'CANCELLED')).toBe(false);
+  it('lo que ya no es válido se descarta en vez de fallar', () => {
+    // La obra avanzó mientras el teléfono no tenía señal.
+    expect(shouldDiscardStatus('COMPLETED', 'IN_PROGRESS')).toBe(true);
+    expect(shouldDiscardStatus('COMPLETED', 'ON_HOLD')).toBe(true);
+    expect(shouldDiscardStatus('IN_PROGRESS', 'SCHEDULED')).toBe(true);
+    // Y también lo que dejó de ser válido sin ser retroceso: el teléfono creía la
+    // obra en `IN_PROGRESS`, donde `COMPLETED` sí era válido. Con un error se
+    // quedaría en su bandeja reintentándose para siempre.
+    expect(shouldDiscardStatus('ON_HOLD', 'COMPLETED')).toBe(true);
   });
 
-  it('pausar una obra entregada es una orden vieja; pausar una en marcha no', () => {
-    expect(isBackwards('COMPLETED', 'ON_HOLD')).toBe(true);
-    expect(isBackwards('IN_PROGRESS', 'ON_HOLD')).toBe(false);
+  it('quedarse en el mismo estado no se descarta', () => {
+    for (const estado of Object.keys(PROJECT_TRANSITIONS) as ProjectStatus[]) {
+      expect(shouldDiscardStatus(estado, estado)).toBe(false);
+    }
   });
 });

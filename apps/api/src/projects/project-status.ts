@@ -17,17 +17,6 @@ export const PROJECT_TRANSITIONS = {
   CANCELLED: [],
 } as const satisfies Record<ProjectStatus, readonly ProjectStatus[]>;
 
-/** El orden del ciclo de vida. Define qué es "hacia atrás". */
-const ORDEN: readonly ProjectStatus[] = [
-  'LEAD',
-  'ESTIMATED',
-  'SCHEDULED',
-  'IN_PROGRESS',
-  'ON_HOLD',
-  'COMPLETED',
-  'CANCELLED',
-];
-
 export function canTransition(from: ProjectStatus, to: ProjectStatus): boolean {
   // Quedarse donde está no es una transición: un `update` que manda el mismo
   // estado junto con otros campos no tiene por qué fallar.
@@ -36,19 +25,29 @@ export function canTransition(from: ProjectStatus, to: ProjectStatus): boolean {
 }
 
 /**
- * Una transición que llega tarde desde un dispositivo con el estado viejo.
+ * Si un cambio de estado que llegó por la bandeja hay que **ignorar** en vez de
+ * rechazar.
  *
- * **Es lo único de `project` que no es última escritura gana.** El móvil no puede
- * decidirlo: sincroniza cuando hay señal y no sabe si mientras tanto la obra
- * avanzó. Lo descarta el servidor, que es el único que ve los dos estados.
+ * Es lo único de `project` que no es última escritura gana. El dispositivo pudo
+ * pasar días sin señal: manda la transición que era válida **desde el estado que
+ * él conocía**, y para cuando llega la obra ya avanzó. No puede saberlo, así que
+ * lo resuelve el servidor, que es el único que ve los dos estados.
  *
- * `ON_HOLD` cuenta como retroceso frente a `COMPLETED` y no frente a
- * `IN_PROGRESS`: pausar una obra en marcha es una operación normal, pero pausar
- * una que ya se entregó es una orden vieja que llegó tarde.
+ * **Se ignora cualquier transición que no sea válida ahora, no solo la
+ * retrocedente.** Un teléfono que creía la obra en `IN_PROGRESS` y manda
+ * `COMPLETED` cuando ya está en `ON_HOLD` mandó algo legítimo que dejó de serlo:
+ * si respondiéramos error se quedaría en su bandeja reintentándose para siempre.
+ *
+ * No existe una función aparte que decida "esto es hacia atrás". La hubo, y
+ * clasificaba `ON_HOLD → IN_PROGRESS` como retroceso porque comparaba índices de
+ * un orden lineal donde `ON_HOLD` va después de `IN_PROGRESS` — y esa es la
+ * transición más común del dominio, reanudar una obra pausada. Se perdía en
+ * silencio. La escalera es una rama, no una fila: `canTransition` es la única
+ * fuente.
  */
-export function isBackwards(from: ProjectStatus, to: ProjectStatus): boolean {
-  if (from === to) return false;
-  // Cancelar nunca es retroceder: es una decisión que se toma en cualquier punto.
-  if (to === 'CANCELLED') return false;
-  return ORDEN.indexOf(to) < ORDEN.indexOf(from);
+export function shouldDiscardStatus(
+  from: ProjectStatus,
+  to: ProjectStatus,
+): boolean {
+  return !canTransition(from, to);
 }

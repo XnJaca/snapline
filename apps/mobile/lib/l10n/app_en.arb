@@ -132,6 +132,7 @@
   "projectFieldSiteRequired": "Pick the property",
   "projectFieldSitePickCustomerFirst": "Choose the customer first",
   "projectFieldSiteNoneForCustomer": "This customer has no properties yet. Add one.",
+  "projectCustomerAndSiteFixed": "The customer and property are set when the project is created. To change them, cancel this project and create a new one.",
   "projectFieldStatus": "Status",
   "projectFieldDescription": "Description",
   "projectFieldServiceType": "Type of work",

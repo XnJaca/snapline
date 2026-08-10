@@ -97,6 +97,7 @@
   "projectFieldSiteRequired": "Falta elegir la propiedad",
   "projectFieldSitePickCustomerFirst": "Elija primero el cliente",
   "projectFieldSiteNoneForCustomer": "Este cliente todavía no tiene propiedades. Agregue una.",
+  "projectCustomerAndSiteFixed": "El cliente y la propiedad se fijan al crear la obra. Para cambiarlos, cancele esta obra y cree una nueva.",
   "projectFieldStatus": "Estado",
   "projectFieldDescription": "Descripción",
   "projectFieldServiceType": "Tipo de trabajo",

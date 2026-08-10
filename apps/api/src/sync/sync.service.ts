@@ -189,7 +189,7 @@ export class SyncService {
           case 'project.update': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
             return ok(
-              (await this.projects.update(op.targetId, dto, { discardBackwards: true })).id,
+              (await this.projects.update(op.targetId, dto, { fromOutbox: true })).id,
             );
           }
           case 'media.register': {

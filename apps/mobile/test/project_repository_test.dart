@@ -156,6 +156,22 @@ void main() {
       expect(await outbox.pending(), hasLength(1));
     });
 
+    test('la corrección no manda el cliente ni la propiedad', () async {
+      final id = await repo.create(input());
+      await outbox.remove((await outbox.pending()).single.clientId);
+
+      await repo.update(id, input(name: 'Corregida'));
+
+      // Se fijan al crear (ficha de `proyecto`), y `UpdateProjectDto` no los
+      // declara: mandarlos los descartaba `whitelist` sin decir nada, así que la
+      // app mostraba guardado algo que no se guardaba.
+      final payload =
+          jsonDecode((await outbox.pending()).single.payload)
+              as Map<String, Object?>;
+      expect(payload.containsKey('customerId'), isFalse);
+      expect(payload.containsKey('siteId'), isFalse);
+    });
+
     test('la corrección no manda el estado', () async {
       final id = await repo.create(input());
       await outbox.remove((await outbox.pending()).single.clientId);

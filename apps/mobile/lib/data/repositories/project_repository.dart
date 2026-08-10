@@ -295,7 +295,14 @@ class ProjectRepository {
   /// `project` que no es última escritura gana.
   Future<void> update(String id, ProjectInput input, {DateTime? occurredAt}) async {
     final cuando = occurredAt ?? DateTime.now();
-    final payload = input.toPayload()..remove('status');
+    final payload = input.toPayload()
+      ..remove('status')
+      // `customer_id` y `site_id` se fijan al crear (ficha de `proyecto`), y
+      // `UpdateProjectDto` no los declara: mandarlos los descartaba `whitelist`
+      // sin decir nada. Se quitan acá para que el payload sea lo que de verdad se
+      // va a aplicar.
+      ..remove('customerId')
+      ..remove('siteId');
 
     await _db.transaction(() async {
       await (_db.update(_db.projects)..where((p) => p.id.equals(id))).write(

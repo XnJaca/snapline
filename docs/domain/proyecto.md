@@ -92,6 +92,13 @@ contra lo que realmente marcó asistencia.
 ## Invariantes
 
 - El `site_id` tiene que pertenecer al `customer_id`. No se cruzan.
+- **`customer_id` y `site_id` se fijan al crear y no se editan.** Una obra tiene
+  horas, fotos, estimados y facturas colgando: cambiarle el cliente reasigna todo
+  eso a otra persona, y eso no es un campo de formulario. Si se eligió mal, se
+  cancela la obra y se crea de nuevo — que además deja rastro, igual que una
+  factura enviada que se anula en vez de editarse (regla 16).
+  *Decidido el 2026-08-10, al encontrar que el formulario de edición los ofrecía y
+  el servidor los descartaba en silencio.*
 - `client_visibility_mode` arranca en `etapas`. Pasar a `avance` es acción explícita.
 - Un `WORKER` solo ve proyectos donde tiene asignación vigente. No puede enumerar
   los demás.

@@ -9,7 +9,7 @@ import { Site } from '../customers/entities/site.entity';
 import { Project } from './entities/project.entity';
 import { ProjectAssignment } from './entities/project-assignment.entity';
 import { AssignCrewDto, CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
-import { canTransition, isBackwards } from './project-status';
+import { canTransition, shouldDiscardStatus } from './project-status';
 
 @Injectable()
 export class ProjectsService {
@@ -101,26 +101,29 @@ export class ProjectsService {
   }
 
   /**
-   * `discardBackwards` lo pone la bandeja de salida, nunca la puerta REST.
+   * `fromOutbox` lo pone la bandeja de salida, nunca la puerta REST.
    *
-   * Una transición retrocedente que llega tarde **se descarta y no falla**: el
-   * dispositivo no puede saber si su estado es viejo, así que si respondiéramos
-   * error la operación se quedaría en su cola para siempre. Se aplica el resto de
-   * los campos y el estado se ignora. Es lo único de `project` que no es última
-   * escritura gana.
+   * Por la bandeja, un cambio de estado que ya no es válido **se ignora y no
+   * falla**: el dispositivo mandó lo que era válido desde el estado que conocía y
+   * no puede saber que la obra avanzó, así que si respondiéramos error la
+   * operación se quedaría en su cola reintentándose para siempre. Se aplica el
+   * resto de los campos y el estado se ignora. Es lo único de `project` que no es
+   * última escritura gana.
+   *
+   * Por REST falla, porque ahí hay alguien mirando la pantalla que puede corregir.
    */
   async update(
     id: string,
     dto: UpdateProjectDto,
-    opciones?: { discardBackwards?: boolean },
+    opciones?: { fromOutbox?: boolean },
   ): Promise<Project> {
     const actual = await this.get(id);
     const cambios: UpdateProjectDto = { ...dto };
 
-    if (cambios.status && cambios.status !== actual.status) {
-      if (opciones?.discardBackwards && isBackwards(actual.status, cambios.status)) {
+    if (cambios.status && !canTransition(actual.status, cambios.status)) {
+      if (opciones?.fromOutbox && shouldDiscardStatus(actual.status, cambios.status)) {
         delete cambios.status;
-      } else if (!canTransition(actual.status, cambios.status)) {
+      } else {
         throw ApiError.conflict(
           'PROJECT_INVALID_TRANSITION',
           `Una obra en ${actual.status} no puede pasar a ${cambios.status}`,
@@ -128,7 +131,12 @@ export class ProjectsService {
       }
     }
 
-    await this.projects.update({ id }, cambios);
+    // Con el estado descartado el objeto puede quedar vacío, y ahí un `update`
+    // de TypeORM solo toca `updated_at`. Se evita para no mover el cursor del
+    // pull por una operación que no cambió nada.
+    if (Object.keys(cambios).length > 0) {
+      await this.projects.update({ id }, cambios);
+    }
     return this.get(id);
   }
 
