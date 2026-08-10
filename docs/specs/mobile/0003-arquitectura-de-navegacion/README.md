@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0003: Arquitectura de navegación: el proyecto como contenedor"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "Cada rol entra a la superficie que le corresponde, y toda la información de una obra —avance, fotos y horas— se lee dentro de esa obra y no en listas globales."
 apps:
   - mobile
@@ -20,7 +20,7 @@ created: 2026-08-08
 updated: 2026-08-08
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -268,3 +268,4 @@ requiere filtrar proyectos por cuadrilla en el API. Se sabrá al usarlo.
 | 2026-08-08 | en implementación | Implementado: `StatefulShellRoute` con una rama por destino, catálogo de ejes con su permiso, y el proyecto como contenedor con cuatro tabs. 95 tests unitarios y 4 de integración contra el API real. Queda parcial el criterio del "Fotos" del `WORKER`, que necesita datos para verificarse. Dependencia nueva: `shared_preferences`, para recordar la última pestaña. |
 | 2026-08-09 | en implementación | Tercera vuelta de diseño sobre el andamiaje, con la app en la mano: la cartera muestra **solo lo que está en obra** y todo lo demás pasa a una pantalla dedicada con una pestaña por estado y su acción de crear; la cabecera de la obra se achicó —el nombre vive en la barra, no repetido a 32px— y sus cuatro tabs se reparten el ancho. Antes se probaron dos formas que no funcionaron: un encabezado con "ver todos" al costado, que flotaba sin leerse como interfaz, y pestañas En proceso/Todos, que costaba ver. |
 | 2026-08-09 | en implementación | **El andamiaje creció más allá de este spec**, a pedido: pantalla de cuenta con selector de tema, cartera en cards con solo obras vivas más "ver todas" con filtro por estado, y cabecera de obra reestructurada. Sigue siendo andamiaje sobre datos sintéticos —no hay capa local todavía— pero el diseño ya no es descartable: lo formalizan SPEC-0005 y SPEC-0006, que se escriben antes de conectarlo a datos reales. Tres correcciones a la regla del naranja que solo se vieron en captura: los `TextButton`, los iconos de los `FilterChip` y el segmento activo del selector de tema salían en `primary`. 102 tests. |
+| 2026-08-09 | implementado | PR #1 mergeado. 104 tests unitarios y 9 de integración contra el API real. Queda **un criterio sin cerrar**: el "Fotos" del `WORKER` scopeado a su proyecto asignado, que este spec pidió verificar pero cuyo contenido él mismo dejó fuera de alcance — se cierra con el spec de esa pantalla. |

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
@@ -364,6 +365,157 @@ describe('invariantes del dominio (e2e)', () => {
     it('un token inventado no entra', async () => {
       const res = await http.get('/api/p/no-existe-este-token').expect(401);
       expect(res.body.code).toBe('TOKEN_INVALID');
+    });
+  });
+
+  // ------------------------------------------------------ permisos de sync
+
+  describe('sync autoriza por operación, no solo por endpoint', () => {
+    const uuid = (): string => randomUUID();
+
+    /**
+     * El endpoint entra con `time.clock`, que el WORKER tiene. Sin autorizar por
+     * operación, esto le dejaba crear clientes saltándose `customers.write`.
+     */
+    it('un WORKER no puede crear clientes por la puerta de sync', async () => {
+      const clientId = uuid();
+      const res = await http
+        .post('/api/sync')
+        .set('Authorization', `Bearer ${workerA}`)
+        .send({
+          operations: [{
+            clientId,
+            type: 'customer.create',
+            targetId: uuid(),
+            payload: { displayName: 'Colado' },
+            occurredAt: new Date().toISOString(),
+          }],
+        })
+        .expect(200);
+
+      expect(res.body.results[0].status).toBe('failed');
+      expect(res.body.results[0].code).toBe('FORBIDDEN');
+
+      const [row] = await admin.query(
+        `SELECT true AS existe FROM customer WHERE display_name = $1`, ['Colado']);
+      expect(row).toBeUndefined();
+    });
+
+    it('lo que sí puede del mismo lote se aplica igual', async () => {
+      const res = await http
+        .post('/api/sync')
+        .set('Authorization', `Bearer ${workerA}`)
+        .send({
+          operations: [
+            {
+              clientId: uuid(), type: 'customer.create', targetId: uuid(),
+              payload: { displayName: 'Tampoco' }, occurredAt: '2026-08-09T10:00:00.000Z',
+            },
+            {
+              clientId: uuid(), type: 'timeEntry.clockIn', targetId: uuid(),
+              payload: { projectId: a.projectId }, occurredAt: '2026-08-09T10:01:00.000Z',
+            },
+          ],
+        })
+        .expect(200);
+
+      expect(res.body.results[0].code).toBe('FORBIDDEN');
+      expect(res.body.results[1].status).toBe('applied');
+      expect(res.body.failed).toBe(1);
+    });
+
+    it('el OWNER sí puede, y repetir la misma operación no la aplica dos veces', async () => {
+      const clientId = uuid();
+      const operacion = {
+        clientId,
+        type: 'customer.update',
+        targetId: a.customerId,
+        payload: { displayName: 'Nombre corregido' },
+        occurredAt: new Date().toISOString(),
+      };
+
+      const primera = await http.post('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [operacion] }).expect(200);
+      expect(primera.body.results[0].status).toBe('applied');
+
+      // La red se cortó después de escribir y el dispositivo reintenta.
+      const segunda = await http.post('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [operacion] }).expect(200);
+      expect(segunda.body.results[0].status).toBe('duplicate');
+
+      const [row] = await admin.query(
+        `SELECT count(*)::int AS n FROM sync_operation WHERE client_id = $1`, [clientId]);
+      expect(row.n).toBe(1);
+    });
+
+    /**
+     * El caso de todos los días: el cliente ya existe y arranca un trabajo en
+     * otra dirección. Antes no había forma de encolar esto sin señal.
+     */
+    it('se puede agregar una propiedad a un cliente que ya existe', async () => {
+      const siteId = uuid();
+      const res = await http.post('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({
+          operations: [{
+            clientId: uuid(),
+            type: 'site.create',
+            targetId: siteId,
+            payload: {
+              customerId: a.customerId,
+              address: {
+                line1: '89 Bel Pre Rd', city: 'Rockville',
+                state: 'MD', postalCode: '20853',
+              },
+            },
+            occurredAt: new Date().toISOString(),
+          }],
+        })
+        .expect(200);
+
+      expect(res.body.results[0].status).toBe('applied');
+
+      const [row] = await admin.query(
+        `SELECT customer_id FROM site WHERE id = $1`, [siteId]);
+      expect(row.customer_id).toBe(a.customerId);
+    });
+
+    /**
+     * El contrato promete `displayName`. Con `SELECT *` la respuesta traía
+     * `display_name` y el cliente generado parseaba, no encontraba nada y no
+     * fallaba: descartaba la sincronización entera en silencio.
+     */
+    it('el pull devuelve lo que el contrato promete, no las columnas crudas', async () => {
+      const res = await http.get('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      // Importa la forma de la clave, no el valor: otro caso de esta suite le
+      // cambia el nombre a este mismo cliente.
+      const cliente = res.body.customers.find((c: { id: string }) => c.id === a.customerId);
+      expect(cliente).toBeDefined();
+      expect(typeof cliente.displayName).toBe('string');
+      expect(cliente).not.toHaveProperty('display_name');
+      expect(cliente).not.toHaveProperty('company_id');
+
+      const sitio = res.body.sites.find((x: { id: string }) => x.id === a.siteId);
+      expect(sitio.address.postalCode).toBe('21201');
+      expect(sitio.geofenceRadiusM).toBe(150);
+    });
+
+    it('las bajas de site y assignment también se propagan', async () => {
+      await admin.query(`UPDATE site SET deleted_at = now(), updated_at = now() WHERE id = $1`,
+        [a.siteId]);
+
+      const res = await http.get('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      expect(res.body.deleted.sites).toContain(a.siteId);
+      expect(res.body.deleted).toHaveProperty('assignments');
+      expect(res.body.sites.map((x: { id: string }) => x.id)).not.toContain(a.siteId);
+
+      await admin.query(`UPDATE site SET deleted_at = NULL WHERE id = $1`, [a.siteId]);
     });
   });
 });

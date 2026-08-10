@@ -117,8 +117,14 @@
   "@projectPhotoCount": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "projectPendingSync": "Not uploaded yet",
   "projectNoCrew": "No crew assigned",
 
+  "syncInProgress": "Syncing…",
+  "syncDone": "Up to date",
+  "syncOffline": "No connection. What you do is saved and sent when the signal comes back.",
+  "syncNow": "Sync now",
+  "syncFailed": "No connection. Showing what is on this phone.",
   "comingSoon": "Coming soon",
   "@comingSoon": {
     "description": "Placeholder de pestaña sin implementar. Se borra cuando cada pantalla tenga su spec."

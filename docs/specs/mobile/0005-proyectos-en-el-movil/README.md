@@ -6,12 +6,13 @@ aliases:
 type: spec
 platform: mobile
 status: borrador
-goal: "William ve las obras en proceso y abre cualquiera sin señal, y da de alta una —con su cliente y su propiedad si hacen falta— parado en la obra sin esperar cobertura."
+goal: "William ve las obras en proceso, abre cualquiera sin señal, y da de alta o corrige una —con su cliente y su propiedad si hacen falta— parado en la obra sin esperar cobertura."
 apps:
   - mobile
 depends_on:
   - "0003-arquitectura-de-navegacion"
   - "0004-capa-local-y-sincronizacion"
+  - "0006-clientes-en-el-movil"
 domain:
   - proyecto
   - cliente
@@ -29,7 +30,8 @@ tags:
 > **Meta**
 > - Apps afectadas: `mobile`
 > - Depende de: [[../0003-arquitectura-de-navegacion/README|SPEC-0003]],
->   [[../0004-capa-local-y-sincronizacion/README|SPEC-0004]]
+>   [[../0004-capa-local-y-sincronizacion/README|SPEC-0004]],
+>   [[../0006-clientes-en-el-movil/README|SPEC-0006]]
 > - Frente: `administrativo`
 
 ---
@@ -53,7 +55,9 @@ ciclo y vuelve al cuaderno.
 - **Detalle**: la tab `Detalle` del contenedor que SPEC-0003 dejó vacía.
 - **Alta de obra** desde el teléfono, con UUIDv7 local.
 - **Edición** de los campos que el dominio marca editables.
-- **Cambio de estado** por la escalera del dominio.
+- **Cambio de estado**, ofreciendo **solo las transiciones válidas** desde el
+  estado actual. La escalera del dominio se respeta en el selector, no como
+  advertencia: hoy el servidor acepta cualquier salto.
 - Buscar por nombre de obra o por cliente.
 - **Crear cliente y propiedad sin salir del alta**, en línea. Ver abajo.
 
@@ -96,6 +100,7 @@ No se agrega nada al modelo.
 | Situación | Comportamiento |
 |---|---|
 | Abrir la lista | Sale de local. Idéntica con red y sin red. |
+| Abrir el detalle | Igual: es lo que el goal promete, y no consulta nada. |
 | Crear una obra | Se escribe local con UUIDv7 y entra a la bandeja. Aparece en la lista al instante, marcada como pendiente. |
 | Editar | Igual: se aplica local y se encola. |
 | Cambiar de estado | Igual. Si al sincronizar el servidor ya avanzó más, la transición retrocedente se descarta. |
@@ -151,6 +156,10 @@ campos: si se duplican, divergen.
 - [ ] Se puede crear cliente, propiedad y obra **sin salir del alta y sin
       señal**, y las tres llegan al servidor en ese orden.
 - [ ] Una obra nueva nace con `client_visibility_mode = etapas`.
+- [ ] El selector de estado ofrece solo las transiciones que la ficha permite
+      desde el estado actual: desde `LEAD` no se puede saltar a `COMPLETED`.
+- [ ] Una transición retrocedente que llega tarde **la descarta el servidor**, no
+      el dispositivo: el móvil no puede saber si su estado es viejo.
 - [ ] Cancelar una obra la saca de la principal y **no** borra sus horas ni sus
       fotos.
 - [ ] Editar sin señal aplica local y encola una sola operación por edición.
@@ -169,10 +178,11 @@ formulario compartido —el de SPEC-0006 en versión mínima— y no copiando ca
 Queda a un toque en "ver todas". Vale la pena mirar con William si prefiere que
 `ON_HOLD` vuelva a la principal; es cambiar un predicado.
 
-**El estado tiene una escalera y el formulario puede romperla.** La ficha define
-transiciones; un selector que ofrezca los siete estados sueltos deja pasar saltos
-que el dominio no contempla. Ofrecer solo las transiciones válidas desde el
-estado actual.
+**El servidor hoy no valida la escalera de estados.** `projects.service.ts` hace
+`update({ id }, dto)` sin comparar contra el estado anterior, así que acepta
+cualquier salto. Este spec lo resuelve del lado del selector, que es lo que puede;
+que el servidor la valide es trabajo de `apps/api` y conviene hacerlo con
+`project.update`, no después.
 
 ## ADRs relacionados
 
@@ -187,3 +197,4 @@ estado actual.
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. El diseño de la cartera y del detalle ya existe como andamiaje de SPEC-0003; este spec lo formaliza y le pone datos reales. |
 | 2026-08-09 | borrador | Dos decisiones de producto cerradas: la principal muestra solo `IN_PROGRESS` —no "todo lo no cerrado"—, y el alta crea cliente y propiedad en línea en vez de mandar a tres pantallas. |
+| 2026-08-09 | borrador | Revisado con `spec-reviewer`. Encontró que el alta en línea da por hecho un camino que no existe: agregar una propiedad a un cliente ya sincronizado no tiene operación de sync, lo que pasó a ser prerequisito de SPEC-0004. Sumados `depends_on: 0006` —el formulario compartido es de ese spec—, la escalera de transiciones movida de Riesgos a Alcance con su criterio, y el dueño del descarte retrocedente declarado: el servidor. |

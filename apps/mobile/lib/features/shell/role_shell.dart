@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/navigation/app_destination.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/theme_extensions.dart';
+import '../../data/sync/sync_controller.dart';
 import '../../core/widgets/account_button.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -21,6 +22,10 @@ class RoleShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Con solo observarlo arranca: trae del servidor lo que cambió desde el
+    // último pull y lo escribe en Drift. Las pantallas se enteran solas.
+    ref.watch(syncControllerProvider);
+
     final destinos = ref.watch(destinationsProvider);
     if (destinos.isEmpty) return const _NoDestinations();
 

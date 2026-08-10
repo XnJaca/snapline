@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { SoftDeletableTenantEntity } from '../../common/entities/base.entity';
 import { Membership } from '../../auth/entities/membership.entity';
@@ -28,6 +29,7 @@ const numeric = bigintNumber;
 // Evidencia laboral: un trigger bloquea DELETE, se corrige con deleted_at + TimeEntryEdit.
 @Entity('time_entry')
 export class TimeEntry extends SoftDeletableTenantEntity {
+  @ApiPropertyOptional()
   @ManyToOne(() => Project, { nullable: false })
   @JoinColumn({ name: 'project_id' })
   project!: Project;
@@ -35,6 +37,7 @@ export class TimeEntry extends SoftDeletableTenantEntity {
   @RelationId((t: TimeEntry) => t.project)
   projectId!: string;
 
+  @ApiPropertyOptional()
   @ManyToOne(() => Membership, { nullable: false })
   @JoinColumn({ name: 'membership_id' })
   membership!: Membership;
@@ -93,6 +96,7 @@ export class TimeEntry extends SoftDeletableTenantEntity {
   method!: TimeEntryMethod;
 
   // No siempre es de quién son las horas: el foreman marca por los suyos.
+  @ApiPropertyOptional()
   @ManyToOne(() => Membership, { nullable: false })
   @JoinColumn({ name: 'recorded_by_membership_id' })
   recordedBy!: Membership;
@@ -119,6 +123,7 @@ export class TimeEntry extends SoftDeletableTenantEntity {
   @Column({ type: 'enum', enum: ['PENDING', 'APPROVED', 'REJECTED'], enumName: 'time_entry_status', default: 'PENDING' })
   status!: TimeEntryStatus;
 
+  @ApiPropertyOptional()
   @ManyToOne(() => Membership, { nullable: true })
   @JoinColumn({ name: 'approved_by_membership_id' })
   approvedBy!: Membership | null;

@@ -1,5 +1,7 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity } from 'typeorm';
 import { SoftDeletableTenantEntity } from '../../common/entities/base.entity';
+import { AddressDto } from '../../common/dto/address.dto';
 
 export type CustomerSource = 'REFERRAL' | 'WEB' | 'SOCIAL' | 'REPEAT' | 'OTHER';
 
@@ -23,8 +25,9 @@ export class Customer extends SoftDeletableTenantEntity {
   @Column({ type: 'text', nullable: true })
   phone!: string | null;
 
+  @ApiProperty({ type: AddressDto, nullable: true })
   @Column({ type: 'jsonb', name: 'billing_address', nullable: true })
-  billingAddress!: Record<string, unknown> | null;
+  billingAddress!: AddressDto | null;
 
   @Column({ type: 'enum', enum: ['REFERRAL', 'WEB', 'SOCIAL', 'REPEAT', 'OTHER'], enumName: 'customer_source', nullable: true })
   source!: CustomerSource | null;

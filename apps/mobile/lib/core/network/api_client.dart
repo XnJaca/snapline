@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/clients/auth_client.dart';
+import '../../api/clients/sync_client.dart';
 import '../session/session_controller.dart';
 import 'auth_interceptor.dart';
 
@@ -10,7 +11,8 @@ import 'auth_interceptor.dart';
 /// El emulador de Android no ve `localhost` del host: ahí va `10.0.2.2`.
 const apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://localhost:3000/api',
+  // defaultValue: 'http://localhost:3000/api',
+  defaultValue: 'https://bj4g0wn5-3000.use2.devtunnels.ms/api',
 );
 
 BaseOptions _options() => BaseOptions(
@@ -42,4 +44,10 @@ final dioProvider = Provider<Dio>((ref) {
 /// Dio interceptado dispararía un refresh en el propio login fallido.
 final authClientProvider = Provider<AuthClient>((ref) {
   return AuthClient(ref.watch(bareDioProvider));
+});
+
+/// Con el Dio interceptado: sincronizar necesita token, y si vence a mitad el
+/// interceptor lo renueva y reintenta una vez.
+final syncClientProvider = Provider<SyncClient>((ref) {
+  return SyncClient(ref.watch(dioProvider));
 });

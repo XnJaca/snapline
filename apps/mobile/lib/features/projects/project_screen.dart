@@ -8,9 +8,9 @@ import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/placeholder_list.dart';
 import '../../core/widgets/status_chip.dart';
+import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'project_status_display.dart';
-import 'sample_projects.dart';
 
 /// Las tabs de una obra. Igual que los ejes de la barra, cada una declara su
 /// permiso y no se dibuja si falta.
@@ -57,7 +57,7 @@ class ProjectScreen extends ConsumerWidget {
         .where((tab) => permisos.contains(tab.permission))
         .toList(growable: false);
 
-    final proyecto = sampleProjectById(projectId);
+    final proyecto = ref.watch(projectByIdProvider(projectId)).value;
 
     final barra = AppBar(
       backgroundColor: colors.surface,
@@ -131,7 +131,7 @@ class ProjectScreen extends ConsumerWidget {
 class _Cabecera extends StatelessWidget {
   const _Cabecera({required this.project});
 
-  final SampleProject project;
+  final ProjectSummary project;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +160,7 @@ class _Cabecera extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  project.customer,
+                  project.customerName,
                   style: context.texts.titleLarge,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -176,7 +176,9 @@ class _Cabecera extends StatelessWidget {
           ),
           SizedBox(height: spacing.sm),
           Text(
-            '${project.site} · ${project.crew ?? l10n.projectNoCrew}',
+            project.pending
+                ? '${project.site} · ${l10n.projectPendingSync}'
+                : project.site,
             style: context.texts.bodySmall?.copyWith(color: atenuado),
             maxLines: 2,
           ),

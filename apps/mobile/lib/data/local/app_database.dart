@@ -1,0 +1,51 @@
+import 'package:drift/drift.dart';
+import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'tables.dart';
+
+part 'app_database.g.dart';
+
+/// La base local. **Es la única fuente de las pantallas**: la UI observa esto y
+/// nunca la red, así que sin señal no hay una ruta distinta que recorrer.
+///
+/// Guarda lo de **una** empresa a la vez. El `companyId` viaja en cada fila para
+/// poder detectar que la sesión cambió de empresa y limpiar, no para consultar
+/// por él: el servidor ya filtra por tenant y el teléfono no ve más de una.
+@DriftDatabase(
+  tables: [
+    Customers,
+    Sites,
+    Projects,
+    ProjectAssignments,
+    OutboxOperations,
+    SyncCursors,
+  ],
+)
+class AppDatabase extends _$AppDatabase {
+  AppDatabase([QueryExecutor? executor])
+    : super(executor ?? driftDatabase(name: 'snapline'));
+
+  @override
+  int get schemaVersion => 1;
+
+  /// Todo lo local, sin excepción.
+  ///
+  /// Se llama al cerrar sesión y al detectar que la sesión entró con otra
+  /// empresa: dejar datos de una empresa visibles bajo otra sesión sería el
+  /// mismo problema que un `company_id` mal filtrado en el servidor, pero del
+  /// lado del teléfono.
+  Future<void> wipe() async {
+    await transaction(() async {
+      for (final tabla in allTables) {
+        await delete(tabla).go();
+      }
+    });
+  }
+}
+
+final appDatabaseProvider = Provider<AppDatabase>((ref) {
+  final db = AppDatabase();
+  ref.onDispose(db.close);
+  return db;
+});

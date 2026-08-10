@@ -944,16 +944,38 @@ export interface components {
             /** @enum {string} */
             locale: "en" | "es";
         };
+        AddressDto: {
+            /** @example 412 Ellsworth Dr */
+            line1: string;
+            /**
+             * @description Unidad, suite, piso.
+             * @example Apt 3
+             */
+            line2?: string;
+            /** @example Silver Spring */
+            city: string;
+            /**
+             * @description Código de dos letras.
+             * @example MD
+             */
+            state: string;
+            /** @example 20910 */
+            postalCode: string;
+            /**
+             * @description ISO de dos letras. Está desde el principio por la misma razón que la moneda no se concatena a mano: sale gratis hoy y es caro después.
+             * @default US
+             * @example US
+             */
+            country: string;
+        };
         Customer: {
+            billingAddress: components["schemas"]["AddressDto"] | null;
             displayName: string;
             firstName: string | null;
             lastName: string | null;
             companyName: string | null;
             email: string | null;
             phone: string | null;
-            billingAddress: {
-                [key: string]: unknown;
-            } | null;
             /** @enum {string|null} */
             source: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER" | null;
             notes: string | null;
@@ -972,9 +994,7 @@ export interface components {
         SiteInputDto: {
             /** Format: uuid */
             id?: string;
-            address: {
-                [key: string]: unknown;
-            };
+            address: components["schemas"]["AddressDto"];
             lat?: number;
             lng?: number;
             geofenceRadiusM?: number;
@@ -989,9 +1009,7 @@ export interface components {
             /** Format: email */
             email?: string;
             phone?: string;
-            billingAddress?: {
-                [key: string]: unknown;
-            };
+            billingAddress?: components["schemas"]["AddressDto"];
             /** @enum {string} */
             source?: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER";
             notes?: string;
@@ -1007,20 +1025,16 @@ export interface components {
             /** Format: email */
             email?: string;
             phone?: string;
-            billingAddress?: {
-                [key: string]: unknown;
-            };
+            billingAddress?: components["schemas"]["AddressDto"];
             /** @enum {string} */
             source?: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER";
             notes?: string;
             site?: components["schemas"]["SiteInputDto"];
         };
         Site: {
-            customer: components["schemas"]["Customer"];
+            customer?: components["schemas"]["Customer"];
+            address: components["schemas"]["AddressDto"];
             customerId: string;
-            address: {
-                [key: string]: unknown;
-            };
             lat: number | null;
             lng: number | null;
             geofenceRadiusM: number | null;
@@ -1034,9 +1048,9 @@ export interface components {
             updatedAt: string;
         };
         Project: {
-            customer: components["schemas"]["Customer"];
+            customer?: components["schemas"]["Customer"];
+            site?: components["schemas"]["Site"];
             customerId: string;
-            site: components["schemas"]["Site"];
             siteId: string;
             name: string;
             description: string | null;
@@ -1148,11 +1162,11 @@ export interface components {
             updatedAt: string;
         };
         ProjectAssignment: {
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"];
+            crew?: components["schemas"]["Crew"] | null;
+            membership?: components["schemas"]["Membership"] | null;
             projectId: string;
-            crew: components["schemas"]["Crew"] | null;
             crewId: string | null;
-            membership: components["schemas"]["Membership"] | null;
             membershipId: string | null;
             workDate: string;
             plannedHeadcount: number | null;
@@ -1166,7 +1180,8 @@ export interface components {
             updatedAt: string;
         };
         MediaAsset: {
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"];
+            uploadedBy?: components["schemas"]["Membership"] | null;
             projectId: string;
             /** @enum {string} */
             kind: "PHOTO" | "VIDEO" | "DOCUMENT";
@@ -1179,7 +1194,6 @@ export interface components {
             height: number | null;
             /** Format: date-time */
             capturedAt: string | null;
-            uploadedBy: components["schemas"]["Membership"] | null;
             uploadedByMembershipId: string | null;
             deviceLat: number | null;
             deviceLng: number | null;
@@ -1220,9 +1234,11 @@ export interface components {
             visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
         };
         TimeEntry: {
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"];
+            membership?: components["schemas"]["Membership"];
+            recordedBy?: components["schemas"]["Membership"];
+            approvedBy?: components["schemas"]["Membership"] | null;
             projectId: string;
-            membership: components["schemas"]["Membership"];
             membershipId: string;
             /** Format: date-time */
             clockInAt: string;
@@ -1243,7 +1259,6 @@ export interface components {
             clockOutPhotoId: string | null;
             /** @enum {string} */
             method: "ADMIN" | "FOREMAN" | "SELF";
-            recordedBy: components["schemas"]["Membership"];
             recordedByMembershipId: string;
             deviceId: string | null;
             isMockLocation: boolean;
@@ -1254,7 +1269,6 @@ export interface components {
             serverReceivedAt: string;
             /** @enum {string} */
             status: "PENDING" | "APPROVED" | "REJECTED";
-            approvedBy: components["schemas"]["Membership"] | null;
             approvedByMembershipId: string | null;
             /** Format: date-time */
             approvedAt: string | null;
@@ -1754,13 +1768,13 @@ export interface components {
              * @description Cursor para el próximo pull. Lo da el servidor: el reloj del dispositivo no es confiable.
              */
             serverTime: string;
-            customers: Record<string, never>[];
-            sites: Record<string, never>[];
-            projects: Record<string, never>[];
-            assignments: Record<string, never>[];
-            mediaAssets: Record<string, never>[];
-            timeEntries: Record<string, never>[];
-            /** @description Ids borrados desde el cursor, por recurso. */
+            customers: components["schemas"]["Customer"][];
+            sites: components["schemas"]["Site"][];
+            projects: components["schemas"]["Project"][];
+            assignments: components["schemas"]["ProjectAssignment"][];
+            mediaAssets: components["schemas"]["MediaAsset"][];
+            timeEntries: components["schemas"]["TimeEntry"][];
+            /** @description Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20). */
             deleted: {
                 [key: string]: string[];
             };
@@ -1772,7 +1786,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "customer.create" | "project.create" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            type: "customer.create" | "customer.update" | "site.create" | "project.create" | "project.update" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.

@@ -1,55 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/navigation/app_destination.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/sync_button.dart';
+import '../../data/repositories/project_repository.dart';
+import '../../data/sync/sync_controller.dart';
 import '../../l10n/app_localizations.dart';
 import 'all_projects_screen.dart';
 import 'project_card.dart';
-import 'sample_projects.dart';
 
 /// La primera pantalla del dueño: **solo lo que está en obra ahora**.
 ///
-/// Nada de filtros ni de estados acá. Lo que abre todos los días muestra una
-/// sola cosa; el resto de la cartera —lo agendado, lo pausado, lo cerrado— vive
-/// en su propia pantalla, a un toque.
-class ProjectsScreen extends StatelessWidget {
+/// Lee de la base local y nunca de la red. El sincronizador escribe en Drift y
+/// esta lista se actualiza sola; sin señal muestra lo mismo que con señal.
+class ProjectsScreen extends ConsumerWidget {
   const ProjectsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final spacing = context.spacing;
-    final enProceso = inProgressSampleProjects;
+    final obras = ref.watch(inProgressProjectsProvider);
 
     return AppScaffold(
       title: AppDestination.projects.label(l10n),
+      actions: const [SyncButton()],
       body: Column(
         children: [
           const _Encabezado(),
           Expanded(
-            child: enProceso.isEmpty
-                ? EmptyState(
-                    icon: AppDestination.projects.icon,
-                    message: l10n.projectsEmptyInProgress,
-                  )
-                : ListView.separated(
-                    key: const PageStorageKey<String>('projects.inProgress'),
-                    padding: EdgeInsets.fromLTRB(
-                      spacing.lg,
-                      spacing.lg,
-                      spacing.lg,
-                      spacing.xxl,
-                    ),
-                    itemCount: enProceso.length,
-                    separatorBuilder: (_, _) => SizedBox(height: spacing.md),
-                    itemBuilder: (context, index) => ProjectCard(
-                      project: enProceso[index],
-                      onTap: () => context.push(enProceso[index].location),
-                    ),
-                  ),
+            child: RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(syncControllerProvider.notifier).refresh(),
+              // Sin spinner: la base local responde al instante, así que un
+              // indicador infinito sería ruido —y cuelga cualquier test que
+              // espere a que las animaciones terminen.
+              child: Builder(
+                builder: (context) {
+                  final lista = obras.value ?? const <ProjectSummary>[];
+                  return lista.isEmpty
+                    ? ListView(
+                        // Scrolleable igual, o no se puede tirar para refrescar.
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(height: spacing.xxl * 3),
+                          EmptyState(
+                            icon: AppDestination.projects.icon,
+                            message: l10n.projectsEmptyInProgress,
+                          ),
+                        ],
+                      )
+                    : ListView.separated(
+                        key: const PageStorageKey<String>('projects.inProgress'),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          spacing.lg,
+                          spacing.lg,
+                          spacing.lg,
+                          spacing.xxl,
+                        ),
+                        itemCount: lista.length,
+                        separatorBuilder: (_, _) =>
+                            SizedBox(height: spacing.md),
+                        itemBuilder: (context, index) => ProjectCard(
+                          project: lista[index],
+                          onTap: () =>
+                              context.push('/projects/${lista[index].id}'),
+                        ),
+                      );
+                },
+              ),
+            ),
           ),
         ],
       ),
@@ -86,8 +111,13 @@ class _Encabezado extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(top: spacing.md),
               child: Text(
+                // Un escalón menos que `titleLarge`: a 20px pegaba un salto
+                // contra los 13 de la barra de abajo y se leía como el título
+                // de la pantalla, que ya está arriba.
                 l10n.projectsInProgressTitle,
-                style: context.texts.titleLarge,
+                style: context.texts.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
