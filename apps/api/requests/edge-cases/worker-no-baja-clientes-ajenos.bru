@@ -1,0 +1,34 @@
+meta { name: WORKER sincroniza y no baja la cartera ajena
+  type: http
+  seq: 15
+}
+get { url: {{base_url}}/sync
+  body: none
+  auth: none
+}
+headers { Authorization: Bearer {{worker_token}} }
+docs {
+  El endpoint entra con `projects.read`, que un WORKER tiene, así que **el scope
+  por rol es el control de acceso de lo que baja**. Un WORKER solo recibe lo de
+  los proyectos donde tiene asignación vigente.
+
+  Lo que este caso protege, y que estuvo abierto: `customer` y `site` bajaban la
+  cartera completa de la empresa —nombre, teléfono, correo, dirección de
+  facturación y notas— a cualquier trabajador sin `customers.read`. Y
+  `time_entry` bajaba las horas de todos con `pay_rate_cents_snapshot` y las
+  coordenadas de cada marcaje: cuánto gana cada compañero y dónde estuvo.
+
+  Lo que baja **queda en disco** en el teléfono. Que el móvil esconda la pantalla
+  no alcanza: un dispositivo perdido o robado ya tiene los datos.
+
+  Sin asignaciones vigentes el WORKER recibe las seis colecciones vacías, que es
+  lo que este caso afirma. Con una asignación tiene que recibir **solo** el
+  cliente, el sitio y la obra de esa asignación — nunca los demás.
+}
+assert { res.status: eq 200
+  res.body.customers: isEmpty
+  res.body.sites: isEmpty
+  res.body.projects: isEmpty
+  res.body.timeEntries: isEmpty
+  res.body.mediaAssets: isEmpty
+}

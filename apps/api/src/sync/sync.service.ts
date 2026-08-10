@@ -272,26 +272,61 @@ export class SyncService {
       return rows.map((r) => r.id);
     };
 
-    // El WORKER solo sincroniza sus proyectos: bajar toda la cartera de clientes
-    // al teléfono de cada trabajador sería tan malo como exponerlo por el API.
+    // El WORKER solo sincroniza lo de sus proyectos.
+    //
+    // El endpoint entra con `projects.read`, que un WORKER tiene, así que el
+    // scope por rol **es** el control de acceso de lo que baja: sin él el pull
+    // entrega lo que la puerta REST le niega. Alcanzaba a `project` y dejaba
+    // afuera las otras cinco colecciones, que es como la cartera entera de
+    // clientes terminaba en el teléfono de cada trabajador.
+    //
+    // Lo que baja queda en disco: el router puede esconder una pantalla, pero un
+    // dispositivo perdido o robado ya tiene los datos.
     const esWorker = tenant.role === 'WORKER';
-    const soloAsignados = esWorker
-      ? `EXISTS (
+    const workerParam = esWorker ? { membershipId: tenant.membershipId } : {};
+
+    /// Tiene asignación vigente en ese proyecto, directa o por su cuadrilla.
+    const asignadoA = (projectId: string) => `EXISTS (
            SELECT 1 FROM project_assignment a
            LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
              AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
-           WHERE a.project_id = project.id AND a.deleted_at IS NULL
-             AND (a.membership_id = :membershipId OR cm.membership_id = :membershipId))`
-      : undefined;
-    const workerParam = esWorker ? { membershipId: tenant.membershipId } : {};
+           WHERE a.project_id = ${projectId} AND a.deleted_at IS NULL
+             AND (a.membership_id = :membershipId OR cm.membership_id = :membershipId))`;
+
+    /// El cliente y la propiedad bajan solo si cuelga de ellos una obra asignada.
+    const deSusObras = (fk: string, columna: string) => `EXISTS (
+           SELECT 1 FROM project p
+           WHERE p.${columna} = ${fk} AND p.deleted_at IS NULL
+             AND ${asignadoA('p.id')})`;
+
+    const soloSi = (expr: string) => (esWorker ? expr : undefined);
 
     const [customers, sites, projects, assignments, mediaAssets, timeEntries] = await Promise.all([
-      vivos(Customer, 'customer'),
-      vivos(Site, 'site'),
-      vivos(Project, 'project', soloAsignados, workerParam),
-      vivos(ProjectAssignment, 'project_assignment'),
-      vivos(MediaAsset, 'media_asset'),
-      vivos(TimeEntry, 'time_entry'),
+      vivos(Customer, 'customer', soloSi(deSusObras('customer.id', 'customer_id')), workerParam),
+      vivos(Site, 'site', soloSi(deSusObras('site.id', 'site_id')), workerParam),
+      vivos(Project, 'project', soloSi(asignadoA('project.id')), workerParam),
+      // Las suyas, no las de sus compañeros: quién más fue asignado a la obra no
+      // es algo que el marcaje necesite.
+      vivos(
+        ProjectAssignment,
+        'project_assignment',
+        soloSi(`(project_assignment.membership_id = :membershipId
+             OR EXISTS (SELECT 1 FROM crew_member cm
+                        WHERE cm.crew_id = project_assignment.crew_id
+                          AND cm.membership_id = :membershipId
+                          AND cm.deleted_at IS NULL))`),
+        workerParam,
+      ),
+      vivos(MediaAsset, 'media_asset', soloSi(asignadoA('media_asset.project_id')), workerParam),
+      // **Solo sus horas.** `time_entry` lleva `pay_rate_cents_snapshot` y las
+      // coordenadas de cada marcaje: sin este filtro un trabajador se baja
+      // cuánto gana cada compañero y dónde estuvo.
+      vivos(
+        TimeEntry,
+        'time_entry',
+        soloSi('time_entry.membership_id = :membershipId'),
+        workerParam,
+      ),
     ]);
 
     return {
