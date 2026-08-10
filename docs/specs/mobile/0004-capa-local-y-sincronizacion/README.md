@@ -129,7 +129,10 @@ trabajo en otra dirección del mismo cliente. Sin `site.create` no se puede crea
 esa obra sin señal, porque no hay `site_id` que ponerle.
 
 `site.update` entra también si se va a poder corregir una dirección — hoy no
-existe ni siquiera un `PATCH` REST para eso.
+existe ni siquiera un `PATCH` REST para eso. **Quedó nombrado acá sin criterio de
+aceptación y sin implementar**; pasó al Alcance de
+[[../0006-clientes-en-el-movil/README|SPEC-0006]], que es el que lo necesita para
+corregir la dirección de una propiedad.
 
 ### 3. La idempotencia se apoya en que el recurso no exista
 
@@ -262,8 +265,11 @@ en el cliente.
 - [x] Un `WORKER` que manda `customer.create` o `project.create` por `/sync`
       recibe `failed` con `FORBIDDEN`, y las demás operaciones de su lote se
       aplican igual.
-- [x] `customer.update`, `project.update` y `site.create` existen en
+- [ ] `customer.update`, `project.update` y `site.create` existen en
       `SYNC_OPERATIONS`, validan su payload y tienen su caso en `edge-cases/`.
+      *(Las tres existen y validan; el caso de Bruno falta — la colección no tiene
+      ninguna request de `/sync`. Encontrado al implementar SPEC-0006, que sí dejó
+      las dos suyas de `site.update`.)*
 - [x] Crear una propiedad para un cliente **que ya sincronizó**, sin señal, llega
       al servidor y queda colgada de ese cliente.
 - [x] Mandar dos veces el mismo `customer.update` lo aplica una sola vez, y la
@@ -319,3 +325,4 @@ Regenerar es parte de esto, no un paso aparte.
 | 2026-08-09 | borrador | Revisado con `spec-reviewer`. **Un hallazgo grave**: `/sync` gatea el endpoint entero con `time.clock`, así que un `WORKER` puede crear clientes y proyectos saltándose `customers.write`/`projects.write`. Sumados cuatro huecos más que no se veían leyendo el documento: falta `site.create` —lo encontraron dos revisores por separado—, la idempotencia se apoya en que el recurso no exista y por eso rompe con los `update`, `deleted[]` no emite `site` ni `project_assignment`, y no había señal para distinguir un conflicto de `time_entry` de una falla común. |
 | 2026-08-09 | en implementación | Primera mitad, PR #2 mergeado: los cinco arreglos de contrato —incluido el agujero de permisos— y la capa local leyendo de Drift. Verificado en teléfono real con el internet apagado. |
 | 2026-08-09 | en implementación | Bandeja de salida: encolar, empujar el lote, y el resultado de vuelta a la fila local. Verificado contra el API que una escritura encolada llega **exactamente una vez** aunque se reintente. Queda sin cerrar el criterio de `CONFLICT` de `time_entry`: los códigos están mapeados, pero no hay forma de producir uno hasta que exista el marcaje desde el móvil. |
+| 2026-08-09 | en implementación | Dos correcciones encontradas al arrancar SPEC-0006, verificando el código y no el changelog. El criterio de las operaciones nuevas estaba marcado `[x]` con la parte de `edge-cases/` sin hacer: la colección de Bruno no tiene ninguna request de `/sync`. Y `site.update`, que este spec nombró sin criterio ni implementación, pasó al Alcance de SPEC-0006. |
