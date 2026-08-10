@@ -5,14 +5,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../session/session_controller.dart';
 import 'locale_store.dart';
+import 'theme_store.dart';
 
 /// Preferencia de tema. Arranca en `system` porque la app se usa tanto en un
 /// techo con sol como en un sótano.
+///
+/// El valor inicial se lee del disco antes de montar la app, en `main`: leerlo
+/// después haría parpadear la primera pantalla al tema equivocado.
 class ThemeModeNotifier extends Notifier<ThemeMode> {
-  @override
-  ThemeMode build() => ThemeMode.system;
+  ThemeModeNotifier([this._inicial]);
 
-  void select(ThemeMode mode) => state = mode;
+  final ThemeMode? _inicial;
+
+  @override
+  ThemeMode build() => _inicial ?? ThemeMode.system;
+
+  void select(ThemeMode mode) {
+    state = mode;
+    // No se espera: lo que la persona pidió ya pasó en pantalla.
+    ref.read(themeStoreProvider).write(mode);
+  }
 }
 
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(

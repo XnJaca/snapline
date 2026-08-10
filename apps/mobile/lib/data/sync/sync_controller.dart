@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/session/session_controller.dart';
+import 'connectivity.dart';
 import 'synchronizer.dart';
 
 /// Cuándo se sincroniza.
@@ -14,8 +15,14 @@ import 'synchronizer.dart';
 class SyncController extends AsyncNotifier<bool> {
   @override
   Future<bool> build() async {
-    final hay = ref.watch(sessionControllerProvider).value != null;
-    if (!hay) return false;
+    final haySesion = ref.watch(sessionControllerProvider).value != null;
+
+    // Observar la conectividad hace que esto se reintente solo cuando el
+    // dispositivo recupera una interfaz de red. Sin esto, volver del sótano no
+    // cambiaba nada hasta que alguien tocara el botón.
+    final hayInterfaz = ref.watch(connectivityProvider).value ?? true;
+
+    if (!haySesion || !hayInterfaz) return false;
     return ref.read(synchronizerProvider).pull();
   }
 

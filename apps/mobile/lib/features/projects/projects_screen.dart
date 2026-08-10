@@ -111,8 +111,13 @@ class _Encabezado extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(top: spacing.md),
               child: Text(
+                // Un escalón menos que `titleLarge`: a 20px pegaba un salto
+                // contra los 13 de la barra de abajo y se leía como el título
+                // de la pantalla, que ya está arriba.
                 l10n.projectsInProgressTitle,
-                style: context.texts.titleLarge,
+                style: context.texts.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

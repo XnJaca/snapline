@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/locale_store.dart';
+import 'core/theme/theme_store.dart';
 import 'core/theme/theme_providers.dart';
 import 'l10n/app_localizations.dart';
 
@@ -14,11 +15,13 @@ Future<void> main() async {
   // Antes de montar nada: leer el idioma después dejaría la primera pantalla en
   // el idioma equivocado por un frame, y esa pantalla es el login.
   final elegido = await readStoredLocale();
+  final tema = await readStoredThemeMode();
 
   runApp(
     ProviderScope(
       overrides: [
         localeProvider.overrideWith(() => LocaleNotifier(elegido)),
+        themeModeProvider.overrideWith(() => ThemeModeNotifier(tema)),
       ],
       child: const SnaplineApp(),
     ),

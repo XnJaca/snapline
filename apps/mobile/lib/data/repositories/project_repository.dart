@@ -15,6 +15,7 @@ class ProjectSummary {
   const ProjectSummary({
     required this.id,
     required this.name,
+    required this.description,
     required this.customerName,
     required this.site,
     required this.status,
@@ -23,6 +24,7 @@ class ProjectSummary {
 
   final String id;
   final String name;
+  final String? description;
   final String customerName;
   final String site;
   final ProjectStatus status;
@@ -76,6 +78,7 @@ class ProjectRepository {
         return ProjectSummary(
           id: proyecto.id,
           name: proyecto.name,
+          description: proyecto.description,
           customerName: cliente?.displayName ?? '',
           site: _direccion(sitio?.address),
           status: ProjectStatus.fromJson(proyecto.status),
