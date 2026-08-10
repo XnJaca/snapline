@@ -6,6 +6,7 @@ import '../../core/navigation/app_destination.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/sync_button.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../data/sync/sync_controller.dart';
 import '../../l10n/app_localizations.dart';
@@ -27,6 +28,7 @@ class ProjectsScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: AppDestination.projects.label(l10n),
+      actions: const [SyncButton()],
       body: Column(
         children: [
           const _Encabezado(),

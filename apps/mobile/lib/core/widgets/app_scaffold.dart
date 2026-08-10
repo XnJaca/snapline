@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/theme_extensions.dart';
 import 'account_button.dart';
+import 'offline_banner.dart';
 
 /// La forma de cualquier pantalla de eje: título a la izquierda y la cuenta a
 /// la derecha. Existe para que las pantallas que vienen no vuelvan a decidir
@@ -35,7 +36,11 @@ class AppScaffold extends StatelessWidget {
         actions: [...actions, const AccountButton()],
         bottom: bottom,
       ),
-      body: body,
+      // La franja de sin conexión va arriba de todo el contenido: es el
+      // contexto de lo que se está viendo abajo.
+      body: Column(
+        children: [const OfflineBanner(), Expanded(child: body)],
+      ),
     );
   }
 }

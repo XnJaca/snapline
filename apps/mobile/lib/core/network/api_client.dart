@@ -11,7 +11,8 @@ import 'auth_interceptor.dart';
 /// El emulador de Android no ve `localhost` del host: ahí va `10.0.2.2`.
 const apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://localhost:3000/api',
+  // defaultValue: 'http://localhost:3000/api',
+  defaultValue: 'https://bj4g0wn5-3000.use2.devtunnels.ms/api',
 );
 
 BaseOptions _options() => BaseOptions(
