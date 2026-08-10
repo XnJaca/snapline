@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/widgets/status_chip.dart';
 import 'project_status_display.dart';
-import 'status_tape.dart';
 
 /// Una obra en la cartera.
 ///
-/// El orden es el de la pregunta que se hace quien mira: qué obra, de qué se
-/// trata, dónde queda, y en qué anda. El estado va al final y como cinta de
-/// obra: cierra la card y se lee de un vistazo sin depender del color.
+/// El orden es el de la pregunta que se hace quien mira: qué obra, de quién, de
+/// qué se trata, dónde queda y en qué anda.
+///
+/// El estado va al final y **sin relleno**: repetido en cada card, un chip
+/// sólido se vuelve una mancha de color que cansa la vista tanto en claro como
+/// en oscuro. El contorno y el icono dicen lo mismo con menos tinta.
 class ProjectCard extends StatelessWidget {
   const ProjectCard({super.key, required this.project, required this.onTap});
 
@@ -47,6 +50,15 @@ class ProjectCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                SizedBox(height: spacing.xs),
+                Text(
+                  project.customerName,
+                  style: context.texts.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
 
                 if (descripcion != null && descripcion.isNotEmpty) ...[
                   SizedBox(height: spacing.xs),
@@ -72,9 +84,14 @@ class ProjectCard extends StatelessWidget {
                 ],
 
                 SizedBox(height: spacing.md),
-                StatusTape(
-                  tone: project.status.tone,
-                  label: project.status.label(l10n),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: StatusChip(
+                    tone: project.status.tone,
+                    icon: project.status.icon,
+                    label: project.status.label(l10n),
+                    subtle: true,
+                  ),
                 ),
               ],
             ),

@@ -17,6 +17,7 @@ class StatusChip extends StatelessWidget {
     required this.label,
     this.icon,
     this.expand = false,
+    this.subtle = false,
   });
 
   final StatusTone tone;
@@ -29,6 +30,13 @@ class StatusChip extends StatelessWidget {
   /// Ancho completo, para errores de formulario. Compacto para banderas.
   final bool expand;
 
+  /// Sin relleno: solo el contorno, el icono y el texto.
+  ///
+  /// Para donde el estado se repite muchas veces —una lista de obras— y el
+  /// relleno se vuelve una mancha de color que cansa. La información es la
+  /// misma; lo que baja es cuánta tinta ocupa.
+  final bool subtle;
+
   @override
   Widget build(BuildContext context) {
     final spacing = context.spacing;
@@ -37,11 +45,12 @@ class StatusChip extends StatelessWidget {
     return Container(
       width: expand ? double.infinity : null,
       padding: EdgeInsets.symmetric(
-        horizontal: spacing.md,
-        vertical: spacing.sm,
+        horizontal: subtle ? spacing.sm : spacing.md,
+        vertical: subtle ? spacing.xs : spacing.sm,
       ),
       decoration: BoxDecoration(
-        color: background,
+        color: subtle ? null : background,
+        border: subtle ? Border.all(color: foreground.withValues(alpha: 0.4)) : null,
         borderRadius: BorderRadius.circular(
           expand ? spacing.radiusMd : spacing.radiusFull,
         ),
@@ -49,12 +58,20 @@ class StatusChip extends StatelessWidget {
       child: Row(
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          Icon(icon ?? _defaultIcon, size: spacing.lg, color: foreground),
-          SizedBox(width: spacing.sm),
+          Icon(
+            icon ?? _defaultIcon,
+            size: subtle ? spacing.md : spacing.lg,
+            color: foreground,
+          ),
+          SizedBox(width: subtle ? spacing.xs : spacing.sm),
           Flexible(
             child: Text(
               label,
-              style: context.texts.bodyMedium?.copyWith(color: foreground),
+              style: (subtle ? context.texts.bodySmall : context.texts.bodyMedium)
+                  ?.copyWith(
+                    color: foreground,
+                    fontWeight: subtle ? FontWeight.w500 : null,
+                  ),
             ),
           ),
         ],
