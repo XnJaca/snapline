@@ -3,7 +3,7 @@ import { RequirePermission } from '../auth/decorators/require-permission.decorat
 import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
 import { TenantContext } from '../tenant/tenant-context';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto, SiteInputDto, UpdateCustomerDto } from './dto/customer.dto';
+import { CreateCustomerDto, SiteInputDto, UpdateCustomerDto, UpdateSiteDto } from './dto/customer.dto';
 import { Customer } from './entities/customer.entity';
 import { Site } from './entities/site.entity';
 
@@ -52,6 +52,18 @@ export class CustomersController {
   @Post(':id/sites')
   addSite(@Param('id', ParseUUIDPipe) id: string, @Body() dto: SiteInputDto, @CurrentTenant() tenant: TenantContext): Promise<Site> {
     return this.service.addSite(id, dto, tenant);
+  }
+
+  // El id de la propiedad alcanza para encontrarla; el del cliente va en la ruta
+  // porque la propiedad cuelga de él y así el recurso se lee igual que se creó.
+  @RequirePermission('customers.write')
+  @Patch(':id/sites/:siteId')
+  updateSite(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('siteId', ParseUUIDPipe) siteId: string,
+    @Body() dto: UpdateSiteDto,
+  ): Promise<Site> {
+    return this.service.updateSite(siteId, dto, id);
   }
 
   @RequirePermission('customers.write')

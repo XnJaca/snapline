@@ -1,0 +1,45 @@
+meta { name: Sync — corregir la dirección de una propiedad
+  type: http
+  seq: 32
+}
+post { url: {{base_url}}/sync
+  body: json
+  auth: none
+}
+script:pre-request {
+  // La clave se guarda para poder reintentar con la misma en edge-cases: es lo
+  // que hace que el servidor responda `duplicate` en vez de aplicar dos veces.
+  bru.setVar("site_update_client_id", crypto.randomUUID());
+}
+body:json {
+  {
+    "operations": [
+      {
+        "clientId": "{{site_update_client_id}}",
+        "type": "site.update",
+        "targetId": "{{site_id}}",
+        "payload": {
+          "address": {
+            "line1": "9800 Georgia Ave",
+            "city": "Silver Spring",
+            "state": "MD",
+            "postalCode": "20902",
+            "country": "US"
+          }
+        },
+        "occurredAt": "2026-08-09T14:00:00.000Z"
+      }
+    ]
+  }
+}
+docs {
+  El caso de todos los días: William se equivocó al cargar la dirección y la
+  corrige sin señal. La operación se encola en el móvil y llega por acá.
+
+  `customerId` no viaja: una propiedad no cambia de cliente.
+}
+assert { res.status: eq 201
+  res.body.failed: eq 0
+  res.body.results[0].status: eq applied
+  res.body.results[0].resourceId: eq {{site_id}}
+}
