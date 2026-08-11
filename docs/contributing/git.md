@@ -165,9 +165,43 @@ respecto de `main` y mergearla los va a borrar. Se rebasa o se descarta.
 > pendiente no significa que su contenido falte: se verifica el contenido, no el
 > commit.
 
+## Un `.gitignore` que protege un secreto va a `main` primero
+
+**El `.gitignore` es un archivo versionado, así que vive por rama.** Una regla que
+ignora un secreto y existe solo en una rama de feature **no protege nada**: la
+próxima rama que salga de `main` nace sin ella, y el primer `git add -A` mete el
+secreto al commit.
+
+Ya pasó acá con la llave de Google Maps. La línea que ignoraba
+`ios/Flutter/Secrets.xcconfig` se agregó junto a la feature que la introdujo. Al
+abrir una rama de `fix` desde `main` para algo no relacionado, esa línea no
+estaba, y un `git add -A` commiteó la llave. Se detectó porque el archivo
+**desapareció del disco** al volver a la rama anterior — git lo borra cuando pasás
+a una rama donde no está trackeado — y el síntoma no se parece en nada a la causa.
+
+Entonces, cuando una feature agregue un archivo de secretos:
+
+1. La regla del `.gitignore` va **en un commit propio, a `main`, antes** que el
+   código que necesita el secreto.
+2. Y va con su `.example` versionado, para que se sepa qué hay que crear.
+
+Verificar que una rama lo cubre:
+
+```bash
+git show <rama>:ruta/al/.gitignore | grep -c Secrets
+```
+
+Y auditar que ningún commit lo tenga:
+
+```bash
+git log --all --name-only | grep -i "Secrets.xcconfig"
+```
+
 ## Qué NO hacer
 
 - **Firmar commits o PRs con atribución de la herramienta.** Ver arriba.
+- **`git add -A` sin mirar `git status` antes.** Es lo que mete un secreto cuando el
+  `.gitignore` de esa rama todavía no lo cubre.
 - Commitear o pushear directo a `main`.
 - Mergear un PR desde la IA.
 - Mezclar dos specs en una rama.
