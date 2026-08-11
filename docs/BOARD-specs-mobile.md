@@ -16,7 +16,7 @@ kanban-plugin: board
 ## ✏️ Borrador (escribiendo el spec)
 
 - [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
-- [ ] [[specs/mobile/0009-la-obra-como-lugar/README|SPEC-0009: La obra como lugar, no como botón]] — reorganiza la UI de SPEC-0008 sin tocar su lógica; salió de probarlo en el teléfono
+
 
 
 ## 🔍 Review (listo para revisar)
@@ -26,6 +26,8 @@ kanban-plugin: board
 
 
 ## 🛠️ En implementación
+
+- [ ] [[specs/mobile/0009-la-obra-como-lugar/README|SPEC-0009: La obra como lugar, no como botón]] — reorganiza la UI de SPEC-0008 sin tocar su lógica
 
 
 

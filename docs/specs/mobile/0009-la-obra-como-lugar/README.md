@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0009: La obra como lugar, no como botón"
 type: spec
 platform: mobile
-status: borrador
+status: en-implementacion
 goal: "El trabajador entra a su obra y ahí adentro marca, ve su registro con cada jornada desglosada y el detalle del lugar; el foreman entra a su cuadrilla y ve a su gente con sus horas — las pestañas Obras y Cuadrilla son listas de lugares, no pantallas de acción."
 apps:
   - mobile
@@ -20,7 +20,7 @@ created: 2026-08-11
 updated: 2026-08-11
 tags:
   - spec
-  - spec/borrador
+  - spec/en-implementacion
   - mobile
 ---
 
@@ -154,4 +154,5 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Aprobado de palabra por quien lo diseñó — el spec ES su decisión de producto, dictada probando SPEC-0008. El `spec-reviewer` corre en paralelo y sus hallazgos entran como fixes antes del PR. |
 | 2026-08-11 | borrador | Creado desde la prueba en teléfono de SPEC-0008: "la obra debe ser un lugar, no un botón". Incidentes queda nombrado como futuro y fuera: es dominio nuevo y necesita su ficha primero. El tab "Otros" se descartó — un cajón sin definición nace vacío y muere lleno. |
