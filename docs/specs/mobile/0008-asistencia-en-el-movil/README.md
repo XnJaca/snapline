@@ -449,12 +449,14 @@ que la visión descartó.
       galería del teléfono**, y el `media_asset` queda con su `capturedAt`.
 - [ ] `openapi.json` declara la respuesta de `POST /media` y de la URL de subida con
       sus campos, y el cliente Dart las expone tipadas y no como `dynamic`.
-- [ ] Un `FOREMAN` marca por alguien asignado a la misma obra ese día: queda con
-      `method = FOREMAN`, `recorded_by_membership_id` distinto de `membership_id`, y
-      **sin** bandera.
-- [ ] Un `FOREMAN` marca por alguien **no** asignado a esa obra ese día: **se registra
-      igual**, con `RECORDER_NOT_ASSIGNED`. No hay ninguna entrada que devuelva 403 por
-      esto, y hay un caso en `edge-cases/` que lo afirma.
+- [ ] Un `FOREMAN` **que está asignado a la obra ese día** —directo o por su
+      cuadrilla— marca por otro: queda con `method = FOREMAN`,
+      `recorded_by_membership_id` distinto de `membership_id`, y **sin** bandera.
+      La condición es sobre quien marca; el destinatario no se evalúa.
+- [ ] Un `FOREMAN` **sin asignación en esa obra ese día** marca por otro: **se
+      registra igual**, con `RECORDER_NOT_ASSIGNED` — también al cerrar la jornada
+      de otro. No hay ninguna entrada que devuelva 403 por esto, y hay un caso en
+      `edge-cases/` que lo afirma.
 - [ ] Con `project_assignment` vacío —que es el estado de hoy— nadie queda sin poder
       marcar: todos se registran, todos con la bandera.
 - [ ] Un `OWNER` que marca por otro queda con `method = ADMIN`, no `FOREMAN`.
@@ -535,6 +537,7 @@ Empieza en 10 segundos y se ajusta con William en la obra, no en una reunión.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Primera tanda terminada: los siete prerequisitos del API, revisados con `domain-guardian`, `contract-watcher` y `code-reviewer`. El guardián encontró de paso una fuga real —`pay_rate_cents` bajaba embebido en cuadrillas y asignaciones, hasta un `WORKER` podía ver la tarifa de sus compañeros— cerrada con el patrón de `passwordHash`, también para el snapshot de `time_entry`. Del reviewer salieron la bandera en `clockOut`, la vigencia en la visibilidad de cuadrillas y los edge-cases que faltaban o no afirmaban nada. **Los criterios no se marcan todavía**: los casos de Bruno están escritos pero sin correr contra la base —Docker apagado—, y marcar con la verificación pendiente es el error que SPEC-0004 ya pagó una vez. Se corren antes del merge. |
 | 2026-08-11 | en implementación | Primera tanda: los siete prerequisitos de `apps/api`, que bloquean todo lo del móvil. |
 | 2026-08-11 | aprobado | Su único bloqueo era SPEC-0007, mergeado en el PR #12: la geocerca ya tiene punto contra el cual evaluar. `geolocator` quedó instalado y heredado, como ADR-0012 había previsto. |
 | 2026-08-10 | review | Entra al alcance **ver a dónde ir**: la obra de hoy muestra su dirección y su punto y se abre en la app de mapas. Sale de revisar SPEC-0007, que prometía eso en su `goal` y no podía cumplirlo — su pantalla está detrás de `customers.read` y un `WORKER` nunca llega. "Hoy" es la única pantalla que ese rol abre, así que el dato se muestra acá. |
