@@ -77,6 +77,7 @@ void main() {
         projectId: obra,
         membershipId: 'otra-persona',
         recordedByMembershipId: yo,
+        recordedByRole: 'FOREMAN',
         companyId: 'c1',
       );
 

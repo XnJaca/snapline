@@ -36,6 +36,30 @@ class TodayProject {
   bool get hasLocation => lat != null && lng != null;
 }
 
+/// Una persona de la obra de hoy, con el estado de su jornada.
+class CrewmateToday {
+  const CrewmateToday({
+    required this.membershipId,
+    required this.name,
+    required this.role,
+    this.openEntryId,
+    this.lastClockIn,
+    this.lastClockOut,
+  });
+
+  final String membershipId;
+  final String name;
+  final String role;
+
+  /// La jornada abierta de hoy en esta obra, si hay.
+  final String? openEntryId;
+  final DateTime? lastClockIn;
+  final DateTime? lastClockOut;
+
+  bool get adentro => openEntryId != null;
+  bool get marcoHoy => lastClockIn != null;
+}
+
 /// Una jornada como la muestran las pantallas.
 class TimeEntrySummary {
   const TimeEntrySummary({
@@ -228,6 +252,90 @@ class TimeEntryRepository {
     lng: f.readNullable<double>('lng'),
   );
 
+  /// La gente asignada a una obra **hoy** —directa o por cuadrilla— con el
+  /// estado de su jornada: es la lista del foreman, quién marcó y quién no.
+  Stream<List<CrewmateToday>> watchCrewToday(String projectId) {
+    final hoy = DateTime.now();
+    final inicio = DateTime(hoy.year, hoy.month, hoy.day);
+    final fin = inicio.add(const Duration(days: 1));
+
+    final consulta = _db.customSelect(
+      '''
+      SELECT pe.membership_id AS membership_id, pe.name AS name, pe.role AS role,
+             t.id AS entry_id, t.clock_in_at AS clock_in_at,
+             t.clock_out_at AS clock_out_at
+      FROM (
+        SELECT DISTINCT COALESCE(a.membership_id, cm.membership_id) AS membership_id
+        FROM project_assignments a
+        LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
+          AND cm.deleted_at IS NULL
+          AND a.work_date >= cm.from_date
+          AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+        WHERE a.project_id = ?1 AND a.deleted_at IS NULL
+          AND a.work_date >= ?2 AND a.work_date < ?3
+      ) asignados
+      JOIN people pe ON pe.membership_id = asignados.membership_id
+      LEFT JOIN time_entries t ON t.membership_id = pe.membership_id
+        AND t.project_id = ?1 AND t.deleted_at IS NULL
+        AND t.clock_in_at >= ?2 AND t.clock_in_at < ?3
+      ORDER BY pe.name ASC, t.clock_in_at DESC
+      ''',
+      variables: [
+        Variable<String>(projectId),
+        Variable<DateTime>(inicio),
+        Variable<DateTime>(fin),
+      ],
+      readsFrom: {
+        _db.projectAssignments,
+        _db.crewMembers,
+        _db.people,
+        _db.timeEntries,
+      },
+    );
+
+    return consulta.watch().map((filas) {
+      // Varias jornadas de la misma persona en el día: gana la más reciente,
+      // que es la primera por el ORDER BY.
+      final porPersona = <String, CrewmateToday>{};
+      for (final f in filas) {
+        final id = f.read<String>('membership_id');
+        if (porPersona.containsKey(id)) continue;
+        final salida = f.readNullable<DateTime>('clock_out_at');
+        final entrada = f.readNullable<DateTime>('clock_in_at');
+        porPersona[id] = CrewmateToday(
+          membershipId: id,
+          name: f.read<String>('name'),
+          role: f.read<String>('role'),
+          openEntryId:
+              entrada != null && salida == null ? f.readNullable<String>('entry_id') : null,
+          lastClockIn: entrada,
+          lastClockOut: salida,
+        );
+      }
+      return porPersona.values.toList(growable: false);
+    });
+  }
+
+  /// Toda la gente conocida en este teléfono. Es la salida de escape del
+  /// foreman: marcar por alguien que no aparece asignado — la bandera del
+  /// servidor lo señala, no lo bloquea.
+  Stream<List<CrewmateToday>> watchEveryone() {
+    return (_db.select(_db.people)
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .watch()
+        .map(
+          (filas) => filas
+              .map(
+                (p) => CrewmateToday(
+                  membershipId: p.membershipId,
+                  name: p.name,
+                  role: p.role,
+                ),
+              )
+              .toList(growable: false),
+        );
+  }
+
   // ─── Escritura ─────────────────────────────────────────────────────────────
 
   /// Marca la entrada y devuelve el id de la jornada.
@@ -239,6 +347,7 @@ class TimeEntryRepository {
     required String membershipId,
     required String recordedByMembershipId,
     required String companyId,
+    String recordedByRole = 'WORKER',
     ClockEvidence evidence = const ClockEvidence(),
     DateTime? occurredAt,
   }) async {
@@ -256,10 +365,12 @@ class TimeEntryRepository {
           membershipId: membershipId,
           recordedByMembershipId: recordedByMembershipId,
           clockInAt: cuando,
-          // Aproximación local: sin el rol de quien marca no se distingue
-          // FOREMAN de ADMIN. El valor real lo fija el servidor y llega por el
-          // pull; cuando exista la pantalla de marcar por otro, pasar el rol.
-          method: membershipId == recordedByMembershipId ? 'SELF' : 'FOREMAN',
+          // El mismo criterio que el servidor: SELF si es propio; si no, el
+          // rol de quien marca. "Lo marcó un foreman" cuando marcó el dueño es
+          // un dato falso en el rastro de la regla 12.
+          method: membershipId == recordedByMembershipId
+              ? 'SELF'
+              : (recordedByRole == 'FOREMAN' ? 'FOREMAN' : 'ADMIN'),
           status: 'PENDING',
           flags: const Value('[]'),
         ),

@@ -13,6 +13,9 @@ import 'package:snapline/core/theme/theme_store.dart';
 import 'package:snapline/main.dart';
 import 'package:snapline/api/models/project_status.dart';
 import 'package:snapline/data/local/app_database.dart';
+import 'package:uuid/uuid.dart';
+import 'package:snapline/data/repositories/time_entry_repository.dart';
+import 'package:snapline/data/sync/outbox.dart';
 import 'package:snapline/data/local/tables.dart';
 import 'package:snapline/data/sync/connectivity.dart';
 import 'package:snapline/data/sync/sync_controller.dart';
@@ -182,6 +185,9 @@ Session buildSession({
 
 /// Base en memoria: cada test arranca con la suya, vacía.
 AppDatabase testDatabase() => AppDatabase(NativeDatabase.memory());
+
+TimeEntryRepository testTimeEntryRepository(AppDatabase db) =>
+    TimeEntryRepository(db, Outbox(db, const Uuid()), const Uuid());
 
 /// No toca la red. La sincronización de verdad se prueba contra el API en
 /// `integration_test/`; acá lo que importa es que la UI lea de local.
