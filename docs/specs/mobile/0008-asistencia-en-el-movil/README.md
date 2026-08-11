@@ -248,6 +248,12 @@ Arreglo: el `method` sale del rol de quien marca, no de si marcó por sí mismo.
   binario con reintento**. Sin esto la evidencia nunca llega al servidor.
 - **Marcar por otro**, con el criterio de la obra y su bandera: es la alternativa B de
   ADR-0003 como método secundario.
+- **Ver a dónde ir.** La obra de hoy muestra su dirección y su punto, y se abre en la
+  app de mapas del teléfono. Viene de
+  [[../0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007]], que llena el dato
+  y **no puede mostrarlo**: su pantalla cuelga de la ficha de propiedad, detrás de
+  `customers.read`, y un `WORKER` nunca llega ahí. "Hoy" es la única pantalla que sí
+  abre, así que el dato se muestra acá o no le llega a quien lo necesita.
 - **Mis horas de la semana** en solo lectura, con su estado y sus banderas.
 - Tablas locales `time_entry`, `media_asset`, `crew`, `crew_member` y la identidad de
   las membresías.
@@ -461,6 +467,9 @@ que la visión descartó.
       manda desde el dispositivo los recibe ignorados.
 - [ ] Un `FOREMAN` que sincroniza **recibe** su cuadrilla, sus miembros vigentes y el
       nombre de cada uno: la pantalla muestra personas y no UUIDs.
+- [ ] Un `WORKER` ve la dirección de la obra de hoy y la abre en la app de mapas del
+      teléfono, **sin pasar por ninguna pantalla de clientes** — no tiene permiso para
+      esas.
 - [ ] Ninguna pantalla de asistencia importa un cliente de `lib/api/` — lo verifica la
       prueba que ya recorre `lib/features/`.
 - [ ] La pantalla se ve entera en claro y en oscuro, y ningún label se corta en
@@ -526,6 +535,7 @@ Empieza en 10 segundos y se ajusta con William en la obra, no en una reunión.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-10 | review | Entra al alcance **ver a dónde ir**: la obra de hoy muestra su dirección y su punto y se abre en la app de mapas. Sale de revisar SPEC-0007, que prometía eso en su `goal` y no podía cumplirlo — su pantalla está detrás de `customers.read` y un `WORKER` nunca llega. "Hoy" es la única pantalla que ese rol abre, así que el dato se muestra acá. |
 | 2026-08-10 | borrador | Revisado con `spec-reviewer`, que encontró **una contradicción con la visión**: `vision.md` ya había decidido ese mismo día quién ficha por otro, y con otro criterio —la obra y no la cuadrilla, aplicado como bandera y no como bloqueo—, cerrando su argumento en que `time.approve` sigue siendo de `OWNER`/`ADMIN`. La primera versión de este spec lo había resuelto por cuadrilla y con el foreman aprobando, que es exactamente lo que ese texto descarta por nombre. **Gana la visión**: se reescribieron el prerequisito 0, el alcance, la UI y los criterios; la aprobación en el móvil salió del alcance. Del mismo repaso salieron el estado `READY` que el criterio de la foto citaba mal como `uploaded`, el contrato de API con sus shapes, y que `method` dice `FOREMAN` aunque marque el dueño. |
 | 2026-08-10 | borrador | Descartado apoyarse en los metadatos de la foto para la ubicación: el GPS del EXIF sale del mismo permiso ya denegado, se edita con cualquier app, y `markUploaded()` borra el EXIF a propósito para no publicar la casa de un cliente con sus coordenadas. Lo que queda es `capturedAt` contra la foto de galería, y se resuelve abriendo la cámara en captura directa. |
 | 2026-08-10 | borrador | Creado. Sale de que SPEC-0004 tiene dos criterios que solo el marcaje puede cerrar. La decisión de producto del spec es **la escalera de evidencia**: el GPS es la prueba y la foto es lo que queda cuando no hay GPS, así que a nadie se le pide una foto por defecto. Descartado el selfie —vigila a la persona y no aporta contenido— y descartada la alerta por geocerca en este alcance, que exige el permiso "Siempre" y va en su propio spec. Seis prerequisitos de contrato encontrados verificando el código: el foreman no puede aprobar, el `WORKER` no puede leer sus horas, el pull no baja cuadrillas, su scope por rol deja afuera al `FOREMAN`, `POST /media` sale como `{}` y no hay forma de pedir la URL de subida de un asset registrado por la bandeja. |
