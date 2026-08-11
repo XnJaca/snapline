@@ -129,7 +129,12 @@ export class TimeEntriesService {
     if (!entry.clockOutAt) throw new BadRequestException('El registro sigue abierto');
     if (entry.status === 'APPROVED') throw new ConflictException('Ya está aprobado');
 
-    const membership = await this.memberships.findOne({ where: { id: entry.membershipId } });
+    // La tarifa va con `select: false` en la entity: acá se pide explícito,
+    // porque aprobar es el momento que la congela (regla 13).
+    const membership = await this.memberships.findOne({
+      where: { id: entry.membershipId },
+      select: { id: true, payRateCents: true },
+    });
     if (!membership?.payRateCents) {
       throw ApiError.badRequest('PAY_RATE_MISSING', 'La persona no tiene tarifa definida');
     }

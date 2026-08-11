@@ -1,9 +1,10 @@
 import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
 import { TenantContext } from '../tenant/tenant-context';
 import { MediaService } from './media.service';
-import { RegisterAssetDto, SetVisibilityDto } from './dto/media.dto';
+import { RegisterAssetDto, RegisterAssetResponseDto, SetVisibilityDto, SignedUrlDto } from './dto/media.dto';
 import { MediaAsset } from './entities/media-asset.entity';
 
 @Controller('media')
@@ -18,14 +19,26 @@ export class MediaController {
 
   @RequirePermission('media.capture')
   @Post()
-  register(@Body() dto: RegisterAssetDto, @CurrentTenant() tenant: TenantContext) {
+  @ApiCreatedResponse({ type: RegisterAssetResponseDto })
+  register(
+    @Body() dto: RegisterAssetDto,
+    @CurrentTenant() tenant: TenantContext,
+  ): Promise<RegisterAssetResponseDto> {
     return this.service.register(dto, tenant);
   }
 
   @RequirePermission('media.read')
   @Get(':id/url')
-  downloadUrl(@Param('id', ParseUUIDPipe) id: string) {
+  @ApiOkResponse({ type: SignedUrlDto })
+  downloadUrl(@Param('id', ParseUUIDPipe) id: string): Promise<SignedUrlDto> {
     return this.service.downloadUrl(id);
+  }
+
+  @RequirePermission('media.capture')
+  @Get(':id/upload-url')
+  @ApiOkResponse({ type: SignedUrlDto })
+  uploadUrl(@Param('id', ParseUUIDPipe) id: string): Promise<SignedUrlDto> {
+    return this.service.uploadUrl(id);
   }
 
   @RequirePermission('media.capture')

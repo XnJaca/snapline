@@ -48,9 +48,25 @@ estuvo ahí.
 
 ## Banderas
 
-Las levanta el sistema, **sin bloquear a nadie**: fuera de geocerca, sin foto, GPS
-simulado, jornada mayor a 14 horas, sin marca de salida, editado a mano, dos
-proyectos solapados, `device_recorded_at` fuera de rango razonable.
+Las levanta el sistema, **sin bloquear a nadie**: fuera de geocerca, sin
+ubicación, sin foto, GPS simulado, jornada mayor a 14 horas, sin marca de salida,
+editado a mano, dos proyectos solapados, `device_recorded_at` fuera de rango
+razonable, y **quien marcó por otro no estaba asignado a esa obra ese día**
+(`RECORDER_NOT_ASSIGNED`).
+
+## Quién puede marcar por otra persona
+
+Decidido en [[../product/vision|la visión]] (2026-08-10) e implementado en
+SPEC-0008:
+
+- **`OWNER` y `ADMIN`, sin acotar.** Responden por la empresa entera; hacerlo
+  depender de una cuadrilla cargada sería burocracia que este producto no pide.
+- **Para el `FOREMAN` el criterio es la obra, no la cuadrilla**: quien fue a la
+  obra ese día marca por quien también fue. Sale de `project_assignment` con su
+  `work_date`, y resuelve sola la cobertura entre encargados.
+- **Se aplica como bandera, no como bloqueo.** Una asignación sin cargar no puede
+  dejar a nadie sin fichar (regla 9): se registra igual, con
+  `RECORDER_NOT_ASSIGNED`, y lo mira quien aprueba.
 
 ## Invariantes
 
@@ -95,7 +111,8 @@ alguien no se sobrescriben en silencio.
 - [[proyecto]] — dónde se trabajó
 - [[usuario-y-membresia]] — de quién son las horas y de dónde sale la tarifa
 - [[contenido]] — la foto de marcaje es un asset
-- [[cuadrilla]] — el foreman puede marcar por los suyos
+- [[cuadrilla]] — de dónde sale quién está asignado cuando la asignación es por
+  cuadrilla; el criterio para marcar por otro es la obra, ver arriba
 
 ## Qué NO es
 
