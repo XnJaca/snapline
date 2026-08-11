@@ -8,6 +8,15 @@ import '../local/app_database.dart';
 import '../local/tables.dart';
 import '../sync/outbox.dart';
 
+/// Una obra con asignación para hoy, como la ofrece la pantalla Hoy.
+class TodayProject {
+  const TodayProject({required this.id, required this.name, required this.siteId});
+
+  final String id;
+  final String name;
+  final String siteId;
+}
+
 /// Una jornada como la muestran las pantallas.
 class TimeEntrySummary {
   const TimeEntrySummary({
@@ -122,6 +131,53 @@ class TimeEntryRepository {
           ))
         .watch()
         .map((filas) => filas.map(_resumen).toList(growable: false));
+  }
+
+  /// Las obras donde la persona tiene asignación **hoy**, directa o por una
+  /// cuadrilla que integra hoy.
+  ///
+  /// Solo asignadas: la cuadrilla no navega la cartera (SPEC-0003), así que la
+  /// obra del día llega por `project_assignment` o no llega. El estado vacío lo
+  /// explica la pantalla.
+  Stream<List<TodayProject>> watchTodayProjects(String membershipId) {
+    final hoy = DateTime.now();
+    final inicio = DateTime(hoy.year, hoy.month, hoy.day);
+    final fin = inicio.add(const Duration(days: 1));
+
+    final consulta = _db.customSelect(
+      '''
+      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id
+      FROM project_assignments a
+      JOIN projects p ON p.id = a.project_id AND p.deleted_at IS NULL
+      LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
+        AND cm.deleted_at IS NULL
+        AND a.work_date >= cm.from_date
+        AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+      WHERE a.deleted_at IS NULL
+        AND a.work_date >= ? AND a.work_date < ?
+        AND (a.membership_id = ? OR cm.membership_id = ?)
+      ORDER BY p.name
+      ''',
+      variables: [
+        Variable<DateTime>(inicio),
+        Variable<DateTime>(fin),
+        Variable<String>(membershipId),
+        Variable<String>(membershipId),
+      ],
+      readsFrom: {_db.projectAssignments, _db.projects, _db.crewMembers},
+    );
+
+    return consulta.watch().map(
+      (filas) => filas
+          .map(
+            (f) => TodayProject(
+              id: f.read<String>('id'),
+              name: f.read<String>('name'),
+              siteId: f.read<String>('site_id'),
+            ),
+          )
+          .toList(growable: false),
+    );
   }
 
   // ─── Escritura ─────────────────────────────────────────────────────────────

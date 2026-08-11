@@ -14,6 +14,7 @@ import '../../features/projects/all_projects_screen.dart';
 import '../../features/projects/project_form_screen.dart';
 import '../../features/projects/project_screen.dart';
 import '../../features/projects/projects_screen.dart';
+import '../../features/today/today_screen.dart';
 import '../../features/shell/role_shell.dart';
 import '../navigation/app_destination.dart';
 import '../navigation/navigation_providers.dart';
@@ -217,6 +218,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: destino.route,
                   builder: (context, state) => switch (destino) {
+                    AppDestination.today => const TodayScreen(),
                     AppDestination.projects => const ProjectsScreen(),
                     AppDestination.customers => const CustomersScreen(),
                     _ => PlaceholderScreen(destination: destino),
