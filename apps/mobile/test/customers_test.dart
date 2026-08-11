@@ -96,7 +96,7 @@ void main() {
 
       // Guardar y que se vea como si ya estuviera en el servidor es lo que
       // después nadie entiende.
-      expect(find.text('Sin subir todavía'), findsWidgets);
+      expect(find.text('Guardado en el teléfono'), findsWidgets);
     });
   });
 
@@ -288,7 +288,7 @@ void main() {
       // Reemplaza el formulario por la ficha, y el back vuelve a la lista.
       expect(find.byType(CustomerFormScreen), findsNothing);
       expect(find.text('Cliente de obra'), findsWidgets);
-      expect(find.text('Sin subir todavía'), findsWidgets);
+      expect(find.text('Guardado en el teléfono'), findsWidgets);
     });
   });
 
