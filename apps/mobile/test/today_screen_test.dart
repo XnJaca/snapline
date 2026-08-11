@@ -86,6 +86,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Marcar entrada'), findsOneWidget);
+    // Ver a dónde ir: la dirección en la tarjeta y el camino a Mapas.
+    expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
+    expect(find.byIcon(Icons.directions_outlined), findsOneWidget);
+
     await tester.tap(find.byType(FieldActionButton));
     // El cronómetro es un Timer.periodic: pumpAndSettle no "asienta" nunca.
     await tester.pump(const Duration(seconds: 2));
@@ -99,6 +103,14 @@ void main() {
 
     final ops = await db.select(db.outboxOperations).get();
     expect(ops.where((o) => o.type == SyncOp.timeEntryClockIn), hasLength(1));
+
+    // El cronómetro no es un número suelto: la obra, su dirección y el ánimo
+    // siguen en pantalla con la jornada abierta. El lugar emite un frame
+    // después de la jornada: un pump más.
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Techo Martinez'), findsOneWidget);
+    expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
+    expect(find.textContaining('Arrancó la jornada'), findsOneWidget);
     await desmontar(tester);
   });
 

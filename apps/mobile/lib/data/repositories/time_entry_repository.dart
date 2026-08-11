@@ -4,17 +4,36 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../local/address_json.dart';
 import '../local/app_database.dart';
 import '../local/tables.dart';
 import '../sync/outbox.dart';
 
 /// Una obra con asignación para hoy, como la ofrece la pantalla Hoy.
 class TodayProject {
-  const TodayProject({required this.id, required this.name, required this.siteId});
+  const TodayProject({
+    required this.id,
+    required this.name,
+    required this.siteId,
+    required this.address,
+    this.lat,
+    this.lng,
+  });
 
   final String id;
   final String name;
   final String siteId;
+
+  /// La dirección en una línea, para saber a dónde ir. Vacía si la propiedad
+  /// no está en local todavía.
+  final String address;
+
+  /// El punto de SPEC-0007, si alguien lo fijó: abre Mapas en el lugar exacto
+  /// y no en el centro de la manzana.
+  final double? lat;
+  final double? lng;
+
+  bool get hasLocation => lat != null && lng != null;
 }
 
 /// Una jornada como la muestran las pantallas.
@@ -146,9 +165,11 @@ class TimeEntryRepository {
 
     final consulta = _db.customSelect(
       '''
-      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id
+      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng
       FROM project_assignments a
       JOIN projects p ON p.id = a.project_id AND p.deleted_at IS NULL
+      LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
       LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
         AND cm.deleted_at IS NULL
         AND a.work_date >= cm.from_date
@@ -164,21 +185,48 @@ class TimeEntryRepository {
         Variable<String>(membershipId),
         Variable<String>(membershipId),
       ],
-      readsFrom: {_db.projectAssignments, _db.projects, _db.crewMembers},
+      readsFrom: {
+        _db.projectAssignments,
+        _db.projects,
+        _db.sites,
+        _db.crewMembers,
+      },
     );
 
     return consulta.watch().map(
-      (filas) => filas
-          .map(
-            (f) => TodayProject(
-              id: f.read<String>('id'),
-              name: f.read<String>('name'),
-              siteId: f.read<String>('site_id'),
-            ),
-          )
-          .toList(growable: false),
+      (filas) => filas.map(_obraDeHoy).toList(growable: false),
     );
   }
+
+  /// El lugar de una obra puntual: el contexto de la jornada abierta, que no
+  /// depende de que la asignación de hoy siga existiendo.
+  Stream<TodayProject?> watchPlace(String projectId) {
+    final consulta = _db.customSelect(
+      '''
+      SELECT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng
+      FROM projects p
+      LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
+      WHERE p.id = ? AND p.deleted_at IS NULL
+      ''',
+      variables: [Variable<String>(projectId)],
+      readsFrom: {_db.projects, _db.sites},
+    );
+    return consulta
+        .watch()
+        .map((filas) => filas.isEmpty ? null : _obraDeHoy(filas.first));
+  }
+
+  static TodayProject _obraDeHoy(QueryRow f) => TodayProject(
+    id: f.read<String>('id'),
+    name: f.read<String>('name'),
+    siteId: f.read<String>('site_id'),
+    address: AddressJson.oneLine(
+      AddressJson.decode(f.readNullable<String>('address')),
+    ),
+    lat: f.readNullable<double>('lat'),
+    lng: f.readNullable<double>('lng'),
+  );
 
   // ─── Escritura ─────────────────────────────────────────────────────────────
 

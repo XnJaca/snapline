@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/location/device_location.dart';
+import '../../core/location/open_in_maps.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
@@ -158,6 +159,10 @@ class _Jornada extends StatelessWidget {
           SizedBox(height: context.spacing.lg),
         ],
         if (jornada != null) ...[
+          // La obra de la jornada, para que el cronómetro no sea un número
+          // suelto — y la dirección, que es a dónde volver del almuerzo.
+          _LugarDeJornada(projectId: jornada.projectId),
+          SizedBox(height: context.spacing.lg),
           _Cronometro(desde: jornada.clockInAt),
           SizedBox(height: context.spacing.sm),
           Center(
@@ -278,16 +283,108 @@ class _CronometroState extends State<_Cronometro> {
     super.dispose();
   }
 
+  /// El mensaje que acompaña las horas. El último no es ánimo: más de 14 horas
+  /// es la bandera SHIFT_TOO_LONG del servidor, y avisarlo acá es más útil que
+  /// descubrirlo en la aprobación.
+  String _animo(AppLocalizations l10n, Duration transcurrido) {
+    if (transcurrido.inHours >= 14) return l10n.todayCheerTooLong;
+    if (transcurrido.inHours >= 8) return l10n.todayCheerLate;
+    if (transcurrido.inHours >= 4) return l10n.todayCheerMid;
+    if (transcurrido.inHours >= 1) return l10n.todayCheerEarly;
+    return l10n.todayCheerStart;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final transcurrido = DateTime.now().difference(widget.desde);
     final horas = transcurrido.inHours.toString().padLeft(2, '0');
     final minutos = (transcurrido.inMinutes % 60).toString().padLeft(2, '0');
     final segundos = (transcurrido.inSeconds % 60).toString().padLeft(2, '0');
+    final avisa = transcurrido.inHours >= 14;
 
-    return Center(
-      // displaySmall ya trae tabularFigures: las cifras no bailan al correr.
-      child: Text('$horas:$minutos:$segundos', style: context.texts.displaySmall),
+    return Column(
+      children: [
+        Center(
+          // displaySmall ya trae tabularFigures: las cifras no bailan al correr.
+          child: Text('$horas:$minutos:$segundos', style: context.texts.displaySmall),
+        ),
+        SizedBox(height: context.spacing.sm),
+        if (avisa)
+          StatusChip(
+            tone: StatusTone.warning,
+            label: _animo(l10n, transcurrido),
+            expand: true,
+          )
+        else
+          Center(
+            child: Text(
+              _animo(l10n, transcurrido),
+              textAlign: TextAlign.center,
+              style: context.texts.bodyMedium?.copyWith(
+                color: context.colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// La obra de la jornada abierta, con su dirección y el camino a Mapas.
+class _LugarDeJornada extends ConsumerWidget {
+  const _LugarDeJornada({required this.projectId});
+
+  final String projectId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final lugar = ref.watch(placeProvider(projectId)).value;
+    if (lugar == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: EdgeInsets.all(context.spacing.md),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.construction_outlined, color: context.colors.onSurfaceVariant),
+          SizedBox(width: context.spacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(lugar.name, style: context.texts.titleMedium),
+                if (lugar.address.isNotEmpty) ...[
+                  SizedBox(height: context.spacing.xs),
+                  Text(
+                    lugar.address,
+                    style: context.texts.bodySmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (lugar.address.isNotEmpty || lugar.hasLocation)
+            IconButton(
+              tooltip: l10n.todayOpenInMaps,
+              onPressed: () => openInMaps(
+                lat: lugar.lat,
+                lng: lugar.lng,
+                address: lugar.address,
+              ),
+              icon: Icon(
+                Icons.directions_outlined,
+                color: context.colors.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -325,16 +422,47 @@ class _ObraCard extends StatelessWidget {
               ),
               SizedBox(width: context.spacing.md),
               Expanded(
-                child: Text(
-                  obra.name,
-                  style: context.texts.titleMedium?.copyWith(
-                    color: seleccionada
-                        ? context.colors.onPrimaryContainer
-                        : null,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      obra.name,
+                      style: context.texts.titleMedium?.copyWith(
+                        color: seleccionada
+                            ? context.colors.onPrimaryContainer
+                            : null,
+                      ),
+                    ),
+                    if (obra.address.isNotEmpty) ...[
+                      SizedBox(height: context.spacing.xs),
+                      Text(
+                        obra.address,
+                        style: context.texts.bodySmall?.copyWith(
+                          color: seleccionada
+                              ? context.colors.onPrimaryContainer
+                              : context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (seleccionada)
+              if (obra.address.isNotEmpty || obra.hasLocation)
+                IconButton(
+                  tooltip: AppLocalizations.of(context).todayOpenInMaps,
+                  onPressed: () => openInMaps(
+                    lat: obra.lat,
+                    lng: obra.lng,
+                    address: obra.address,
+                  ),
+                  icon: Icon(
+                    Icons.directions_outlined,
+                    color: seleccionada
+                        ? context.colors.onPrimaryContainer
+                        : context.colors.onSurfaceVariant,
+                  ),
+                )
+              else if (seleccionada)
                 Icon(
                   Icons.check_circle_outline,
                   color: context.colors.onPrimaryContainer,
@@ -350,6 +478,11 @@ class _ObraCard extends StatelessWidget {
 final todayProjectsProvider =
     StreamProvider.family<List<TodayProject>, String>((ref, membershipId) {
   return ref.watch(timeEntryRepositoryProvider).watchTodayProjects(membershipId);
+});
+
+final placeProvider =
+    StreamProvider.family<TodayProject?, String>((ref, projectId) {
+  return ref.watch(timeEntryRepositoryProvider).watchPlace(projectId);
 });
 
 final openEntryProvider =

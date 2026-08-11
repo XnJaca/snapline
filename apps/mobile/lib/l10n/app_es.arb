@@ -195,6 +195,13 @@
   "todayConflictTitle": "Estas horas necesitan revisión",
   "todayConflictBody": "Esta entrada chocó con una que ya estaba en el servidor. No se perdió ni se sobrescribió nada: alguien de la oficina lo va a resolver.",
   "todayWeekLink": "Mi semana",
+  "todayOpenInMaps": "Abrir en Mapas",
+  "todayCheerStart": "Arrancó la jornada. ¡Buen día!",
+  "todayCheerEarly": "Buen ritmo. ¡Seguí así!",
+  "todayCheerMid": "Media jornada ya. ¡Buen trabajo!",
+  "todayCheerLate": "Día largo — ya casi. No te olvidés de marcar la salida.",
+  "todayCheerTooLong": "Más de 14 horas. Esta jornada va a llegar marcada — cerrala si el día terminó.",
+
   "weekTitle": "Mi semana",
   "weekEmpty": "Sin horas registradas en los últimos 7 días.",
   "weekPendingApproval": "Esperando aprobación",

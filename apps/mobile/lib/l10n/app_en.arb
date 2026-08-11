@@ -236,6 +236,13 @@
   "todayConflictTitle": "These hours need review",
   "todayConflictBody": "This entry clashed with one already on the server. Nothing was lost or overwritten: someone at the office will resolve it.",
   "todayWeekLink": "My week",
+  "todayOpenInMaps": "Open in Maps",
+  "todayCheerStart": "Shift started. Have a good one!",
+  "todayCheerEarly": "Good pace. Keep it up!",
+  "todayCheerMid": "Half the day down. Strong work!",
+  "todayCheerLate": "Long day — almost there. Don't forget to clock out.",
+  "todayCheerTooLong": "Over 14 hours. This entry will arrive flagged — close it if the day is done.",
+
   "weekTitle": "My week",
   "weekEmpty": "No hours recorded in the last 7 days.",
   "weekPendingApproval": "Pending approval",
