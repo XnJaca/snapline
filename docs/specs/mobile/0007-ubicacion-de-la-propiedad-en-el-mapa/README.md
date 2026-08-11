@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0007: Ubicación de la propiedad en el mapa"
 type: spec
 platform: mobile
-status: borrador
+status: review
 goal: "Una propiedad queda con su punto y su radio de geocerca fijados desde un mapa —tocándolo o usando la posición actual— y quien va a la obra ve dónde es antes de salir, sin que nadie escriba coordenadas a mano."
 apps:
   - mobile
@@ -18,7 +18,7 @@ created: 2026-08-10
 updated: 2026-08-10
 tags:
   - spec
-  - spec/borrador
+  - spec/review
   - mobile
 ---
 
@@ -151,21 +151,38 @@ Sobre la ficha de propiedad que SPEC-0006 ya dejó:
 
 ## Prerequisitos
 
-**Hace falta un ADR de proveedor de mapas antes de implementar.** Es una decisión que
-no se revierte en una tarde: cambia dependencias nativas, claves de API, costos por
-carga y el comportamiento sin señal.
+**Resuelto.** [[../../../adr/0012-proveedor-de-mapas/README|ADR-0012]] eligió
+**`google_maps_flutter`** sobre los SDK nativos, y **`geolocator`** para leer la
+posición — que el frente de campo necesita igual para el marcaje, así que se eligió
+acá y SPEC-0008 lo hereda.
 
-Lo que hay que comparar, con el offline como criterio de peso:
+Las dos premisas con las que este spec había planteado la comparación resultaron
+viejas, y el ADR las corrige con su fuente:
 
-| Opción | A favor | En contra |
-|---|---|---|
-| `flutter_map` sobre OpenStreetMap | Sin clave de API, sin costo por carga, tiles cacheables | Menos pulido, y el uso de los tiles públicos de OSM tiene política propia |
-| `google_maps_flutter` | El mapa que la gente reconoce, buen soporte | Clave, facturación habilitada, y sin red no dibuja |
-| Mapbox | Tier gratis amplio, buen control de estilo | Clave y dependencia de un tercero más |
+- **Los Maps SDK de Android y de iOS son gratis y sin límite** desde marzo de 2025.
+  El costo por carga dejó de ser un criterio.
+- **Los tiles públicos de OpenStreetMap no son una opción para un servicio
+  comercial.** Su política dice que el acceso puede retirarse sin aviso, y OSM midió
+  que `flutter_map` es su mayor consumidor por user-agent.
 
-Además hace falta `geolocator` para leer la posición una vez, que **el frente de
-campo va a necesitar igual** para el marcaje. Conviene elegirlo acá y que asistencia
-lo herede, en vez de al revés.
+Lo que este spec necesita del SDK y ya está resuelto: `Circle` toma su `radius` en
+**metros**, que es la unidad de `geofence_radius_m`, y `onTap` devuelve el `LatLng`
+del toque.
+
+**Geocoding no entra**, y no por el costo: el punto se elige tocando el mapa, y el
+caso principal es alguien parado en la obra usando su ubicación actual. Se puede
+agregar después sin tocar el modelo — `site.address` ya existe y es obligatorio.
+
+### Lo que hay que tener antes del primer build
+
+- **Clave de API restringida por plataforma**: SHA-1 del certificado en Android,
+  bundle id en iOS, y llaves distintas para desarrollo y producción. El mismo criterio
+  que ADR-0010 pide para Backblaze, y por la misma razón: una demo no debe poder
+  gastar la cuota de producción.
+- **El texto del permiso de ubicación en `en` y `es`**, en `Info.plist` y en el
+  manifiesto de Android. Tiene que decir la verdad de para qué se usa: acá se lee la
+  posición **de quien carga la obra, una sola vez y al tocar el botón**. La del
+  trabajador en cada marcaje es SPEC-0008 y es otra cosa.
 
 Y el permiso de ubicación necesita su texto de justificación en iOS y Android. Eso
 se cruza con un pendiente ya registrado en `DECISIONES.md`: *"consentimiento firmado
@@ -215,10 +232,12 @@ afuera a propósito, pero es la razón más fuerte para volver a considerarlo.
 
 ## ADRs relacionados
 
-- **Pendiente**: proveedor de mapas y librería de ubicación. Es prerequisito de la
-  implementación, no de la aprobación de este spec.
+- [[../../../adr/0012-proveedor-de-mapas/README|ADR-0012]] — `google_maps_flutter` y
+  `geolocator`, con el porqué de descartar OSM y Mapbox
 - [[../../../adr/0009-sistema-de-diseno-y-tokens/README|ADR-0009]] — la acción de
   campo va a 64dp, que es la de fijar el punto
+- [[../../../adr/0003-asistencia-geocerca-foto/README|ADR-0003]] — la geocerca que
+  este spec vuelve verificable
 
 ---
 
@@ -226,4 +245,5 @@ afuera a propósito, pero es la razón más fuerte para volver a considerarlo.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-10 | review | Prerequisito resuelto por [[../../../adr/0012-proveedor-de-mapas/README|ADR-0012]]: `google_maps_flutter` y `geolocator`. **Las dos premisas de la comparación que este spec había planteado eran viejas** — los SDK móviles de Google son gratis y sin límite desde marzo de 2025, y los tiles públicos de OSM no son una opción para un servicio comercial porque su política permite retirar el acceso sin aviso. Geocoding queda afuera por decisión, no por costo. Se agregó lo que hay que tener antes del primer build: la clave restringida por plataforma y el texto del permiso de ubicación en los dos idiomas. |
 | 2026-08-10 | borrador | Creado. Sale de la ficha de propiedad de SPEC-0006, que dejó `lat`, `lng` y el radio afuera por ser de asistencia. Verificado contra el gate duro de la visión: no contradice "no tracking continuo" ni "mapa en vivo", y la sección que traza esa línea es parte del spec para que no se derive después. El proveedor de mapas queda como ADR prerequisito. |

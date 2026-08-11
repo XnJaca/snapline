@@ -16,11 +16,11 @@ kanban-plugin: board
 ## ✏️ Borrador (escribiendo el spec)
 
 - [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
-- [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — desbloqueado: [[adr/0012-proveedor-de-mapas/README|ADR-0012]] eligió Google Maps. Falta completar el spec y revisarlo
 
 
 ## 🔍 Review (listo para revisar)
 
+- [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — desbloqueado por [[adr/0012-proveedor-de-mapas/README|ADR-0012]]; es lo que le da a la geocerca un punto contra el cual evaluar
 - [ ] [[specs/mobile/0008-asistencia-en-el-movil/README|SPEC-0008: Asistencia en el móvil]] — revisado con `spec-reviewer` y corregido; cierra los dos criterios de `CONFLICT` de SPEC-0004. **No pasa a Aprobado hasta que avance SPEC-0007**, que le da el punto de la obra
 
 
