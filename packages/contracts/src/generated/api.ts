@@ -1418,9 +1418,9 @@ export interface components {
             color?: string;
         };
         CrewMember: {
-            crew: components["schemas"]["Crew"];
+            crew?: components["schemas"]["Crew"];
+            membership?: components["schemas"]["Membership"];
             crewId: string;
-            membership: components["schemas"]["Membership"];
             membershipId: string;
             fromDate: string;
             toDate: string | null;

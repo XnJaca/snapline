@@ -15,6 +15,8 @@ abstract final class SyncOp {
   static const siteUpdate = 'site.update';
   static const projectCreate = 'project.create';
   static const projectUpdate = 'project.update';
+  static const timeEntryClockIn = 'timeEntry.clockIn';
+  static const timeEntryClockOut = 'timeEntry.clockOut';
 }
 
 /// La cola de lo que todavía no llegó al servidor.
@@ -117,6 +119,13 @@ class Outbox {
   /// Cuántas operaciones esperan. Para que la interfaz pueda decirlo.
   Stream<int> watchPendingCount() {
     return _db.outboxOperations.count().watchSingle();
+  }
+
+  /// Una operación puntual, para saber a qué fila apuntaba un resultado.
+  Future<OutboxOperation?> byClientId(String clientId) {
+    return (_db.select(_db.outboxOperations)
+          ..where((o) => o.clientId.equals(clientId)))
+        .getSingleOrNull();
   }
 
   /// Sale de la cola: el servidor la aplicó, o ya la tenía.

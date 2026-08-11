@@ -130,6 +130,50 @@ void main() {
     expect(despues.notes, 'Techo del vecino');
   });
 
+  test('subir de v2 a v3 crea las tablas del marcaje sin tocar la bandeja', () async {
+    // La base como la dejó SPEC-0006: esquema 1 + las columnas de la v2, que es
+    // lo que un teléfono actualizado hasta ayer tiene instalado.
+    crearEsquemaV1();
+    final previa = sqlite3.open(archivo.path);
+    previa.execute('ALTER TABLE customers ADD COLUMN first_name TEXT');
+    previa.execute('ALTER TABLE customers ADD COLUMN last_name TEXT');
+    previa.execute('ALTER TABLE customers ADD COLUMN source TEXT');
+    previa.execute('ALTER TABLE customers ADD COLUMN notes TEXT');
+    previa.execute('PRAGMA user_version = 2');
+    previa.execute(
+      'INSERT INTO outbox_operations (client_id, type, target_id, payload, '
+      'occurred_at) VALUES (?, ?, ?, ?, ?)',
+      ['op1', 'site.update', 's1', '{"lat":9.9}', 1754700000],
+    );
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    // Las tablas nuevas existen y se puede escribir el marcaje del día uno.
+    await db.into(db.timeEntries).insert(
+      TimeEntriesCompanion.insert(
+        id: 't1',
+        companyId: 'co1',
+        updatedAt: DateTime.now(),
+        projectId: 'p1',
+        membershipId: 'm1',
+        recordedByMembershipId: 'm1',
+        clockInAt: DateTime.now(),
+        method: 'SELF',
+        status: 'PENDING',
+      ),
+    );
+    expect(await db.select(db.timeEntries).get(), hasLength(1));
+    expect(await db.select(db.crews).get(), isEmpty);
+    expect(await db.select(db.people).get(), isEmpty);
+
+    // Y la bandeja sigue entera, que es la promesa de toda migración.
+    final pendientes = await db.select(db.outboxOperations).get();
+    expect(pendientes, hasLength(1));
+    expect(pendientes.first.type, 'site.update');
+  });
+
   test('una base nueva arranca directamente en el esquema de ahora', () async {
     final db = AppDatabase(NativeDatabase(archivo));
     addTearDown(db.close);

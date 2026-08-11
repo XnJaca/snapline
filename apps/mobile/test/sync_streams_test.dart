@@ -159,6 +159,9 @@ SyncPullResponseDto _pullVacio({required List<String> borradosDeSitios}) {
     assignments: const [],
     mediaAssets: const [],
     timeEntries: const [],
+    crews: const [],
+    crewMembers: const [],
+    people: const [],
     deleted: {'sites': borradosDeSitios},
   );
 }
