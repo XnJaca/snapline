@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0007: Ubicación de la propiedad en el mapa"
 type: spec
 platform: mobile
-status: review
+status: en-implementacion
 goal: "Una propiedad queda con su punto y su radio de geocerca fijados desde un mapa —tocándolo o usando la posición actual, nunca escribiendo coordenadas a mano— y ese punto es contra el que el marcaje evalúa la geocerca."
 apps:
   - mobile
@@ -18,7 +18,7 @@ created: 2026-08-10
 updated: 2026-08-10
 tags:
   - spec
-  - spec/review
+  - spec/en-implementacion
   - mobile
 ---
 

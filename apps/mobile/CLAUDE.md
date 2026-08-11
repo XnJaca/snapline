@@ -13,6 +13,9 @@ mezclan. No aparece en `pnpm-workspace.yaml` y no la toca `turbo`.
 |---|---|
 | `phone_form_field` | Un teléfono no se puede validar sin saber su país: diez dígitos son válidos en Estados Unidos y no en Guatemala. Trae los datos de libphonenumber portados a **Dart puro**, así que valida sin señal, y sus textos ya vienen en `en` y `es` |
 | `flutter_country_selector` | Viene con el anterior; se usa directo para el país de una dirección y para los nombres de país traducidos. Una sola lista de países en la app |
+| `google_maps_flutter` | El mapa donde se fija el punto de una propiedad. Elegido en ADR-0012: los SDK móviles son gratis y sin límite, y los tiles públicos de OSM no se pueden usar comercialmente |
+| `geolocator` | Lee la posición **una sola vez**, al tocar "usar mi ubicación". No se usa su stream: la visión descarta el tracking continuo |
+| `url_launcher` | Abre la dirección en la app de mapas del teléfono. Construir navegación adentro es lo que la visión descarta |
 
 Los dos se registran en `main.dart` vía `PhoneFieldLocalization.delegates`. Sin
 eso el selector sale en inglés con la app en español.
@@ -32,6 +35,22 @@ flutter run
 Los tres comandos del medio son obligatorios después de clonar: **el código
 generado no se versiona.** Son ~240 archivos y versionarlos haría ilegible el diff
 de cualquier PR.
+
+### La llave de Google Maps
+
+**No se versiona, y sin ella la app compila y corre igual** — solo el mapa queda
+gris. Clonar el repo no exige tener llave.
+
+| Plataforma | Dónde va | Archivo |
+|---|---|---|
+| Android | `MAPS_API_KEY=...` | `android/local.properties` |
+| iOS | `MAPS_API_KEY = ...` | `ios/Flutter/Secrets.xcconfig`, copiado de `Secrets.example.xcconfig` |
+
+Son **dos llaves distintas**, cada una restringida a su plataforma: SHA-1 del
+certificado en Android, bundle id en iOS. Una filtrada no sirve en la otra.
+
+iOS pide **deployment target 14.0** como mínimo, que es lo que exige
+`google_maps_flutter_ios`. Está fijado en el `Podfile` y en el proyecto de Xcode.
 
 ## Código generado — qué lo produce
 
