@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 
 import 'core/router/app_router.dart';
+import 'core/widgets/dismiss_keyboard.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/locale_store.dart';
 import 'core/theme/theme_store.dart';
@@ -52,6 +53,9 @@ class SnaplineApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(appRouterProvider),
       debugShowCheckedModeBanner: false,
+      // Acá y no en cada pantalla: toda hoja y todo diálogo quedan cubiertos, y
+      // no hay una que se olvide.
+      builder: (context, child) => DismissKeyboard(child: child!),
     );
   }
 }
