@@ -172,6 +172,9 @@ void main() {
     final pendientes = await db.select(db.outboxOperations).get();
     expect(pendientes, hasLength(1));
     expect(pendientes.first.type, 'site.update');
+
+    // La v4 también entró en el mismo salto: las subidas pendientes existen.
+    expect(await db.select(db.pendingUploads).get(), isEmpty);
   });
 
   test('una base nueva arranca directamente en el esquema de ahora', () async {

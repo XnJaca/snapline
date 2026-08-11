@@ -26,6 +26,7 @@ import 'package:snapline/api/models/auth_user_dto.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/location/device_location.dart';
+import 'package:snapline/core/media/photo_capture.dart';
 import 'package:snapline/core/session/session.dart';
 
 /// Almacenamiento en memoria: el Keychain no existe en un test de unidad.
@@ -196,6 +197,11 @@ class FakeSyncController extends SyncController {
   Future<bool> build() async => true;
 }
 
+class _CamaraNula implements PhotoCapture {
+  @override
+  Future<String?> takePhoto() async => null;
+}
+
 /// La app montada para un test: base en memoria, sin red, con la sesión que se
 /// le pase. Evita repetir seis overrides en cada caso.
 Widget testApp({
@@ -207,11 +213,15 @@ Widget testApp({
   LocaleStore? localeStore,
   ThemeStore? themeStore,
   DeviceLocation? deviceLocation,
+  PhotoCapture? photoCapture,
 }) {
   return ProviderScope(
     overrides: [
       if (deviceLocation != null)
         deviceLocationProvider.overrideWithValue(deviceLocation),
+      // Siempre con cámara falsa: la real es un canal de plataforma que en un
+      // test cuelga para siempre bajo el reloj falso.
+      photoCaptureProvider.overrideWithValue(photoCapture ?? _CamaraNula()),
       appDatabaseProvider.overrideWithValue(db),
       syncControllerProvider.overrideWith(FakeSyncController.new),
       sessionStorageProvider.overrideWithValue(

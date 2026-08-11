@@ -17,6 +17,7 @@ abstract final class SyncOp {
   static const projectUpdate = 'project.update';
   static const timeEntryClockIn = 'timeEntry.clockIn';
   static const timeEntryClockOut = 'timeEntry.clockOut';
+  static const mediaRegister = 'media.register';
 }
 
 /// La cola de lo que todavía no llegó al servidor.

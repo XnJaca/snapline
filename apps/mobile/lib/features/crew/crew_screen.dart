@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/location/device_location.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
@@ -9,6 +8,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../today/evidence_collector.dart';
 import '../today/today_screen.dart';
 
 /// La gente de la obra de hoy: quién está adentro, quién salió, quién no marcó
@@ -36,14 +36,12 @@ class _CrewScreenState extends ConsumerState<CrewScreen> {
     setState(() => _marcando = persona.membershipId);
 
     try {
-      // La misma escalera que el marcaje propio: el GPS del teléfono del
-      // foreman, con su tope, y su ausencia viaja como ausencia.
-      final ubicacion = await ref.read(deviceLocationProvider).current();
-      final evidencia = ClockEvidence(
-        lat: ubicacion.lat,
-        lng: ubicacion.lng,
-        isMockLocation: ubicacion.isMocked,
-      );
+      // La misma escalera que el marcaje propio: GPS con tope, y sin GPS la
+      // foto del frente de obra — desde el teléfono del foreman.
+      final capturada = await ref
+          .read(evidenceCollectorProvider)
+          .collect(projectId: projectId);
+      final evidencia = capturada.evidence;
 
       final repo = ref.read(timeEntryRepositoryProvider);
       if (persona.adentro) {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/session/session_controller.dart';
 import 'connectivity.dart';
+import 'media_uploader.dart';
 import 'outbox.dart';
 import 'synchronizer.dart';
 
@@ -51,6 +52,9 @@ class SyncEngine {
       _otraVez = false;
       ok = await _ref.read(synchronizerProvider).sync();
     }
+    // Los binarios van después del push: el registro del asset tiene que
+    // existir en el servidor antes de pedir dónde subirlo.
+    await _ref.read(mediaUploaderProvider).subirPendientes();
     return ok;
   }
 }

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/location/device_location.dart';
 import '../../core/location/open_in_maps.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
@@ -13,6 +12,7 @@ import '../../core/widgets/field_action_button.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
+import 'evidence_collector.dart';
 import 'week_screen.dart';
 
 /// La pantalla que la visión le promete al trabajador: dónde trabajo hoy,
@@ -42,20 +42,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
     var conUbicacion = false;
     try {
-      // La escalera de evidencia: se intenta el GPS con su tope. Lo que no haya
-      // no detiene nada — la ausencia viaja como ausencia y el servidor pone la
-      // bandera. (La foto de respaldo entra con la tanda de cámara.)
-      final ubicacion = await ref.read(deviceLocationProvider).current();
-      conUbicacion = ubicacion.isOk;
-      final evidencia = ClockEvidence(
-        lat: ubicacion.lat,
-        lng: ubicacion.lng,
-        isMockLocation: ubicacion.isMocked,
-      );
-
       final repo = ref.read(timeEntryRepositoryProvider);
       if (abierta != null) {
-        await repo.clockOut(abierta.id, evidence: evidencia);
+        final capturada = await ref
+            .read(evidenceCollectorProvider)
+            .collect(projectId: abierta.projectId);
+        conUbicacion = capturada.conUbicacion || capturada.conFoto;
+        await repo.clockOut(abierta.id, evidence: capturada.evidence);
       } else {
         final obras = await repo.watchTodayProjects(sesion.membership.id).first;
         // Solo una obra de HOY: una elección de ayer que ya no está asignada
@@ -65,12 +58,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             (vigente ? _obraElegida : null) ??
             (obras.length == 1 ? obras.first.id : null);
         if (obra == null) return;
+        final capturada = await ref
+            .read(evidenceCollectorProvider)
+            .collect(projectId: obra);
+        conUbicacion = capturada.conUbicacion || capturada.conFoto;
         await repo.clockIn(
           projectId: obra,
           membershipId: sesion.membership.id,
           recordedByMembershipId: sesion.membership.id,
           companyId: sesion.membership.companyId,
-          evidence: evidencia,
+          evidence: capturada.evidence,
         );
       }
     } finally {

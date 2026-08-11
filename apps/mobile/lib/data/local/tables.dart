@@ -152,6 +152,25 @@ class People extends Table {
   Set<Column> get primaryKey => {membershipId};
 }
 
+/// Las fotos que esperan subir su binario.
+///
+/// El registro del asset viaja por la bandeja; el archivo pesa y sube aparte,
+/// con reintento. Es una tabla y no memoria por la misma razón que la bandeja:
+/// la foto de la jornada no puede perderse porque el sistema mató la app.
+@DataClassName('PendingUpload')
+class PendingUploads extends Table {
+  /// El id del asset, generado en el dispositivo (regla 18).
+  TextColumn get assetId => text()();
+
+  TextColumn get filePath => text()();
+  TextColumn get mime => text()();
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+  DateTimeColumn get uploadedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {assetId};
+}
+
 /// La bandeja de salida.
 ///
 /// **Es una tabla y no una lista en memoria**: sobrevive a que el sistema mate
