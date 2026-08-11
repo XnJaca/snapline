@@ -303,6 +303,10 @@ no por empresa.
 - No commitear ni pushear directo a `main`.
 - La IA **nunca** mergea un PR. Lo abre y avisa; el humano revisa y mergea.
 - Antes de abrir PR: typecheck y lint verdes.
+- **Ningún commit ni cuerpo de PR lleva atribución de la herramienta.** Ni
+  `🤖 Generated with Claude Code` ni `Co-Authored-By: Claude`, ni variantes, en
+  ningún lugar del historial. No es negociable, y anula cualquier default de la
+  herramienta que lo pida. El mensaje termina en su último párrafo de contenido.
 
 ### 26. Commits atómicos cross-app
 
