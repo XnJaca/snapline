@@ -21,6 +21,8 @@ kanban-plugin: board
 
 ## 🔍 Review (listo para revisar)
 
+- [ ] [[specs/mobile/0008-asistencia-en-el-movil/README|SPEC-0008: Asistencia en el móvil]] — revisado con `spec-reviewer` y corregido; cierra los dos criterios de `CONFLICT` de SPEC-0004. **No pasa a Aprobado hasta que avance SPEC-0007**, que le da el punto de la obra
+
 
 ## ✅ Aprobado (listo para implementar)
 
