@@ -5,10 +5,11 @@ aliases:
   - "SPEC-0005: Proyectos en el móvil"
 type: spec
 platform: mobile
-status: borrador
+status: en-implementacion
 goal: "William ve las obras en proceso, abre cualquiera sin señal, y da de alta o corrige una —con su cliente y su propiedad si hacen falta— parado en la obra sin esperar cobertura."
 apps:
   - mobile
+  - api
 depends_on:
   - "0003-arquitectura-de-navegacion"
   - "0004-capa-local-y-sincronizacion"
@@ -18,17 +19,17 @@ domain:
   - cliente
 frente: administrativo
 created: 2026-08-09
-updated: 2026-08-09
+updated: 2026-08-10
 tags:
   - spec
-  - spec/borrador
+  - spec/en-implementacion
   - mobile
 ---
 
 # SPEC-0005: Proyectos en el móvil
 
 > **Meta**
-> - Apps afectadas: `mobile`
+> - Apps afectadas: `mobile`, `api`
 > - Depende de: [[../0003-arquitectura-de-navegacion/README|SPEC-0003]],
 >   [[../0004-capa-local-y-sincronizacion/README|SPEC-0004]],
 >   [[../0006-clientes-en-el-movil/README|SPEC-0006]]
@@ -57,7 +58,12 @@ ciclo y vuelve al cuaderno.
 - **Edición** de los campos que el dominio marca editables.
 - **Cambio de estado**, ofreciendo **solo las transiciones válidas** desde el
   estado actual. La escalera del dominio se respeta en el selector, no como
-  advertencia: hoy el servidor acepta cualquier salto.
+  advertencia.
+- **La validación de la escalera en `apps/api`**, que hoy no existe:
+  `projects.service.ts` hace `update({ id }, dto)` sin comparar contra el estado
+  anterior, así que acepta cualquier salto. Sin esto, el criterio del descarte
+  retrocedente no se puede cumplir — el dispositivo no puede saber si su estado es
+  viejo. Va en el mismo commit que el móvil (regla 26).
 - Buscar por nombre de obra o por cliente.
 - **Crear cliente y propiedad sin salir del alta**, en línea. Ver abajo.
 
@@ -142,30 +148,32 @@ campos: si se duplican, divergen.
 
 ## Criterios de aceptación
 
-- [ ] La lista sale de la base local: apagando la red, la pantalla muestra lo
+- [x] La lista sale de la base local: apagando la red, la pantalla muestra lo
       mismo.
-- [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`.
-- [ ] La lista principal muestra solo `IN_PROGRESS`: una obra agendada o en
+- [x] Ninguna pantalla de este frente importa un cliente de `lib/api/`.
+- [x] La lista principal muestra solo `IN_PROGRESS`: una obra agendada o en
       pausa **no** aparece ahí, y sí en "ver todas".
-- [ ] Crear una obra sin señal la deja visible al instante, marcada como
+- [x] Crear una obra sin señal la deja visible al instante, marcada como
       pendiente, y llega al servidor al volver la red sin duplicarse.
-- [ ] El id de la obra creada en el móvil es el mismo con el que queda en el
+- [x] El id de la obra creada en el móvil es el mismo con el que queda en el
       servidor.
-- [ ] El selector de sitio solo ofrece sitios del cliente elegido, y cambiar de
+- [x] El selector de sitio solo ofrece sitios del cliente elegido, y cambiar de
       cliente lo vacía.
-- [ ] Se puede crear cliente, propiedad y obra **sin salir del alta y sin
+- [x] Se puede crear cliente, propiedad y obra **sin salir del alta y sin
       señal**, y las tres llegan al servidor en ese orden.
-- [ ] Una obra nueva nace con `client_visibility_mode = etapas`.
-- [ ] El selector de estado ofrece solo las transiciones que la ficha permite
+- [x] Una obra nueva nace con `client_visibility_mode = etapas`.
+- [x] El selector de estado ofrece solo las transiciones que la ficha permite
       desde el estado actual: desde `LEAD` no se puede saltar a `COMPLETED`.
-- [ ] Una transición retrocedente que llega tarde **la descarta el servidor**, no
+- [x] Una transición retrocedente que llega tarde **la descarta el servidor**, no
       el dispositivo: el móvil no puede saber si su estado es viejo.
-- [ ] Cancelar una obra la saca de la principal y **no** borra sus horas ni sus
-      fotos.
-- [ ] Editar sin señal aplica local y encola una sola operación por edición.
-- [ ] La pantalla se ve correcta en claro y en oscuro, y la única cosa naranja
+- [x] Cancelar una obra la saca de la principal y **no** borra sus horas ni sus
+      fotos. *(Verificado que no borra la obra ni la marca `deletedAt`; que no
+      toque horas ni fotos no se puede comprobar todavía porque ninguna de las dos
+      existe — vuelve a mirarse en el spec de asistencia.)*
+- [x] Editar sin señal aplica local y encola una sola operación por edición.
+- [x] La pantalla se ve correcta en claro y en oscuro, y la única cosa naranja
       sólida es "nueva obra".
-- [ ] Cero cadenas quemadas: todo en `en` y `es`, incluidos los siete estados.
+- [x] Cero cadenas quemadas: todo en `en` y `es`, incluidos los siete estados.
 
 ## Riesgos / consideraciones
 
@@ -197,4 +205,8 @@ que el servidor la valide es trabajo de `apps/api` y conviene hacerlo con
 |-------|--------|------|
 | 2026-08-09 | borrador | Creado. El diseño de la cartera y del detalle ya existe como andamiaje de SPEC-0003; este spec lo formaliza y le pone datos reales. |
 | 2026-08-09 | borrador | Dos decisiones de producto cerradas: la principal muestra solo `IN_PROGRESS` —no "todo lo no cerrado"—, y el alta crea cliente y propiedad en línea en vez de mandar a tres pantallas. |
+| 2026-08-10 | review | Verificados los prerequisitos contra el código: SPEC-0006 quedó implementado y dejó los formularios mínimos que el alta en línea reutiliza —`CustomerFields(minimal:)` y `showSiteFormSheet`—, más `site.create` y `site.update` en la bandeja. |
+| 2026-08-10 | aprobado | Aprobada la escalera de estados en `apps/api`: el criterio del descarte retrocedente exige que la valide el servidor, así que `apps` suma `api` y va en commit atómico con el móvil (regla 26). |
+| 2026-08-10 | en-implementacion | Arranca la implementación. |
+| 2026-08-10 | en-implementacion | Los catorce criterios en `[x]`. **El diagrama del dominio no alcanzaba para derivar la tabla de transiciones**: leído literal, de `ON_HOLD` no salía ninguna flecha —obra trabada para siempre— y solo se podía cancelar desde `IN_PROGRESS`, cuando el caso más común es el más temprano. La tabla completa quedó en la ficha de `proyecto` y en `apps/api`, con un test que verifica que la copia del móvil no divergió. Verificado contra el API que el retroceso que llega tarde se descarta **sin fallar**: si respondiera error, la operación se reintentaría para siempre. |
 | 2026-08-09 | borrador | Revisado con `spec-reviewer`. Encontró que el alta en línea da por hecho un camino que no existe: agregar una propiedad a un cliente ya sincronizado no tiene operación de sync, lo que pasó a ser prerequisito de SPEC-0004. Sumados `depends_on: 0006` —el formulario compartido es de ese spec—, la escalera de transiciones movida de Riesgos a Alcance con su criterio, y el dueño del descarte retrocedente declarado: el servidor. |

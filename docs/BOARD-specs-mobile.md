@@ -17,7 +17,6 @@ kanban-plugin: board
 
 - [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
 - [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — necesita ADR de proveedor de mapas antes de implementar
-- [ ] [[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005: Proyectos en el móvil]] — revisado; espera los formularios mínimos de SPEC-0006
 
 
 ## 🔍 Review (listo para revisar)
@@ -29,6 +28,7 @@ kanban-plugin: board
 ## 🛠️ En implementación
 
 - [ ] [[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004: Capa local y sincronización]] — contrato, capa local y bandeja listos; faltan los dos criterios de `CONFLICT`, que dependen del marcaje
+- [ ] [[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005: Proyectos en el móvil]] — arrancó; trae la escalera de estados al API porque el descarte retrocedente lo decide el servidor
 
 
 ## 🎉 Implementado

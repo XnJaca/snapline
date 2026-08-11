@@ -117,7 +117,57 @@
   "@projectPhotoCount": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "projectsSearchHint": "Search by project or customer",
+  "projectsEmptySearch": "No projects match that search",
   "projectPendingSync": "Not uploaded yet",
+
+  "projectNewTitle": "New project",
+  "projectEditTitle": "Edit project",
+  "projectFieldName": "Project name",
+  "projectFieldNameHelp": "A name to identify this project.",
+  "projectFieldNameRequired": "Enter a name for the project",
+  "projectFieldCustomer": "Customer",
+  "projectFieldCustomerRequired": "Pick the customer",
+  "projectFieldSite": "Property",
+  "projectFieldSiteRequired": "Pick the property",
+  "projectFieldSitePickCustomerFirst": "Choose the customer first",
+  "projectFieldSiteNoneForCustomer": "This customer has no properties yet. Add one.",
+  "projectCustomerAndSiteFixed": "The customer and property are set when the project is created. To change them, cancel this project and create a new one.",
+  "projectFieldStatus": "Status",
+  "projectFieldDescription": "Description",
+  "projectFieldServiceType": "Type of work",
+  "projectFieldStartDate": "Start date",
+  "projectFieldTargetEndDate": "Target end date",
+  "projectFieldDateNotSet": "Not set",
+  "projectFieldDateClear": "Clear date",
+
+  "projectPickCustomerTitle": "Choose a customer",
+  "projectPickSiteTitle": "Choose a property",
+  "projectPickCustomerNew": "New customer",
+  "projectPickSiteNew": "New property",
+  "projectPickEmpty": "Nothing on this phone yet",
+
+  "projectChangeStatus": "Change status",
+  "projectChangeStatusFrom": "Now: {status}",
+  "@projectChangeStatusFrom": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "projectConfirmTitle": "Mark this project as {status}?",
+  "@projectConfirmTitle": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "projectConfirmCompletedBody": "A finished project does not change status again. If there is still work left, leave it in progress or on hold.",
+  "projectConfirmCancelledBody": "A cancelled project does not change status again. Nothing is deleted: its hours and photos stay, and it stops showing in the main list.",
+  "projectConfirmAccept": "Yes, mark it",
+  "projectStatusTerminal": "A finished or cancelled project does not change status again",
+  "projectVisibilityStages": "The customer will see this project by stages",
+  "projectVisibilityStagesHelpTitle": "What the customer sees of the project",
+  "projectVisibilityStagesHelpBody": "Your customer gets in through a private link and sees the job summarized in three stages: Starting, In progress and Finished.\n\nThey do not see the seven statuses you work with. Lead, Estimated and Scheduled show up as Starting; In progress and On hold, as In progress. So the customer knows how it is going without finding out the job was paused for three days.\n\nThey do not see hours, costs, or any photo you have not shared with them.",
+  "projectDetailSectionWhat": "The job",
+  "projectDetailSectionWhen": "Dates",
+  "projectDetailSectionWho": "Customer and property",
+  "projectDetailEdit": "Edit",
+  "projectNotFound": "This project is not on this phone",
   "projectNoCrew": "No crew assigned",
 
   "customersSearchHint": "Search by name, company or phone",

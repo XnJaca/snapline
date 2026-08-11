@@ -6,6 +6,7 @@ import '../../core/navigation/app_destination.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/search_field.dart';
 import '../../core/widgets/sync_button.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/sync/sync_controller.dart';
@@ -47,8 +48,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       actions: const [SyncButton()],
       body: Column(
         children: [
-          _Buscador(
+          SearchField(
             controller: _buscador,
+            hint: l10n.customersSearchHint,
             onChanged: (valor) => setState(() => _query = valor),
           ),
           Expanded(
@@ -107,49 +109,6 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         icon: const Icon(Icons.add),
         label: Text(l10n.customersNew),
         onPressed: () => context.push(CustomerFormScreen.newRoute),
-      ),
-    );
-  }
-}
-
-/// El buscador, en su propia franja con el fondo de la barra: suelto sobre el
-/// fondo de la lista flota y no se lee como parte de la interfaz.
-class _Buscador extends StatelessWidget {
-  const _Buscador({required this.controller, required this.onChanged});
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final spacing = context.spacing;
-    final colors = context.colors;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.outline)),
-      ),
-      padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.md),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: l10n.customersSearchHint,
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: controller.text.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.clear),
-                  tooltip: l10n.actionCancel,
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                ),
-        ),
       ),
     );
   }

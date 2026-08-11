@@ -148,6 +148,13 @@ No volver a resolverlos por pantalla:
 produce "Nombre (obligatorio)". Un asterisco solo lo entiende quien ya conoce la
 convención, y esta app se usa sin entrenamiento.
 
+**El teclado ya se cierra al tocar afuera, en toda la app.** `DismissKeyboard` está
+en `MaterialApp.builder`, así que no hay que resolverlo por pantalla — y no se hace
+con `GestureDetector`: el gesto lo gana el hijo y un `onTap` de ancestro nunca
+dispara. Va con `Listener` sobre los eventos de puntero, y **excluye los toques que
+caen sobre otro campo** con un hit test, o el teclado parpadearía al saltar de uno
+al siguiente.
+
 ### Los estados se muestran con `StatusChip`
 
 No se arma a mano un contenedor de color: `core/widgets/status_chip.dart` ya trae

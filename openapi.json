@@ -10382,6 +10382,7 @@
               "MEMBERSHIP_INACTIVE",
               "PERMISSION_NOT_DECLARED",
               "PERMISSION_DENIED",
+              "PROJECT_INVALID_TRANSITION",
               "TIME_ENTRY_ALREADY_OPEN",
               "TIME_ENTRY_ALREADY_CLOSED",
               "CANNOT_APPROVE_OWN_HOURS",
