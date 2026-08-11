@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiHideProperty } from '@nestjs/swagger';
 import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { SoftDeletableTenantEntity } from '../../common/entities/base.entity';
 import { Membership } from '../../auth/entities/membership.entity';
@@ -18,6 +19,9 @@ export const TIME_ENTRY_FLAGS = {
   MANUALLY_EDITED: 'MANUALLY_EDITED',
   OVERLAPPING_PROJECTS: 'OVERLAPPING_PROJECTS',
   TIMESTAMP_OUT_OF_RANGE: 'TIMESTAMP_OUT_OF_RANGE',
+  // Quien marcó por otro no estaba asignado a esa obra ese día. Es bandera y no
+  // bloqueo (regla 9): la mira quien aprueba.
+  RECORDER_NOT_ASSIGNED: 'RECORDER_NOT_ASSIGNED',
 } as const;
 
 const bigintNumber = {
@@ -135,7 +139,12 @@ export class TimeEntry extends SoftDeletableTenantEntity {
   approvedAt!: Date | null;
 
   // Congelada al aprobar. La base la exige si status=APPROVED.
-  @Column({ type: 'bigint', name: 'pay_rate_cents_snapshot', nullable: true, transformer: bigintNumber })
+  //
+  // Oculta como Membership.payRateCents y por la misma razón: el foreman recibe
+  // las horas de su gente, y el snapshot es la tarifa por otro nombre. El
+  // timesheet del contador la lee por SQL explícito en reports.
+  @ApiHideProperty()
+  @Column({ type: 'bigint', name: 'pay_rate_cents_snapshot', nullable: true, select: false, transformer: bigintNumber })
   payRateCentsSnapshot!: number | null;
 
   @Column({ type: 'text', array: true, default: () => `'{}'` })

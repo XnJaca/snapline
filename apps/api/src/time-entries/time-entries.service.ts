@@ -50,6 +50,16 @@ export class TimeEntriesService {
     if (!dto.photoId) flags.push(TIME_ENTRY_FLAGS.NO_PHOTO);
     if (dto.isMockLocation) flags.push(TIME_ENTRY_FLAGS.MOCK_LOCATION);
 
+    // El criterio para que un foreman marque por otro es la obra, no la
+    // cuadrilla, y es bandera y no bloqueo: una asignación sin cargar no puede
+    // dejar a nadie sin fichar (regla 9). OWNER y ADMIN quedan sin acotar.
+    if (targetMembershipId !== tenant.membershipId && tenant.role === 'FOREMAN') {
+      const asignado = await this.recorderAssignedThatDay(
+        tenant.membershipId, project.id, deviceRecordedAt,
+      );
+      if (!asignado) flags.push(TIME_ENTRY_FLAGS.RECORDER_NOT_ASSIGNED);
+    }
+
     const entry = this.entries.create({
       id: dto.id ?? newId(),
       companyId: tenant.companyId,
@@ -65,7 +75,9 @@ export class TimeEntriesService {
       clockInDistanceM: geo.distanceM,
       clockInWithinGeofence: geo.within,
       clockInPhotoId: dto.photoId ?? null,
-      method: targetMembershipId === tenant.membershipId ? 'SELF' : 'FOREMAN',
+      // Del rol de quien marca, no de por quién: "lo marcó un foreman" cuando
+      // lo marcó el dueño es un dato falso en el rastro de la regla 12.
+      method: this.methodFor(tenant, targetMembershipId),
       deviceId: dto.deviceId ?? null,
       isMockLocation: dto.isMockLocation ?? false,
       recordedOffline: dto.recordedOffline ?? false,
@@ -164,17 +176,33 @@ export class TimeEntriesService {
     return this.get(id);
   }
 
-  async get(id: string): Promise<TimeEntry> {
+  async get(id: string, tenant?: TenantContext): Promise<TimeEntry> {
     const found = await this.entries.findOne({ where: { id, deletedAt: IsNull() } });
     if (!found) throw new NotFoundException('Registro no encontrado');
+    // Mismo alcance que list(): sin esto, el detalle sería la puerta que la
+    // lista cierra.
+    if (tenant && this.soloLoPropio(tenant) && found.membershipId !== tenant.membershipId) {
+      throw new NotFoundException('Registro no encontrado');
+    }
     return found;
   }
 
-  list(projectId?: string): Promise<TimeEntry[]> {
+  list(projectId?: string, tenant?: TenantContext): Promise<TimeEntry[]> {
+    const soloMias = tenant && this.soloLoPropio(tenant);
     return this.entries.find({
-      where: { deletedAt: IsNull(), ...(projectId ? { project: { id: projectId } } : {}) },
+      where: {
+        deletedAt: IsNull(),
+        ...(projectId ? { project: { id: projectId } } : {}),
+        ...(soloMias ? { membership: { id: tenant.membershipId } } : {}),
+      },
       order: { clockInAt: 'DESC' },
     });
+  }
+
+  /// Un WORKER tiene `time.read` para **sus** horas: `time_entry` lleva la
+  /// tarifa congelada y las coordenadas de cada marcaje de sus compañeros.
+  private soloLoPropio(tenant: TenantContext): boolean {
+    return tenant.role === 'WORKER';
   }
 
   // El servidor recalcula siempre. Si aceptara la bandera del dispositivo,
@@ -207,6 +235,34 @@ export class TimeEntriesService {
       if (t > now) t = now;
     }
     return { deviceRecordedAt: t, flags };
+  }
+
+  private methodFor(tenant: TenantContext, targetMembershipId: string): TimeEntry['method'] {
+    if (targetMembershipId === tenant.membershipId) return 'SELF';
+    return tenant.role === 'FOREMAN' ? 'FOREMAN' : 'ADMIN';
+  }
+
+  /// Quién estaba asignado a la obra ese día, directo o por su cuadrilla.
+  ///
+  /// La ventana es de dos días porque `work_date` es una fecha local y
+  /// `device_recorded_at` viaja en UTC: una entrada de la tarde de Maryland cae
+  /// en el día siguiente en UTC. Preferible no marcar a un encargado legítimo
+  /// que marcar de más — la bandera existe para el que aprueba, no para castigar.
+  private async recorderAssignedThatDay(
+    membershipId: string, projectId: string, cuando: Date,
+  ): Promise<boolean> {
+    const dia = cuando.toISOString().slice(0, 10);
+    const filas = (await this.entries.query(
+      `SELECT 1 FROM project_assignment a
+       LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
+         AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
+       WHERE a.project_id = $1 AND a.deleted_at IS NULL
+         AND a.work_date BETWEEN ($2::date - 1) AND $2::date
+         AND (a.membership_id = $3 OR cm.membership_id = $3)
+       LIMIT 1`,
+      [projectId, dia, membershipId],
+    )) as unknown[];
+    return filas.length > 0;
   }
 
   private async assertCanRecordForOthers(tenant: TenantContext): Promise<void> {
