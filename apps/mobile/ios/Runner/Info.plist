@@ -4,6 +4,8 @@
 <dict>
 	<key>MapsApiKey</key>
 	<string>$(MAPS_API_KEY)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Snapline opens the camera only when you choose to take a photo of the job site — for example when clocking in without GPS.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Snapline uses your location only when you tap "Use my location", to place a property on the map. It never tracks you in the background.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

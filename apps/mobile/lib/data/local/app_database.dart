@@ -22,6 +22,7 @@ part 'app_database.g.dart';
     Crews,
     CrewMembers,
     People,
+    PendingUploads,
     OutboxOperations,
     SyncCursors,
   ],
@@ -31,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -51,6 +52,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(crews);
         await m.createTable(crewMembers);
         await m.createTable(people);
+      }
+      if (from < 4) {
+        await m.createTable(pendingUploads);
       }
     },
   );

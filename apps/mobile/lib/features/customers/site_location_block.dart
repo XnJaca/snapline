@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-
+import '../../core/location/open_in_maps.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -17,15 +16,6 @@ class SiteLocationBlock extends ConsumerWidget {
   const SiteLocationBlock({super.key, required this.site});
 
   final SiteSummary site;
-
-  Future<void> _abrirEnMapas(String consulta) async {
-    // `geo:` en Android, Apple Maps en iOS. Se delega a propósito: construir
-    // navegación es lo que la visión descarta.
-    final url = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=$consulta',
-    );
-    await launchUrl(url, mode: LaunchMode.externalApplication);
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,7 +62,7 @@ class SiteLocationBlock extends ConsumerWidget {
               ),
               TextButton.icon(
                 onPressed: () =>
-                    _abrirEnMapas('${actual.lat},${actual.lng}'),
+                    openInMaps(lat: actual.lat, lng: actual.lng),
                 icon: const Icon(Icons.open_in_new),
                 label: Text(l10n.siteLocationOpenInMaps),
               ),

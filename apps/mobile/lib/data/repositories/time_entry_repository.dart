@@ -4,17 +4,60 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../local/address_json.dart';
 import '../local/app_database.dart';
 import '../local/tables.dart';
 import '../sync/outbox.dart';
 
 /// Una obra con asignación para hoy, como la ofrece la pantalla Hoy.
 class TodayProject {
-  const TodayProject({required this.id, required this.name, required this.siteId});
+  const TodayProject({
+    required this.id,
+    required this.name,
+    required this.siteId,
+    required this.address,
+    this.lat,
+    this.lng,
+  });
 
   final String id;
   final String name;
   final String siteId;
+
+  /// La dirección en una línea, para saber a dónde ir. Vacía si la propiedad
+  /// no está en local todavía.
+  final String address;
+
+  /// El punto de SPEC-0007, si alguien lo fijó: abre Mapas en el lugar exacto
+  /// y no en el centro de la manzana.
+  final double? lat;
+  final double? lng;
+
+  bool get hasLocation => lat != null && lng != null;
+}
+
+/// Una persona de la obra de hoy, con el estado de su jornada.
+class CrewmateToday {
+  const CrewmateToday({
+    required this.membershipId,
+    required this.name,
+    required this.role,
+    this.openEntryId,
+    this.lastClockIn,
+    this.lastClockOut,
+  });
+
+  final String membershipId;
+  final String name;
+  final String role;
+
+  /// La jornada abierta de hoy en esta obra, si hay.
+  final String? openEntryId;
+  final DateTime? lastClockIn;
+  final DateTime? lastClockOut;
+
+  bool get adentro => openEntryId != null;
+  bool get marcoHoy => lastClockIn != null;
 }
 
 /// Una jornada como la muestran las pantallas.
@@ -146,9 +189,11 @@ class TimeEntryRepository {
 
     final consulta = _db.customSelect(
       '''
-      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id
+      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng
       FROM project_assignments a
       JOIN projects p ON p.id = a.project_id AND p.deleted_at IS NULL
+      LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
       LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
         AND cm.deleted_at IS NULL
         AND a.work_date >= cm.from_date
@@ -164,20 +209,131 @@ class TimeEntryRepository {
         Variable<String>(membershipId),
         Variable<String>(membershipId),
       ],
-      readsFrom: {_db.projectAssignments, _db.projects, _db.crewMembers},
+      readsFrom: {
+        _db.projectAssignments,
+        _db.projects,
+        _db.sites,
+        _db.crewMembers,
+      },
     );
 
     return consulta.watch().map(
-      (filas) => filas
-          .map(
-            (f) => TodayProject(
-              id: f.read<String>('id'),
-              name: f.read<String>('name'),
-              siteId: f.read<String>('site_id'),
-            ),
-          )
-          .toList(growable: false),
+      (filas) => filas.map(_obraDeHoy).toList(growable: false),
     );
+  }
+
+  /// El lugar de una obra puntual: el contexto de la jornada abierta, que no
+  /// depende de que la asignación de hoy siga existiendo.
+  Stream<TodayProject?> watchPlace(String projectId) {
+    final consulta = _db.customSelect(
+      '''
+      SELECT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng
+      FROM projects p
+      LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
+      WHERE p.id = ? AND p.deleted_at IS NULL
+      ''',
+      variables: [Variable<String>(projectId)],
+      readsFrom: {_db.projects, _db.sites},
+    );
+    return consulta
+        .watch()
+        .map((filas) => filas.isEmpty ? null : _obraDeHoy(filas.first));
+  }
+
+  static TodayProject _obraDeHoy(QueryRow f) => TodayProject(
+    id: f.read<String>('id'),
+    name: f.read<String>('name'),
+    siteId: f.read<String>('site_id'),
+    address: AddressJson.oneLine(
+      AddressJson.decode(f.readNullable<String>('address')),
+    ),
+    lat: f.readNullable<double>('lat'),
+    lng: f.readNullable<double>('lng'),
+  );
+
+  /// La gente asignada a una obra **hoy** —directa o por cuadrilla— con el
+  /// estado de su jornada: es la lista del foreman, quién marcó y quién no.
+  Stream<List<CrewmateToday>> watchCrewToday(String projectId) {
+    final hoy = DateTime.now();
+    final inicio = DateTime(hoy.year, hoy.month, hoy.day);
+    final fin = inicio.add(const Duration(days: 1));
+
+    final consulta = _db.customSelect(
+      '''
+      SELECT pe.membership_id AS membership_id, pe.name AS name, pe.role AS role,
+             t.id AS entry_id, t.clock_in_at AS clock_in_at,
+             t.clock_out_at AS clock_out_at
+      FROM (
+        SELECT DISTINCT COALESCE(a.membership_id, cm.membership_id) AS membership_id
+        FROM project_assignments a
+        LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
+          AND cm.deleted_at IS NULL
+          AND a.work_date >= cm.from_date
+          AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+        WHERE a.project_id = ?1 AND a.deleted_at IS NULL
+          AND a.work_date >= ?2 AND a.work_date < ?3
+      ) asignados
+      JOIN people pe ON pe.membership_id = asignados.membership_id
+      LEFT JOIN time_entries t ON t.membership_id = pe.membership_id
+        AND t.project_id = ?1 AND t.deleted_at IS NULL
+        AND t.clock_in_at >= ?2 AND t.clock_in_at < ?3
+      ORDER BY pe.name ASC, t.clock_in_at DESC
+      ''',
+      variables: [
+        Variable<String>(projectId),
+        Variable<DateTime>(inicio),
+        Variable<DateTime>(fin),
+      ],
+      readsFrom: {
+        _db.projectAssignments,
+        _db.crewMembers,
+        _db.people,
+        _db.timeEntries,
+      },
+    );
+
+    return consulta.watch().map((filas) {
+      // Varias jornadas de la misma persona en el día: gana la más reciente,
+      // que es la primera por el ORDER BY.
+      final porPersona = <String, CrewmateToday>{};
+      for (final f in filas) {
+        final id = f.read<String>('membership_id');
+        if (porPersona.containsKey(id)) continue;
+        final salida = f.readNullable<DateTime>('clock_out_at');
+        final entrada = f.readNullable<DateTime>('clock_in_at');
+        porPersona[id] = CrewmateToday(
+          membershipId: id,
+          name: f.read<String>('name'),
+          role: f.read<String>('role'),
+          openEntryId:
+              entrada != null && salida == null ? f.readNullable<String>('entry_id') : null,
+          lastClockIn: entrada,
+          lastClockOut: salida,
+        );
+      }
+      return porPersona.values.toList(growable: false);
+    });
+  }
+
+  /// Toda la gente conocida en este teléfono. Es la salida de escape del
+  /// foreman: marcar por alguien que no aparece asignado — la bandera del
+  /// servidor lo señala, no lo bloquea.
+  Stream<List<CrewmateToday>> watchEveryone() {
+    return (_db.select(_db.people)
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .watch()
+        .map(
+          (filas) => filas
+              .map(
+                (p) => CrewmateToday(
+                  membershipId: p.membershipId,
+                  name: p.name,
+                  role: p.role,
+                ),
+              )
+              .toList(growable: false),
+        );
   }
 
   // ─── Escritura ─────────────────────────────────────────────────────────────
@@ -191,6 +347,7 @@ class TimeEntryRepository {
     required String membershipId,
     required String recordedByMembershipId,
     required String companyId,
+    String recordedByRole = 'WORKER',
     ClockEvidence evidence = const ClockEvidence(),
     DateTime? occurredAt,
   }) async {
@@ -208,10 +365,12 @@ class TimeEntryRepository {
           membershipId: membershipId,
           recordedByMembershipId: recordedByMembershipId,
           clockInAt: cuando,
-          // Aproximación local: sin el rol de quien marca no se distingue
-          // FOREMAN de ADMIN. El valor real lo fija el servidor y llega por el
-          // pull; cuando exista la pantalla de marcar por otro, pasar el rol.
-          method: membershipId == recordedByMembershipId ? 'SELF' : 'FOREMAN',
+          // El mismo criterio que el servidor: SELF si es propio; si no, el
+          // rol de quien marca. "Lo marcó un foreman" cuando marcó el dueño es
+          // un dato falso en el rastro de la regla 12.
+          method: membershipId == recordedByMembershipId
+              ? 'SELF'
+              : (recordedByRole == 'FOREMAN' ? 'FOREMAN' : 'ADMIN'),
           status: 'PENDING',
           flags: const Value('[]'),
         ),

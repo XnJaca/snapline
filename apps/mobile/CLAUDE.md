@@ -52,6 +52,15 @@ certificado en Android, bundle id en iOS. Una filtrada no sirve en la otra.
 iOS pide **deployment target 14.0** como mínimo, que es lo que exige
 `google_maps_flutter_ios`. Está fijado en el `Podfile` y en el proyecto de Xcode.
 
+### Si iOS deja de linkear: `Framework 'Pods_Runner' not found`
+
+Pasa después de cambiar de rama o de que se borren ramas mergeadas: la carpeta
+`Pods/` no se versiona y queda desincronizada del `Podfile` del branch actual.
+
+```bash
+cd ios && rm -rf Pods .symlinks && pod install
+```
+
 ## Código generado — qué lo produce
 
 | Qué | Comando | Sale en |

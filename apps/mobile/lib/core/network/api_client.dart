@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/clients/auth_client.dart';
+import '../../api/clients/media_client.dart';
 import '../../api/clients/sync_client.dart';
 import '../session/session_controller.dart';
 import 'auth_interceptor.dart';
@@ -48,6 +49,10 @@ final authClientProvider = Provider<AuthClient>((ref) {
 
 /// Con el Dio interceptado: sincronizar necesita token, y si vence a mitad el
 /// interceptor lo renueva y reintenta una vez.
+final mediaClientProvider = Provider<MediaClient>((ref) {
+  return MediaClient(ref.watch(dioProvider));
+});
+
 final syncClientProvider = Provider<SyncClient>((ref) {
   return SyncClient(ref.watch(dioProvider));
 });

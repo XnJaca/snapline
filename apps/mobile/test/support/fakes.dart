@@ -13,6 +13,9 @@ import 'package:snapline/core/theme/theme_store.dart';
 import 'package:snapline/main.dart';
 import 'package:snapline/api/models/project_status.dart';
 import 'package:snapline/data/local/app_database.dart';
+import 'package:uuid/uuid.dart';
+import 'package:snapline/data/repositories/time_entry_repository.dart';
+import 'package:snapline/data/sync/outbox.dart';
 import 'package:snapline/data/local/tables.dart';
 import 'package:snapline/data/sync/connectivity.dart';
 import 'package:snapline/data/sync/sync_controller.dart';
@@ -23,6 +26,7 @@ import 'package:snapline/api/models/auth_user_dto.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/location/device_location.dart';
+import 'package:snapline/core/media/photo_capture.dart';
 import 'package:snapline/core/session/session.dart';
 
 /// Almacenamiento en memoria: el Keychain no existe en un test de unidad.
@@ -183,11 +187,19 @@ Session buildSession({
 /// Base en memoria: cada test arranca con la suya, vacía.
 AppDatabase testDatabase() => AppDatabase(NativeDatabase.memory());
 
+TimeEntryRepository testTimeEntryRepository(AppDatabase db) =>
+    TimeEntryRepository(db, Outbox(db, const Uuid()), const Uuid());
+
 /// No toca la red. La sincronización de verdad se prueba contra el API en
 /// `integration_test/`; acá lo que importa es que la UI lea de local.
 class FakeSyncController extends SyncController {
   @override
   Future<bool> build() async => true;
+}
+
+class _CamaraNula implements PhotoCapture {
+  @override
+  Future<String?> takePhoto() async => null;
 }
 
 /// La app montada para un test: base en memoria, sin red, con la sesión que se
@@ -201,11 +213,15 @@ Widget testApp({
   LocaleStore? localeStore,
   ThemeStore? themeStore,
   DeviceLocation? deviceLocation,
+  PhotoCapture? photoCapture,
 }) {
   return ProviderScope(
     overrides: [
       if (deviceLocation != null)
         deviceLocationProvider.overrideWithValue(deviceLocation),
+      // Siempre con cámara falsa: la real es un canal de plataforma que en un
+      // test cuelga para siempre bajo el reloj falso.
+      photoCaptureProvider.overrideWithValue(photoCapture ?? _CamaraNula()),
       appDatabaseProvider.overrideWithValue(db),
       syncControllerProvider.overrideWith(FakeSyncController.new),
       sessionStorageProvider.overrideWithValue(

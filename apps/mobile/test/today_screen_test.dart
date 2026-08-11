@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_membership_dto_role.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/location/device_location.dart';
+import 'package:snapline/core/media/photo_capture.dart';
 import 'package:snapline/core/widgets/field_action_button.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/local/tables.dart';
@@ -22,6 +25,13 @@ class _GpsFijo implements DeviceLocation {
 
   @override
   Future<LocationResult> current() async => resultado;
+}
+
+class _CamaraFija implements PhotoCapture {
+  const _CamaraFija(this.ruta);
+  final String? ruta;
+  @override
+  Future<String?> takePhoto() async => ruta;
 }
 
 const _gpsOk = LocationResult.ok(39.0042, -77.0261);
@@ -86,6 +96,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Marcar entrada'), findsOneWidget);
+    // Ver a dónde ir: la dirección en la tarjeta y el camino a Mapas.
+    expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
+    expect(find.byIcon(Icons.directions_outlined), findsOneWidget);
+
     await tester.tap(find.byType(FieldActionButton));
     // El cronómetro es un Timer.periodic: pumpAndSettle no "asienta" nunca.
     await tester.pump(const Duration(seconds: 2));
@@ -99,6 +113,14 @@ void main() {
 
     final ops = await db.select(db.outboxOperations).get();
     expect(ops.where((o) => o.type == SyncOp.timeEntryClockIn), hasLength(1));
+
+    // El cronómetro no es un número suelto: la obra, su dirección y el ánimo
+    // siguen en pantalla con la jornada abierta. El lugar emite un frame
+    // después de la jornada: un pump más.
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Techo Martinez'), findsOneWidget);
+    expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
+    expect(find.textContaining('Arrancó la jornada'), findsOneWidget);
     await desmontar(tester);
   });
 
@@ -132,6 +154,36 @@ void main() {
       payload.contains('"isMockLocation":true'),
       isTrue,
       reason: 'sin esta bandera la geocerca es teatro',
+    );
+    await desmontar(tester);
+  });
+
+  testWidgets('sin GPS con foto: el marcaje lleva la foto de respaldo', (tester) async {
+    await asignadaHoy('m1');
+    final foto = File('${Directory.systemTemp.path}/frente.jpg')
+      ..writeAsBytesSync([9, 9, 9]);
+    addTearDown(() => foto.deleteSync());
+
+    await tester.pumpWidget(
+      testApp(
+        db: db,
+        session: buildSession(role: AuthMembershipDtoRole.worker),
+        deviceLocation: const _GpsFijo(_gpsDenegado),
+        photoCapture: _CamaraFija(foto.path),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FieldActionButton));
+    await tester.pump(const Duration(seconds: 2));
+
+    final ops = await db.select(db.outboxOperations).get();
+    final marcaje = ops.firstWhere((o) => o.type == SyncOp.timeEntryClockIn);
+    expect(marcaje.payload, contains('photoId'));
+    expect(
+      ops.where((o) => o.type == SyncOp.mediaRegister),
+      hasLength(1),
+      reason: 'la foto se registra por la bandeja, el binario espera',
     );
     await desmontar(tester);
   });

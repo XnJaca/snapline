@@ -1,2 +1,3 @@
 /* El porqué del permiso, en el diálogo del sistema. */
 "NSLocationWhenInUseUsageDescription" = "Snapline uses your location only when you tap \"Use my location\", to place a property on the map. It never tracks you in the background.";
+"NSCameraUsageDescription" = "Snapline opens the camera only when you choose to take a photo of the job site — for example when clocking in without GPS.";
