@@ -108,12 +108,76 @@ async function seed(): Promise<void> {
     ),
   );
 
+  const foremanId = await obtenerOCrear(
+    ds, 'app_user', 'phone = $1', ['+15557654321'],
+    (id) => ds.query(
+      `INSERT INTO app_user (id, phone, password_hash, name, locale) VALUES ($1,$2,$3,$4,$5)`,
+      [id, '+15557654321', password, 'María López', 'es'],
+    ),
+  );
+
+  const foremanMembershipId = await obtenerOCrear(
+    ds, 'membership', 'company_id = $1 AND user_id = $2', [companyId, foremanId],
+    (id) => ds.query(
+      `INSERT INTO membership (id, company_id, user_id, role, status, pay_rate_cents, employment_type, joined_at)
+       VALUES ($1,$2,$3,'FOREMAN','ACTIVE',4500,'W2',now())`,
+      [id, companyId, foremanId],
+    ),
+  );
+
+  const crewId = await obtenerOCrear(
+    ds, 'crew', 'company_id = $1 AND name = $2', [companyId, 'Cuadrilla A'],
+    (id) => ds.query(
+      `INSERT INTO crew (id, company_id, name, foreman_membership_id, color)
+       VALUES ($1,$2,'Cuadrilla A',$3,'#2563EB')`,
+      [id, companyId, foremanMembershipId],
+    ),
+  );
+
+  // La forewoman integra su propia cuadrilla: la ficha lo exige.
+  for (const miembro of [foremanMembershipId, workerMembershipId]) {
+    await obtenerOCrear(
+      ds, 'crew_member', 'crew_id = $1 AND membership_id = $2', [crewId, miembro],
+      (id) => ds.query(
+        `INSERT INTO crew_member (id, company_id, crew_id, membership_id, from_date)
+         VALUES ($1,$2,$3,$4,'2026-01-01')`,
+        [id, companyId, crewId, miembro],
+      ),
+    );
+  }
+
   const projectId = await obtenerOCrear(
     ds, 'project', 'company_id = $1 AND name = $2', [companyId, 'Techo Martinez'],
     (id) => ds.query(
       `INSERT INTO project (id, company_id, customer_id, site_id, name, service_type, status)
        VALUES ($1,$2,$3,$4,'Techo Martinez','roofing','IN_PROGRESS')`,
       [id, companyId, customerId, siteId],
+    ),
+  );
+
+  const georgiaSiteId = (await ds.query(
+    `SELECT id FROM site WHERE customer_id = $1 AND address->>'line1' = $2`,
+    [customerId, '9800 Georgia Ave'],
+  ) as Array<{ id: string }>)[0]?.id;
+  if (georgiaSiteId) {
+    await obtenerOCrear(
+      ds, 'project', 'company_id = $1 AND name = $2', [companyId, 'Baño Martinez'],
+      (id) => ds.query(
+        `INSERT INTO project (id, company_id, customer_id, site_id, name, service_type, status)
+         VALUES ($1,$2,$3,$4,'Baño Martinez','bathroom','IN_PROGRESS')`,
+        [id, companyId, customerId, georgiaSiteId],
+      ),
+    );
+  }
+
+  // La cuadrilla asignada a la obra hoy: es lo que hace probable el marcaje,
+  // el pull del foreman y la bandera de asignación.
+  await obtenerOCrear(
+    ds, 'project_assignment', 'project_id = $1 AND crew_id = $2 AND work_date = CURRENT_DATE', [projectId, crewId],
+    (id) => ds.query(
+      `INSERT INTO project_assignment (id, company_id, project_id, crew_id, work_date)
+       VALUES ($1,$2,$3,$4,CURRENT_DATE)`,
+      [id, companyId, projectId, crewId],
     ),
   );
 
@@ -130,6 +194,8 @@ async function seed(): Promise<void> {
     companyId, projectId, customerId, siteId,
     owner: { email: 'william@pcdmv.com', membershipId: ownerMembershipId },
     worker: { phone: '+15551234567', membershipId: workerMembershipId },
+    foreman: { phone: '+15557654321', membershipId: foremanMembershipId },
+    crewId,
     password: 'Snapline123!',
   }, null, 2));
 

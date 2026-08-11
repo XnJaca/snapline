@@ -14,7 +14,8 @@ export const PERMISSIONS = {
   'crews.write': ['OWNER', 'ADMIN'],
 
   'time.clock': ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER'],
-  'time.read': ['OWNER', 'ADMIN', 'FOREMAN', 'ACCOUNTANT'],
+  // Un WORKER lee **sus** horas: el servicio acota el alcance por rol.
+  'time.read': ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER', 'ACCOUNTANT'],
   // Nadie aprueba sus propias horas; el servicio lo verifica además del rol.
   'time.approve': ['OWNER', 'ADMIN'],
 

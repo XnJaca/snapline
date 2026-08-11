@@ -47,11 +47,17 @@ para más de un contratista.
 |---|---|
 | `OWNER` | Todo. William |
 | `ADMIN` | Todo menos la facturación de la cuenta. La persona de oficina |
-| `FOREMAN` | Su cuadrilla: marcar por su gente, fotos, ver su proyecto |
-| `WORKER` | Marcar entrada y salida, tomar fotos. Nada más |
+| `FOREMAN` | Marcar por quien fue a su obra ese día —el criterio es la obra, no la cuadrilla, ver [[registro-de-tiempo]]—, fotos, ver su proyecto |
+| `WORKER` | Marcar entrada y salida, ver sus propias horas, tomar fotos. Nada más |
 | `ACCOUNTANT` | Solo lectura de reportes y comercial. **Cero acceso a fotos** |
 
 ## Invariantes
+
+- **`pay_rate_cents` solo lo ven `OWNER` y `ADMIN`.** Es lo que gana cada
+  persona, y la membresía viaja embebida en cuadrillas y asignaciones que ven
+  otros roles: en el API va con `select: false` y fuera del contrato, y quien lo
+  necesita —aprobar congela la tarifa— lo selecciona explícito. Nunca baja al
+  teléfono, con ningún rol.
 
 - `email` o `phone`: al menos uno. No pueden ser ambos nulos.
 - Una empresa tiene **exactamente un** `OWNER` activo.

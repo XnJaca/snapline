@@ -1,3 +1,4 @@
+import { ApiHideProperty } from '@nestjs/swagger';
 import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { SoftDeletableTenantEntity } from '../../common/entities/base.entity';
 import { AppUser } from './app-user.entity';
@@ -19,7 +20,13 @@ export class Membership extends SoftDeletableTenantEntity {
   role!: MembershipRole;
 
   // Cambiarla no recalcula horas ya aprobadas: TimeEntry congela su propia copia.
-  @Column({ type: 'bigint', name: 'pay_rate_cents', nullable: true, transformer: {
+  //
+  // `select: false` como `passwordHash`: es lo que gana cada persona, y la
+  // membresía viaja embebida en cuadrillas y asignaciones que ven FOREMAN y
+  // WORKER. Quien la necesite —aprobar congela la tarifa— la selecciona
+  // explícito.
+  @ApiHideProperty()
+  @Column({ type: 'bigint', name: 'pay_rate_cents', nullable: true, select: false, transformer: {
     to: (v: number | null) => v,
     from: (v: string | null) => (v === null ? null : Number(v)),
   } })

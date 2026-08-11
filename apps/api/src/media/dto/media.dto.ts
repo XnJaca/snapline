@@ -1,5 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
-import { MediaKind, MediaVisibility } from '../entities/media-asset.entity';
+import { MediaAsset, MediaKind, MediaVisibility } from '../entities/media-asset.entity';
 
 export class RegisterAssetDto {
   @IsOptional() @IsUUID() id?: string;
@@ -18,4 +19,21 @@ export class RegisterAssetDto {
 
 export class SetVisibilityDto {
   @IsEnum(['INTERNAL', 'CLIENT', 'PUBLIC']) visibility!: MediaVisibility;
+}
+
+/**
+ * Lo que devuelve registrar un asset. Sin este DTO la respuesta salía al
+ * contrato como `{}` y el cliente Dart descartaba la `uploadUrl` sin fallar
+ * (regla 8).
+ */
+export class RegisterAssetResponseDto {
+  @ApiProperty({ type: MediaAsset }) asset!: MediaAsset;
+  uploadUrl!: string;
+  uploadUrlExpiresInSeconds!: number;
+}
+
+/** Una URL firmada de vida corta. La misma forma para subir y para descargar. */
+export class SignedUrlDto {
+  url!: string;
+  expiresInSeconds!: number;
 }

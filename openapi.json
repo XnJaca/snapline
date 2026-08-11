@@ -1927,7 +1927,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterAssetResponseDto"
+                }
+              }
+            }
           },
           "400": {
             "description": "Error",
@@ -2010,7 +2017,104 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedUrlDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/media/{id}/upload-url": {
+      "get": {
+        "operationId": "Media_uploadUrl",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedUrlDto"
+                }
+              }
+            }
           },
           "400": {
             "description": "Error",
@@ -7822,10 +7926,6 @@
               "ACCOUNTANT"
             ]
           },
-          "payRateCents": {
-            "type": "number",
-            "nullable": true
-          },
           "employmentType": {
             "type": "string",
             "nullable": true,
@@ -7876,7 +7976,6 @@
           "user",
           "userId",
           "role",
-          "payRateCents",
           "employmentType",
           "status",
           "invitedAt",
@@ -8214,6 +8313,40 @@
           "checksum"
         ]
       },
+      "RegisterAssetResponseDto": {
+        "type": "object",
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/MediaAsset"
+          },
+          "uploadUrl": {
+            "type": "string"
+          },
+          "uploadUrlExpiresInSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "asset",
+          "uploadUrl",
+          "uploadUrlExpiresInSeconds"
+        ]
+      },
+      "SignedUrlDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "expiresInSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "url",
+          "expiresInSeconds"
+        ]
+      },
       "SetVisibilityDto": {
         "type": "object",
         "properties": {
@@ -8363,10 +8496,6 @@
             "type": "string",
             "nullable": true
           },
-          "payRateCentsSnapshot": {
-            "type": "number",
-            "nullable": true
-          },
           "flags": {
             "type": "array",
             "items": {
@@ -8421,7 +8550,6 @@
           "status",
           "approvedByMembershipId",
           "approvedAt",
-          "payRateCentsSnapshot",
           "flags",
           "deletedAt",
           "companyId",
@@ -10163,6 +10291,32 @@
           "offerId"
         ]
       },
+      "SyncPersonDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "enum": [
+              "OWNER",
+              "ADMIN",
+              "FOREMAN",
+              "WORKER",
+              "ACCOUNTANT"
+            ],
+            "type": "string"
+          },
+          "membershipId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "membershipId",
+          "name"
+        ]
+      },
       "SyncPullResponseDto": {
         "type": "object",
         "properties": {
@@ -10207,6 +10361,24 @@
               "$ref": "#/components/schemas/TimeEntry"
             }
           },
+          "crews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Crew"
+            }
+          },
+          "crewMembers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CrewMember"
+            }
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncPersonDto"
+            }
+          },
           "deleted": {
             "type": "object",
             "additionalProperties": {
@@ -10226,6 +10398,9 @@
           "assignments",
           "mediaAssets",
           "timeEntries",
+          "crews",
+          "crewMembers",
+          "people",
           "deleted"
         ]
       },
@@ -10390,6 +10565,7 @@
               "PHOTO_RELEASE_REQUIRED",
               "EXIF_NOT_STRIPPED",
               "UPLOAD_NOT_READY",
+              "MEDIA_ALREADY_UPLOADED",
               "ASSET_NOT_PUBLIC",
               "ALREADY_PUBLISHED",
               "ESTIMATE_ALREADY_SENT",

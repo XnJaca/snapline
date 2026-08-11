@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0008: Asistencia en el móvil"
 type: spec
 platform: mobile
-status: aprobado
+status: en-implementacion
 goal: "Marcar entrada y salida —propia o por otro que fue a la misma obra— nunca falla: sin señal, sin GPS, sin cámara y sin asignación cargada siempre queda el registro con lo que haya y su bandera, y un choque de horas al sincronizar queda en `CONFLICT` sin sobrescribir nada."
 apps:
   - mobile
@@ -24,7 +24,7 @@ created: 2026-08-10
 updated: 2026-08-11
 tags:
   - spec
-  - spec/aprobado
+  - spec/en-implementacion
   - mobile
 ---
 
@@ -449,23 +449,25 @@ que la visión descartó.
       galería del teléfono**, y el `media_asset` queda con su `capturedAt`.
 - [ ] `openapi.json` declara la respuesta de `POST /media` y de la URL de subida con
       sus campos, y el cliente Dart las expone tipadas y no como `dynamic`.
-- [ ] Un `FOREMAN` marca por alguien asignado a la misma obra ese día: queda con
-      `method = FOREMAN`, `recorded_by_membership_id` distinto de `membership_id`, y
-      **sin** bandera.
-- [ ] Un `FOREMAN` marca por alguien **no** asignado a esa obra ese día: **se registra
-      igual**, con `RECORDER_NOT_ASSIGNED`. No hay ninguna entrada que devuelva 403 por
-      esto, y hay un caso en `edge-cases/` que lo afirma.
-- [ ] Con `project_assignment` vacío —que es el estado de hoy— nadie queda sin poder
+- [x] Un `FOREMAN` **que está asignado a la obra ese día** —directo o por su
+      cuadrilla— marca por otro: queda con `method = FOREMAN`,
+      `recorded_by_membership_id` distinto de `membership_id`, y **sin** bandera.
+      La condición es sobre quien marca; el destinatario no se evalúa.
+- [x] Un `FOREMAN` **sin asignación en esa obra ese día** marca por otro: **se
+      registra igual**, con `RECORDER_NOT_ASSIGNED` — también al cerrar la jornada
+      de otro. No hay ninguna entrada que devuelva 403 por esto, y hay un caso en
+      `edge-cases/` que lo afirma.
+- [x] Con `project_assignment` vacío —que es el estado de hoy— nadie queda sin poder
       marcar: todos se registran, todos con la bandera.
-- [ ] Un `OWNER` que marca por otro queda con `method = ADMIN`, no `FOREMAN`.
-- [ ] Un `FOREMAN` que sincroniza **no** se baja clientes ni horas ajenas a sus obras,
+- [x] Un `OWNER` que marca por otro queda con `method = ADMIN`, no `FOREMAN`.
+- [x] Un `FOREMAN` que sincroniza **no** se baja clientes ni horas ajenas a sus obras,
       con su caso en `edge-cases/`.
-- [ ] `pay_rate_cents` no aparece en ninguna respuesta que baje al móvil.
+- [x] `pay_rate_cents` no aparece en ninguna respuesta que baje al móvil.
 - [ ] `is_mock_location` viaja en toda marca, y una entrada con GPS simulado en
       Android llega al servidor con su bandera.
 - [ ] El servidor recalcula `within_geofence` y `distance_m`: una entrada que los
       manda desde el dispositivo los recibe ignorados.
-- [ ] Un `FOREMAN` que sincroniza **recibe** su cuadrilla, sus miembros vigentes y el
+- [x] Un `FOREMAN` que sincroniza **recibe** su cuadrilla, sus miembros vigentes y el
       nombre de cada uno: la pantalla muestra personas y no UUIDs.
 - [ ] Un `WORKER` ve la dirección de la obra de hoy y la abre en la app de mapas del
       teléfono, **sin pasar por ninguna pantalla de clientes** — no tiene permiso para
@@ -535,6 +537,9 @@ Empieza en 10 segundos y se ajusta con William en la obra, no en una reunión.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | **Verificado contra la base viva**: 27 comprobaciones por API real —los dos pulls acotados, la bandera en obra ajena y su ausencia en la propia, `method` por rol, cero tarifas en ningún cuerpo, y media tipado— todas en verde. Los siete criterios del API quedan en `[x]`; los del móvil esperan la tanda 2. De paso quedó verificado que la bandera **sobrevive al cierre** de la jornada. |
+| 2026-08-11 | en implementación | Primera tanda terminada: los siete prerequisitos del API, revisados con `domain-guardian`, `contract-watcher` y `code-reviewer`. El guardián encontró de paso una fuga real —`pay_rate_cents` bajaba embebido en cuadrillas y asignaciones, hasta un `WORKER` podía ver la tarifa de sus compañeros— cerrada con el patrón de `passwordHash`, también para el snapshot de `time_entry`. Del reviewer salieron la bandera en `clockOut`, la vigencia en la visibilidad de cuadrillas y los edge-cases que faltaban o no afirmaban nada. **Los criterios no se marcan todavía**: los casos de Bruno están escritos pero sin correr contra la base —Docker apagado—, y marcar con la verificación pendiente es el error que SPEC-0004 ya pagó una vez. Se corren antes del merge. |
+| 2026-08-11 | en implementación | Primera tanda: los siete prerequisitos de `apps/api`, que bloquean todo lo del móvil. |
 | 2026-08-11 | aprobado | Su único bloqueo era SPEC-0007, mergeado en el PR #12: la geocerca ya tiene punto contra el cual evaluar. `geolocator` quedó instalado y heredado, como ADR-0012 había previsto. |
 | 2026-08-10 | review | Entra al alcance **ver a dónde ir**: la obra de hoy muestra su dirección y su punto y se abre en la app de mapas. Sale de revisar SPEC-0007, que prometía eso en su `goal` y no podía cumplirlo — su pantalla está detrás de `customers.read` y un `WORKER` nunca llega. "Hoy" es la única pantalla que ese rol abre, así que el dato se muestra acá. |
 | 2026-08-10 | borrador | Revisado con `spec-reviewer`, que encontró **una contradicción con la visión**: `vision.md` ya había decidido ese mismo día quién ficha por otro, y con otro criterio —la obra y no la cuadrilla, aplicado como bandera y no como bloqueo—, cerrando su argumento en que `time.approve` sigue siendo de `OWNER`/`ADMIN`. La primera versión de este spec lo había resuelto por cuadrilla y con el foreman aprobando, que es exactamente lo que ese texto descarta por nombre. **Gana la visión**: se reescribieron el prerequisito 0, el alcance, la UI y los criterios; la aprobación en el móvil salió del alcance. Del mismo repaso salieron el estado `READY` que el criterio de la foto citaba mal como `uploaded`, el contrato de API con sus shapes, y que `method` dice `FOREMAN` aunque marque el dueño. |

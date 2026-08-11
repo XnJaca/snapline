@@ -23,11 +23,10 @@ kanban-plugin: board
 
 ## ✅ Aprobado (listo para implementar)
 
-- [ ] [[specs/mobile/0008-asistencia-en-el-movil/README|SPEC-0008: Asistencia en el móvil]] — desbloqueado por el merge de SPEC-0007; cierra los dos criterios de `CONFLICT` de SPEC-0004
-
 
 ## 🛠️ En implementación
 
+- [ ] [[specs/mobile/0008-asistencia-en-el-movil/README|SPEC-0008: Asistencia en el móvil]] — primera tanda en curso: los siete prerequisitos del API
 - [ ] [[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004: Capa local y sincronización]] — contrato, capa local y bandeja listos; faltan los dos criterios de `CONFLICT`, que dependen del marcaje
 
 

@@ -21,14 +21,37 @@ docs {
   Lo que baja **queda en disco** en el teléfono. Que el móvil esconda la pantalla
   no alcanza: un dispositivo perdido o robado ya tiene los datos.
 
-  Sin asignaciones vigentes el WORKER recibe las seis colecciones vacías, que es
-  lo que este caso afirma. Con una asignación tiene que recibir **solo** el
-  cliente, el sitio y la obra de esa asignación — nunca los demás.
+  El seed asigna la Cuadrilla A —donde está el worker— a la obra de hoy, así que
+  recibe **exactamente uno** de cada: el cliente, la obra y su cuadrilla de esa
+  asignación, nunca la cartera. Y ni una tarifa en todo el cuerpo: ni
+  `payRateCents` ni `payRateCentsSnapshot` existen en ninguna colección.
 }
 assert { res.status: eq 200
-  res.body.customers: isEmpty
-  res.body.sites: isEmpty
-  res.body.projects: isEmpty
-  res.body.timeEntries: isEmpty
-  res.body.mediaAssets: isEmpty
+  res.body.customers.length: eq 1
+  res.body.projects.length: eq 1
+  res.body.sites.length: eq 1
+  res.body.crews.length: eq 1
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (JSON.stringify(body).includes("payRateCents")) {
+    throw new Error("la tarifa está bajando al teléfono");
+  }
+  // Nada puede colgar de una obra o un cliente que no bajó, y las horas son
+  // exclusivamente las propias.
+  const obras = new Set((body.projects ?? []).map((p) => p.id));
+  for (const m of body.mediaAssets ?? []) {
+    if (!obras.has(m.projectId)) throw new Error("fotos de una obra ajena están bajando");
+  }
+  const clientes = new Set((body.customers ?? []).map((c) => c.id));
+  for (const s of body.sites ?? []) {
+    if (!clientes.has(s.customerId)) throw new Error("una propiedad ajena está bajando");
+  }
+  const yo = (body.people ?? []).find((p) => p.name === "Carlos Ramírez");
+  for (const t of body.timeEntries ?? []) {
+    if (yo && t.membershipId !== yo.membershipId) {
+      throw new Error("horas ajenas están bajando a un WORKER");
+    }
+  }
 }

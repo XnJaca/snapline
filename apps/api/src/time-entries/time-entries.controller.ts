@@ -12,14 +12,20 @@ export class TimeEntriesController {
 
   @RequirePermission('time.read')
   @Get()
-  list(@Query('projectId') projectId?: string): Promise<TimeEntry[]> {
-    return this.service.list(projectId);
+  list(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('projectId') projectId?: string,
+  ): Promise<TimeEntry[]> {
+    return this.service.list(projectId, tenant);
   }
 
   @RequirePermission('time.read')
   @Get(':id')
-  get(@Param('id', ParseUUIDPipe) id: string): Promise<TimeEntry> {
-    return this.service.get(id);
+  get(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentTenant() tenant: TenantContext,
+  ): Promise<TimeEntry> {
+    return this.service.get(id, tenant);
   }
 
   @RequirePermission('time.clock')

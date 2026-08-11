@@ -1,0 +1,72 @@
+meta { name: FOREMAN marca por otro en una obra ajena y queda la bandera, no un 403
+  type: http
+  seq: 18
+}
+post { url: {{base_url}}/time-entries/clock-in
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{obra_sin_asignacion_id}}",
+    "membershipId": "{{owner_membership_id}}",
+    "deviceRecordedAt": "{{$isoTimestamp}}"
+  }
+}
+
+script:pre-request {
+  const base = bru.getEnvVar("base_url");
+  const login = async (identifier, password) => {
+    const r = await fetch(`${base}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, password }),
+    });
+    return r.json();
+  };
+
+  const foreman = await login(bru.getEnvVar("foreman_identifier"), bru.getEnvVar("foreman_password"));
+  bru.setVar("foreman_token", foreman.accessToken);
+  req.setHeader("Authorization", `Bearer ${foreman.accessToken}`);
+
+  // El destinatario: el dueño, que no tiene entradas abiertas en la colección.
+  const owner = await login(bru.getEnvVar("owner_identifier"), bru.getEnvVar("owner_password"));
+  bru.setVar("owner_membership_id", owner.membership.id);
+
+  // La obra donde María NO está asignada, sembrada a propósito.
+  const proyectos = await (await fetch(`${base}/projects`, {
+    headers: { Authorization: `Bearer ${foreman.accessToken}` },
+  })).json();
+  const bano = (proyectos ?? []).find((p) => p.name === "Baño Martinez");
+  bru.setVar("obra_sin_asignacion_id", bano?.id ?? "");
+}
+
+docs {
+  El criterio para que un foreman marque por otro es **la obra, no la cuadrilla**,
+  y se aplica como bandera y no como bloqueo (regla 9): María no está asignada al
+  Baño Martinez —el seed lo crea sin asignaciones— y el marcaje entra igual, con
+  `RECORDER_NOT_ASSIGNED` para quien aprueba. Si esto respondiera 403, una
+  asignación sin cargar dejaría a una cuadrilla entera sin poder fichar.
+
+  El registro queda con `method = FOREMAN` y `recordedBy` distinto del dueño de
+  la hora — el rastro de la regla 12.
+}
+assert { res.status: eq 201
+  res.body.method: eq FOREMAN
+}
+
+script:post-response {
+  const cuerpo = res.getBody();
+  if (!(cuerpo.flags ?? []).includes("RECORDER_NOT_ASSIGNED")) {
+    throw new Error("marcar sin asignación tiene que dejar la bandera");
+  }
+  // Limpieza: cerrar lo que este caso abrió, para no romper a los siguientes.
+  await fetch(`${bru.getEnvVar("base_url")}/time-entries/${cuerpo.id}/clock-out`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${bru.getVar("foreman_token")}`,
+    },
+    body: JSON.stringify({ deviceRecordedAt: new Date(Date.now() + 2000).toISOString() }),
+  });
+}

@@ -1,0 +1,53 @@
+meta { name: FOREMAN marca por otro en su obra y no hay bandera
+  type: http
+  seq: 19
+}
+post { url: {{base_url}}/time-entries/clock-in
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "projectId": "{{obra_asignada_id}}",
+    "membershipId": "{{owner_membership_id}}",
+    "deviceRecordedAt": "{{$isoTimestamp}}"
+  }
+}
+
+script:pre-request {
+  const base = bru.getEnvVar("base_url");
+  const token = bru.getVar("foreman_token");
+  req.setHeader("Authorization", `Bearer ${token}`);
+
+  // La obra con la Cuadrilla A asignada hoy, que María lidera.
+  const proyectos = await (await fetch(`${base}/projects`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })).json();
+  const techo = (proyectos ?? []).find((p) => p.name === "Techo Martinez");
+  bru.setVar("obra_asignada_id", techo?.id ?? "");
+}
+
+docs {
+  La otra mitad del criterio: María sí está asignada hoy al Techo Martinez —por
+  su cuadrilla, no directo, que es el camino que resuelve el JOIN con
+  `crew_member`— así que marcar por otro ahí **no** deja bandera. Corre después
+  de `foreman-marca-sin-asignacion`, que deja los tokens y el destinatario.
+}
+assert { res.status: eq 201
+  res.body.method: eq FOREMAN
+}
+
+script:post-response {
+  const cuerpo = res.getBody();
+  if ((cuerpo.flags ?? []).includes("RECORDER_NOT_ASSIGNED")) {
+    throw new Error("asignado por su cuadrilla no puede quedar marcado");
+  }
+  await fetch(`${bru.getEnvVar("base_url")}/time-entries/${cuerpo.id}/clock-out`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${bru.getVar("foreman_token")}`,
+    },
+    body: JSON.stringify({ deviceRecordedAt: new Date(Date.now() + 2000).toISOString() }),
+  });
+}

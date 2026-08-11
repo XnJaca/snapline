@@ -7,9 +7,9 @@ import { newId } from '../common/entities/base.entity';
 import { TenantContext } from '../tenant/tenant-context';
 import { Project } from '../projects/entities/project.entity';
 import { MediaAsset } from './entities/media-asset.entity';
-import { RegisterAssetDto, SetVisibilityDto } from './dto/media.dto';
+import { RegisterAssetDto, RegisterAssetResponseDto, SetVisibilityDto, SignedUrlDto } from './dto/media.dto';
 import sharp from 'sharp';
-import { StorageService } from '../storage/storage.service';
+import { DOWNLOAD_TTL_SECONDS, StorageService, UPLOAD_TTL_SECONDS } from '../storage/storage.service';
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/jpeg': '.jpg',
@@ -50,7 +50,7 @@ export class MediaService {
    * confirma con markUploaded, así el registro existe desde el disparo de la foto.
    */
   @Transactional()
-  async register(dto: RegisterAssetDto, tenant: TenantContext): Promise<{ asset: MediaAsset; uploadUrl: string }> {
+  async register(dto: RegisterAssetDto, tenant: TenantContext): Promise<RegisterAssetResponseDto> {
     const project = await this.projects.findOne({ where: { id: dto.projectId, deletedAt: IsNull() } });
     if (!project) throw new NotFoundException('Proyecto no encontrado');
 
@@ -59,7 +59,11 @@ export class MediaService {
       where: { project: { id: dto.projectId }, checksum: dto.checksum, deletedAt: IsNull() },
     });
     if (existing) {
-      return { asset: existing, uploadUrl: await this.storage.presignUpload(existing.storageKey, existing.mime) };
+      return {
+        asset: existing,
+        uploadUrl: await this.storage.presignUpload(existing.storageKey, existing.mime),
+        uploadUrlExpiresInSeconds: UPLOAD_TTL_SECONDS,
+      };
     }
 
     const id = dto.id ?? newId();
@@ -88,6 +92,7 @@ export class MediaService {
     return {
       asset: await this.get(id),
       uploadUrl: await this.storage.presignUpload(asset.storageKey, asset.mime),
+      uploadUrlExpiresInSeconds: UPLOAD_TTL_SECONDS,
     };
   }
 
@@ -165,8 +170,29 @@ export class MediaService {
   }
 
   /** URL firmada y de vida corta para ver el archivo. Nunca una ruta pública. */
-  async downloadUrl(id: string): Promise<{ url: string; expiresInSeconds: number }> {
+  async downloadUrl(id: string): Promise<SignedUrlDto> {
     const asset = await this.get(id);
-    return { url: await this.storage.presignDownload(asset.storageKey), expiresInSeconds: 600 };
+    return {
+      url: await this.storage.presignDownload(asset.storageKey),
+      expiresInSeconds: DOWNLOAD_TTL_SECONDS,
+    };
+  }
+
+  /**
+   * La URL de subida de un asset que ya está registrado. Es el camino del
+   * reintento offline: `media.register` entra por la bandeja sin poder devolver
+   * dónde subir, y el binario sube después con esto.
+   */
+  async uploadUrl(id: string): Promise<SignedUrlDto> {
+    const asset = await this.get(id);
+    // Un asset ya subido no se vuelve a subir: markUploaded le quitó el EXIF, y
+    // una segunda subida lo repondría con las coordenadas de la casa adentro.
+    if (asset.uploadStatus === 'READY') {
+      throw ApiError.conflict('MEDIA_ALREADY_UPLOADED', 'El archivo ya está subido');
+    }
+    return {
+      url: await this.storage.presignUpload(asset.storageKey, asset.mime),
+      expiresInSeconds: UPLOAD_TTL_SECONDS,
+    };
   }
 }
