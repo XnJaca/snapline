@@ -25,6 +25,7 @@ class _GpsFijo implements DeviceLocation {
 }
 
 const _gpsOk = LocationResult.ok(39.0042, -77.0261);
+const _gpsSimulado = LocationResult.ok(39.0042, -77.0261, isMocked: true);
 const _gpsDenegado = LocationResult.failed(LocationFailure.denied);
 
 
@@ -112,6 +113,26 @@ void main() {
     final filas = await db.select(db.timeEntries).get();
     expect(filas, hasLength(1), reason: 'ninguna rama termina sin fila');
     expect(find.textContaining('sin ubicación'), findsOneWidget);
+    await desmontar(tester);
+  });
+
+  testWidgets('el GPS simulado viaja con su bandera — regla 11', (tester) async {
+    await asignadaHoy('m1');
+    await tester.pumpWidget(app(gps: _gpsSimulado));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FieldActionButton));
+    await tester.pump(const Duration(seconds: 2));
+
+    final ops = await db.select(db.outboxOperations).get();
+    final payload = ops
+        .firstWhere((o) => o.type == SyncOp.timeEntryClockIn)
+        .payload;
+    expect(
+      payload.contains('"isMockLocation":true'),
+      isTrue,
+      reason: 'sin esta bandera la geocerca es teatro',
+    );
     await desmontar(tester);
   });
 

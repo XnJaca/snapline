@@ -7,6 +7,7 @@ import '../../core/location/device_location.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/field_action_button.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
@@ -38,41 +39,49 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       _sinUbicacionAviso = false;
     });
 
-    // La escalera de evidencia: se intenta el GPS con su tope. Lo que no haya
-    // no detiene nada — la ausencia viaja como ausencia y el servidor pone la
-    // bandera. (La foto de respaldo entra con la tanda de cámara.)
-    final ubicacion = await ref.read(deviceLocationProvider).current();
-    final evidencia = ClockEvidence(
-      lat: ubicacion.lat,
-      lng: ubicacion.lng,
-      isMockLocation: false,
-    );
-
-    final repo = ref.read(timeEntryRepositoryProvider);
-    if (abierta != null) {
-      await repo.clockOut(abierta.id, evidence: evidencia);
-    } else {
-      final obras = await repo.watchTodayProjects(sesion.membership.id).first;
-      final obra = _obraElegida ?? (obras.length == 1 ? obras.first.id : null);
-      if (obra == null) {
-        // Sin obra elegible no hay marcaje que hacer; la pantalla ya lo explica.
-        if (mounted) setState(() => _marcando = false);
-        return;
-      }
-      await repo.clockIn(
-        projectId: obra,
-        membershipId: sesion.membership.id,
-        recordedByMembershipId: sesion.membership.id,
-        companyId: sesion.membership.companyId,
-        evidence: evidencia,
+    var conUbicacion = false;
+    try {
+      // La escalera de evidencia: se intenta el GPS con su tope. Lo que no haya
+      // no detiene nada — la ausencia viaja como ausencia y el servidor pone la
+      // bandera. (La foto de respaldo entra con la tanda de cámara.)
+      final ubicacion = await ref.read(deviceLocationProvider).current();
+      conUbicacion = ubicacion.isOk;
+      final evidencia = ClockEvidence(
+        lat: ubicacion.lat,
+        lng: ubicacion.lng,
+        isMockLocation: ubicacion.isMocked,
       );
-    }
 
-    if (!mounted) return;
-    setState(() {
-      _marcando = false;
-      _sinUbicacionAviso = !ubicacion.isOk;
-    });
+      final repo = ref.read(timeEntryRepositoryProvider);
+      if (abierta != null) {
+        await repo.clockOut(abierta.id, evidence: evidencia);
+      } else {
+        final obras = await repo.watchTodayProjects(sesion.membership.id).first;
+        // Solo una obra de HOY: una elección de ayer que ya no está asignada
+        // no puede mandar la hora a la obra equivocada.
+        final vigente = obras.any((o) => o.id == _obraElegida);
+        final obra =
+            (vigente ? _obraElegida : null) ??
+            (obras.length == 1 ? obras.first.id : null);
+        if (obra == null) return;
+        await repo.clockIn(
+          projectId: obra,
+          membershipId: sesion.membership.id,
+          recordedByMembershipId: sesion.membership.id,
+          companyId: sesion.membership.companyId,
+          evidence: evidencia,
+        );
+      }
+    } finally {
+      // Pase lo que pase, el botón vuelve: dejarlo muerto sin mensaje es la
+      // rama que la regla 9 prohíbe.
+      if (mounted) {
+        setState(() {
+          _marcando = false;
+          _sinUbicacionAviso = !conUbicacion;
+        });
+      }
+    }
   }
 
   @override
@@ -98,11 +107,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ),
       ],
       body: obras.isEmpty && abierta == null
-          ? _Vacio(message: l10n.todayNoAssignments)
+          ? EmptyState(
+              icon: Icons.event_busy_outlined,
+              message: l10n.todayNoAssignments,
+            )
           : _Jornada(
               obras: obras,
               abierta: abierta,
-              obraElegida: _obraElegida,
+              obraElegida: obras.any((o) => o.id == _obraElegida)
+                  ? _obraElegida
+                  : null,
               marcando: _marcando,
               sinUbicacionAviso: _sinUbicacionAviso,
               onElegirObra: (id) => setState(() => _obraElegida = id),
@@ -327,39 +341,6 @@ class _ObraCard extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Vacio extends StatelessWidget {
-  const _Vacio({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.event_busy_outlined,
-              size: 48,
-              color: context.colors.onSurfaceVariant,
-            ),
-            SizedBox(height: context.spacing.md),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: context.texts.bodyMedium?.copyWith(
-                color: context.colors.onSurfaceVariant,
-              ),
-            ),
-          ],
         ),
       ),
     );

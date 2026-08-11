@@ -208,6 +208,9 @@ class TimeEntryRepository {
           membershipId: membershipId,
           recordedByMembershipId: recordedByMembershipId,
           clockInAt: cuando,
+          // Aproximación local: sin el rol de quien marca no se distingue
+          // FOREMAN de ADMIN. El valor real lo fija el servidor y llega por el
+          // pull; cuando exista la pantalla de marcar por otro, pasar el rol.
           method: membershipId == recordedByMembershipId ? 'SELF' : 'FOREMAN',
           status: 'PENDING',
           flags: const Value('[]'),
