@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0004: Capa local y sincronización"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "Ninguna pantalla lee de la red —todas observan la base local— y toda escritura hecha sin señal llega al servidor sola cuando vuelve, exactamente una vez."
 apps:
   - mobile
@@ -22,7 +22,7 @@ created: 2026-08-09
 updated: 2026-08-09
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -275,8 +275,9 @@ en el cliente.
 - [x] Mandar dos veces el mismo `customer.update` lo aplica una sola vez, y la
       segunda vuelve `duplicate`.
 - [x] `pull().deleted` incluye `sites` y `assignments`.
-- [ ] Solo `TIME_ENTRY_ALREADY_OPEN` y `TIME_ENTRY_ALREADY_CLOSED` dejan una fila
+- [x] Solo `TIME_ENTRY_ALREADY_OPEN` y `TIME_ENTRY_ALREADY_CLOSED` dejan una fila
       en `CONFLICT`; cualquier otro código la deja reintentable.
+      *Verificado en `time_entry_conflict_test.dart` (SPEC-0008, tanda 2).*
 - [x] `billing_address` y `site.address` salen al contrato con sus seis campos,
       no como objeto vacío, y comparten el mismo DTO.
 - [x] Ninguna pantalla importa un cliente de `lib/api/`: se verifica con una
@@ -286,8 +287,9 @@ en el cliente.
 - [x] Reenviar la misma operación dos veces deja **una** fila en el servidor, y
       la segunda vuelve `duplicate`.
 - [x] Matar la app con la bandeja llena y reabrirla no pierde ninguna operación.
-- [ ] Un `time_entry` con escritura concurrente queda `CONFLICT` y **no** se
-      sobrescribe solo.
+- [x] Un `time_entry` con escritura concurrente queda `CONFLICT` y **no** se
+      sobrescribe solo. *Ni el push la reenvía ni el pull la pisa: los dos
+      caminos verificados observando el stream, como hace la UI.*
 - [x] Un borrado en el servidor llega al dispositivo como marca, no como
       `DELETE`, y la fila deja de listarse.
 - [x] El cursor que se guarda es el `serverTime` de la respuesta.
@@ -321,6 +323,7 @@ Regenerar es parte de esto, no un paso aparte.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | implementado | Los dos criterios de `CONFLICT` cerraron con la capa de datos del marcaje (SPEC-0008, tanda 2): el choque deja la fila en `CONFLICT` visible por stream, la operación no se reenvía, y el pull no la pisa. Eran los últimos abiertos. |
 | 2026-08-09 | borrador | Creado. Sale de decidir offline-first de verdad en vez de leer del API con deuda registrada. Los dos prerequisitos de `apps/api` se encontraron leyendo el contrato: el pull devuelve `unknown[]` y el push no acepta correcciones. |
 | 2026-08-09 | borrador | Revisado con `spec-reviewer`. **Un hallazgo grave**: `/sync` gatea el endpoint entero con `time.clock`, así que un `WORKER` puede crear clientes y proyectos saltándose `customers.write`/`projects.write`. Sumados cuatro huecos más que no se veían leyendo el documento: falta `site.create` —lo encontraron dos revisores por separado—, la idempotencia se apoya en que el recurso no exista y por eso rompe con los `update`, `deleted[]` no emite `site` ni `project_assignment`, y no había señal para distinguir un conflicto de `time_entry` de una falla común. |
 | 2026-08-09 | en implementación | Primera mitad, PR #2 mergeado: los cinco arreglos de contrato —incluido el agujero de permisos— y la capa local leyendo de Drift. Verificado en teléfono real con el internet apagado. |
