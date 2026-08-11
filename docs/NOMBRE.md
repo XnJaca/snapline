@@ -29,7 +29,9 @@ También existen: un manejador de capturas de pantalla, un POS para bares (snapl
 Google no es la autoridad. Los tres lugares que sí lo son:
 
 - [ ] **App Store Connect** — reservar el nombre. Es lo único que confirma disponibilidad en iOS; si está tomado, el envío se rechaza.
-- [ ] **Google Play Console** — verificar el bundle `com.snapline.*`.
+- [ ] **Google Play Console** — verificar el bundle `com.snapline.app`, que es el
+      que la app declara desde el 2026-08-10 en Android y en iOS. Si estuviera
+      tomado, hay que renombrar **antes** de la primera subida.
 - [ ] **USPTO TESS** (tmsearch.uspto.gov) — buscar marcas registradas en la clase de software. Aquí se aclara de verdad lo de Graco.
 - [ ] **Dominio** — probar `snapline.app`, `getsnapline.com`, `snapline.build`.
 
@@ -39,3 +41,13 @@ Google no es la autoridad. Los tres lugares que sí lo son:
 - **Remate** — el acabado final de una obra. Vocabulario real del gremio hispano.
 
 Mientras no haya bundle ID publicado, renombrar cuesta un `mv` y un buscar-reemplazar.
+
+> **El identificador ya está elegido: `com.snapline.app`**, en Android y en iOS
+> (2026-08-10). Reemplaza al `com.snapline.snapline` que generaba Flutter por
+> defecto y que nadie había decidido.
+>
+> Salió al restringir la clave de Google Maps, que exige declarar el paquete. La
+> ventana era esa: **una vez publicada la app, el identificador no se cambia — se
+> publica otra**, y se pierde a todo el que la tenía instalada. El bundle no
+> necesita un dominio que se posea, así que no depende de cuál de los tres se
+> consiga.

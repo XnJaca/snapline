@@ -16,7 +16,7 @@ val mapsApiKey: String = Properties().apply {
 }.getProperty("MAPS_API_KEY", "")
 
 android {
-    namespace = "com.snapline.snapline"
+    namespace = "com.snapline.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -30,8 +30,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.snapline.snapline"
+        // Es la identidad de la app en Play: una vez publicada no se cambia, se
+        // publica otra. Elegido a propósito antes de la primera subida.
+        applicationId = "com.snapline.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
