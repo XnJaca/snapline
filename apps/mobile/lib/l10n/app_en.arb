@@ -119,7 +119,7 @@
   },
   "projectsSearchHint": "Search by project or customer",
   "projectsEmptySearch": "No projects match that search",
-  "projectPendingSync": "Not uploaded yet",
+  "projectPendingSync": "Saved on this phone",
 
   "projectNewTitle": "New project",
   "projectEditTitle": "Edit project",
@@ -177,7 +177,7 @@
   "customersNew": "New customer",
   "customersEmpty": "No customers yet. Add the first one to start a project.",
   "customersEmptySearch": "No customers match that search",
-  "customerPendingSync": "Not uploaded yet",
+  "customerPendingSync": "Saved on this phone",
 
   "customerSectionDetails": "Details",
   "customerSectionSites": "Properties",
