@@ -41,7 +41,8 @@ class MediaUploader {
         // "Ya subido" es éxito: un reintento anterior llegó y la confirmación
         // se perdió en el camino. Se deja de reintentar. El código viene en el
         // envelope de ADR-0011.
-        final code = (e.response?.data as Map<String, Object?>?)?['code'];
+        final data = e.response?.data;
+        final code = data is Map ? data['code'] : null;
         if (code == 'MEDIA_ALREADY_UPLOADED') {
           await _media.markUploaded(pendiente.assetId);
           subidos++;

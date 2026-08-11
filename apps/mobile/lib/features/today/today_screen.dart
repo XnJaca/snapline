@@ -41,6 +41,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     });
 
     var conUbicacion = false;
+    var marco = false;
     try {
       final repo = ref.read(timeEntryRepositoryProvider);
       if (abierta != null) {
@@ -49,6 +50,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             .collect(projectId: abierta.projectId);
         conUbicacion = capturada.conUbicacion || capturada.conFoto;
         await repo.clockOut(abierta.id, evidence: capturada.evidence);
+        marco = true;
       } else {
         final obras = await repo.watchTodayProjects(sesion.membership.id).first;
         // Solo una obra de HOY: una elección de ayer que ya no está asignada
@@ -69,6 +71,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           companyId: sesion.membership.companyId,
           evidence: capturada.evidence,
         );
+        marco = true;
       }
     } finally {
       // Pase lo que pase, el botón vuelve: dejarlo muerto sin mensaje es la
@@ -76,7 +79,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       if (mounted) {
         setState(() {
           _marcando = false;
-          _sinUbicacionAviso = !conUbicacion;
+          // Solo si de verdad se escribió: "quedó registrada igual" sobre una
+          // fila que no existe sería una confirmación falsa en el agregado más
+          // delicado del sistema.
+          _sinUbicacionAviso = marco && !conUbicacion;
         });
       }
     }

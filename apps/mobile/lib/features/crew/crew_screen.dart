@@ -155,13 +155,16 @@ class _Gente extends ConsumerWidget {
           _PersonaCard(
             persona: persona,
             ocupada: marcando == persona.membershipId,
-            onMarcar: () => onMarcar(persona),
+            // Un marcaje a la vez: los demás botones se apagan de verdad, no
+            // solo el de la persona en curso — un botón que parece vivo y no
+            // hace nada es peor que uno gris.
+            onMarcar: marcando != null ? null : () => onMarcar(persona),
           ),
           SizedBox(height: context.spacing.sm),
         ],
         SizedBox(height: context.spacing.md),
         OutlinedButton.icon(
-          onPressed: onOtraPersona,
+          onPressed: marcando != null ? null : onOtraPersona,
           icon: const Icon(Icons.person_add_alt_outlined),
           label: Text(l10n.crewSomeoneElse),
         ),
@@ -179,7 +182,7 @@ class _PersonaCard extends StatelessWidget {
 
   final CrewmateToday persona;
   final bool ocupada;
-  final VoidCallback onMarcar;
+  final VoidCallback? onMarcar;
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +231,7 @@ class _PersonaCard extends StatelessWidget {
             tooltip: persona.adentro
                 ? l10n.crewClockOutFor(persona.name)
                 : l10n.crewClockInFor(persona.name),
-            onPressed: ocupada ? null : onMarcar,
+            onPressed: onMarcar,
             icon: ocupada
                 ? const SizedBox.square(
                     dimension: 20,

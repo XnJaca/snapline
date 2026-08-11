@@ -48,11 +48,23 @@ class EvidenceCollector {
     }
 
     // El segundo escalón: la foto del frente de obra. Registrarla nunca espera
-    // a la red — el binario sube después, con reintento.
+    // a la red — el binario sube después, con reintento. Y **nada de esto puede
+    // tumbar el marcaje** (regla 9): un archivo ilegible o una transacción que
+    // falla cuentan como "sin foto", no como "sin jornada".
     String? photoId;
-    final ruta = await _camera.takePhoto();
-    if (ruta != null) {
-      photoId = await _media.registerPhoto(projectId: projectId, filePath: ruta);
+    try {
+      final ruta = await _camera.takePhoto();
+      if (ruta != null) {
+        photoId = await _media.registerPhoto(
+          projectId: projectId,
+          filePath: ruta,
+          // Lo más cerca del disparo que se puede sin leer EXIF: recién
+          // vuelto de la cámara.
+          capturedAt: DateTime.now(),
+        );
+      }
+    } on Object {
+      photoId = null;
     }
 
     return CollectedEvidence(

@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0008: Asistencia en el móvil"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "Marcar entrada y salida —propia o por otro que fue a la misma obra— nunca falla: sin señal, sin GPS, sin cámara y sin asignación cargada siempre queda el registro con lo que haya y su bandera, y un choque de horas al sincronizar queda en `CONFLICT` sin sobrescribir nada."
 apps:
   - mobile
@@ -24,7 +24,7 @@ created: 2026-08-10
 updated: 2026-08-11
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -427,27 +427,27 @@ que la visión descartó.
 
 ## Criterios de aceptación
 
-- [ ] Con el GPS denegado, marcar entrada **pide la foto**; con el GPS disponible, no
+- [x] Con el GPS denegado, marcar entrada **pide la foto**; con el GPS disponible, no
       la pide.
-- [ ] Con el GPS y la cámara denegados, la entrada **se registra igual**, con
+- [x] Con el GPS y la cámara denegados, la entrada **se registra igual**, con
       `NO_LOCATION` y `NO_PHOTO`.
-- [ ] Ninguna rama del marcaje puede terminar sin fila escrita: hay una prueba que
+- [x] Ninguna rama del marcaje puede terminar sin fila escrita: hay una prueba que
       deniega todos los permisos y corta la red, y la fila existe.
-- [ ] El cronómetro arranca al instante y con la red caída, con `sync_status = PENDING`.
-- [ ] Una entrada marcada sin señal llega al servidor **exactamente una vez** aunque
+- [x] El cronómetro arranca al instante y con la red caída, con `sync_status = PENDING`.
+- [x] Una entrada marcada sin señal llega al servidor **exactamente una vez** aunque
       se reintente.
-- [ ] Marcar entrada dos veces deja la segunda fila en `CONFLICT` con
+- [x] Marcar entrada dos veces deja la segunda fila en `CONFLICT` con
       `TIME_ENTRY_ALREADY_OPEN`, y **no se reintenta sola**. *(Cierra el criterio
       abierto de SPEC-0004.)*
-- [ ] Marcar salida sobre un registro ya cerrado la deja en `CONFLICT` con
+- [x] Marcar salida sobre un registro ya cerrado la deja en `CONFLICT` con
       `TIME_ENTRY_ALREADY_CLOSED`.
-- [ ] Cualquier otro código de error deja la operación reintentable y **no** marca
+- [x] Cualquier otro código de error deja la operación reintentable y **no** marca
       conflicto.
-- [ ] La foto de respaldo tomada sin señal sube sola cuando vuelve la red, y su
+- [x] La foto de respaldo tomada sin señal sube sola cuando vuelve la red, y su
       `media_asset` queda en `READY`.
-- [ ] La cámara del marcaje se abre en captura directa: **no hay camino desde ahí a la
+- [x] La cámara del marcaje se abre en captura directa: **no hay camino desde ahí a la
       galería del teléfono**, y el `media_asset` queda con su `capturedAt`.
-- [ ] `openapi.json` declara la respuesta de `POST /media` y de la URL de subida con
+- [x] `openapi.json` declara la respuesta de `POST /media` y de la URL de subida con
       sus campos, y el cliente Dart las expone tipadas y no como `dynamic`.
 - [x] Un `FOREMAN` **que está asignado a la obra ese día** —directo o por su
       cuadrilla— marca por otro: queda con `method = FOREMAN`,
@@ -463,20 +463,20 @@ que la visión descartó.
 - [x] Un `FOREMAN` que sincroniza **no** se baja clientes ni horas ajenas a sus obras,
       con su caso en `edge-cases/`.
 - [x] `pay_rate_cents` no aparece en ninguna respuesta que baje al móvil.
-- [ ] `is_mock_location` viaja en toda marca, y una entrada con GPS simulado en
+- [x] `is_mock_location` viaja en toda marca, y una entrada con GPS simulado en
       Android llega al servidor con su bandera.
-- [ ] El servidor recalcula `within_geofence` y `distance_m`: una entrada que los
+- [x] El servidor recalcula `within_geofence` y `distance_m`: una entrada que los
       manda desde el dispositivo los recibe ignorados.
 - [x] Un `FOREMAN` que sincroniza **recibe** su cuadrilla, sus miembros vigentes y el
       nombre de cada uno: la pantalla muestra personas y no UUIDs.
-- [ ] Un `WORKER` ve la dirección de la obra de hoy y la abre en la app de mapas del
+- [x] Un `WORKER` ve la dirección de la obra de hoy y la abre en la app de mapas del
       teléfono, **sin pasar por ninguna pantalla de clientes** — no tiene permiso para
       esas.
-- [ ] Ninguna pantalla de asistencia importa un cliente de `lib/api/` — lo verifica la
+- [x] Ninguna pantalla de asistencia importa un cliente de `lib/api/` — lo verifica la
       prueba que ya recorre `lib/features/`.
-- [ ] La pantalla se ve entera en claro y en oscuro, y ningún label se corta en
+- [x] La pantalla se ve entera en claro y en oscuro, y ningún label se corta en
       español.
-- [ ] Cero cadenas quemadas: todo el copy nuevo —banderas, `CONFLICT`, estados vacíos,
+- [x] Cero cadenas quemadas: todo el copy nuevo —banderas, `CONFLICT`, estados vacíos,
       el texto de cada bandera— existe en `en` y en `es`, agregado en el mismo commit.
 
 ## Riesgos / consideraciones
@@ -537,6 +537,7 @@ Empieza en 10 segundos y se ajusta con William en la obra, no en una reunión.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | implementado | Tanda 3 completa (Hoy con dirección y ánimo, la cuadrilla del foreman, la foto de respaldo con su subida) y revisada: el `code-reviewer` cazó una rama donde un archivo ilegible tumbaba el marcaje **confirmando en falso** — cerrada con su test. Verificado en un iPhone real durante el desarrollo. La reorganización de UI que salió de esa prueba es SPEC-0009 y no toca esta lógica. La transición vale con el merge. |
 | 2026-08-11 | en implementación | Tanda 2 (PRs #16 y #17): la capa de datos, los dos criterios de `CONFLICT` de SPEC-0004 cerrados con tests, y la pantalla Hoy con Mi semana. El `code-reviewer` encontró un grave real: `is_mock_location` viajaba hardcodeado en `false` — la regla 11 aparentaba cumplirse sin cumplirse. Arreglado leyendo `Position.isMocked`, con su test. También: `_marcar` blindado con `finally` (regla 9), la obra elegida se valida contra las asignaciones de hoy, y el estado vacío reusa `EmptyState`. **Quedan para las tandas siguientes, a propósito**: la foto de respaldo con su subida, la vista de cuadrilla del foreman con marcar-por-otro, y "ver a dónde ir" en Hoy — sus criterios siguen en `[ ]`. |
 | 2026-08-11 | en implementación | **Verificado contra la base viva**: 27 comprobaciones por API real —los dos pulls acotados, la bandera en obra ajena y su ausencia en la propia, `method` por rol, cero tarifas en ningún cuerpo, y media tipado— todas en verde. Los siete criterios del API quedan en `[x]`; los del móvil esperan la tanda 2. De paso quedó verificado que la bandera **sobrevive al cierre** de la jornada. |
 | 2026-08-11 | en implementación | Primera tanda terminada: los siete prerequisitos del API, revisados con `domain-guardian`, `contract-watcher` y `code-reviewer`. El guardián encontró de paso una fuga real —`pay_rate_cents` bajaba embebido en cuadrillas y asignaciones, hasta un `WORKER` podía ver la tarifa de sus compañeros— cerrada con el patrón de `passwordHash`, también para el snapshot de `time_entry`. Del reviewer salieron la bandera en `clockOut`, la vigencia en la visibilidad de cuadrillas y los edge-cases que faltaban o no afirmaban nada. **Los criterios no se marcan todavía**: los casos de Bruno están escritos pero sin correr contra la base —Docker apagado—, y marcar con la verificación pendiente es el error que SPEC-0004 ya pagó una vez. Se corren antes del merge. |

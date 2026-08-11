@@ -52,9 +52,10 @@ class SyncEngine {
       _otraVez = false;
       ok = await _ref.read(synchronizerProvider).sync();
     }
-    // Los binarios van después del push: el registro del asset tiene que
-    // existir en el servidor antes de pedir dónde subirlo.
-    await _ref.read(mediaUploaderProvider).subirPendientes();
+    // Los binarios van después de un push que ENTRÓ: el registro del asset
+    // tiene que existir en el servidor antes de pedir dónde subirlo, y con el
+    // push caído cada intento sería un 404 seguro.
+    if (ok) await _ref.read(mediaUploaderProvider).subirPendientes();
     return ok;
   }
 }

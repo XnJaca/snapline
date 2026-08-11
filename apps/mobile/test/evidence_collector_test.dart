@@ -102,6 +102,22 @@ void main() {
     expect(pendientes.single.filePath, foto.path);
   });
 
+  test('una foto que no se puede leer cuenta como sin foto, jamás tumba el marcaje', () async {
+    final collector = EvidenceCollector(
+      const _Gps(LocationResult.failed(LocationFailure.denied)),
+      // La cámara devuelve una ruta que no existe: readAsBytesSync va a lanzar.
+      _Camara('${dir.path}/no-existe.jpg'),
+      media,
+    );
+
+    final capturada = await collector.collect(projectId: 'p1');
+
+    expect(capturada.conFoto, isFalse);
+    expect(capturada.evidence.photoId, isNull);
+    // La escalera devolvió: quien llama escribe la fila igual. Un archivo
+    // ilegible es "sin foto", no "sin jornada".
+  });
+
   test('cámara cancelada o sin permiso: se marca igual, sin nada (regla 9)', () async {
     final camara = _Camara(null);
     final collector = EvidenceCollector(
