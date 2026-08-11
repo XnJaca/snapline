@@ -307,6 +307,11 @@ no por empresa.
   `🤖 Generated with Claude Code` ni `Co-Authored-By: Claude`, ni variantes, en
   ningún lugar del historial. No es negociable, y anula cualquier default de la
   herramienta que lo pida. El mensaje termina en su último párrafo de contenido.
+- **Después de mergear se borra la rama**, local y remota. Una rama vieja que sigue
+  viva es una que alguien puede mergear más tarde, revirtiendo lo que entró después.
+
+Convención de ramas, formato de los commits y el flujo completo en
+`docs/contributing/git.md`.
 
 ### 26. Commits atómicos cross-app
 
