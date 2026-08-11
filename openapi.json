@@ -8860,11 +8860,11 @@
           "crew": {
             "$ref": "#/components/schemas/Crew"
           },
-          "crewId": {
-            "type": "string"
-          },
           "membership": {
             "$ref": "#/components/schemas/Membership"
+          },
+          "crewId": {
+            "type": "string"
           },
           "membershipId": {
             "type": "string"
@@ -8897,9 +8897,7 @@
           }
         },
         "required": [
-          "crew",
           "crewId",
-          "membership",
           "membershipId",
           "fromDate",
           "toDate",

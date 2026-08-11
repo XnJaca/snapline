@@ -88,6 +88,70 @@ class ProjectAssignments extends Table with SyncedTable {
   IntColumn get plannedHeadcount => integer().nullable()();
 }
 
+/// Las horas de la persona —o de su gente, si es foreman.
+///
+/// El agregado más delicado del sistema (regla 12): es la única tabla cuyo
+/// `syncStatus` puede llegar a `CONFLICT`, y ahí se queda hasta que lo mire un
+/// humano.
+@DataClassName('LocalTimeEntry')
+class TimeEntries extends Table with SyncedTable {
+  TextColumn get projectId => text()();
+  TextColumn get membershipId => text()();
+
+  /// Quién marcó. No siempre es el dueño de la hora: el foreman marca por los
+  /// suyos, y ese rastro es la defensa legal de la regla 12.
+  TextColumn get recordedByMembershipId => text()();
+
+  DateTimeColumn get clockInAt => dateTime()();
+  DateTimeColumn get clockOutAt => dateTime().nullable()();
+  IntColumn get breakMinutes => integer().withDefault(const Constant(0))();
+
+  /// `SELF`, `FOREMAN` o `ADMIN`, como texto: un valor nuevo del servidor llega
+  /// sin romper la base local.
+  TextColumn get method => text()();
+
+  /// `PENDING` → `APPROVED` · `REJECTED`.
+  TextColumn get status => text()();
+
+  /// La lista de banderas como JSON. Informan, nunca bloquean (regla 9).
+  TextColumn get flags => text().withDefault(const Constant('[]'))();
+}
+
+/// Las cuadrillas que la persona lidera o integra. Se cachean para que el
+/// foreman vea a su gente sin señal.
+@DataClassName('LocalCrew')
+class Crews extends Table with SyncedTable {
+  TextColumn get name => text()();
+  TextColumn get foremanMembershipId => text().nullable()();
+  TextColumn get color => text().nullable()();
+}
+
+/// La pertenencia lleva fechas: la gente rota, y un reporte de marzo refleja
+/// quién estaba en marzo.
+@DataClassName('LocalCrewMember')
+class CrewMembers extends Table with SyncedTable {
+  TextColumn get crewId => text()();
+  TextColumn get membershipId => text()();
+  DateTimeColumn get fromDate => dateTime()();
+  DateTimeColumn get toDate => dateTime().nullable()();
+}
+
+/// La identidad mínima de cada membresía: un nombre donde iría un UUID.
+///
+/// Es una proyección del servidor, no un agregado: sin `SyncedTable` porque no
+/// tiene ediciones locales que sincronizar, y su baja se aplica borrando la
+/// fila — no hay dispositivo al que propagarle este borrado, la fuente es el
+/// pull mismo.
+@DataClassName('LocalPerson')
+class People extends Table {
+  TextColumn get membershipId => text()();
+  TextColumn get name => text()();
+  TextColumn get role => text()();
+
+  @override
+  Set<Column> get primaryKey => {membershipId};
+}
+
 /// La bandeja de salida.
 ///
 /// **Es una tabla y no una lista en memoria**: sobrevive a que el sistema mate

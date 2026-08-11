@@ -63,7 +63,12 @@ class Synchronizer {
   /// y esa queda encolada con su motivo.
   Future<bool> push() async {
     try {
-      final pendientes = await _outbox.pending();
+      // Lo que quedó en conflicto no se reenvía: el servidor va a responder lo
+      // mismo, y la regla 12 dice que lo resuelve un humano, no un reintento.
+      // La operación sigue en la cola para que se vea — solo no viaja.
+      final pendientes = (await _outbox.pending())
+          .where((op) => !conflictCodes.contains(op.lastError))
+          .toList();
       if (pendientes.isEmpty) return true;
 
       final respuesta = await _api.syncPush(
@@ -110,8 +115,21 @@ class Synchronizer {
       await _outbox.markFailed(resultado.clientId, resultado.code);
 
       if (conflictCodes.contains(resultado.code)) {
-        // Queda en la cola igual: sale cuando un humano resuelva el conflicto,
-        // no por reintento (regla 12).
+        // La fila local queda en CONFLICT y ahí se queda hasta que la mire un
+        // humano: las horas de alguien no se sobrescriben solas (regla 12). La
+        // operación queda en la cola igual — sale cuando se resuelva, no por
+        // reintento.
+        final operacion = await _outbox.byClientId(resultado.clientId);
+        if (operacion != null) {
+          await _db.customUpdate(
+            'UPDATE time_entries SET sync_status = ? WHERE id = ?',
+            variables: [
+              Variable<int>(SyncStatus.conflict.index),
+              Variable<String>(operacion.targetId),
+            ],
+            updates: {_db.timeEntries},
+          );
+        }
         developer.log(
           'conflicto en ${resultado.clientId}: ${resultado.code}',
           name: 'sync',
@@ -133,6 +151,7 @@ class Synchronizer {
       _db.customers,
       _db.sites,
       _db.projects,
+      _db.timeEntries,
     ];
     for (final tabla in tablas) {
       await _db.customUpdate(
@@ -194,6 +213,24 @@ class Synchronizer {
             .into(_db.projectAssignments)
             .insertOnConflictUpdate(SyncMapper.assignment(dto));
       }
+      for (final dto in respuesta.timeEntries) {
+        // Una fila local en CONFLICT no se pisa con lo del servidor: la mira
+        // un humano primero (regla 12). Todo lo demás, última escritura gana.
+        final local = await (_db.select(_db.timeEntries)
+              ..where((t) => t.id.equals(dto.id)))
+            .getSingleOrNull();
+        if (local?.syncStatus == SyncStatus.conflict) continue;
+        await _db.into(_db.timeEntries).insertOnConflictUpdate(SyncMapper.timeEntry(dto));
+      }
+      for (final dto in respuesta.crews) {
+        await _db.into(_db.crews).insertOnConflictUpdate(SyncMapper.crew(dto));
+      }
+      for (final dto in respuesta.crewMembers) {
+        await _db.into(_db.crewMembers).insertOnConflictUpdate(SyncMapper.crewMember(dto));
+      }
+      for (final dto in respuesta.people) {
+        await _db.into(_db.people).insertOnConflictUpdate(SyncMapper.person(dto));
+      }
 
       await _marcarBorrados(respuesta.deleted);
 
@@ -231,6 +268,18 @@ class Synchronizer {
     await marcar('sites', _db.sites);
     await marcar('projects', _db.projects);
     await marcar('assignments', _db.projectAssignments);
+    await marcar('timeEntries', _db.timeEntries);
+    await marcar('crews', _db.crews);
+    await marcar('crewMembers', _db.crewMembers);
+
+    // `people` es una proyección: su baja se aplica borrando la fila. No hay
+    // otro dispositivo al que propagar este borrado — la fuente es el pull.
+    final bajasDeGente = borrados['people'];
+    if (bajasDeGente != null && bajasDeGente.isNotEmpty) {
+      await (_db.delete(_db.people)
+            ..where((p) => p.membershipId.isIn(bajasDeGente)))
+          .go();
+    }
   }
 }
 

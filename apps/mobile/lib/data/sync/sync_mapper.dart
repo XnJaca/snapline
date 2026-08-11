@@ -2,10 +2,14 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../../api/models/crew.dart';
+import '../../api/models/crew_member.dart';
 import '../../api/models/customer.dart';
 import '../../api/models/project.dart';
 import '../../api/models/project_assignment.dart';
 import '../../api/models/site.dart';
+import '../../api/models/sync_person_dto.dart';
+import '../../api/models/time_entry.dart';
 import '../local/app_database.dart';
 import '../local/tables.dart';
 
@@ -19,6 +23,52 @@ import '../local/tables.dart';
 /// no `date-time`. `tryParse` y no `parse`: un formato inesperado no puede
 /// tumbar la sincronización entera.
 abstract final class SyncMapper {
+  static TimeEntriesCompanion timeEntry(TimeEntry dto) => TimeEntriesCompanion(
+    id: Value(dto.id),
+    companyId: Value(dto.companyId),
+    updatedAt: Value(dto.updatedAt),
+    deletedAt: Value(dto.deletedAt),
+    syncStatus: const Value(SyncStatus.synced),
+    projectId: Value(dto.projectId),
+    membershipId: Value(dto.membershipId),
+    recordedByMembershipId: Value(dto.recordedByMembershipId),
+    clockInAt: Value(dto.clockInAt),
+    clockOutAt: Value(dto.clockOutAt),
+    breakMinutes: Value(dto.breakMinutes.toInt()),
+    method: Value(dto.method.json ?? 'SELF'),
+    status: Value(dto.status.json ?? 'PENDING'),
+    flags: Value(jsonEncode(dto.flags)),
+  );
+
+  static CrewsCompanion crew(Crew dto) => CrewsCompanion(
+    id: Value(dto.id),
+    companyId: Value(dto.companyId),
+    updatedAt: Value(dto.updatedAt),
+    deletedAt: Value(dto.deletedAt),
+    syncStatus: const Value(SyncStatus.synced),
+    name: Value(dto.name),
+    foremanMembershipId: Value(dto.foremanMembershipId),
+    color: Value(dto.color),
+  );
+
+  static CrewMembersCompanion crewMember(CrewMember dto) => CrewMembersCompanion(
+    id: Value(dto.id),
+    companyId: Value(dto.companyId),
+    updatedAt: Value(dto.updatedAt),
+    deletedAt: Value(dto.deletedAt),
+    syncStatus: const Value(SyncStatus.synced),
+    crewId: Value(dto.crewId),
+    membershipId: Value(dto.membershipId),
+    fromDate: Value(_fecha(dto.fromDate) ?? DateTime.fromMillisecondsSinceEpoch(0)),
+    toDate: Value(_fecha(dto.toDate)),
+  );
+
+  static PeopleCompanion person(SyncPersonDto dto) => PeopleCompanion(
+    membershipId: Value(dto.membershipId),
+    name: Value(dto.name),
+    role: Value(dto.role.json ?? 'WORKER'),
+  );
+
   static DateTime? _fecha(String? valor) =>
       valor == null ? null : DateTime.tryParse(valor);
 

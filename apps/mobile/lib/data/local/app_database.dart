@@ -18,6 +18,10 @@ part 'app_database.g.dart';
     Sites,
     Projects,
     ProjectAssignments,
+    TimeEntries,
+    Crews,
+    CrewMembers,
+    People,
     OutboxOperations,
     SyncCursors,
   ],
@@ -27,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -39,6 +43,14 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(customers, customers.lastName);
         await m.addColumn(customers, customers.source);
         await m.addColumn(customers, customers.notes);
+      }
+      if (from < 3) {
+        // Tablas nuevas, nunca recrear: la bandeja con la jornada sin
+        // sincronizar tiene que sobrevivir a la actualización.
+        await m.createTable(timeEntries);
+        await m.createTable(crews);
+        await m.createTable(crewMembers);
+        await m.createTable(people);
       }
     },
   );
