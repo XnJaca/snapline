@@ -1,0 +1,54 @@
+meta { name: FOREMAN sincroniza y solo baja sus obras
+  type: http
+  seq: 16
+}
+get { url: {{base_url}}/sync
+  body: none
+  auth: none
+}
+
+script:pre-request {
+  let token = bru.getVar("foreman_token");
+  if (!token) {
+    const res = await fetch(`${bru.getEnvVar("base_url")}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: bru.getEnvVar("foreman_identifier"),
+        password: bru.getEnvVar("foreman_password"),
+      }),
+    });
+    const data = await res.json();
+    token = data.accessToken;
+    bru.setVar("foreman_token", token);
+  }
+  req.setHeader("Authorization", `Bearer ${token}`);
+}
+
+docs {
+  El scope del pull estuvo acotado solo para WORKER: un FOREMAN se bajaba la
+  cartera completa de clientes y las horas de toda la empresa. Encontrado por el
+  `domain-guardian` al validar SPEC-0008 — la mitad que el PR #5 dejó abierta.
+
+  Con el seed, María lidera la Cuadrilla A, asignada hoy al Techo Martinez:
+  recibe ese cliente, esa obra, su cuadrilla y la gente de ella — y nada del
+  resto de la cartera. `people` trae nombres para no mostrar UUIDs, y **jamás**
+  una tarifa.
+}
+assert { res.status: eq 200
+  res.body.customers.length: eq 1
+  res.body.projects.length: eq 1
+  res.body.crews.length: eq 1
+  res.body.crewMembers.length: eq 2
+}
+
+script:post-response {
+  const cuerpo = JSON.stringify(res.getBody());
+  if (cuerpo.includes("payRateCents")) {
+    throw new Error("la tarifa está bajando al teléfono");
+  }
+  const gente = res.getBody().people ?? [];
+  if (!gente.some((p) => p.name === "María López")) {
+    throw new Error("people no trae los nombres de la cuadrilla");
+  }
+}

@@ -1,0 +1,28 @@
+meta { name: WORKER lista horas y recibe solo las suyas
+  type: http
+  seq: 17
+}
+get { url: {{base_url}}/time-entries
+  body: none
+  auth: none
+}
+headers { Authorization: Bearer {{worker_token}} }
+docs {
+  `time.read` incluye a WORKER desde SPEC-0008, para que "mis horas de la
+  semana" no dependa de un permiso que no tenía. Pero el alcance lo acota el
+  servicio: sus horas y nada más. Sin ese recorte, la lista traería las de toda
+  la empresa con las coordenadas de cada marcaje.
+
+  El mismo recorte aplica al detalle por id: una hora ajena responde 404, como
+  si no existiera.
+}
+assert { res.status: eq 200
+}
+
+script:post-response {
+  const propias = bru.getVar("worker_membership_id");
+  const ajenas = (res.getBody() ?? []).filter((t) => propias && t.membershipId !== propias);
+  if (ajenas.length > 0) {
+    throw new Error("un WORKER está leyendo horas ajenas");
+  }
+}

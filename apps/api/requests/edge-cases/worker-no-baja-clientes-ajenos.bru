@@ -21,14 +21,20 @@ docs {
   Lo que baja **queda en disco** en el teléfono. Que el móvil esconda la pantalla
   no alcanza: un dispositivo perdido o robado ya tiene los datos.
 
-  Sin asignaciones vigentes el WORKER recibe las seis colecciones vacías, que es
-  lo que este caso afirma. Con una asignación tiene que recibir **solo** el
-  cliente, el sitio y la obra de esa asignación — nunca los demás.
+  El seed asigna la Cuadrilla A —donde está el worker— a la obra de hoy, así que
+  recibe **exactamente uno** de cada: el cliente, la obra y su cuadrilla de esa
+  asignación, nunca la cartera. Y ni una tarifa en todo el cuerpo: ni
+  `payRateCents` ni `payRateCentsSnapshot` existen en ninguna colección.
 }
 assert { res.status: eq 200
-  res.body.customers: isEmpty
-  res.body.sites: isEmpty
-  res.body.projects: isEmpty
-  res.body.timeEntries: isEmpty
-  res.body.mediaAssets: isEmpty
+  res.body.customers.length: eq 1
+  res.body.projects.length: eq 1
+  res.body.crews.length: eq 1
+}
+
+script:post-response {
+  const cuerpo = JSON.stringify(res.getBody());
+  if (cuerpo.includes("payRateCents")) {
+    throw new Error("la tarifa está bajando al teléfono");
+  }
 }
