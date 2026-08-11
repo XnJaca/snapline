@@ -10,6 +10,8 @@ import { Project } from '../projects/entities/project.entity';
 import { ProjectAssignment } from '../projects/entities/project-assignment.entity';
 import { MediaAsset } from '../media/entities/media-asset.entity';
 import { TimeEntry } from '../time-entries/entities/time-entry.entity';
+import { Crew } from '../crews/entities/crew.entity';
+import { CrewMember } from '../crews/entities/crew-member.entity';
 import { CustomersService } from '../customers/customers.service';
 import { ProjectsService } from '../projects/projects.service';
 import { MediaService } from '../media/media.service';
@@ -28,6 +30,7 @@ import {
   OPERATION_PERMISSION,
   SyncOperationDto, SyncOperationType, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto,
   SyncResultDto, SyncSiteCreateDto,
+  SyncPersonDto,
 } from './dto/sync.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,18 +280,19 @@ export class SyncService {
       return rows.map((r) => r.id);
     };
 
-    // El WORKER solo sincroniza lo de sus proyectos.
+    // Los roles de campo solo sincronizan lo de sus obras.
     //
-    // El endpoint entra con `projects.read`, que un WORKER tiene, así que el
-    // scope por rol **es** el control de acceso de lo que baja: sin él el pull
-    // entrega lo que la puerta REST le niega. Alcanzaba a `project` y dejaba
-    // afuera las otras cinco colecciones, que es como la cartera entera de
-    // clientes terminaba en el teléfono de cada trabajador.
+    // El endpoint entra con `projects.read`, que WORKER y FOREMAN tienen, así
+    // que el scope por rol **es** el control de acceso de lo que baja: sin él
+    // el pull entrega lo que la puerta REST le niega. Estuvo acotado solo para
+    // WORKER, y un FOREMAN se bajaba la cartera completa de clientes y las
+    // horas de toda la empresa.
     //
     // Lo que baja queda en disco: el router puede esconder una pantalla, pero un
     // dispositivo perdido o robado ya tiene los datos.
     const esWorker = tenant.role === 'WORKER';
-    const workerParam = esWorker ? { membershipId: tenant.membershipId } : {};
+    const acotado = esWorker || tenant.role === 'FOREMAN';
+    const workerParam = acotado ? { membershipId: tenant.membershipId } : {};
 
     /// Tiene asignación vigente en ese proyecto, directa o por su cuadrilla.
     const asignadoA = (projectId: string) => `EXISTS (
@@ -304,39 +308,56 @@ export class SyncService {
            WHERE p.${columna} = ${fk} AND p.deleted_at IS NULL
              AND ${asignadoA('p.id')})`;
 
-    const soloSi = (expr: string) => (esWorker ? expr : undefined);
+    const soloSi = (expr: string) => (acotado ? expr : undefined);
 
-    const [customers, sites, projects, assignments, mediaAssets, timeEntries] = await Promise.all([
+    /// La cuadrilla es visible si la persona la lidera o la integra.
+    const cuadrillaVisible = (crewId: string) => `(
+           EXISTS (SELECT 1 FROM crew cx WHERE cx.id = ${crewId} AND cx.deleted_at IS NULL
+                     AND cx.foreman_membership_id = :membershipId)
+           OR EXISTS (SELECT 1 FROM crew_member cmx WHERE cmx.crew_id = ${crewId}
+                        AND cmx.membership_id = :membershipId AND cmx.deleted_at IS NULL))`;
+
+    const [customers, sites, projects, assignments, mediaAssets, timeEntries, crews, crewMembers] = await Promise.all([
       vivos(Customer, 'customer', soloSi(deSusObras('customer.id', 'customer_id')), workerParam),
       vivos(Site, 'site', soloSi(deSusObras('site.id', 'site_id')), workerParam),
       vivos(Project, 'project', soloSi(asignadoA('project.id')), workerParam),
-      // Las suyas, no las de sus compañeros: quién más fue asignado a la obra no
-      // es algo que el marcaje necesite.
+      // El WORKER recibe las suyas; el FOREMAN, todas las de sus obras — sin
+      // eso no puede saber quién tenía que estar hoy.
       vivos(
         ProjectAssignment,
         'project_assignment',
-        soloSi(`(project_assignment.membership_id = :membershipId
+        esWorker
+          ? `(project_assignment.membership_id = :membershipId
              OR EXISTS (SELECT 1 FROM crew_member cm
                         WHERE cm.crew_id = project_assignment.crew_id
                           AND cm.membership_id = :membershipId
-                          AND cm.deleted_at IS NULL))`),
+                          AND cm.deleted_at IS NULL))`
+          : soloSi(asignadoA('project_assignment.project_id')),
         workerParam,
       ),
       vivos(MediaAsset, 'media_asset', soloSi(asignadoA('media_asset.project_id')), workerParam),
-      // **Solo sus horas.** `time_entry` lleva `pay_rate_cents_snapshot` y las
-      // coordenadas de cada marcaje: sin este filtro un trabajador se baja
-      // cuánto gana cada compañero y dónde estuvo.
+      // El WORKER solo sus horas; el FOREMAN las de sus obras, que es a quién
+      // les marca y les revisa el día. Las coordenadas de cada marcaje bajan
+      // con esto — la tarifa no: va oculta en la entity, para todos.
       vivos(
         TimeEntry,
         'time_entry',
-        soloSi('time_entry.membership_id = :membershipId'),
+        esWorker
+          ? 'time_entry.membership_id = :membershipId'
+          : soloSi(asignadoA('time_entry.project_id')),
         workerParam,
       ),
+      // Las cuadrillas que lidera o integra; para la oficina, todas.
+      vivos(Crew, 'crew', soloSi(cuadrillaVisible('crew.id')), workerParam),
+      vivos(CrewMember, 'crew_member', soloSi(cuadrillaVisible('crew_member.crew_id')), workerParam),
     ]);
+
+    const people = await this.gente(desde, acotado ? tenant.membershipId : null);
 
     return {
       serverTime: new Date(now).toISOString(),
       customers, sites, projects, assignments, mediaAssets, timeEntries,
+      crews, crewMembers, people,
       // Las seis colecciones que el pull trae vivas emiten también sus bajas: si
       // una falta, ese borrado nunca llega al dispositivo y la fila queda para
       // siempre en la base local (regla 20).
@@ -347,7 +368,50 @@ export class SyncService {
         assignments: await borrados('project_assignment'),
         mediaAssets: await borrados('media_asset'),
         timeEntries: await borrados('time_entry'),
+        crews: await borrados('crew'),
+        crewMembers: await borrados('crew_member'),
+        // La persona es una proyección de la membresía: su baja viaja acá.
+        people: await borrados('membership'),
       },
     };
+  }
+
+  /**
+   * La identidad de cada membresía, para mostrar personas y no UUIDs.
+   *
+   * Con alcance: los roles de campo reciben solo a la gente de sus cuadrillas y
+   * de sus obras, y a sí mismos. El nombre sale de `app_user`, así que el
+   * cursor mira las dos tablas — un nombre corregido tiene que llegar aunque la
+   * membresía no haya cambiado.
+   */
+  private async gente(desde: string, membershipId: string | null): Promise<SyncPersonDto[]> {
+    const alcance = membershipId === null ? '' : `
+      AND (m.id = $2
+        OR EXISTS (SELECT 1 FROM crew c
+                   LEFT JOIN crew_member cm ON cm.crew_id = c.id AND cm.deleted_at IS NULL
+                   WHERE c.deleted_at IS NULL
+                     AND (c.foreman_membership_id = $2
+                          OR EXISTS (SELECT 1 FROM crew_member yo WHERE yo.crew_id = c.id
+                                       AND yo.membership_id = $2 AND yo.deleted_at IS NULL))
+                     AND (cm.membership_id = m.id OR c.foreman_membership_id = m.id))
+        OR EXISTS (SELECT 1 FROM project_assignment a
+                   WHERE a.deleted_at IS NULL AND a.membership_id = m.id
+                     AND EXISTS (SELECT 1 FROM project_assignment mia
+                                 LEFT JOIN crew_member cmx ON cmx.crew_id = mia.crew_id
+                                   AND cmx.deleted_at IS NULL
+                                 WHERE mia.project_id = a.project_id AND mia.deleted_at IS NULL
+                                   AND (mia.membership_id = $2 OR cmx.membership_id = $2))))`;
+
+    const params: unknown[] = membershipId === null ? [desde] : [desde, membershipId];
+    return (await this.dataSource.query(
+      `SELECT m.id AS "membershipId", u.name AS "name", m.role AS "role"
+       FROM membership m
+       JOIN app_user u ON u.id = m.user_id
+       WHERE m.deleted_at IS NULL AND m.status = 'ACTIVE'
+         AND (m.updated_at > $1::timestamptz OR u.updated_at > $1::timestamptz)
+         ${alcance}
+       ORDER BY u.name ASC`,
+      params,
+    )) as SyncPersonDto[];
   }
 }

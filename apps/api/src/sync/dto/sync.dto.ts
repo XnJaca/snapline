@@ -9,6 +9,9 @@ import { Project } from '../../projects/entities/project.entity';
 import { ProjectAssignment } from '../../projects/entities/project-assignment.entity';
 import { MediaAsset } from '../../media/entities/media-asset.entity';
 import { TimeEntry } from '../../time-entries/entities/time-entry.entity';
+import { Crew } from '../../crews/entities/crew.entity';
+import { CrewMember } from '../../crews/entities/crew-member.entity';
+import { MembershipRole } from '../../auth/entities/membership.entity';
 
 export const SYNC_OPERATIONS = [
   'customer.create',
@@ -98,6 +101,18 @@ export class SyncPullQueryDto {
   @IsOptional() @IsDateString() since?: string;
 }
 
+/**
+ * La identidad mínima para poner un nombre donde iría un UUID. Es un DTO y no
+ * la entity: `name` vive en `app_user`, y la membresía entera arrastraría lo
+ * que no debe bajar — la tarifa va oculta hasta en la entity.
+ */
+export class SyncPersonDto {
+  membershipId!: string;
+  name!: string;
+  @ApiProperty({ enum: ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER', 'ACCOUNTANT'] })
+  role!: MembershipRole;
+}
+
 export class SyncPullResponseDto {
   @ApiProperty({
     format: 'date-time',
@@ -114,6 +129,9 @@ export class SyncPullResponseDto {
   @ApiProperty({ type: [ProjectAssignment] }) assignments!: ProjectAssignment[];
   @ApiProperty({ type: [MediaAsset] }) mediaAssets!: MediaAsset[];
   @ApiProperty({ type: [TimeEntry] }) timeEntries!: TimeEntry[];
+  @ApiProperty({ type: [Crew] }) crews!: Crew[];
+  @ApiProperty({ type: [CrewMember] }) crewMembers!: CrewMember[];
+  @ApiProperty({ type: [SyncPersonDto] }) people!: SyncPersonDto[];
 
   @ApiProperty({
     description: 'Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20).',
