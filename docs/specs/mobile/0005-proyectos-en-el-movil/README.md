@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0005: Proyectos en el móvil"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "William ve las obras en proceso, abre cualquiera sin señal, y da de alta o corrige una —con su cliente y su propiedad si hacen falta— parado en la obra sin esperar cobertura."
 apps:
   - mobile
@@ -22,7 +22,7 @@ created: 2026-08-09
 updated: 2026-08-10
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -208,5 +208,6 @@ que el servidor la valide es trabajo de `apps/api` y conviene hacerlo con
 | 2026-08-10 | review | Verificados los prerequisitos contra el código: SPEC-0006 quedó implementado y dejó los formularios mínimos que el alta en línea reutiliza —`CustomerFields(minimal:)` y `showSiteFormSheet`—, más `site.create` y `site.update` en la bandeja. |
 | 2026-08-10 | aprobado | Aprobada la escalera de estados en `apps/api`: el criterio del descarte retrocedente exige que la valide el servidor, así que `apps` suma `api` y va en commit atómico con el móvil (regla 26). |
 | 2026-08-10 | en-implementacion | Arranca la implementación. |
+| 2026-08-10 | implementado | PR #7 mergeado. Revisado con `code-reviewer`, que encontró **dos GRAVES silenciosos** —la app mostraba guardado lo que no se guardaba— y los dos se arreglaron antes del PR: reanudar una obra pausada se descartaba como si fuera un retroceso, y editar el cliente de una obra no tenía ningún efecto. Después, una pasada de interfaz sobre el teléfono: la ficha del detalle cortaba las etiquetas, terminar y cancelar ahora piden confirmación, una obra que no está en marcha abre en Detalle, y tocar afuera cierra el teclado en toda la app. 226 tests. |
 | 2026-08-10 | en-implementacion | Los catorce criterios en `[x]`. **El diagrama del dominio no alcanzaba para derivar la tabla de transiciones**: leído literal, de `ON_HOLD` no salía ninguna flecha —obra trabada para siempre— y solo se podía cancelar desde `IN_PROGRESS`, cuando el caso más común es el más temprano. La tabla completa quedó en la ficha de `proyecto` y en `apps/api`, con un test que verifica que la copia del móvil no divergió. Verificado contra el API que el retroceso que llega tarde se descarta **sin fallar**: si respondiera error, la operación se reintentaría para siempre. |
 | 2026-08-09 | borrador | Revisado con `spec-reviewer`. Encontró que el alta en línea da por hecho un camino que no existe: agregar una propiedad a un cliente ya sincronizado no tiene operación de sync, lo que pasó a ser prerequisito de SPEC-0004. Sumados `depends_on: 0006` —el formulario compartido es de ese spec—, la escalera de transiciones movida de Riesgos a Alcance con su criterio, y el dueño del descarte retrocedente declarado: el servidor. |

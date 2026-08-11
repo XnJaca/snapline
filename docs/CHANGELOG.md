@@ -15,6 +15,52 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-08-10 — obras en el móvil
+
+- **Se crean y se corrigen obras desde el teléfono**
+  ([[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005]]), con la tab de
+  Detalle que SPEC-0003 había dejado en placeholder. El alta **no manda a otra
+  pantalla**: cliente y propiedad se eligen con "＋ nuevo" en línea, que abre los
+  formularios de SPEC-0006 y no una copia. Era la razón de hacer ese spec primero.
+- **El diagrama del dominio no alcanzaba para derivar la escalera de estados.**
+  Leído literal, de `ON_HOLD` no salía ninguna flecha —una obra en pausa quedaba
+  trabada para siempre— y solo se podía cancelar desde `IN_PROGRESS`, cuando el
+  caso más común de cancelar es el más temprano: el cliente no aceptó el estimado.
+  Se preguntó en vez de deducirlo y la tabla completa quedó en la ficha.
+- **Y el primer intento de implementarla rompió justo eso.** `isBackwards`
+  comparaba índices de un orden lineal donde `ON_HOLD` va después de
+  `IN_PROGRESS`, así que **reanudar una obra pausada se descartaba como retroceso**:
+  el servidor respondía `applied`, el móvil sacaba la operación de la bandeja, y la
+  obra volvía a pausada sin aviso. Lo encontró el `code-reviewer` y se verificó
+  contra el API antes de tocar nada. El arreglo no fue corregir el orden: **la
+  escalera es una rama, no una fila**, y cualquier índice lineal vuelve a mentir.
+  `canTransition` es ahora la única fuente.
+- **Editar el cliente de una obra tampoco hacía nada**, y en silencio: el
+  repositorio no lo escribía y `UpdateProjectDto` no lo declara, así que
+  `whitelist` lo borraba antes del `UPDATE`. Decidido que **se fija al crear**, con
+  su invariante en la ficha: una obra tiene horas, fotos y facturas colgando, y
+  cambiarle el cliente reasigna todo eso a otra persona. Si se eligió mal, se
+  cancela y se crea de nuevo — el mismo criterio de la regla 16 con las facturas.
+- **Terminar y cancelar piden confirmación.** Son las dos transiciones de las que
+  no se vuelve, así que un toque por error dejaba la obra sin salida. Se eligió
+  confirmar antes que permitir reabrir, para no romper la garantía de que
+  "terminada" sea confiable para el reporte y para publicar. Pausar y reanudar no
+  preguntan: se hacen a cada rato.
+- **Una obra que no está en marcha abre en Detalle** y no en Avance. Escribiendo
+  ese test apareció que `initialIndex` se lee una sola vez, al crear el
+  controlador de tabs, y ahí la obra todavía no había salido de Drift.
+- **La ficha del detalle cortaba las etiquetas.** Con la etiqueta en una columna de
+  ancho fijo, "Nombre de la obra" se partía en tres líneas y "Propiedad" quedaba
+  como "Propieda / d". Apilada sobre su valor entra en una línea, y como el mismo
+  bug estaba en la ficha de cliente, salió a un widget compartido.
+- **Tocar afuera cierra el teclado, en toda la app.** No se puede con
+  `GestureDetector` —el gesto lo gana el hijo y el `onTap` del ancestro nunca
+  dispara—, así que va con `Listener` sobre los eventos de puntero. Y excluye los
+  toques sobre otro campo, o el teclado parpadea al saltar de uno al siguiente.
+- **Un bug en los datos de prueba escondía cobertura.** `seedProject` armaba la
+  dirección con tres campos y `AddressDto` exige `postalCode`, así que se
+  descartaba y la propiedad salía vacía — con los tests pasando igual.
+
 ## 2026-08-10
 
 - **El teléfono ahora sabe de qué país es**, y no es un adorno: es lo único que
