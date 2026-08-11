@@ -6,6 +6,7 @@ import '../../data/repositories/customer_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'address_fields.dart';
 import 'form_sheet.dart';
+import 'site_location_block.dart';
 
 /// Alta y corrección de una propiedad, en una hoja.
 ///
@@ -92,6 +93,12 @@ class _SiteFormSheetState extends ConsumerState<_SiteFormSheet> {
         ),
         SizedBox(height: context.spacing.md),
         AddressFields(controllers: _direccion),
+        // Solo en corrección: fijar el punto necesita una propiedad que ya
+        // exista, porque se guarda contra su id.
+        if (widget.site != null) ...[
+          SizedBox(height: context.spacing.xl),
+          SiteLocationBlock(site: widget.site!),
+        ],
       ],
     );
   }

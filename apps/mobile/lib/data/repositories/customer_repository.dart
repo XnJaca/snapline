@@ -84,12 +84,26 @@ class SiteSummary {
     required this.customerId,
     required this.address,
     required this.pending,
+    this.lat,
+    this.lng,
+    this.geofenceRadiusM,
   });
 
   final String id;
   final String customerId;
   final AddressDto? address;
   final bool pending;
+
+  /// El punto de la propiedad. Nulo mientras nadie lo fijó, que es el estado de
+  /// todo lo cargado antes de SPEC-0007.
+  final double? lat;
+  final double? lng;
+
+  /// Nulo es válido: cae al default, no es un formulario a medio llenar.
+  final int? geofenceRadiusM;
+
+  /// Los dos o ninguno: media coordenada no ubica nada.
+  bool get hasLocation => lat != null && lng != null;
 
   String get oneLine => AddressJson.oneLine(address);
 }
@@ -297,10 +311,48 @@ class CustomerRepository {
     return id;
   }
 
+  /// Fija el punto de una propiedad y el radio de su geocerca.
+  ///
+  /// Va aparte de [updateSite] porque son dos acciones distintas: corregir una
+  /// dirección y ubicarla en el mapa. Manda solo estos campos, así que una
+  /// corrección de dirección encolada aparte no se pisa.
+  Future<void> setSiteLocation(
+    String siteId, {
+    required double lat,
+    required double lng,
+    int? geofenceRadiusM,
+    DateTime? occurredAt,
+  }) async {
+    final cuando = occurredAt ?? DateTime.now();
+
+    await _db.transaction(() async {
+      await (_db.update(_db.sites)..where((s) => s.id.equals(siteId))).write(
+        SitesCompanion(
+          updatedAt: Value(cuando),
+          syncStatus: const Value(SyncStatus.pending),
+          lat: Value(lat),
+          lng: Value(lng),
+          geofenceRadiusM: Value(geofenceRadiusM),
+        ),
+      );
+      await _outbox.enqueue(
+        type: SyncOp.siteUpdate,
+        targetId: siteId,
+        payload: {
+          'lat': lat,
+          'lng': lng,
+          // Sin radio elegido no se manda el campo: el servidor lo valida como
+          // positivo y rechazaría un nulo explícito.
+          'geofenceRadiusM': ?geofenceRadiusM,
+        },
+        occurredAt: cuando,
+      );
+    });
+  }
+
   /// Corrige la dirección de una propiedad.
   ///
-  /// `lat`, `lng` y el radio de la geocerca no se tocan desde acá: son de
-  /// asistencia y entran con el frente de campo.
+  /// El punto y el radio no se tocan desde acá: los fija [setSiteLocation].
   Future<void> updateSite(
     String siteId,
     AddressDto address, {
@@ -357,6 +409,9 @@ class CustomerRepository {
     customerId: fila.customerId,
     address: AddressJson.decode(fila.address),
     pending: fila.syncStatus != SyncStatus.synced,
+    lat: fila.lat,
+    lng: fila.lng,
+    geofenceRadiusM: fila.geofenceRadiusM,
   );
 }
 

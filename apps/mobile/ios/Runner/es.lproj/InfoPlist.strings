@@ -1,0 +1,2 @@
+/* El porqué del permiso, en el diálogo del sistema. */
+"NSLocationWhenInUseUsageDescription" = "Snapline usa tu ubicación solo cuando tocás \"Usar mi ubicación\", para poner una propiedad en el mapa. Nunca te rastrea en segundo plano.";

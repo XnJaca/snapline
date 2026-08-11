@@ -16,7 +16,6 @@ kanban-plugin: board
 ## ✏️ Borrador (escribiendo el spec)
 
 - [ ] [[specs/mobile/0002-idioma-de-la-app/README|SPEC-0002: Idioma de la app]]
-- [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — desbloqueado: [[adr/0012-proveedor-de-mapas/README|ADR-0012]] eligió Google Maps. Falta completar el spec y revisarlo
 
 
 ## 🔍 Review (listo para revisar)
@@ -30,6 +29,7 @@ kanban-plugin: board
 ## 🛠️ En implementación
 
 - [ ] [[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004: Capa local y sincronización]] — contrato, capa local y bandeja listos; faltan los dos criterios de `CONFLICT`, que dependen del marcaje
+- [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — aprobado y en curso; sin prerequisitos de API, la implementación es de móvil sola
 
 
 ## 🎉 Implementado

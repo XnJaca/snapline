@@ -13,9 +13,12 @@ kanban-plugin: board
 ## 📥 Backlog (registrada, sin trigger disparado)
 
 - [ ] [[tech-debt/0001-tokens-a-dart-a-mano|DEBT-0001: Los tokens se traducen a Dart a mano]] (trigger: scaffold de `apps/web`)
+- [ ] [[tech-debt/0004-radio-de-geocerca-hardcodeado|DEBT-0004: El radio de geocerca por default es una constante, no un ajuste de la empresa]] (trigger: la segunda empresa, o el primer ajuste de radio que pida William)
 
 
 ## 🔥 Activa (causando fricción hoy)
+
+- [ ] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — **severidad alta**: decidido sacarlo, y cada semana suma código que lo asume (trigger: antes del spec de publicación)
 
 
 ## 🛠️ En resolución

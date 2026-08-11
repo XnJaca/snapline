@@ -121,13 +121,27 @@ class Synchronizer {
   }
 
   /// La fila local pasa de `PENDING` a `SYNCED`. Es lo que apaga la marca de
-  /// "sin subir" en la pantalla.
+  /// "guardado en el teléfono" en la pantalla.
+  ///
+  /// **Va con `customUpdate` y su `updates`, no con `customStatement`.** Drift no
+  /// sabe qué tabla toca una sentencia cruda, así que no refresca ningún stream:
+  /// la fila queda bien en la base y la pantalla sigue mostrando lo viejo hasta
+  /// que alguien la reconstruya.
   Future<void> _marcarSincronizada(String? resourceId) async {
     if (resourceId == null) return;
-    for (final tabla in ['customers', 'sites', 'projects']) {
-      await _db.customStatement(
-        'UPDATE $tabla SET sync_status = ? WHERE id = ?',
-        [SyncStatus.synced.index, resourceId],
+    final tablas = <TableInfo<Table, dynamic>>[
+      _db.customers,
+      _db.sites,
+      _db.projects,
+    ];
+    for (final tabla in tablas) {
+      await _db.customUpdate(
+        'UPDATE ${tabla.actualTableName} SET sync_status = ? WHERE id = ?',
+        variables: [
+          Variable<int>(SyncStatus.synced.index),
+          Variable<String>(resourceId),
+        ],
+        updates: {tabla},
       );
     }
   }
@@ -200,10 +214,16 @@ class Synchronizer {
     Future<void> marcar(String clave, TableInfo<Table, dynamic> tabla) async {
       final ids = borrados[clave];
       if (ids == null || ids.isEmpty) return;
-      await _db.customStatement(
+      // Igual que arriba: sin `updates` la fila se marca borrada y la lista
+      // sigue mostrándola hasta que se reconstruya la pantalla.
+      await _db.customUpdate(
         'UPDATE ${tabla.actualTableName} SET deleted_at = ? '
         'WHERE id IN (${List.filled(ids.length, '?').join(',')})',
-        [ahora.millisecondsSinceEpoch ~/ 1000, ...ids],
+        variables: [
+          Variable<int>(ahora.millisecondsSinceEpoch ~/ 1000),
+          ...ids.map(Variable<String>.new),
+        ],
+        updates: {tabla},
       );
     }
 

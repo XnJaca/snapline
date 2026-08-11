@@ -1,4 +1,4 @@
-package com.snapline.snapline
+package com.snapline.app
 
 import io.flutter.embedding.android.FlutterActivity
 
