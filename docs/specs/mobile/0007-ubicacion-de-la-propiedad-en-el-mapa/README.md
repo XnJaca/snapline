@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0007: Ubicación de la propiedad en el mapa"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "Una propiedad queda con su punto y su radio de geocerca fijados desde un mapa —tocándolo o usando la posición actual, nunca escribiendo coordenadas a mano— y ese punto es contra el que el marcaje evalúa la geocerca."
 apps:
   - mobile
@@ -15,10 +15,10 @@ domain:
   - cliente
 frente: campo
 created: 2026-08-10
-updated: 2026-08-10
+updated: 2026-08-11
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -296,6 +296,7 @@ afuera a propósito, pero es la razón más fuerte para volver a considerarlo.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | implementado | PR #12 mergeado con los criterios en `[x]`. La geocerca dejó de ser teatro: toda propiedad puede tener su punto y su radio, fijados desde el teléfono y sin señal. |
 | 2026-08-11 | en implementación | Implementado y revisado con `code-reviewer`: sin hallazgos graves. Los dos medios eran criterios sin cumplir y se arreglaron en el momento — la pantalla del mapa no mostraba la dirección ni las coordenadas en texto, y el permiso de iOS estaba solo en inglés. Salieron además tres claves de l10n muertas y un `_guardar` que podía dejar el botón deshabilitado si la escritura local fallara. En el camino aparecieron y se arreglaron dos bugs de SPEC-0004 que ninguna prueba veía: el sincronizador escribía con `customStatement` —que no notifica streams— y el disparo del sync moría pausado por Riverpod 3 cuando el shell quedaba tapado por la pantalla que guarda. Cada uno quedó con su test de regresión. |
 | 2026-08-10 | review | Revisado con `spec-reviewer`. **El `goal` prometía algo que el alcance no podía entregar**: *"quien va a la obra ve dónde es antes de salir"*, cuando la cuadrilla no puede abrir esta pantalla — cuelga de la ficha de propiedad, detrás de `customers.read`, y su eje en la barra solo lo ven `OWNER` y `ADMIN`. El mecanismo real seguía siendo el WhatsApp que el Problema describe como el estado actual. Se reparte: acá se fija el punto, y que el trabajador lo vea pasó al alcance de SPEC-0008, dueño de la pantalla "Hoy". Se sumaron los criterios que faltaban y una sección de contrato que deja verificado que **no hay ningún prerequisito de API**, a diferencia de SPEC-0004 y SPEC-0006. La afirmación de que un radio nulo usa "el default de la empresa" resultó falsa en el código y quedó en [[../../../tech-debt/0004-radio-de-geocerca-hardcodeado\|DEBT-0004]]. |
 | 2026-08-10 | review | Prerequisito resuelto por [[../../../adr/0012-proveedor-de-mapas/README|ADR-0012]]: `google_maps_flutter` y `geolocator`. **Las dos premisas de la comparación que este spec había planteado eran viejas** — los SDK móviles de Google son gratis y sin límite desde marzo de 2025, y los tiles públicos de OSM no son una opción para un servicio comercial porque su política permite retirar el acceso sin aviso. Geocoding queda afuera por decisión, no por costo. Se agregó lo que hay que tener antes del primer build: la clave restringida por plataforma y el texto del permiso de ubicación en los dos idiomas. |

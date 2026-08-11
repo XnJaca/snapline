@@ -15,6 +15,42 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-08-11 — la propiedad en el mapa
+
+- **Toda propiedad puede tener su punto y su radio de geocerca**
+  ([[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007]]):
+  tocando el mapa, arrastrando el marcador o con la ubicación de quien está parado
+  en la obra. Nunca tecleando coordenadas. Con esto `evaluateGeofence` deja de
+  comparar contra nulo — la geocerca del marcaje ya tiene contra qué evaluar.
+- **Google Maps, decidido con datos que invalidaron el análisis previo**
+  ([[adr/0012-proveedor-de-mapas/README|ADR-0012]]): los SDK móviles son gratis y
+  sin límite desde marzo de 2025, y los tiles públicos de OSM no son una opción
+  comercial — su política permite retirar el acceso sin aviso y `flutter_map` es
+  su mayor consumidor. Geocoding queda afuera porque no hace falta, no por costo.
+- **El identificador de la app es `com.snapline.app`**, elegido a propósito en la
+  última ventana barata: una vez publicada, el bundle no se cambia — se publica
+  otra app. Reemplaza el default de Flutter que nadie había decidido.
+- **Dos bugs de sincronización que ningún test veía**, encontrados probando en un
+  iPhone real. El sincronizador escribía con `customStatement`, que no notifica
+  streams: la fila quedaba bien en la base y la pantalla mostraba lo viejo — un
+  borrado del servidor ni siquiera sacaba la fila de la lista. Y el disparo del
+  sync moría pausado: **Riverpod 3 pausa los providers cuyos widgets quedan
+  tapados por una ruta opaca**, y se guarda justo desde pantallas que tapan al
+  shell; además, al invalidarse un provider sus recursos se cancelan aunque el
+  rebuild quede diferido. La suscripción vive ahora en un provider sin
+  dependencias, que nada invalida ni pausa. Cada capa quedó con su test de
+  regresión, verificado que falla contra el diseño viejo.
+- **El gate del photo release se va** ([[tech-debt/0005-photo-release-se-quita|DEBT-0005]],
+  severidad alta): la decisión de publicar es del contratista y no hay dónde subir
+  un permiso firmado. Vive en cuatro lugares y cada semana suma código que lo
+  asume — por eso es deuda con trigger y no un TODO.
+- **El seed corre las veces que haga falta**: buscaba nada e insertaba a ciegas,
+  así que la segunda corrida moría en la primera fila. Ahora busca por clave
+  natural. Y el cliente de prueba tiene una segunda propiedad sin punto, que es
+  el estado de todo lo cargado antes de este spec.
+- **"Guardado en el teléfono"** reemplaza a "Sin subir todavía": dice dónde está
+  el dato en vez de anunciar una falta que se lee como fallo.
+
 ## 2026-08-10 — obras en el móvil
 
 - **Se crean y se corrigen obras desde el teléfono**
