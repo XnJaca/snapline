@@ -228,29 +228,29 @@ tiene que decir la verdad de para qué se usa.
 
 ## Criterios de aceptación
 
-- [ ] Una propiedad sin punto se puede fijar desde su ficha, y queda con `lat`,
+- [x] Una propiedad sin punto se puede fijar desde su ficha, y queda con `lat`,
       `lng` guardados y visibles.
-- [ ] "Usar mi ubicación" lee la posición **una sola vez**: no hay stream de
+- [x] "Usar mi ubicación" lee la posición **una sola vez**: no hay stream de
       posición ni permiso de ubicación en segundo plano en el manifiesto.
-- [ ] Fijar el punto **sin señal** funciona y llega al servidor por `site.update`
+- [x] Fijar el punto **sin señal** funciona y llega al servidor por `site.update`
       cuando vuelve la red, sin duplicar.
-- [ ] Sin red, la pantalla del mapa dice que falta la red y muestra la dirección y
+- [x] Sin red, la pantalla del mapa dice que falta la red y muestra la dirección y
       las coordenadas en texto — no queda en gris.
-- [ ] Ajustar el radio mueve el círculo en pantalla mientras se arrastra.
-- [ ] Un radio sin tocar deja `geofence_radius_m` nulo, y eso es válido.
-- [ ] Cambiar el punto de una propiedad se refleja en todas las obras de ese sitio,
+- [x] Ajustar el radio mueve el círculo en pantalla mientras se arrastra.
+- [x] Un radio sin tocar deja `geofence_radius_m` nulo, y eso es válido.
+- [x] Cambiar el punto de una propiedad se refleja en todas las obras de ese sitio,
       porque la geocerca es del sitio.
-- [ ] Ninguna pantalla de este spec dibuja la posición de una persona.
-- [ ] **No existe ningún campo de texto para latitud ni longitud** en toda la feature:
+- [x] Ninguna pantalla de este spec dibuja la posición de una persona.
+- [x] **No existe ningún campo de texto para latitud ni longitud** en toda la feature:
       el punto sale del mapa o del GPS, nunca del teclado.
-- [ ] Una propiedad con punto sin subir **muestra su marca de pendiente**, como el
+- [x] Una propiedad con punto sin subir **muestra su marca de pendiente**, como el
       resto de lo que sincroniza.
-- [ ] Un `FOREMAN` y un `WORKER` **no** tienen forma de llegar a esta pantalla, que
+- [x] Un `FOREMAN` y un `WORKER` **no** tienen forma de llegar a esta pantalla, que
       cuelga de la ficha de propiedad. Es lo que hace que el `goal` se limite a fijar
       el punto y no a mostrárselo a la cuadrilla.
-- [ ] La dirección se abre en la app de mapas del teléfono desde la ficha.
-- [ ] La pantalla se ve correcta en claro y en oscuro, y hay un solo naranja sólido.
-- [ ] Cero cadenas quemadas, en `en` y `es`, incluidos los textos del permiso de
+- [x] La dirección se abre en la app de mapas del teléfono desde la ficha.
+- [x] La pantalla se ve correcta en claro y en oscuro, y hay un solo naranja sólido.
+- [x] Cero cadenas quemadas, en `en` y `es`, incluidos los textos del permiso de
       ubicación y el mensaje de mapa sin red.
 
 ## Riesgos / consideraciones
@@ -284,10 +284,19 @@ afuera a propósito, pero es la razón más fuerte para volver a considerarlo.
 
 ---
 
+> **Cómo se verificó cada uno.** Repositorio, bandeja e idempotencia por tests
+> (`site_location_test`, `sync_streams_test`, `sync_trigger_test`,
+> `outbox_stream_isolate_test`); la pantalla, el permiso y el mapa a mano en un
+> iPhone real, con y sin señal; lo estructural —sin campo de lat/lng, sin
+> posición de personas, permisos del manifest— por lectura del `code-reviewer`.
+> El texto del permiso de iOS quedó en `en` y `es` vía `InfoPlist.strings`
+> registrados en el proyecto, verificado en el bundle compilado.
+
 ## Historial
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Implementado y revisado con `code-reviewer`: sin hallazgos graves. Los dos medios eran criterios sin cumplir y se arreglaron en el momento — la pantalla del mapa no mostraba la dirección ni las coordenadas en texto, y el permiso de iOS estaba solo en inglés. Salieron además tres claves de l10n muertas y un `_guardar` que podía dejar el botón deshabilitado si la escritura local fallara. En el camino aparecieron y se arreglaron dos bugs de SPEC-0004 que ninguna prueba veía: el sincronizador escribía con `customStatement` —que no notifica streams— y el disparo del sync moría pausado por Riverpod 3 cuando el shell quedaba tapado por la pantalla que guarda. Cada uno quedó con su test de regresión. |
 | 2026-08-10 | review | Revisado con `spec-reviewer`. **El `goal` prometía algo que el alcance no podía entregar**: *"quien va a la obra ve dónde es antes de salir"*, cuando la cuadrilla no puede abrir esta pantalla — cuelga de la ficha de propiedad, detrás de `customers.read`, y su eje en la barra solo lo ven `OWNER` y `ADMIN`. El mecanismo real seguía siendo el WhatsApp que el Problema describe como el estado actual. Se reparte: acá se fija el punto, y que el trabajador lo vea pasó al alcance de SPEC-0008, dueño de la pantalla "Hoy". Se sumaron los criterios que faltaban y una sección de contrato que deja verificado que **no hay ningún prerequisito de API**, a diferencia de SPEC-0004 y SPEC-0006. La afirmación de que un radio nulo usa "el default de la empresa" resultó falsa en el código y quedó en [[../../../tech-debt/0004-radio-de-geocerca-hardcodeado\|DEBT-0004]]. |
 | 2026-08-10 | review | Prerequisito resuelto por [[../../../adr/0012-proveedor-de-mapas/README|ADR-0012]]: `google_maps_flutter` y `geolocator`. **Las dos premisas de la comparación que este spec había planteado eran viejas** — los SDK móviles de Google son gratis y sin límite desde marzo de 2025, y los tiles públicos de OSM no son una opción para un servicio comercial porque su política permite retirar el acceso sin aviso. Geocoding queda afuera por decisión, no por costo. Se agregó lo que hay que tener antes del primer build: la clave restringida por plataforma y el texto del permiso de ubicación en los dos idiomas. |
 | 2026-08-10 | borrador | Creado. Sale de la ficha de propiedad de SPEC-0006, que dejó `lat`, `lng` y el radio afuera por ser de asistencia. Verificado contra el gate duro de la visión: no contradice "no tracking continuo" ni "mapa en vivo", y la sección que traza esa línea es parte del spec para que no se derive después. El proveedor de mapas queda como ADR prerequisito. |

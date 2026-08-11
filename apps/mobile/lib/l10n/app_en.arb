@@ -231,14 +231,12 @@
   "siteLocationHint": "Tap the map to place the point, or use your current location if you are standing at the site.",
   "siteLocationUseMine": "Use my location",
   "siteLocationSave": "Save location",
-  "siteLocationSaved": "Location saved",
   "siteLocationRadius": "Geofence radius",
   "siteLocationRadiusValue": "{meters} m",
   "@siteLocationRadiusValue": {
     "placeholders": { "meters": { "type": "int" } }
   },
   "siteLocationRadiusDefault": "Company default",
-  "siteLocationRadiusHelp": "The circle is the area where clocking in counts as being at the job site. Leave it untouched to use the company default.",
   "siteLocationCoords": "{lat}, {lng}",
   "@siteLocationCoords": {
     "description": "Coordenadas en texto. Es lo que se dicta por teléfono cuando el mapa no carga.",
@@ -250,7 +248,6 @@
   "siteLocationDenied": "Snapline has no permission to read your location. Tap the map to place the point by hand.",
   "siteLocationDeniedForever": "Location permission is off for Snapline. Change it in Settings, or tap the map to place the point by hand.",
   "siteLocationTimeout": "Could not get a fix in time. This happens indoors. Tap the map to place the point by hand.",
-  "siteLocationOpenSettings": "Open Settings",
   "addressLine1": "Street address",
   "addressLine2": "Apt, suite, unit",
   "addressCity": "City",

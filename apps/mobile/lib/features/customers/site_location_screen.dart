@@ -95,14 +95,20 @@ class _SiteLocationScreenState extends ConsumerState<SiteLocationScreen> {
     if (punto == null || _guardando) return;
 
     setState(() => _guardando = true);
-    await ref
-        .read(customerRepositoryProvider)
-        .setSiteLocation(
-          widget.site.id,
-          lat: punto.latitude,
-          lng: punto.longitude,
-          geofenceRadiusM: _radio?.round(),
-        );
+    try {
+      await ref
+          .read(customerRepositoryProvider)
+          .setSiteLocation(
+            widget.site.id,
+            lat: punto.latitude,
+            lng: punto.longitude,
+            geofenceRadiusM: _radio?.round(),
+          );
+    } finally {
+      // La escritura es local y casi nunca falla, pero si falla el botón no
+      // puede quedar deshabilitado para siempre.
+      if (mounted) setState(() => _guardando = false);
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop(true);
@@ -166,6 +172,7 @@ class _SiteLocationScreenState extends ConsumerState<SiteLocationScreen> {
             ),
           ),
           _Controles(
+            direccion: widget.site.oneLine,
             punto: _punto,
             radio: _radio,
             guardando: _guardando,
@@ -210,6 +217,7 @@ class _Aviso extends StatelessWidget {
 
 class _Controles extends StatelessWidget {
   const _Controles({
+    required this.direccion,
     required this.punto,
     required this.radio,
     required this.guardando,
@@ -219,6 +227,7 @@ class _Controles extends StatelessWidget {
     required this.onGuardar,
   });
 
+  final String direccion;
   final LatLng? punto;
   final double? radio;
   final bool guardando;
@@ -239,6 +248,22 @@ class _Controles extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // La dirección y las coordenadas en texto, siempre: sin tiles son
+            // lo único que ubica, y es lo que se dicta por teléfono.
+            Text(direccion, style: context.texts.labelLarge),
+            if (punto != null) ...[
+              SizedBox(height: context.spacing.xs),
+              Text(
+                l10n.siteLocationCoords(
+                  punto!.latitude.toStringAsFixed(5),
+                  punto!.longitude.toStringAsFixed(5),
+                ),
+                style: context.texts.bodySmall?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+            SizedBox(height: context.spacing.sm),
             Text(
               l10n.siteLocationHint,
               style: context.texts.bodySmall?.copyWith(

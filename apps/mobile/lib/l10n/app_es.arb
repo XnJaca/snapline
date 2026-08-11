@@ -190,14 +190,12 @@
   "siteLocationHint": "Tocá el mapa para poner el punto, o usá tu ubicación actual si estás parado en la obra.",
   "siteLocationUseMine": "Usar mi ubicación",
   "siteLocationSave": "Guardar ubicación",
-  "siteLocationSaved": "Ubicación guardada",
   "siteLocationRadius": "Radio de la geocerca",
   "siteLocationRadiusValue": "{meters} m",
   "@siteLocationRadiusValue": {
     "placeholders": { "meters": { "type": "int" } }
   },
   "siteLocationRadiusDefault": "El de la empresa",
-  "siteLocationRadiusHelp": "El círculo es el área donde marcar entrada cuenta como estar en la obra. Dejalo sin tocar para usar el de la empresa.",
   "siteLocationCoords": "{lat}, {lng}",
   "@siteLocationCoords": {
     "placeholders": { "lat": { "type": "String" }, "lng": { "type": "String" } }
@@ -208,7 +206,6 @@
   "siteLocationDenied": "Snapline no tiene permiso para leer tu ubicación. Tocá el mapa para poner el punto a mano.",
   "siteLocationDeniedForever": "El permiso de ubicación está desactivado para Snapline. Cambialo en Ajustes, o tocá el mapa para poner el punto a mano.",
   "siteLocationTimeout": "No se pudo obtener la ubicación a tiempo. Pasa bajo techo. Tocá el mapa para poner el punto a mano.",
-  "siteLocationOpenSettings": "Abrir Ajustes",
   "addressLine1": "Calle y número",
   "addressLine2": "Apto., suite, unidad",
   "addressCity": "Ciudad",
