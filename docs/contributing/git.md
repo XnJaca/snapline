@@ -32,9 +32,39 @@ El historial de este repositorio es de quien lo escribe. Una firma automática n
 aporta información —el autor ya está en el commit— y se propaga a todos los archivos
 que la copien.
 
+## Esto no es Git Flow, y no hay `develop`
+
+El flujo es **GitHub Flow**: todo sale de `main` y vuelve a `main` por PR.
+
+```
+main ──┬── feature/SPEC-XXXX-slug ──▶ PR ──▶ main
+       ├── fix/slug ─────────────────▶ PR ──▶ main
+       └── docs/slug ────────────────▶ PR ──▶ main
+```
+
+**No existen `develop`, `release/` ni `hotfix/`.** Sin `develop` no hay diferencia
+entre un fix y un hotfix —los dos salen de `main`—, así que `fix/` cubre los dos
+casos.
+
+`develop` existe para tener dónde integrar features a medias mientras `main` refleja
+lo publicado. Hoy no hay nada publicado y las dos ramas serían idénticas el 100% del
+tiempo, cobrando un merge extra por cambio.
+
+> **El trigger que lo cambia: la primera publicación en App Store o Play.**
+>
+> Ahí el argumento se da vuelta, y es propio de una app móvil: **una release
+> publicada no se revierte.** Si aparece un bug en la versión que la gente tiene
+> instalada, no hay "deshacer el deploy" — hay que publicar otra y esperar la
+> revisión de la tienda, que tarda días. Para eso hace falta poder ramificar desde
+> **exactamente lo que está publicado**, sin arrastrar features a medias que ya se
+> mergearon. Eso es `main` = publicado y `develop` = en desarrollo.
+>
+> Cuando ese día llegue, se agrega `develop` y esta sección se reescribe. Antes, no.
+
 ## Convención de ramas
 
-Tres prefijos, y ninguno más:
+Tres prefijos, y ninguno más. **`feature/` es prefijo de rama; `feat` es tipo de
+commit.** No se mezclan:
 
 | Prefijo | Cuándo | Ejemplo |
 |---|---|---|
