@@ -449,25 +449,25 @@ que la visión descartó.
       galería del teléfono**, y el `media_asset` queda con su `capturedAt`.
 - [ ] `openapi.json` declara la respuesta de `POST /media` y de la URL de subida con
       sus campos, y el cliente Dart las expone tipadas y no como `dynamic`.
-- [ ] Un `FOREMAN` **que está asignado a la obra ese día** —directo o por su
+- [x] Un `FOREMAN` **que está asignado a la obra ese día** —directo o por su
       cuadrilla— marca por otro: queda con `method = FOREMAN`,
       `recorded_by_membership_id` distinto de `membership_id`, y **sin** bandera.
       La condición es sobre quien marca; el destinatario no se evalúa.
-- [ ] Un `FOREMAN` **sin asignación en esa obra ese día** marca por otro: **se
+- [x] Un `FOREMAN` **sin asignación en esa obra ese día** marca por otro: **se
       registra igual**, con `RECORDER_NOT_ASSIGNED` — también al cerrar la jornada
       de otro. No hay ninguna entrada que devuelva 403 por esto, y hay un caso en
       `edge-cases/` que lo afirma.
-- [ ] Con `project_assignment` vacío —que es el estado de hoy— nadie queda sin poder
+- [x] Con `project_assignment` vacío —que es el estado de hoy— nadie queda sin poder
       marcar: todos se registran, todos con la bandera.
-- [ ] Un `OWNER` que marca por otro queda con `method = ADMIN`, no `FOREMAN`.
-- [ ] Un `FOREMAN` que sincroniza **no** se baja clientes ni horas ajenas a sus obras,
+- [x] Un `OWNER` que marca por otro queda con `method = ADMIN`, no `FOREMAN`.
+- [x] Un `FOREMAN` que sincroniza **no** se baja clientes ni horas ajenas a sus obras,
       con su caso en `edge-cases/`.
-- [ ] `pay_rate_cents` no aparece en ninguna respuesta que baje al móvil.
+- [x] `pay_rate_cents` no aparece en ninguna respuesta que baje al móvil.
 - [ ] `is_mock_location` viaja en toda marca, y una entrada con GPS simulado en
       Android llega al servidor con su bandera.
 - [ ] El servidor recalcula `within_geofence` y `distance_m`: una entrada que los
       manda desde el dispositivo los recibe ignorados.
-- [ ] Un `FOREMAN` que sincroniza **recibe** su cuadrilla, sus miembros vigentes y el
+- [x] Un `FOREMAN` que sincroniza **recibe** su cuadrilla, sus miembros vigentes y el
       nombre de cada uno: la pantalla muestra personas y no UUIDs.
 - [ ] Un `WORKER` ve la dirección de la obra de hoy y la abre en la app de mapas del
       teléfono, **sin pasar por ninguna pantalla de clientes** — no tiene permiso para
@@ -537,6 +537,7 @@ Empieza en 10 segundos y se ajusta con William en la obra, no en una reunión.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | **Verificado contra la base viva**: 27 comprobaciones por API real —los dos pulls acotados, la bandera en obra ajena y su ausencia en la propia, `method` por rol, cero tarifas en ningún cuerpo, y media tipado— todas en verde. Los siete criterios del API quedan en `[x]`; los del móvil esperan la tanda 2. De paso quedó verificado que la bandera **sobrevive al cierre** de la jornada. |
 | 2026-08-11 | en implementación | Primera tanda terminada: los siete prerequisitos del API, revisados con `domain-guardian`, `contract-watcher` y `code-reviewer`. El guardián encontró de paso una fuga real —`pay_rate_cents` bajaba embebido en cuadrillas y asignaciones, hasta un `WORKER` podía ver la tarifa de sus compañeros— cerrada con el patrón de `passwordHash`, también para el snapshot de `time_entry`. Del reviewer salieron la bandera en `clockOut`, la vigencia en la visibilidad de cuadrillas y los edge-cases que faltaban o no afirmaban nada. **Los criterios no se marcan todavía**: los casos de Bruno están escritos pero sin correr contra la base —Docker apagado—, y marcar con la verificación pendiente es el error que SPEC-0004 ya pagó una vez. Se corren antes del merge. |
 | 2026-08-11 | en implementación | Primera tanda: los siete prerequisitos de `apps/api`, que bloquean todo lo del móvil. |
 | 2026-08-11 | aprobado | Su único bloqueo era SPEC-0007, mergeado en el PR #12: la geocerca ya tiene punto contra el cual evaluar. `geolocator` quedó instalado y heredado, como ADR-0012 había previsto. |
