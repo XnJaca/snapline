@@ -113,6 +113,15 @@ export class TimeEntriesService {
     const flags = new Set([...entry.flags, ...timeFlags, ...geo.flags]);
     if (dto.isMockLocation) flags.add(TIME_ENTRY_FLAGS.MOCK_LOCATION);
 
+    // La misma evaluación que al entrar: cerrar la jornada de otro sin haber
+    // estado asignado a esa obra ese día también se marca, no solo abrirla.
+    if (entry.membershipId !== tenant.membershipId && tenant.role === 'FOREMAN') {
+      const asignado = await this.recorderAssignedThatDay(
+        tenant.membershipId, entry.projectId, deviceRecordedAt,
+      );
+      if (!asignado) flags.add(TIME_ENTRY_FLAGS.RECORDER_NOT_ASSIGNED);
+    }
+
     const hours = (deviceRecordedAt.getTime() - entry.clockInAt.getTime()) / 3_600_000;
     if (hours > MAX_SHIFT_HOURS) flags.add(TIME_ENTRY_FLAGS.SHIFT_TOO_LONG);
 
@@ -252,7 +261,7 @@ export class TimeEntriesService {
     membershipId: string, projectId: string, cuando: Date,
   ): Promise<boolean> {
     const dia = cuando.toISOString().slice(0, 10);
-    const filas = (await this.entries.query(
+    const filas = await this.entries.query<unknown[]>(
       `SELECT 1 FROM project_assignment a
        LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
          AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
@@ -261,7 +270,7 @@ export class TimeEntriesService {
          AND (a.membership_id = $3 OR cm.membership_id = $3)
        LIMIT 1`,
       [projectId, dia, membershipId],
-    )) as unknown[];
+    );
     return filas.length > 0;
   }
 

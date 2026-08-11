@@ -310,12 +310,19 @@ export class SyncService {
 
     const soloSi = (expr: string) => (acotado ? expr : undefined);
 
-    /// La cuadrilla es visible si la persona la lidera o la integra.
+    /// La cuadrilla es visible si la persona la lidera o la integra **hoy**.
+    ///
+    /// La vigencia gatea la visibilidad, no las filas: de una cuadrilla visible
+    /// bajan todos sus `crew_member`, incluidos los que ya salieron — la baja de
+    /// un miembro tiene que llegar al teléfono, y filtrarla acá la dejaría
+    /// vigente para siempre en el espejo local.
     const cuadrillaVisible = (crewId: string) => `(
            EXISTS (SELECT 1 FROM crew cx WHERE cx.id = ${crewId} AND cx.deleted_at IS NULL
                      AND cx.foreman_membership_id = :membershipId)
            OR EXISTS (SELECT 1 FROM crew_member cmx WHERE cmx.crew_id = ${crewId}
-                        AND cmx.membership_id = :membershipId AND cmx.deleted_at IS NULL))`;
+                        AND cmx.membership_id = :membershipId AND cmx.deleted_at IS NULL
+                        AND CURRENT_DATE BETWEEN cmx.from_date
+                          AND coalesce(cmx.to_date, CURRENT_DATE)))`;
 
     const [customers, sites, projects, assignments, mediaAssets, timeEntries, crews, crewMembers] = await Promise.all([
       vivos(Customer, 'customer', soloSi(deSusObras('customer.id', 'customer_id')), workerParam),
@@ -392,7 +399,9 @@ export class SyncService {
                    WHERE c.deleted_at IS NULL
                      AND (c.foreman_membership_id = $2
                           OR EXISTS (SELECT 1 FROM crew_member yo WHERE yo.crew_id = c.id
-                                       AND yo.membership_id = $2 AND yo.deleted_at IS NULL))
+                                       AND yo.membership_id = $2 AND yo.deleted_at IS NULL
+                                       AND CURRENT_DATE BETWEEN yo.from_date
+                                         AND coalesce(yo.to_date, CURRENT_DATE)))
                      AND (cm.membership_id = m.id OR c.foreman_membership_id = m.id))
         OR EXISTS (SELECT 1 FROM project_assignment a
                    WHERE a.deleted_at IS NULL AND a.membership_id = m.id

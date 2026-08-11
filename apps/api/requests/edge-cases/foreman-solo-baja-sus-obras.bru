@@ -38,17 +38,35 @@ docs {
 assert { res.status: eq 200
   res.body.customers.length: eq 1
   res.body.projects.length: eq 1
+  res.body.sites.length: eq 1
   res.body.crews.length: eq 1
   res.body.crewMembers.length: eq 2
 }
 
 script:post-response {
-  const cuerpo = JSON.stringify(res.getBody());
+  const body = res.getBody();
+  const cuerpo = JSON.stringify(body);
   if (cuerpo.includes("payRateCents")) {
     throw new Error("la tarifa está bajando al teléfono");
   }
-  const gente = res.getBody().people ?? [];
+  const gente = body.people ?? [];
   if (!gente.some((p) => p.name === "María López")) {
     throw new Error("people no trae los nombres de la cuadrilla");
+  }
+  // Consistencia: todo lo que bajó cuelga de las obras que bajaron. El seed
+  // tiene una segunda obra sin asignación —Baño Martinez— que NO puede venir.
+  const obras = new Set((body.projects ?? []).map((p) => p.id));
+  if ((body.projects ?? []).some((p) => p.name === "Baño Martinez")) {
+    throw new Error("una obra sin asignación está bajando al foreman");
+  }
+  for (const t of body.timeEntries ?? []) {
+    if (!obras.has(t.projectId)) throw new Error("horas de una obra ajena están bajando");
+  }
+  for (const m of body.mediaAssets ?? []) {
+    if (!obras.has(m.projectId)) throw new Error("fotos de una obra ajena están bajando");
+  }
+  const clientes = new Set((body.customers ?? []).map((c) => c.id));
+  for (const s of body.sites ?? []) {
+    if (!clientes.has(s.customerId)) throw new Error("una propiedad de un cliente ajeno está bajando");
   }
 }

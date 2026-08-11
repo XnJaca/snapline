@@ -29,12 +29,29 @@ docs {
 assert { res.status: eq 200
   res.body.customers.length: eq 1
   res.body.projects.length: eq 1
+  res.body.sites.length: eq 1
   res.body.crews.length: eq 1
 }
 
 script:post-response {
-  const cuerpo = JSON.stringify(res.getBody());
-  if (cuerpo.includes("payRateCents")) {
+  const body = res.getBody();
+  if (JSON.stringify(body).includes("payRateCents")) {
     throw new Error("la tarifa está bajando al teléfono");
+  }
+  // Nada puede colgar de una obra o un cliente que no bajó, y las horas son
+  // exclusivamente las propias.
+  const obras = new Set((body.projects ?? []).map((p) => p.id));
+  for (const m of body.mediaAssets ?? []) {
+    if (!obras.has(m.projectId)) throw new Error("fotos de una obra ajena están bajando");
+  }
+  const clientes = new Set((body.customers ?? []).map((c) => c.id));
+  for (const s of body.sites ?? []) {
+    if (!clientes.has(s.customerId)) throw new Error("una propiedad ajena está bajando");
+  }
+  const yo = (body.people ?? []).find((p) => p.name === "Carlos Ramírez");
+  for (const t of body.timeEntries ?? []) {
+    if (yo && t.membershipId !== yo.membershipId) {
+      throw new Error("horas ajenas están bajando a un WORKER");
+    }
   }
 }

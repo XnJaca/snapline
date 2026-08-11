@@ -155,6 +155,21 @@ async function seed(): Promise<void> {
     ),
   );
 
+  const georgiaSiteId = (await ds.query(
+    `SELECT id FROM site WHERE customer_id = $1 AND address->>'line1' = $2`,
+    [customerId, '9800 Georgia Ave'],
+  ) as Array<{ id: string }>)[0]?.id;
+  if (georgiaSiteId) {
+    await obtenerOCrear(
+      ds, 'project', 'company_id = $1 AND name = $2', [companyId, 'Baño Martinez'],
+      (id) => ds.query(
+        `INSERT INTO project (id, company_id, customer_id, site_id, name, service_type, status)
+         VALUES ($1,$2,$3,$4,'Baño Martinez','bathroom','IN_PROGRESS')`,
+        [id, companyId, customerId, georgiaSiteId],
+      ),
+    );
+  }
+
   // La cuadrilla asignada a la obra hoy: es lo que hace probable el marcaje,
   // el pull del foreman y la bandera de asignación.
   await obtenerOCrear(
