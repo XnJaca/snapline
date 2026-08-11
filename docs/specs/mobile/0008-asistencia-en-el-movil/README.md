@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0008: Asistencia en el móvil"
 type: spec
 platform: mobile
-status: review
+status: aprobado
 goal: "Marcar entrada y salida —propia o por otro que fue a la misma obra— nunca falla: sin señal, sin GPS, sin cámara y sin asignación cargada siempre queda el registro con lo que haya y su bandera, y un choque de horas al sincronizar queda en `CONFLICT` sin sobrescribir nada."
 apps:
   - mobile
@@ -21,10 +21,10 @@ domain:
   - contenido
 frente: campo
 created: 2026-08-10
-updated: 2026-08-10
+updated: 2026-08-11
 tags:
   - spec
-  - spec/review
+  - spec/aprobado
   - mobile
 ---
 
@@ -535,6 +535,7 @@ Empieza en 10 segundos y se ajusta con William en la obra, no en una reunión.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | aprobado | Su único bloqueo era SPEC-0007, mergeado en el PR #12: la geocerca ya tiene punto contra el cual evaluar. `geolocator` quedó instalado y heredado, como ADR-0012 había previsto. |
 | 2026-08-10 | review | Entra al alcance **ver a dónde ir**: la obra de hoy muestra su dirección y su punto y se abre en la app de mapas. Sale de revisar SPEC-0007, que prometía eso en su `goal` y no podía cumplirlo — su pantalla está detrás de `customers.read` y un `WORKER` nunca llega. "Hoy" es la única pantalla que ese rol abre, así que el dato se muestra acá. |
 | 2026-08-10 | borrador | Revisado con `spec-reviewer`, que encontró **una contradicción con la visión**: `vision.md` ya había decidido ese mismo día quién ficha por otro, y con otro criterio —la obra y no la cuadrilla, aplicado como bandera y no como bloqueo—, cerrando su argumento en que `time.approve` sigue siendo de `OWNER`/`ADMIN`. La primera versión de este spec lo había resuelto por cuadrilla y con el foreman aprobando, que es exactamente lo que ese texto descarta por nombre. **Gana la visión**: se reescribieron el prerequisito 0, el alcance, la UI y los criterios; la aprobación en el móvil salió del alcance. Del mismo repaso salieron el estado `READY` que el criterio de la foto citaba mal como `uploaded`, el contrato de API con sus shapes, y que `method` dice `FOREMAN` aunque marque el dueño. |
 | 2026-08-10 | borrador | Descartado apoyarse en los metadatos de la foto para la ubicación: el GPS del EXIF sale del mismo permiso ya denegado, se edita con cualquier app, y `markUploaded()` borra el EXIF a propósito para no publicar la casa de un cliente con sus coordenadas. Lo que queda es `capturedAt` contra la foto de galería, y se resuelve abriendo la cámara en captura directa. |

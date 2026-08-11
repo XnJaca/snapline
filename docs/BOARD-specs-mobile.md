@@ -20,16 +20,15 @@ kanban-plugin: board
 
 ## 🔍 Review (listo para revisar)
 
-- [ ] [[specs/mobile/0008-asistencia-en-el-movil/README|SPEC-0008: Asistencia en el móvil]] — revisado con `spec-reviewer` y corregido; cierra los dos criterios de `CONFLICT` de SPEC-0004. **No pasa a Aprobado hasta que avance SPEC-0007**, que le da el punto de la obra
-
 
 ## ✅ Aprobado (listo para implementar)
+
+- [ ] [[specs/mobile/0008-asistencia-en-el-movil/README|SPEC-0008: Asistencia en el móvil]] — desbloqueado por el merge de SPEC-0007; cierra los dos criterios de `CONFLICT` de SPEC-0004
 
 
 ## 🛠️ En implementación
 
 - [ ] [[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004: Capa local y sincronización]] — contrato, capa local y bandeja listos; faltan los dos criterios de `CONFLICT`, que dependen del marcaje
-- [ ] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — aprobado y en curso; sin prerequisitos de API, la implementación es de móvil sola
 
 
 ## 🎉 Implementado
@@ -38,6 +37,7 @@ kanban-plugin: board
 - [x] [[specs/mobile/0003-arquitectura-de-navegacion/README|SPEC-0003: Arquitectura de navegación]] — 104 tests + 9 de integración, PR #1 mergeado
 - [x] [[specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005: Proyectos en el móvil]] — 226 tests + 2 de integración, PR #7 mergeado; trajo la escalera de estados al API
 - [x] [[specs/mobile/0006-clientes-en-el-movil/README|SPEC-0006: Clientes en el móvil]] — 170 tests + 2 de integración, PR #4 mergeado; trajo `site.update` al API
+- [x] [[specs/mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007: Ubicación de la propiedad en el mapa]] — 239 tests en la suite, PR #12 mergeado; trajo Google Maps (ADR-0012), el bundle `com.snapline.app` y dos fixes de sincronización de SPEC-0004 con sus tests de regresión
 
 
 ## 🚧 Bloqueado
