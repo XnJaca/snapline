@@ -32,3 +32,6 @@ Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# Llave de Google Maps para iOS — no se versiona (SPEC-0007)
+/Flutter/Secrets.xcconfig
