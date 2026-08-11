@@ -6,7 +6,7 @@ aliases:
 type: spec
 platform: mobile
 status: review
-goal: "Una propiedad queda con su punto y su radio de geocerca fijados desde un mapa —tocándolo o usando la posición actual— y quien va a la obra ve dónde es antes de salir, sin que nadie escriba coordenadas a mano."
+goal: "Una propiedad queda con su punto y su radio de geocerca fijados desde un mapa —tocándolo o usando la posición actual, nunca escribiendo coordenadas a mano— y ese punto es contra el que el marcaje evalúa la geocerca."
 apps:
   - mobile
 depends_on:
@@ -50,6 +50,17 @@ Sin esos tres campos pasan dos cosas concretas:
 El caso que lo dispara: William manda una cuadrilla a una obra donde él ya estuvo y
 ellos no. Hoy les manda la dirección por WhatsApp y contesta llamadas.
 
+> **Este spec resuelve la primera mitad, no la segunda.** Fijar el punto es una
+> acción de quien administra: la pantalla cuelga de la ficha de propiedad, que está
+> detrás de `customers.read` —`OWNER`, `ADMIN` y `ACCOUNTANT`— y cuyo eje en la barra
+> solo ven `OWNER` y `ADMIN`. **La cuadrilla no entra ahí y no va a ver este mapa.**
+>
+> Que el trabajador vea a dónde ir pasa a
+> [[../0008-asistencia-en-el-movil/README|SPEC-0008]], que es el spec dueño de la
+> pantalla "Hoy" — la única a la que un `WORKER` sí entra. Sin ese reparto, este spec
+> prometía en su `goal` algo que su propio alcance no puede entregar, y el mecanismo
+> real seguiría siendo el WhatsApp que el párrafo de arriba describe.
+
 ## Alcance
 
 ### Entra
@@ -75,6 +86,10 @@ ellos no. Hoy les manda la dirección por WhatsApp y contesta llamadas.
   con el ADR del proveedor y puede entrar después. El punto se fija a mano.
 - **El marcaje de asistencia en sí.** Este spec llena los campos que la geocerca
   necesita; evaluar y mostrar la bandera es del spec de asistencia.
+- **Que el trabajador vea a dónde ir.** Ver el punto de la obra de hoy y abrirla en la
+  app de mapas desde la pantalla "Hoy" es de
+  [[../0008-asistencia-en-el-movil/README|SPEC-0008]], que es dueño de esa pantalla.
+  Acá se llena el dato; allá se muestra a quien lo necesita.
 
 ## Dónde está la línea con "Qué NO somos"
 
@@ -109,14 +124,35 @@ No se agrega nada al modelo.
 - **La geocerca pertenece al sitio, no al proyecto.** El mismo cliente puede tener
   tres trabajos en la misma casa: se fija una vez y las tres obras la comparten.
   Cambiar el punto afecta a todas, y eso es lo correcto.
-- **`geofence_radius_m` nulo usa el default de la empresa.** Dejarlo sin tocar es una
-  opción válida y no un formulario incompleto.
+- **`geofence_radius_m` nulo es válido**, y dejarlo sin tocar no es un formulario
+  incompleto. Las fichas de dominio dicen que entonces se usa "el default de la
+  empresa"; **hoy eso no es cierto en el código** —es una constante de 150 metros en
+  `time-entries.service.ts` y `company.settings` no se lee—, y quedó registrado en
+  [[../../../tech-debt/0004-radio-de-geocerca-hardcodeado|DEBT-0004]]. No bloquea este
+  spec: lo que se fija por sitio sí se respeta.
 - **La regla 11 no se toca acá.** `is_mock_location` es del marcaje, no de fijar el
   punto de una propiedad: si alguien falsea el GPS al cargar una obra, lo que sale
   mal es la geocerca de esa obra, y eso se corrige a mano. La bandera sigue siendo
   del `time_entry`.
 - **Borrado suave y sincronización.** El punto viaja por `site.update`, que ya
   existe (SPEC-0006). Última escritura gana.
+
+## Contrato de API
+
+**No cambia nada.** Verificado contra el código, y por eso queda escrito: a diferencia
+de SPEC-0004 y SPEC-0006, este spec **no tiene ningún prerequisito de contrato**.
+
+```http
+PATCH /api/customers/:id/sites/:siteId      # customers.write
+```
+
+`UpdateSiteDto` ya acepta `lat`, `lng` y `geofenceRadiusM`, la operación `site.update`
+ya está en `SYNC_OPERATIONS`, y la tabla local `Sites` ya tiene las tres columnas.
+
+Lo único que falta es del lado del móvil: `CustomerRepository.updateSite()` **los
+excluye a propósito**, con un comentario que dice que son de asistencia y entran con
+el frente de campo. La implementación de este spec es extender ese método, no crear
+uno nuevo.
 
 ## Comportamiento sin señal
 
@@ -205,6 +241,13 @@ tiene que decir la verdad de para qué se usa.
 - [ ] Cambiar el punto de una propiedad se refleja en todas las obras de ese sitio,
       porque la geocerca es del sitio.
 - [ ] Ninguna pantalla de este spec dibuja la posición de una persona.
+- [ ] **No existe ningún campo de texto para latitud ni longitud** en toda la feature:
+      el punto sale del mapa o del GPS, nunca del teclado.
+- [ ] Una propiedad con punto sin subir **muestra su marca de pendiente**, como el
+      resto de lo que sincroniza.
+- [ ] Un `FOREMAN` y un `WORKER` **no** tienen forma de llegar a esta pantalla, que
+      cuelga de la ficha de propiedad. Es lo que hace que el `goal` se limite a fijar
+      el punto y no a mostrárselo a la cuadrilla.
 - [ ] La dirección se abre en la app de mapas del teléfono desde la ficha.
 - [ ] La pantalla se ve correcta en claro y en oscuro, y hay un solo naranja sólido.
 - [ ] Cero cadenas quemadas, en `en` y `es`, incluidos los textos del permiso de
