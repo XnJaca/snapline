@@ -45,6 +45,11 @@ class _SiteLocationScreenState extends ConsumerState<SiteLocationScreen> {
   bool _buscandoUbicacion = false;
   LocationFailure? _falloUbicacion;
 
+  /// `initialCameraPosition` solo se aplica al crear el mapa, así que mover el
+  /// marcador no mueve la vista. Sin este controlador, "usar mi ubicación" pone
+  /// el punto donde estás y te deja mirando el otro lado del continente.
+  GoogleMapController? _mapa;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +57,12 @@ class _SiteLocationScreenState extends ConsumerState<SiteLocationScreen> {
       _punto = LatLng(widget.site.lat!, widget.site.lng!);
     }
     _radio = widget.site.geofenceRadiusM?.toDouble();
+  }
+
+  @override
+  void dispose() {
+    _mapa?.dispose();
+    super.dispose();
   }
 
   Future<void> _usarMiUbicacion() async {
@@ -71,6 +82,12 @@ class _SiteLocationScreenState extends ConsumerState<SiteLocationScreen> {
         _falloUbicacion = resultado.failure;
       }
     });
+
+    if (resultado.isOk) {
+      await _mapa?.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(resultado.lat!, resultado.lng!), 17),
+      );
+    }
   }
 
   Future<void> _guardar() async {
@@ -109,6 +126,7 @@ class _SiteLocationScreenState extends ConsumerState<SiteLocationScreen> {
                     target: _punto ?? _centroPorDefecto,
                     zoom: _punto == null ? 9 : 17,
                   ),
+                  onMapCreated: (controlador) => _mapa = controlador,
                   onTap: (posicion) => setState(() => _punto = posicion),
                   markers: {
                     if (_punto != null)
