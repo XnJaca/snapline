@@ -4,7 +4,7 @@ title: "Google Maps para el mapa del móvil"
 aliases:
   - "ADR-0012: Google Maps para el mapa del móvil"
 type: adr
-status: propuesto
+status: aceptado
 supersedes: null
 superseded_by: null
 related_specs: ["SPEC-0007", "SPEC-0008"]
@@ -14,7 +14,7 @@ deciders:
   - jaca
 tags:
   - adr
-  - adr/propuesto
+  - adr/aceptado
 ---
 
 # ADR-0012: Google Maps para el mapa del móvil
@@ -116,13 +116,23 @@ por plataforma duplica el trabajo de una pantalla que se escribe una vez.
 ### Negativas / Costos
 
 - **Hace falta una cuenta de Google Cloud con facturación habilitada**, aunque el SDK
-  no cobre. Es una tarjeta cargada en una cuenta para usar algo gratis, y es fricción
-  real de setup.
+  no cobre. **Ya existe** —confirmado el 2026-08-10—, así que no es fricción de setup
+  acá; lo sería para quien monte esto desde cero.
 - **El día que entre geocoding, deja de ser gratis.** Convertir "9800 Georgia Ave" en
   coordenadas es un SKU Essentials: 10.000 llamadas gratis por mes y después entre USD
-  2 y 7 por millar. A este volumen es gratis en la práctica, pero ya no es "sin
-  factura posible". SPEC-0007 lo dejó fuera de alcance y anotó que se decidía acá:
-  **entra después, con su propio cupo vigilado.**
+  2 y 7 por millar. **Decidido que no entra**, y no por el costo —a este volumen serían
+  decenas de llamadas al mes— sino porque **no hace falta**: el punto se elige tocando
+  el mapa, y el caso principal es alguien parado en la obra usando su ubicación actual,
+  donde una dirección geocodificada no aporta nada.
+
+  Serviría solo para cargar una obra desde la oficina, centrando el mapa cerca de la
+  casa en vez de abrirlo en cualquier lado. No pediría ningún dato nuevo —`site.address`
+  ya es obligatorio desde SPEC-0006— así que **si cargar obras a distancia termina
+  siendo lo común, se agrega sin tocar el modelo ni este ADR**.
+
+  Lo que nunca hace es fijar el punto solo: la dirección geocodificada cae en el centro
+  de la manzana o sobre la calle, y acá el punto **es** la geocerca. Un punto aproximado
+  hace que las banderas de asistencia mientan en las dos direcciones.
 - **Sin red no dibuja**, lo mismo que cualquier proveedor sin descarga offline.
 - La clave viaja en el binario.
 
