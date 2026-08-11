@@ -394,25 +394,28 @@ void main() {
     testWithApp('cambiar de pestaña y volver conserva el scroll', (
       tester,
     ) async {
+      // Sobre Fotos, que sigue siendo placeholder con su lista sintética: Hoy
+      // ya es una pantalla real y no tiene lista que desplazar.
       await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
       await tester.pumpAndSettle();
 
-      // Hoy arranca arriba de todo.
+      await tester.tap(find.text('Fotos'));
+      await tester.pumpAndSettle();
       expect(find.text('Elemento de ejemplo 1'), findsOneWidget);
 
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
       expect(find.text('Elemento de ejemplo 1'), findsNothing);
 
-      await tester.tap(find.text('Fotos'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Hoy'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fotos'));
       await tester.pumpAndSettle();
 
       expect(
         find.text('Elemento de ejemplo 1'),
         findsNothing,
-        reason: 'volver a Hoy rebobinó la lista al principio',
+        reason: 'volver a Fotos rebobinó la lista al principio',
       );
     });
 

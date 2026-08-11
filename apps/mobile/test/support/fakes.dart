@@ -22,6 +22,7 @@ import 'package:snapline/api/models/auth_membership_dto_role.dart';
 import 'package:snapline/api/models/auth_user_dto.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
+import 'package:snapline/core/location/device_location.dart';
 import 'package:snapline/core/session/session.dart';
 
 /// Almacenamiento en memoria: el Keychain no existe en un test de unidad.
@@ -199,9 +200,12 @@ Widget testApp({
   FakeLastDestinationStore? lastDestinationStore,
   LocaleStore? localeStore,
   ThemeStore? themeStore,
+  DeviceLocation? deviceLocation,
 }) {
   return ProviderScope(
     overrides: [
+      if (deviceLocation != null)
+        deviceLocationProvider.overrideWithValue(deviceLocation),
       appDatabaseProvider.overrideWithValue(db),
       syncControllerProvider.overrideWith(FakeSyncController.new),
       sessionStorageProvider.overrideWithValue(
