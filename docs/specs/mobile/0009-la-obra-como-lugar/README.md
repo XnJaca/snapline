@@ -200,10 +200,18 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
   el resumen semanal vive ahí y saltarla lo escondería justo en el caso más
   común. El Registro es el primer tab y abre activo, así que nunca hay que
   elegir tab. Cuadrilla sigue la misma regla: siempre su lista.
-- **Nada flota sobre el fondo.** El resumen semanal y las filas de Horas van
-  en cards con borde; las tarjetas de obra y de cuadrilla usan el
+- **Nada flota sobre el fondo.** Toda sección se nombra con una etiqueta
+  (`ListLabel`: "Tu tiempo", "Obras en las que estás asignado hoy", "Tus
+  cuadrillas", "La gente de esta obra, hoy") y su contenido va en cards
+  (`InfoCard`): el resumen, las filas de Horas, la ficha del Detalle y las
+  personas. Las tarjetas tocables de obra y cuadrilla usan el
   `primaryContainer` del tema — color con calidez, nunca el naranja saturado,
   que sigue siendo exclusivo de la acción primaria (la regla del naranja).
+- **Las acciones dicen qué hacen, con palabras.** En Personas el icono murió:
+  el botón dice "Marcar entrada" o "Marcar salida" según el estado — adentro
+  no se ofrece una segunda entrada — y el estado es explícito: "Marcó entrada
+  hoy a las 7:02", "Salió hoy a las 15:40", "Sin marcar hoy". Esta app se usa
+  sin entrenamiento: un icono que hay que adivinar es un bug de producto.
 - **El desglose de una obra que salió de la asignación.** El Registro de cada
   obra muestra sus jornadas de la semana, pero la obra es alcanzable mientras
   esté en la lista — asignada hoy o con la jornada abierta. Las jornadas
@@ -226,6 +234,7 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Segunda pasada de diseño probando como María: nace la convención `ListLabel` + `InfoCard` (ninguna sección sin nombre, ningún dato suelto), el Detalle se agrupa en "El lugar" y "La obra", y en Personas el icono se reemplaza por botones con palabras y estado explícito con "hoy". |
 | 2026-08-11 | en implementación | Tanda de diseño, dictada probando en el teléfono como María: nada flota (resumen y Horas en cards), las tarjetas toman el `primaryContainer` del tema, la lista de cuadrillas no se salta nunca, el foreman gana el tab Cuadrilla dentro de la obra, el botón pasa a "Marcar mi entrada" y el Detalle se llena con la ficha que ya baja (estado, fechas, tipo, descripción). Fases quedan fuera: sin ficha de dominio no se inventan. |
 | 2026-08-11 | en implementación | Hallazgos de los revisores incorporados. Del `spec-reviewer`: el caso de jornada abierta en otra obra, la resolución con SPEC-0003, el criterio del tab Detalle y la definición de "semana". Del `code-reviewer` (GRAVE): la obra con jornada abierta entra a la lista sin asignación de hoy — sin eso, cerrar la jornada podía quedar sin camino. El "costo cero" de Riesgos se corrigió: la decisión real es la lista siempre visible, un toque más a conciencia. |
 | 2026-08-11 | en implementación | Aprobado de palabra por quien lo diseñó — el spec ES su decisión de producto, dictada probando SPEC-0008. El `spec-reviewer` corre en paralelo y sus hallazgos entran como fixes antes del PR. |

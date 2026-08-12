@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/field_action_button.dart';
+import '../../core/widgets/list_label.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -141,8 +142,7 @@ class _RegistroTabState extends ConsumerState<RegistroTab> {
         ],
         SizedBox(height: context.spacing.xl),
         if (jornadas.isNotEmpty) ...[
-          Text(l10n.registroPastTitle, style: context.texts.titleSmall),
-          SizedBox(height: context.spacing.sm),
+          ListLabel(label: l10n.registroPastTitle),
           for (final jornada in jornadas) _JornadaTile(jornada: jornada),
         ],
       ],

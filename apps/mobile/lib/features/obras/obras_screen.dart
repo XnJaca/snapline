@@ -6,6 +6,8 @@ import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/info_card.dart';
+import '../../core/widgets/list_label.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -50,8 +52,10 @@ class ObrasScreen extends ConsumerWidget {
           : ListView(
               padding: EdgeInsets.all(context.spacing.lg),
               children: [
+                ListLabel(label: l10n.obrasSectionTiempo),
                 _ResumenSemanal(membershipId: membershipId),
                 SizedBox(height: context.spacing.lg),
+                ListLabel(label: l10n.obrasSectionAsignadas),
                 for (final obra in [?conJornada, ...obras]) ...[
                   _ObraCard(
                     obra: obra,
@@ -91,13 +95,7 @@ class _ResumenSemanal extends ConsumerWidget {
       total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
     }
 
-    return Container(
-      padding: EdgeInsets.all(context.spacing.lg),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
-        border: Border.all(color: context.colors.outline),
-      ),
+    return InfoCard(
       child: Row(
         children: [
           Container(

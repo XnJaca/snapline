@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/info_card.dart';
+import '../../core/widgets/list_label.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -154,6 +156,7 @@ class _Gente extends ConsumerWidget {
           ),
           SizedBox(height: context.spacing.lg),
         ],
+        ListLabel(label: l10n.crewTodayHeader),
         for (final persona in gente) ...[
           _PersonaCard(
             persona: persona,
@@ -176,6 +179,11 @@ class _Gente extends ConsumerWidget {
   }
 }
 
+/// La persona con su estado del día — explícito: **hoy**, en esta obra — y la
+/// acción con palabras, no un icono que hay que adivinar.
+///
+/// Adentro solo se ofrece marcar salida: la segunda entrada no existe como
+/// opción, ni acá ni en el servidor (un registro abierto por persona).
 class _PersonaCard extends StatelessWidget {
   const _PersonaCard({
     required this.persona,
@@ -212,35 +220,28 @@ class _PersonaCard extends StatelessWidget {
               )
             : StatusChip(tone: StatusTone.warning, label: l10n.crewNotClockedIn);
 
-    return Container(
+    return InfoCard(
       padding: EdgeInsets.all(context.spacing.md),
-      decoration: BoxDecoration(
-        color: context.colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(persona.name, style: context.texts.titleMedium),
-                SizedBox(height: context.spacing.xs),
-                estado,
-              ],
+          Text(persona.name, style: context.texts.titleMedium),
+          SizedBox(height: context.spacing.xs),
+          estado,
+          SizedBox(height: context.spacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: onMarcar,
+              child: ocupada
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      persona.adentro ? l10n.crewMarkOut : l10n.crewMarkIn,
+                    ),
             ),
-          ),
-          IconButton(
-            tooltip: persona.adentro
-                ? l10n.crewClockOutFor(persona.name)
-                : l10n.crewClockInFor(persona.name),
-            onPressed: onMarcar,
-            icon: ocupada
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(persona.adentro ? Icons.logout : Icons.login),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/info_card.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'personas_tab.dart';
@@ -115,13 +116,8 @@ class _PersonaHoras extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Container(
+    return InfoCard(
       padding: EdgeInsets.all(context.spacing.md),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
-        border: Border.all(color: context.colors.outline),
-      ),
       child: Row(
         children: [
           Container(

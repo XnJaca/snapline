@@ -5,7 +5,9 @@ import '../../api/models/project_status.dart';
 import '../../core/location/open_in_maps.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
+import '../../core/widgets/info_card.dart';
 import '../../core/widgets/labeled_value.dart';
+import '../../core/widgets/list_label.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -84,42 +86,71 @@ class _DetalleTab extends ConsumerWidget {
     String? fecha(DateTime? d) =>
         d == null ? null : material.formatMediumDate(d.toLocal());
 
+    // Dos secciones con nombre, cada una en su card: el lugar y la ficha.
+    // Nada suelto sobre el fondo.
     return ListView(
       padding: EdgeInsets.all(context.spacing.lg),
       children: [
-        if (estado != null && estado != ProjectStatus.$unknown) ...[
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: StatusChip(tone: estado.tone, label: estado.label(l10n)),
+        if (lugar.address.isNotEmpty || lugar.hasLocation) ...[
+          ListLabel(label: l10n.detalleSeccionLugar),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (lugar.address.isNotEmpty)
+                  LabeledValue(
+                    label: l10n.detalleDireccion,
+                    value: lugar.address,
+                  ),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => openInMaps(
+                      lat: lugar.lat,
+                      lng: lugar.lng,
+                      address: lugar.address,
+                    ),
+                    icon: const Icon(Icons.directions_outlined),
+                    label: Text(l10n.todayOpenInMaps),
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(height: context.spacing.lg),
         ],
-        if (lugar.address.isNotEmpty)
-          LabeledValue(label: l10n.detalleDireccion, value: lugar.address),
-        LabeledValue(label: l10n.detalleServicio, value: ficha?.serviceType),
-        LabeledValue(label: l10n.detalleInicio, value: fecha(ficha?.startDate)),
-        LabeledValue(
-          label: l10n.detalleObjetivo,
-          value: fecha(ficha?.targetEndDate),
-        ),
-        LabeledValue(
-          label: l10n.detalleTerminada,
-          value: fecha(ficha?.actualEndDate),
-        ),
-        LabeledValue(
-          label: l10n.detalleDescripcion,
-          value: ficha?.description,
-        ),
-        if (lugar.address.isNotEmpty || lugar.hasLocation) ...[
-          SizedBox(height: context.spacing.sm),
-          OutlinedButton.icon(
-            onPressed: () => openInMaps(
-              lat: lugar.lat,
-              lng: lugar.lng,
-              address: lugar.address,
+        if (ficha != null) ...[
+          ListLabel(label: l10n.detalleSeccionFicha),
+          InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (estado != null && estado != ProjectStatus.$unknown) ...[
+                  StatusChip(tone: estado.tone, label: estado.label(l10n)),
+                  SizedBox(height: context.spacing.md),
+                ],
+                LabeledValue(
+                  label: l10n.detalleServicio,
+                  value: ficha.serviceType,
+                ),
+                LabeledValue(
+                  label: l10n.detalleInicio,
+                  value: fecha(ficha.startDate),
+                ),
+                LabeledValue(
+                  label: l10n.detalleObjetivo,
+                  value: fecha(ficha.targetEndDate),
+                ),
+                LabeledValue(
+                  label: l10n.detalleTerminada,
+                  value: fecha(ficha.actualEndDate),
+                ),
+                LabeledValue(
+                  label: l10n.detalleDescripcion,
+                  value: ficha.description,
+                ),
+              ],
             ),
-            icon: const Icon(Icons.directions_outlined),
-            label: Text(l10n.todayOpenInMaps),
           ),
         ],
       ],

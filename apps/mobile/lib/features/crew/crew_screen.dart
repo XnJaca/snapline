@@ -5,6 +5,7 @@ import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/list_label.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'crew_detail_screen.dart';
@@ -36,8 +37,7 @@ class CrewScreen extends ConsumerWidget {
           : ListView(
               padding: EdgeInsets.all(context.spacing.lg),
               children: [
-                Text(l10n.crewPickOne, style: context.texts.titleSmall),
-                SizedBox(height: context.spacing.sm),
+                ListLabel(label: l10n.crewPickOne),
                 for (final cuadrilla in cuadrillas) ...[
                   Material(
                     color: context.colors.primaryContainer,

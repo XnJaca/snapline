@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_membership_dto_role.dart';
 import 'package:snapline/core/location/device_location.dart';
+import 'package:snapline/core/widgets/info_card.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/local/tables.dart';
@@ -112,7 +113,7 @@ void main() {
     expect(find.text('Personas'), findsOneWidget);
     expect(find.text('Horas'), findsOneWidget);
     expect(find.text('Carlos Ruiz'), findsOneWidget);
-    expect(find.text('Sin marcar'), findsWidgets);
+    expect(find.text('Sin marcar hoy'), findsWidgets);
     await desmontar(tester);
   });
 
@@ -127,7 +128,13 @@ void main() {
     await tester.tap(find.text('Cuadrilla A'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Marcar entrada de Carlos Ruiz'));
+    final cardCarlos = find.ancestor(
+      of: find.text('Carlos Ruiz'),
+      matching: find.byType(InfoCard),
+    );
+    await tester.tap(
+      find.descendant(of: cardCarlos, matching: find.text('Marcar entrada')),
+    );
     await tester.pump(const Duration(seconds: 2));
 
     final filas = await db.select(db.timeEntries).get();
@@ -135,6 +142,24 @@ void main() {
     expect(filas.single.membershipId, 'm2');
     expect(filas.single.recordedByMembershipId, 'm1');
     expect(filas.single.method, 'FOREMAN');
+
+    // La card lo dice con palabras: ya marcó, y lo único que queda es salida.
+    expect(
+      find.descendant(
+        of: cardCarlos,
+        matching: find.textContaining('Marcó entrada hoy a las'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: cardCarlos, matching: find.text('Marcar salida')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: cardCarlos, matching: find.text('Marcar entrada')),
+      findsNothing,
+      reason: 'adentro no existe la segunda entrada como opción',
+    );
     await desmontar(tester);
   });
 
