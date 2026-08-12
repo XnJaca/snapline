@@ -94,13 +94,4 @@ export class CustomersService {
     return this.sites.save(site);
   }
 
-  // Otorgar el release habilita publicar; revocarlo debe despublicar en cascada.
-  async setPhotoRelease(id: string, granted: boolean, documentId?: string): Promise<Customer> {
-    await this.get(id);
-    await this.customers.update({ id }, {
-      photoReleaseGrantedAt: granted ? new Date() : null,
-      photoReleaseDocumentId: granted ? (documentId ?? null) : null,
-    });
-    return this.get(id);
-  }
 }

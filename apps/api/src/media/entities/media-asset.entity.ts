@@ -72,7 +72,7 @@ export class MediaAsset extends SoftDeletableTenantEntity {
   @Column({ type: 'enum', enum: ['PENDING', 'UPLOADING', 'READY', 'FAILED'], enumName: 'upload_status', name: 'upload_status', default: 'PENDING' })
   uploadStatus!: UploadStatus;
 
-  // Escalera INTERNAL -> CLIENT -> PUBLIC. Un trigger rechaza PUBLIC sin photo release.
+  // Escalera INTERNAL -> CLIENT -> PUBLIC. Un trigger rechaza una foto PUBLIC sin EXIF limpio.
   @Column({ type: 'enum', enum: ['INTERNAL', 'CLIENT', 'PUBLIC'], enumName: 'media_visibility', default: 'INTERNAL' })
   visibility!: MediaVisibility;
 

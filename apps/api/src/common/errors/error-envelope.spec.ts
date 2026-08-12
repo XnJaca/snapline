@@ -56,11 +56,11 @@ describe('envelope de errores', () => {
   it('un invariante que salta en la base llega con el mismo código que el servicio', () => {
     // El trigger no pone su nombre en el mensaje: solo el texto del RAISE.
     const trigger = new QueryFailedError('UPDATE media_asset', [],
-      new Error('media_asset abc: no puede ser PUBLIC, el cliente no otorgó photo release'));
+      new Error('media_asset abc: no puede ser PUBLIC sin limpiar el EXIF'));
     const indice = new QueryFailedError('INSERT time_entry', [],
       new Error('duplicate key value violates unique constraint "uq_time_entry_single_open"'));
 
-    expect(capture(trigger)).toMatchObject({ code: 'PHOTO_RELEASE_REQUIRED', statusCode: 400 });
+    expect(capture(trigger)).toMatchObject({ code: 'EXIF_NOT_STRIPPED', statusCode: 400 });
     expect(capture(indice)).toMatchObject({ code: 'TIME_ENTRY_ALREADY_OPEN', statusCode: 409 });
   });
 

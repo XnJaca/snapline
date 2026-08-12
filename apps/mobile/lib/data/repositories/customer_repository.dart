@@ -16,7 +16,6 @@ class CustomerSummary {
     required this.companyName,
     required this.phone,
     required this.email,
-    required this.hasPhotoRelease,
     required this.pending,
   });
 
@@ -25,9 +24,6 @@ class CustomerSummary {
   final String? companyName;
   final String? phone;
   final String? email;
-
-  /// Lo único que habilita publicar sus obras (regla 17). Acá solo se muestra.
-  final bool hasPhotoRelease;
 
   /// Todavía no llegó al servidor.
   final bool pending;
@@ -50,7 +46,6 @@ class CustomerDetail {
     required this.billingAddress,
     required this.source,
     required this.notes,
-    required this.photoReleaseGrantedAt,
     required this.pending,
   });
 
@@ -65,13 +60,7 @@ class CustomerDetail {
   final String? source;
   final String? notes;
 
-  /// De solo lectura en el móvil: otorgarlo necesita el documento firmado, y esa
-  /// subida no entra en este alcance.
-  final DateTime? photoReleaseGrantedAt;
-
   final bool pending;
-
-  bool get hasPhotoRelease => photoReleaseGrantedAt != null;
 
   bool get canBeInvited =>
       (email?.isNotEmpty ?? false) || (phone?.isNotEmpty ?? false);
@@ -385,7 +374,6 @@ class CustomerRepository {
     companyName: fila.companyName,
     phone: fila.phone,
     email: fila.email,
-    hasPhotoRelease: fila.photoReleaseGrantedAt != null,
     pending: fila.syncStatus != SyncStatus.synced,
   );
 
@@ -400,7 +388,6 @@ class CustomerRepository {
     billingAddress: AddressJson.decode(fila.billingAddress),
     source: fila.source,
     notes: fila.notes,
-    photoReleaseGrantedAt: fila.photoReleaseGrantedAt,
     pending: fila.syncStatus != SyncStatus.synced,
   );
 

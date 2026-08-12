@@ -34,11 +34,4 @@ export class Customer extends SoftDeletableTenantEntity {
 
   @Column({ type: 'text', nullable: true })
   notes!: string | null;
-
-  // Habilita publicar. Un trigger rechaza visibility=PUBLIC sin esto.
-  @Column({ type: 'timestamptz', name: 'photo_release_granted_at', nullable: true })
-  photoReleaseGrantedAt!: Date | null;
-
-  @Column({ type: 'uuid', name: 'photo_release_document_id', nullable: true })
-  photoReleaseDocumentId!: string | null;
 }

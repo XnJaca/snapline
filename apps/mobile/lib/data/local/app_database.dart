@@ -32,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -55,6 +55,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.createTable(pendingUploads);
+      }
+      if (from < 5) {
+        // El photo release salió del producto (DEBT-0005). Es la primera columna
+        // que se va: recrea `customers` y copia lo demás, sin tocar la bandeja.
+        await m.alterTable(TableMigration(customers));
       }
     },
   );

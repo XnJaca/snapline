@@ -10,8 +10,8 @@ body:json {
   { "visibility": "PUBLIC" }
 }
 docs {
-  Escalera INTERNAL → CLIENT → PUBLIC. Exige photo release del cliente y EXIF
-  limpio: publicar con GPS expone la dirección de la vivienda.
+  Escalera INTERNAL → CLIENT → PUBLIC. Exige EXIF limpio, y si falta lo limpia
+  sola: publicar con GPS expone la dirección de la vivienda.
 }
 assert { res.status: eq 200
   res.body.visibility: eq PUBLIC

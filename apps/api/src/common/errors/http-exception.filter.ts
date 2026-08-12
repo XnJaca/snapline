@@ -11,8 +11,8 @@ import { ErrorResponseDto, FieldErrorDto } from './error-response.dto';
 // RAISE EXCEPTION de un trigger solo trae el texto que se escribió. Por eso acá
 // se matchea contra fragmentos del mensaje, no contra nombres de objeto.
 const DB_ERROR_SIGNATURES: { match: string; code: ErrorCode; status: number; message: string }[] = [
-  { match: 'photo release', code: 'PHOTO_RELEASE_REQUIRED', status: 400,
-    message: 'El cliente no otorgó permiso para publicar sus fotos' },
+  { match: 'sin limpiar el EXIF', code: 'EXIF_NOT_STRIPPED', status: 400,
+    message: 'La foto todavía tiene EXIF: publicarla expondría la ubicación' },
   { match: 'time_entry no se borra', code: 'FORBIDDEN', status: 403,
     message: 'Los registros de tiempo no se borran: se corrigen dejando rastro' },
   { match: 'uq_time_entry_single_open', code: 'TIME_ENTRY_ALREADY_OPEN', status: 409,

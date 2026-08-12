@@ -309,7 +309,6 @@ Future<void> seedCustomer(
   String? companyName,
   String? phone,
   String? email,
-  DateTime? photoReleaseGrantedAt,
   String? siteLine1,
   SyncStatus syncStatus = SyncStatus.synced,
 }) async {
@@ -324,7 +323,6 @@ Future<void> seedCustomer(
       companyName: Value(companyName),
       phone: Value(phone),
       email: Value(email),
-      photoReleaseGrantedAt: Value(photoReleaseGrantedAt),
       syncStatus: Value(syncStatus),
     ),
   );

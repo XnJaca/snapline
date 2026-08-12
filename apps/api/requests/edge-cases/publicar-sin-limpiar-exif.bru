@@ -1,4 +1,4 @@
-meta { name: PUBLIC sin limpiar EXIF
+meta { name: PUBLIC nunca queda con EXIF
   type: http
   seq: 5
 }
@@ -12,5 +12,14 @@ body:json {
 docs {
   Las fotos llevan coordenadas GPS. Publicarlas con EXIF expone la dirección
   exacta de la vivienda del cliente.
+
+  Subir a PUBLIC no rechaza: limpia. Olvidar la llamada previa publicaba la
+  ubicación, y eso no puede depender de recordarla. Lo que este caso verifica es
+  que **no existe camino a PUBLIC con EXIF adentro** — si `exifStrippedAt` vuelve
+  nulo, se rompió el invariante. El trigger de la base lo rechaza también, para
+  los caminos que no pasan por este endpoint.
 }
-assert { res.status: eq 400 }
+assert { res.status: eq 200
+  res.body.visibility: eq PUBLIC
+  res.body.exifStrippedAt: isString
+}
