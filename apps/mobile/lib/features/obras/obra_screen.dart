@@ -34,6 +34,9 @@ class ObraScreen extends ConsumerWidget {
         sesion?.membership.permissions.contains('crews.read') ?? false;
 
     return DefaultTabController(
+      // Con la key, un cambio de permisos en vivo rearma los tabs desde el
+      // primero en vez de dejar la selección apuntando a otro contenido.
+      key: ValueKey(conCuadrilla),
       length: conCuadrilla ? 3 : 2,
       child: Scaffold(
         appBar: AppBar(

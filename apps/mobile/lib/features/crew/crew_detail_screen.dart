@@ -38,7 +38,7 @@ class CrewDetailScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            const PersonasTab(),
+            PersonasTab(crewId: crewId),
             _HorasTab(crewId: crewId),
           ],
         ),
@@ -66,11 +66,7 @@ class _HorasTab extends ConsumerWidget {
       final previa = totales[fila.membershipId];
       var total = previa?.total ?? Duration.zero;
       final jornada = fila.entry;
-      if (jornada != null) {
-        final fin = jornada.clockOutAt ?? DateTime.now();
-        total += fin.difference(jornada.clockInAt) -
-            Duration(minutes: jornada.breakMinutes);
-      }
+      if (jornada != null) total += jornada.worked;
       totales[fila.membershipId] = (name: fila.name, total: total);
     }
 

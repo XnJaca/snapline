@@ -141,7 +141,7 @@ class _RegistroTabState extends ConsumerState<RegistroTab> {
           ),
         ],
         SizedBox(height: context.spacing.xl),
-        if (jornadas.isNotEmpty)
+        if (jornadas.isNotEmpty || abiertaAca != null)
           SectionCard(
             // El título es el dato: cuánto llevás de la semana acá. Las
             // jornadas de abajo son exactamente las que lo suman.
@@ -149,7 +149,9 @@ class _RegistroTabState extends ConsumerState<RegistroTab> {
             padded: false,
             child: Column(
               children: [
-                _TotalEnObra(jornadas: jornadas),
+                // La abierta también suma: el mismo número que el resumen del
+                // home, que la cuenta en vivo.
+                _TotalEnObra(jornadas: [?abiertaAca, ...jornadas]),
                 for (final jornada in jornadas) ...[
                   Divider(height: 1, color: context.colors.outline),
                   _JornadaTile(jornada: jornada),
@@ -260,8 +262,7 @@ class _TotalEnObra extends StatelessWidget {
 
     var total = Duration.zero;
     for (final j in jornadas) {
-      final fin = j.clockOutAt ?? DateTime.now();
-      total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
+      total += j.worked;
     }
 
     return Padding(
@@ -301,10 +302,7 @@ class _JornadaTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final material = MaterialLocalizations.of(context);
 
-    final fin = jornada.clockOutAt ?? DateTime.now();
-    final total =
-        fin.difference(jornada.clockInAt) -
-        Duration(minutes: jornada.breakMinutes);
+    final total = jornada.worked;
     final totalTexto =
         l10n.obrasDuration(total.inHours, total.inMinutes % 60);
 

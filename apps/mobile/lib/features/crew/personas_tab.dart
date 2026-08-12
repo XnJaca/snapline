@@ -20,12 +20,18 @@ import '../obras/obras_screen.dart';
 /// pantalla que solo dejara elegir de la lista convertiría la bandera en
 /// bloqueo por la puerta de atrás.
 class PersonasTab extends ConsumerStatefulWidget {
-  const PersonasTab({super.key, this.projectId});
+  const PersonasTab({super.key, this.projectId, this.crewId});
 
   /// Con obra fija —el tab Cuadrilla dentro de una obra— la lista es de ESA
   /// obra, sin selector. Sin ella, la del eje: la primera de hoy, con chips
   /// para cambiar.
   final String? projectId;
+
+  /// Entrando por una cuadrilla, las obras que se ofrecen son las de **esa**
+  /// cuadrilla hoy. La gente sigue siendo la de la obra —quien fue ese día
+  /// ficha por quien también fue— pero la obra ya no puede ser la de otra
+  /// cuadrilla.
+  final String? crewId;
 
   @override
   ConsumerState<PersonasTab> createState() => _PersonasTabState();
@@ -89,10 +95,13 @@ class _PersonasTabState extends ConsumerState<PersonasTab> {
     final sesion = ref.watch(sessionControllerProvider).value;
     if (sesion == null) return const SizedBox.shrink();
 
-    final obras = widget.projectId != null
-        ? const <TodayProject>[]
-        : ref.watch(todayProjectsProvider(sesion.membership.id)).value ??
-            const <TodayProject>[];
+    final obras = switch ((widget.projectId, widget.crewId)) {
+      (final String _, _) => const <TodayProject>[],
+      (_, final String crewId) =>
+        ref.watch(crewProjectsProvider(crewId)).value ?? const <TodayProject>[],
+      _ => ref.watch(todayProjectsProvider(sesion.membership.id)).value ??
+          const <TodayProject>[],
+    };
     final obraId =
         widget.projectId ??
         (obras.any((o) => o.id == _obraElegida) ? _obraElegida : null) ??
@@ -309,6 +318,13 @@ class _OtraPersonaSheet extends ConsumerWidget {
 
 final everyoneProvider = StreamProvider<List<CrewmateToday>>((ref) {
   return ref.watch(timeEntryRepositoryProvider).watchEveryone();
+});
+
+final crewProjectsProvider =
+    StreamProvider.family<List<TodayProject>, String>((ref, crewId) {
+  return ref
+      .watch(timeEntryRepositoryProvider)
+      .watchTodayProjectsForCrew(crewId);
 });
 
 final crewTodayProvider =

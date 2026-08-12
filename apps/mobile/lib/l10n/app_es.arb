@@ -238,7 +238,6 @@
   "@obrasDuration": { "placeholders": { "h": { "type": "int" }, "m": { "type": "int" } } },
   "obraTabRegistro": "Registro",
   "obraTabDetalle": "Detalle",
-  "registroPastTitle": "Tus jornadas en esta obra",
   "registroEntrada": "Entrada a las {hora}",
   "@registroEntrada": { "placeholders": { "hora": { "type": "String" } } },
   "registroSalida": "Salida a las {hora}",

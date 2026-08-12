@@ -164,7 +164,8 @@ async function seed(): Promise<void> {
        target_end_date = COALESCE(target_end_date, CURRENT_DATE + 14),
        description = COALESCE(description,
          'Reemplazo completo del techo con teja arquitectónica. Incluye tablado nuevo donde haga falta.')
-     WHERE id = $1`,
+     WHERE id = $1
+       AND (start_date IS NULL OR target_end_date IS NULL OR description IS NULL)`,
     [projectId],
   );
 
@@ -188,7 +189,8 @@ async function seed(): Promise<void> {
          target_end_date = COALESCE(target_end_date, CURRENT_DATE + 10),
          description = COALESCE(description,
            'Remodelación del baño principal: ducha nueva, piso y vanidad.')
-       WHERE id = $1`,
+       WHERE id = $1
+         AND (start_date IS NULL OR target_end_date IS NULL OR description IS NULL)`,
       [banoId],
     );
   }

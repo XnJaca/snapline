@@ -101,8 +101,7 @@ class _ResumenSemanal extends ConsumerWidget {
 
     var total = Duration.zero;
     for (final j in jornadas) {
-      final fin = j.clockOutAt ?? DateTime.now();
-      total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
+      total += j.worked;
     }
 
     // El mensaje va bajo el número y alineado con él, no bajo el icono:

@@ -111,7 +111,11 @@ app no da ningún camino — y cerrar la jornada sí podría fallar.
 - **Tocar una cuadrilla abre su pantalla, con tabs:**
   - **[Personas]** — lo que hoy es la pantalla de cuadrilla: quién está adentro,
     quién salió, quién no marcó, marcar por otro y "Otra persona…". Sin cambios
-    de comportamiento.
+    de comportamiento, con una precisión: **las obras que ofrece son las de esa
+    cuadrilla** —las asignadas a ella y las que tenga su gente a título
+    propio—. La lista de personas sigue siendo de la obra y no de la cuadrilla
+    (quien fue ese día ficha por quien también fue), pero la obra ya no puede
+    ser la de otra cuadrilla.
   - **[Horas]** — el acumulado de la semana por persona, sumado de las jornadas
     que ya bajan al teléfono. Solo lectura: aprobar sigue siendo de la oficina.
 
@@ -262,6 +266,7 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Hallazgos del `code-reviewer` sobre las tandas de diseño: Personas dentro de una cuadrilla mostraba la gente de la obra que saliera primero, sin mirar qué cuadrilla se abrió; el total por obra no contaba la jornada abierta mientras el resumen del home sí; y el seed rompía su propia idempotencia bumpeando `updated_at` en cada corrida. Los tres arreglados, con un test que se verificó contra el código roto. |
 | 2026-08-11 | en implementación | Cuarta pasada: copy y peso. "La gente de esta obra" suena seco y pasa a "Personas asignadas a esta obra"; el estado deja de competir con el botón en Personas y de flotar como título en el Detalle; y el tiempo se cuenta por obra, con ánimo semanal en el home. |
 | 2026-08-11 | en implementación | Tercera pasada: el label con fondo. `ListLabel` + `InfoCard` se funden en `SectionCard` —banda arriba, filas de borde a borde abajo— porque un título sin fondo seguía flotando sobre el lienzo. Ninguna sección de la app queda sin marco. |
 | 2026-08-11 | en implementación | Segunda pasada de diseño probando como María: ninguna sección sin nombre y ningún dato suelto, el Detalle se agrupa en "El lugar" y "La obra", y en Personas el icono se reemplaza por botones con palabras y estado explícito con "hoy". |

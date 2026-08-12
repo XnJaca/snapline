@@ -279,7 +279,6 @@
   "@obrasDuration": { "placeholders": { "h": { "type": "int" }, "m": { "type": "int" } } },
   "obraTabRegistro": "Time log",
   "obraTabDetalle": "Details",
-  "registroPastTitle": "Your shifts on this job",
   "registroEntrada": "Clocked in at {hora}",
   "@registroEntrada": { "placeholders": { "hora": { "type": "String" } } },
   "registroSalida": "Clocked out at {hora}",

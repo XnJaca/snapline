@@ -10,6 +10,14 @@ import '../local/tables.dart';
 import '../sync/outbox.dart';
 
 /// Una obra con asignación para hoy, como la ofrece la pantalla Hoy.
+extension TimeEntryWorked on TimeEntrySummary {
+  /// Lo trabajado en la jornada. La abierta corre hasta ahora — y se calcula
+  /// en un solo lugar, para que ninguna pantalla la cuente distinto.
+  Duration get worked =>
+      (clockOutAt ?? DateTime.now()).difference(clockInAt) -
+      Duration(minutes: breakMinutes);
+}
+
 typedef ObraDetalle = ({
   String status,
   String? serviceType,
@@ -290,6 +298,50 @@ class TimeEntryRepository {
   /// Solo asignadas: la cuadrilla no navega la cartera (SPEC-0003), así que la
   /// obra del día llega por `project_assignment` o no llega. El estado vacío lo
   /// explica la pantalla.
+  /// Las obras donde **esta cuadrilla** trabaja hoy: las asignadas a la
+  /// cuadrilla y las que tenga asignada su gente a título propio.
+  ///
+  /// Es lo que acota el tab Personas cuando se entra por una cuadrilla y no
+  /// por el eje: sin esto, la pantalla de la Cuadrilla B mostraría la gente de
+  /// la obra de la A.
+  Stream<List<TodayProject>> watchTodayProjectsForCrew(String crewId) {
+    final hoy = DateTime.now();
+    final inicio = DateTime(hoy.year, hoy.month, hoy.day);
+    final fin = inicio.add(const Duration(days: 1));
+
+    final consulta = _db.customSelect(
+      '''
+      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng
+      FROM project_assignments a
+      JOIN projects p ON p.id = a.project_id AND p.deleted_at IS NULL
+      LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
+      LEFT JOIN crew_members cm ON cm.crew_id = ?1
+        AND cm.deleted_at IS NULL
+        AND a.work_date >= cm.from_date
+        AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+      WHERE a.deleted_at IS NULL
+        AND a.work_date >= ?2 AND a.work_date < ?3
+        AND (a.crew_id = ?1 OR a.membership_id = cm.membership_id)
+      ORDER BY p.name
+      ''',
+      variables: [
+        Variable<String>(crewId),
+        Variable<DateTime>(inicio),
+        Variable<DateTime>(fin),
+      ],
+      readsFrom: {
+        _db.projectAssignments,
+        _db.projects,
+        _db.sites,
+        _db.crewMembers,
+      },
+    );
+    return consulta.watch().map(
+      (filas) => filas.map(_obraDeHoy).toList(growable: false),
+    );
+  }
+
   Stream<List<TodayProject>> watchTodayProjects(String membershipId) {
     final hoy = DateTime.now();
     final inicio = DateTime(hoy.year, hoy.month, hoy.day);

@@ -228,6 +228,49 @@ void main() {
     await desmontar(tester);
   });
 
+  testWidgets('el total de la obra suma la jornada abierta, igual que el resumen del home', (tester) async {
+    await asignadaHoy('m1');
+    final ayer = DateTime.now().subtract(const Duration(days: 1, hours: 8));
+    await db.into(db.timeEntries).insert(
+      TimeEntriesCompanion.insert(
+        id: 't-ayer',
+        companyId: 'c1',
+        updatedAt: DateTime.now(),
+        syncStatus: const Value(SyncStatus.synced),
+        projectId: 'p1',
+        membershipId: 'm1',
+        recordedByMembershipId: 'm1',
+        clockInAt: ayer,
+        clockOutAt: Value(ayer.add(const Duration(hours: 8))),
+        method: 'SELF',
+        status: 'APPROVED',
+      ),
+    );
+    await db.into(db.timeEntries).insert(
+      TimeEntriesCompanion.insert(
+        id: 't-corriendo',
+        companyId: 'c1',
+        updatedAt: DateTime.now(),
+        syncStatus: const Value(SyncStatus.pending),
+        projectId: 'p1',
+        membershipId: 'm1',
+        recordedByMembershipId: 'm1',
+        clockInAt: DateTime.now().subtract(const Duration(hours: 2)),
+        method: 'SELF',
+        status: 'PENDING',
+      ),
+    );
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await entrarALaObra(tester);
+
+    expect(find.text('10h 0m'), findsOneWidget,
+        reason: '8h de ayer más las 2h que corren ahora');
+    expect(find.text('8h 0m'), findsOneWidget, reason: 'la fila de ayer');
+    await desmontar(tester);
+  });
+
   testWidgets('con la jornada abierta en OTRA obra, acá no se puede marcar', (tester) async {
     await asignadaHoy('m1', id: 'p1', nombre: 'Techo Martinez');
     await asignadaHoy('m1', id: 'p2', nombre: 'Baño González');
