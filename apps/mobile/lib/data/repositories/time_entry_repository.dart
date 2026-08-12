@@ -163,6 +163,105 @@ class TimeEntryRepository {
         .map((filas) => filas.map(_resumen).toList(growable: false));
   }
 
+  /// Las jornadas de una persona en una obra puntual: el tab Registro.
+  Stream<List<TimeEntrySummary>> watchForProject(
+    String membershipId,
+    String projectId,
+    DateTime desde,
+  ) {
+    return (_db.select(_db.timeEntries)
+          ..where(
+            (t) =>
+                t.membershipId.equals(membershipId) &
+                t.projectId.equals(projectId) &
+                t.clockInAt.isBiggerOrEqualValue(desde) &
+                t.deletedAt.isNull(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.clockInAt)]))
+        .watch()
+        .map((filas) => filas.map(_resumen).toList(growable: false));
+  }
+
+  /// Las cuadrillas que la persona lidera o integra hoy: la lista del eje.
+  Stream<List<({String id, String name})>> watchMyCrews(String membershipId) {
+    final consulta = _db.customSelect(
+      '''
+      SELECT DISTINCT c.id AS id, c.name AS name
+      FROM crews c
+      LEFT JOIN crew_members cm ON cm.crew_id = c.id AND cm.deleted_at IS NULL
+      WHERE c.deleted_at IS NULL
+        AND (c.foreman_membership_id = ?1
+             OR (cm.membership_id = ?1
+                 AND cm.from_date <= ?2
+                 AND (cm.to_date IS NULL OR cm.to_date >= ?2)))
+      ORDER BY c.name
+      ''',
+      variables: [
+        Variable<String>(membershipId),
+        Variable<DateTime>(DateTime.now()),
+      ],
+      readsFrom: {_db.crews, _db.crewMembers},
+    );
+    return consulta.watch().map(
+      (filas) => filas
+          .map((f) => (id: f.read<String>('id'), name: f.read<String>('name')))
+          .toList(growable: false),
+    );
+  }
+
+  /// Las jornadas de la semana de toda la gente de una cuadrilla, para que el
+  /// tab Horas las sume. Vienen crudas y se agregan en Dart: la jornada
+  /// abierta cuenta con el reloj corriendo, y eso no se congela en SQL.
+  Stream<List<({String membershipId, String name, TimeEntrySummary? entry})>>
+      watchCrewWeekEntries(String crewId, DateTime desde) {
+    final consulta = _db.customSelect(
+      '''
+      SELECT pe.membership_id AS membership_id, pe.name AS name,
+             t.id AS entry_id, t.project_id AS project_id,
+             t.recorded_by_membership_id AS recorded_by,
+             t.clock_in_at AS clock_in_at, t.clock_out_at AS clock_out_at,
+             t.break_minutes AS break_minutes, t.method AS method,
+             t.status AS status, t.flags AS flags, t.sync_status AS sync_status
+      FROM crew_members cm
+      JOIN people pe ON pe.membership_id = cm.membership_id
+      LEFT JOIN time_entries t ON t.membership_id = cm.membership_id
+        AND t.deleted_at IS NULL AND t.clock_in_at >= ?2
+      WHERE cm.crew_id = ?1 AND cm.deleted_at IS NULL
+      ORDER BY pe.name ASC, t.clock_in_at DESC
+      ''',
+      variables: [Variable<String>(crewId), Variable<DateTime>(desde)],
+      readsFrom: {_db.crewMembers, _db.people, _db.timeEntries},
+    );
+    return consulta.watch().map(
+      (filas) => filas
+          .map(
+            (f) => (
+              membershipId: f.read<String>('membership_id'),
+              name: f.read<String>('name'),
+              entry: f.readNullable<String>('entry_id') == null
+                  ? null
+                  : TimeEntrySummary(
+                      id: f.read<String>('entry_id'),
+                      projectId: f.read<String>('project_id'),
+                      membershipId: f.read<String>('membership_id'),
+                      recordedByMembershipId: f.read<String>('recorded_by'),
+                      clockInAt: f.read<DateTime>('clock_in_at'),
+                      clockOutAt: f.readNullable<DateTime>('clock_out_at'),
+                      breakMinutes: f.read<int>('break_minutes'),
+                      method: f.read<String>('method'),
+                      status: f.read<String>('status'),
+                      flags: (jsonDecode(f.read<String>('flags'))
+                              as List<dynamic>)
+                          .cast<String>(),
+                      syncStatus: SyncStatus
+                          .values[f.read<int>('sync_status')],
+                    ),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
   /// Las jornadas en conflicto. Se muestran y las resuelve un humano; ninguna
   /// pantalla puede resolverlas sola (regla 12).
   Stream<List<TimeEntrySummary>> watchConflicts() {

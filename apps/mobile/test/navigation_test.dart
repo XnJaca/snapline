@@ -125,7 +125,7 @@ void main() {
       await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
       await tester.pumpAndSettle();
 
-      expect(ejes(tester), ['Hoy', 'Fotos']);
+      expect(ejes(tester), ['Obras', 'Fotos']);
       expect(ejes(tester), isNot(contains('Proyectos')));
     });
 
@@ -133,7 +133,7 @@ void main() {
       await pumpApp(tester, app(role: AuthMembershipDtoRole.foreman));
       await tester.pumpAndSettle();
 
-      expect(ejes(tester), ['Hoy', 'Cuadrilla', 'Fotos']);
+      expect(ejes(tester), ['Obras', 'Cuadrilla', 'Fotos']);
     });
 
     // El dominio le da cero acceso a fotos, y `media.read` no lo incluye.
@@ -394,7 +394,7 @@ void main() {
     testWithApp('cambiar de pestaña y volver conserva el scroll', (
       tester,
     ) async {
-      // Sobre Fotos, que sigue siendo placeholder con su lista sintética: Hoy
+      // Sobre Fotos, que sigue siendo placeholder con su lista sintética: Obras
       // ya es una pantalla real y no tiene lista que desplazar.
       await pumpApp(tester, app(role: AuthMembershipDtoRole.worker));
       await tester.pumpAndSettle();
@@ -407,7 +407,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Elemento de ejemplo 1'), findsNothing);
 
-      await tester.tap(find.text('Hoy'));
+      await tester.tap(find.text('Obras'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Fotos'));
       await tester.pumpAndSettle();
@@ -453,7 +453,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(AppBar, 'Hoy'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Obras'), findsOneWidget);
     });
   });
 

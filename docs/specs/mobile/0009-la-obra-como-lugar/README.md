@@ -61,6 +61,10 @@ intactos: esto reorganiza dónde viven.
   con asignación de hoy, cada una con su dirección y su camino a Mapas. Arriba,
   el resumen de la semana propia (horas acumuladas), que hoy vive escondido en
   "Mi semana".
+
+  **"La semana"**, acá y en todo este spec, es la ventana rodante de los últimos
+  7 días — la misma convención que "Mi semana" de SPEC-0008, no la semana
+  calendario. La jornada abierta cuenta en vivo, hasta el momento de mirar.
 - **Tocar una obra abre su pantalla, con tabs** — el mismo patrón del detalle
   de obra del OWNER, con el contenido del campo:
   - **[Registro]** — la acción y la historia en un solo lugar. Marcar entrada
@@ -70,6 +74,22 @@ intactos: esto reorganiza dónde viven.
     sus banderas y su estado de aprobación.
   - **[Detalle]** — la dirección, el punto en Mapas, el cliente no (la cuadrilla
     no navega cartera: solo el lugar).
+
+**Jornada abierta en otra obra.** El invariante del dominio es global — no puede
+haber dos registros abiertos del mismo membership — y la estructura por-obra
+hace este caso alcanzable: entrar al Registro de la obra B con la jornada
+abierta en la A. Ahí no se puede marcar ni entrada (ya hay una) ni salida (es de
+otro lugar): el botón no aparece y en su lugar un aviso dice **en qué obra** está
+la jornada abierta y que hay que cerrarla allá. Es el mismo precedente de
+SPEC-0008 —que ocultaba el selector de obra con jornada abierta— y no viola la
+regla 9: el marcaje que se bloquea acá es el que produciría un segundo `clockIn`
+condenado a `CONFLICT`; marcar donde corresponde sigue sin poder fallar.
+
+Y para que eso sea verdad, **la obra con la jornada abierta aparece siempre en
+la lista de Obras, aunque ya no tenga asignación hoy**, marcada como tal. El
+caso es real: la jornada quedó abierta ayer y hoy lo cambiaron de obra. Si la
+lista fuera solo la asignación de hoy, el aviso nombraría un lugar al que la
+app no da ningún camino — y cerrar la jornada sí podría fallar.
 - "Mi semana" como pantalla aparte desaparece: su contenido vive en el resumen
   del home y en el Registro de cada obra.
 
@@ -83,6 +103,12 @@ intactos: esto reorganiza dónde viven.
     de comportamiento.
   - **[Horas]** — el acumulado de la semana por persona, sumado de las jornadas
     que ya bajan al teléfono. Solo lectura: aprobar sigue siendo de la oficina.
+
+    Ese acumulado **puede subestimar**: al teléfono del foreman solo bajan las
+    jornadas de las obras donde él mismo está asignado (prerequisito 3 de
+    SPEC-0008). Si alguien de su cuadrilla trabajó la semana en una obra ajena
+    al foreman, esas horas no aparecen. Es una vista de campo, no el reporte de
+    nómina — el número autoritativo sigue siendo el de la oficina.
 
 ### No entra
 
@@ -104,6 +130,13 @@ ruta puede quedar) y convierte dos ejes-pantalla en ejes-lista con detalle
 pushed. La estructura de ramas del shell no cambia; los criterios de SPEC-0003
 sobre cantidad de ejes por rol siguen valiendo tal cual.
 
+Un criterio de SPEC-0003 merece mención aparte: *"un WORKER ve exactamente dos
+y ninguna es la cartera"* descansaba en "su día es una obra", en singular, y
+este spec vuelve el eje explícitamente plural. **El invariante de fondo no
+cambia y el test queda como está**: Obras lista solo las asignaciones de hoy —
+nunca la cartera completa de proyectos de la empresa, que sigue siendo del
+OWNER/ADMIN. Lo que era singular era el label, no el límite de visibilidad.
+
 ## Comportamiento sin señal
 
 Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
@@ -114,30 +147,50 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 | Marcar desde el tab Registro | El mismo camino de SPEC-0008, sin cambios |
 | El desglose de jornadas | Local; las banderas y aprobaciones llegan por el pull |
 | Horas por persona (foreman) | Suma local de lo que ya baja |
+| Jornada abierta en otra obra | Sin botón de marcar; un aviso nombra la obra donde está abierta. Se decide con datos locales — sin señal funciona igual |
 
 ## Criterios de aceptación
 
-- [ ] El eje se llama "Obras" en `en` y `es`, y lista las obras de hoy con
+- [x] El eje se llama "Obras" en `en` y `es`, y lista las obras de hoy con
       dirección; el resumen semanal propio encabeza la lista.
-- [ ] Tocar una obra abre su pantalla con tabs Registro y Detalle; el marcaje
+- [x] Tocar una obra abre su pantalla con tabs Registro y Detalle; el marcaje
       vive en Registro y funciona exactamente como en SPEC-0008 (los tests de
       marcaje siguen pasando sin cambios de lógica).
-- [ ] Una jornada pasada colapsada muestra fecha y total; expandida muestra
+- [x] Una jornada pasada colapsada muestra fecha y total; expandida muestra
       entrada, salida, total, banderas y estado.
-- [ ] Con una sola obra asignada, el flujo de marcar no requiere más toques que
-      antes (obra → Registro ya abierto → botón).
-- [ ] La pestaña Cuadrilla lista cuadrillas; con una sola entra directo; adentro,
+- [x] Con la jornada abierta en otra obra, el Registro de esta no ofrece botón
+      de marcar y el aviso nombra la obra donde está abierta.
+- [x] El tab Detalle muestra dirección y camino a Mapas, y **ningún dato del
+      cliente** — nombre, teléfono, nada.
+- [x] Marcar cuesta un toque más que antes — obra → botón, con Registro ya
+      abierto como primer tab — y es a propósito: el home es la lista con el
+      resumen y la dirección, y **no se salta ni con una sola obra**, porque
+      saltarla escondería el resumen en el caso más común.
+- [x] La obra con la jornada abierta aparece en la lista de Obras aunque ya no
+      tenga asignación hoy, marcada como tal, y desde ahí se marca la salida.
+- [x] La pestaña Cuadrilla lista cuadrillas; con una sola entra directo; adentro,
       Personas se comporta idéntico a hoy y Horas muestra el acumulado semanal
       por persona.
-- [ ] "Mi semana" no existe más como pantalla; nada de su información se perdió.
-- [ ] Cero cadenas quemadas en `en` y `es`; ambos temas; ningún valor de estilo
+- [x] "Mi semana" no existe más como pantalla: el total vive en el resumen del
+      home y el desglose por jornada en el Registro de cada obra (alcanzable
+      mientras la obra esté en la lista — ver Riesgos).
+- [x] Cero cadenas quemadas en `en` y `es`; ambos temas; ningún valor de estilo
       literal.
 
 ## Riesgos / consideraciones
 
-- **Un toque más para marcar.** Antes: abrir la app → botón. Ahora: abrir →
-  obra → botón. Con una sola obra el Registro abre directo, así que el costo
-  real es cero en el caso común; con varias, elegir la obra ya era necesario.
+- **Un toque más para marcar, a conciencia.** Antes: abrir la app → botón.
+  Ahora: abrir → obra → botón. La lista **no se salta ni con una sola obra** —
+  el resumen semanal vive ahí y saltarla lo escondería justo en el caso más
+  común. El Registro es el primer tab y abre activo, así que nunca hay que
+  elegir tab. (Cuadrilla sí entra directo con una sola: ahí no hay resumen que
+  perder.)
+- **El desglose de una obra que salió de la asignación.** El Registro de cada
+  obra muestra sus jornadas de la semana, pero la obra es alcanzable mientras
+  esté en la lista — asignada hoy o con la jornada abierta. Las jornadas
+  cerradas de una obra que ya no aparece suman al resumen y siguen en el
+  teléfono; su desglose reaparece cuando la obra vuelva a asignarse. La vista
+  autoritativa de la semana completa es de la oficina, no del teléfono.
 - **`navToday` cambia de significado.** Los tests de navegación que afirman el
   label "Hoy" se actualizan en el mismo commit.
 - Los widget tests de SPEC-0008 sobre TodayScreen se migran a la pantalla
@@ -154,5 +207,6 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Hallazgos de los revisores incorporados. Del `spec-reviewer`: el caso de jornada abierta en otra obra, la resolución con SPEC-0003, el criterio del tab Detalle y la definición de "semana". Del `code-reviewer` (GRAVE): la obra con jornada abierta entra a la lista sin asignación de hoy — sin eso, cerrar la jornada podía quedar sin camino. El "costo cero" de Riesgos se corrigió: la decisión real es la lista siempre visible, un toque más a conciencia. |
 | 2026-08-11 | en implementación | Aprobado de palabra por quien lo diseñó — el spec ES su decisión de producto, dictada probando SPEC-0008. El `spec-reviewer` corre en paralelo y sus hallazgos entran como fixes antes del PR. |
 | 2026-08-11 | borrador | Creado desde la prueba en teléfono de SPEC-0008: "la obra debe ser un lugar, no un botón". Incidentes queda nombrado como futuro y fuera: es dominio nuevo y necesita su ficha primero. El tab "Otros" se descartó — un cajón sin definición nace vacío y muere lleno. |
