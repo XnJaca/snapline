@@ -87,7 +87,9 @@ void main() {
     expect(find.text('Obras'), findsWidgets);
     expect(find.text('Techo Martinez'), findsOneWidget);
     expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
-    expect(find.text('Tu tiempo esta semana'), findsOneWidget);
+    expect(find.text('Tu tiempo de esta semana'), findsOneWidget);
+    expect(find.textContaining('Semana nueva'), findsOneWidget,
+        reason: 'el ánimo rota con las horas y arranca sin reproche');
     expect(find.byType(FieldActionButton), findsNothing,
         reason: 'la acción vive adentro de la obra, no en el home');
     await desmontar(tester);
@@ -210,11 +212,13 @@ void main() {
     await tester.pumpAndSettle();
     await entrarALaObra(tester);
 
-    // Colapsada: el total a la derecha.
-    expect(find.text('8h 0m'), findsOneWidget);
+    expect(find.textContaining('Tu tiempo de esta semana en Techo Martinez'),
+        findsOneWidget);
+    // Colapsada la fila, y el acumulado de la obra arriba: el mismo total.
+    expect(find.text('8h 0m'), findsNWidgets(2));
     expect(find.textContaining('Entrada a las'), findsNothing);
 
-    await tester.tap(find.text('8h 0m'));
+    await tester.tap(find.text('8h 0m').last);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Entrada a las'), findsOneWidget);

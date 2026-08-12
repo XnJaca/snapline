@@ -216,6 +216,16 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
   no se ofrece una segunda entrada — y el estado es explícito: "Marcó entrada
   hoy a las 7:02", "Salió hoy a las 15:40", "Sin marcar hoy". Esta app se usa
   sin entrenamiento: un icono que hay que adivinar es un bug de producto.
+- **El estado es lectura; la acción es acción.** Van en lados distintos de la
+  fila —identidad y estado a la izquierda, botón a la derecha— y no uno
+  encima del otro a ancho completo, que los ponía a pelear por el mismo peso.
+  En el Detalle, por lo mismo, el estado de la obra es un campo con su
+  etiqueta ("Estado") y no un chip suelto arriba de todo.
+- **El tiempo se cuenta donde se ganó.** En Obras, el total de la semana con
+  un ánimo que rota según las horas —de "Semana nueva" a "Semana completa"—;
+  en el Registro de cada obra, el acumulado **de esa obra** titulando la
+  sección: "Tu tiempo de esta semana en Techo Martinez", con las jornadas que
+  lo suman debajo.
 - **El desglose de una obra que salió de la asignación.** El Registro de cada
   obra muestra sus jornadas de la semana, pero la obra es alcanzable mientras
   esté en la lista — asignada hoy o con la jornada abierta. Las jornadas
@@ -238,6 +248,7 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Cuarta pasada: copy y peso. "La gente de esta obra" suena seco y pasa a "Personas asignadas a esta obra"; el estado deja de competir con el botón en Personas y de flotar como título en el Detalle; y el tiempo se cuenta por obra, con ánimo semanal en el home. |
 | 2026-08-11 | en implementación | Tercera pasada: el label con fondo. `ListLabel` + `InfoCard` se funden en `SectionCard` —banda arriba, filas de borde a borde abajo— porque un título sin fondo seguía flotando sobre el lienzo. Ninguna sección de la app queda sin marco. |
 | 2026-08-11 | en implementación | Segunda pasada de diseño probando como María: ninguna sección sin nombre y ningún dato suelto, el Detalle se agrupa en "El lugar" y "La obra", y en Personas el icono se reemplaza por botones con palabras y estado explícito con "hoy". |
 | 2026-08-11 | en implementación | Tanda de diseño, dictada probando en el teléfono como María: nada flota (resumen y Horas en cards), las tarjetas toman el `primaryContainer` del tema, la lista de cuadrillas no se salta nunca, el foreman gana el tab Cuadrilla dentro de la obra, el botón pasa a "Marcar mi entrada" y el Detalle se llena con la ficha que ya baja (estado, fechas, tipo, descripción). Fases quedan fuera: sin ficha de dominio no se inventan. |

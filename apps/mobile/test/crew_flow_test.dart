@@ -127,11 +127,10 @@ void main() {
     await tester.tap(find.text('Cuadrilla A'));
     await tester.pumpAndSettle();
 
-    // La fila de Carlos: su nombre y su botón viven en la misma Column.
-    final cardCarlos = find.ancestor(
-      of: find.text('Carlos Ruiz'),
-      matching: find.byType(Column),
-    ).first;
+    // La fila de Carlos: nombre y estado a la izquierda, botón a la derecha.
+    final cardCarlos = find
+        .ancestor(of: find.text('Carlos Ruiz'), matching: find.byType(Row))
+        .first;
     await tester.tap(
       find.descendant(of: cardCarlos, matching: find.text('Marcar entrada')),
     );

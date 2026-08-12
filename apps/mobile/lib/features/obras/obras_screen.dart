@@ -105,26 +105,49 @@ class _ResumenSemanal extends ConsumerWidget {
       total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
     }
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.all(context.spacing.sm),
-          decoration: BoxDecoration(
-            color: context.colors.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.schedule_outlined,
-            color: context.colors.onPrimaryContainer,
-          ),
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(context.spacing.sm),
+              decoration: BoxDecoration(
+                color: context.colors.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.schedule_outlined,
+                color: context.colors.onPrimaryContainer,
+              ),
+            ),
+            SizedBox(width: context.spacing.md),
+            Text(
+              l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+              style: context.texts.displaySmall,
+            ),
+          ],
         ),
-        SizedBox(width: context.spacing.md),
+        SizedBox(height: context.spacing.sm),
         Text(
-          l10n.obrasDuration(total.inHours, total.inMinutes % 60),
-          style: context.texts.displaySmall,
+          _animoSemanal(l10n, total),
+          style: context.texts.bodyMedium?.copyWith(
+            color: context.colors.onSurfaceVariant,
+          ),
         ),
       ],
     );
+  }
+
+  /// El ánimo rota con las horas de la semana. Nunca reprocha: quien lleva
+  /// pocas horas puede estar arrancando el lunes.
+  String _animoSemanal(AppLocalizations l10n, Duration total) {
+    final horas = total.inHours;
+    if (horas <= 0) return l10n.obrasCheerZero;
+    if (horas < 8) return l10n.obrasCheerStart;
+    if (horas < 20) return l10n.obrasCheerMid;
+    if (horas < 40) return l10n.obrasCheerStrong;
+    return l10n.obrasCheerFull;
   }
 }
 

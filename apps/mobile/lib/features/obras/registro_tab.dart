@@ -143,12 +143,15 @@ class _RegistroTabState extends ConsumerState<RegistroTab> {
         SizedBox(height: context.spacing.xl),
         if (jornadas.isNotEmpty)
           SectionCard(
-            label: l10n.registroPastTitle,
+            // El título es el dato: cuánto llevás de la semana acá. Las
+            // jornadas de abajo son exactamente las que lo suman.
+            label: l10n.registroTiempoEnObra(widget.obra.name),
             padded: false,
             child: Column(
               children: [
-                for (final (i, jornada) in jornadas.indexed) ...[
-                  if (i > 0) Divider(height: 1, color: context.colors.outline),
+                _TotalEnObra(jornadas: jornadas),
+                for (final jornada in jornadas) ...[
+                  Divider(height: 1, color: context.colors.outline),
                   _JornadaTile(jornada: jornada),
                 ],
               ],
@@ -240,6 +243,49 @@ class _CronometroState extends State<_Cronometro> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Lo acumulado en esta obra, sumado de las mismas jornadas que se listan
+/// abajo.
+class _TotalEnObra extends StatelessWidget {
+  const _TotalEnObra({required this.jornadas});
+
+  final List<TimeEntrySummary> jornadas;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    var total = Duration.zero;
+    for (final j in jornadas) {
+      final fin = j.clockOutAt ?? DateTime.now();
+      total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
+    }
+
+    return Padding(
+      padding: EdgeInsets.all(context.spacing.md),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(context.spacing.sm),
+            decoration: BoxDecoration(
+              color: context.colors.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.schedule_outlined,
+              color: context.colors.onPrimaryContainer,
+            ),
+          ),
+          SizedBox(width: context.spacing.md),
+          Text(
+            l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+            style: context.texts.displaySmall,
+          ),
+        ],
+      ),
     );
   }
 }

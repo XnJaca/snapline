@@ -226,28 +226,35 @@ class _PersonaRow extends StatelessWidget {
               )
             : StatusChip(tone: StatusTone.warning, label: l10n.crewNotClockedIn);
 
+    // Quién y cómo está a la izquierda; la acción a la derecha. Un botón de
+    // ancho completo debajo del estado ponía a los dos a pelear por el mismo
+    // peso, y el estado es lectura, no acción.
     return Padding(
       padding: EdgeInsets.all(context.spacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(persona.name, style: context.texts.titleMedium),
-          SizedBox(height: context.spacing.xs),
-          estado,
-          SizedBox(height: context.spacing.md),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: onMarcar,
-              child: ocupada
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      persona.adentro ? l10n.crewMarkOut : l10n.crewMarkIn,
-                    ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(persona.name, style: context.texts.titleMedium),
+                SizedBox(height: context.spacing.xs),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: estado,
+                ),
+              ],
             ),
+          ),
+          SizedBox(width: context.spacing.md),
+          OutlinedButton(
+            onPressed: onMarcar,
+            child: ocupada
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(persona.adentro ? l10n.crewMarkOut : l10n.crewMarkIn),
           ),
         ],
       ),

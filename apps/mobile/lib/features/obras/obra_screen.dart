@@ -124,8 +124,23 @@ class _DetalleTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // El estado es un campo más de la ficha, con su etiqueta:
+                // suelto arriba pesaba como un título y no lo es.
                 if (estado != null && estado != ProjectStatus.$unknown) ...[
-                  StatusChip(tone: estado.tone, label: estado.label(l10n)),
+                  Text(
+                    l10n.detalleEstado,
+                    style: context.texts.bodySmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                  SizedBox(height: context.spacing.xs),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: StatusChip(
+                      tone: estado.tone,
+                      label: estado.label(l10n),
+                    ),
+                  ),
                   SizedBox(height: context.spacing.md),
                 ],
                 LabeledValue(
