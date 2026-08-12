@@ -151,9 +151,6 @@
   "customerEdit": "Editar",
   "customerNotFound": "Este cliente no está en este teléfono",
 
-  "customerPhotoReleaseGranted": "Permiso de fotos firmado",
-  "customerPhotoReleaseMissing": "Sin permiso de fotos",
-  "customerPhotoReleaseHelp": "Sin el permiso firmado, las obras de este cliente no se pueden publicar. Se otorga desde la oficina, con el documento adjunto.",
   "customerNoPortalAccess": "Sin correo ni teléfono no se puede invitar a este cliente al portal.",
 
   "customerNewTitle": "Nuevo cliente",

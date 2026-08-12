@@ -91,7 +91,6 @@ abstract final class SyncMapper {
     billingAddress: Value(
       dto.billingAddress == null ? null : jsonEncode(dto.billingAddress!.toJson()),
     ),
-    photoReleaseGrantedAt: Value(dto.photoReleaseGrantedAt),
   );
 
   static SitesCompanion site(Site dto) => SitesCompanion(

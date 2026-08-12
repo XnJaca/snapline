@@ -3,7 +3,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Observable } from 'rxjs';
 import { from, switchMap } from 'rxjs';
-import { runOnTransactionComplete, runInTransaction } from 'typeorm-transactional';
+import { runInTransaction } from 'typeorm-transactional';
 import { tenantStorage, TenantContext } from './tenant-context';
 
 // Abre una transacción por request y setea app.company_id ahí. SET LOCAL no se

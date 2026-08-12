@@ -18,10 +18,12 @@ kanban-plugin: board
 
 ## 🔥 Activa (causando fricción hoy)
 
-- [ ] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — **severidad alta**: decidido sacarlo, y cada semana suma código que lo asume (trigger: antes del spec de publicación)
+- [ ] [[tech-debt/0006-razon-de-anulacion-se-descarta|DEBT-0006: La razón de anular una factura se exige y se tira]] — **severidad media**: el DTO la pide obligatoria, el servicio la descarta y no hay columna donde guardarla (trigger: la primera factura real, o el spec retroactivo de billing)
 
 
 ## 🛠️ En resolución
+
+- [ ] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — **severidad alta**: eran once lugares, no cuatro. En su lugar entra un trigger de EXIF, para que `PUBLIC` no quede sin invariante en la base
 
 
 ## ✅ Resuelta

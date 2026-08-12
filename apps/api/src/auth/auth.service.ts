@@ -1,5 +1,5 @@
 import { ApiError } from '../common/errors/api-error';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { DataSource, IsNull, Repository } from 'typeorm';

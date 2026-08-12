@@ -156,41 +156,14 @@ class _Datos extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: spacing.sm,
-            runSpacing: spacing.sm,
-            children: [
-              // Regla 17: es lo único que habilita publicar, y el móvil lo
-              // muestra sin poder tocarlo — otorgarlo necesita el papel firmado.
-              StatusChip(
-                tone: customer.hasPhotoRelease
-                    ? StatusTone.success
-                    : StatusTone.warning,
-                label: customer.hasPhotoRelease
-                    ? l10n.customerPhotoReleaseGranted
-                    : l10n.customerPhotoReleaseMissing,
-                icon: customer.hasPhotoRelease
-                    ? Icons.verified_outlined
-                    : Icons.no_photography_outlined,
-              ),
-              if (customer.pending)
-                StatusChip(
-                  tone: StatusTone.info,
-                  label: l10n.customerPendingSync,
-                  icon: Icons.cloud_upload_outlined,
-                ),
-            ],
-          ),
-          if (!customer.hasPhotoRelease) ...[
-            SizedBox(height: spacing.sm),
-            Text(
-              l10n.customerPhotoReleaseHelp,
-              style: context.texts.bodySmall?.copyWith(
-                color: colors.onSurfaceVariant,
-              ),
+          if (customer.pending) ...[
+            StatusChip(
+              tone: StatusTone.info,
+              label: l10n.customerPendingSync,
+              icon: Icons.cloud_upload_outlined,
             ),
+            SizedBox(height: spacing.md),
           ],
-          SizedBox(height: spacing.md),
           LabeledValue(label: l10n.customerFieldPhone, value: customer.phone),
           LabeledValue(label: l10n.customerFieldEmail, value: customer.email),
           LabeledValue(

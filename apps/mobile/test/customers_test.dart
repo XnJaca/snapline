@@ -26,7 +26,6 @@ void main() {
       displayName: 'Ana Martínez',
       companyName: 'Martinez Holdings',
       phone: '+13015550142',
-      photoReleaseGrantedAt: DateTime(2026, 8, 1),
       siteLine1: '412 Ellsworth Dr',
     );
     await seedCustomer(
@@ -147,30 +146,6 @@ void main() {
         ),
         findsOne,
       );
-    });
-  });
-
-  group('el photo release', () {
-    testWithApp('se ve en la lista sin entrar a la ficha', (tester) async {
-      await pumpApp(tester, app());
-      await tester.pumpAndSettle();
-
-      // Es lo que decide si esa obra se puede publicar (regla 17).
-      expect(find.text('Permiso de fotos firmado'), findsOne);
-      expect(find.text('Sin permiso de fotos'), findsWidgets);
-    });
-
-    testWithApp('la ficha no ofrece otorgarlo ni revocarlo', (tester) async {
-      await pumpApp(tester, app());
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ana Martínez'));
-      await tester.pumpAndSettle();
-
-      // Otorgarlo necesita el documento firmado y no se puede desde el móvil;
-      // revocarlo despublica en cascada, que tampoco está implementado.
-      expect(find.byType(Switch), findsNothing);
-      expect(find.byType(Checkbox), findsNothing);
-      expect(find.text('Permiso de fotos firmado'), findsOne);
     });
   });
 
@@ -438,7 +413,6 @@ void main() {
 
       expect(find.text('New customer'), findsOne);
       expect(find.text('Search by name, company or phone'), findsOne);
-      expect(find.text('Photo release signed'), findsOne);
       expect(find.text('Nuevo cliente'), findsNothing);
     });
 

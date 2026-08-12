@@ -10,10 +10,10 @@ import 'package:sqlite3/sqlite3.dart';
 /// Actualizar la app no puede vaciar la base local.
 ///
 /// El caso concreto: un teléfono con la jornada entera sin sincronizar recibe la
-/// versión nueva. Si la migración recreara las tablas en vez de agregar columnas,
-/// **la bandeja de salida se iría con ellas** y el trabajo del día no llegaría
-/// nunca. Un `addColumn` es difícil de romper, pero esto se descubre abriendo la
-/// app y ahí ya es tarde.
+/// versión nueva. **La bandeja de salida no se recrea nunca** — si se fuera con
+/// una migración, el trabajo del día no llegaría jamás. Recrear otra tabla sí es
+/// seguro, y la v5 lo hace para sacarle una columna a `customers`. Todo esto se
+/// descubre abriendo la app, y ahí ya es tarde.
 void main() {
   late Directory carpeta;
   late File archivo;
@@ -175,6 +175,47 @@ void main() {
 
     // La v4 también entró en el mismo salto: las subidas pendientes existen.
     expect(await db.select(db.pendingUploads).get(), isEmpty);
+  });
+
+  test('subir a v5 borra el photo release y deja la bandeja intacta', () async {
+    crearEsquemaV1();
+
+    final previa = sqlite3.open(archivo.path);
+    previa.execute(
+      'INSERT INTO customers (id, company_id, updated_at, sync_status, '
+      'display_name, phone, photo_release_granted_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['c1', 'co1', 1754700000, 2, 'Martínez', '+13015550142', 1754700000],
+    );
+    previa.execute(
+      'INSERT INTO outbox_operations (client_id, type, target_id, payload, '
+      'occurred_at) VALUES (?, ?, ?, ?, ?)',
+      ['op1', 'customer.create', 'c1', '{"displayName":"Martínez"}', 1754700000],
+    );
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    // La fila sobrevive a que se recree la tabla, con lo que no era el release.
+    final clientes = await db.select(db.customers).get();
+    expect(clientes, hasLength(1));
+    expect(clientes.first.displayName, 'Martínez');
+    expect(clientes.first.phone, '+13015550142');
+    expect(clientes.first.syncStatus, SyncStatus.synced);
+
+    final pendientes = await db.select(db.outboxOperations).get();
+    expect(
+      pendientes,
+      hasLength(1),
+      reason: 'recrear customers no puede llevarse la bandeja',
+    );
+    await db.close();
+
+    // La columna se fue de verdad, no quedó vacía.
+    final despues = sqlite3.open(archivo.path);
+    final columnas = despues
+        .select('PRAGMA table_info(customers)')
+        .map((fila) => fila['name'] as String);
+    expect(columnas, isNot(contains('photo_release_granted_at')));
+    despues.close();
   });
 
   test('una base nueva arranca directamente en el esquema de ahora', () async {

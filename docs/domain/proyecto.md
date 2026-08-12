@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0003", "ADR-0004"]
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-12
 tags: [domain, domain/borrador]
 ---
 
@@ -102,7 +102,6 @@ contra lo que realmente marcó asistencia.
 - `client_visibility_mode` arranca en `etapas`. Pasar a `avance` es acción explícita.
 - Un `WORKER` solo ve proyectos donde tiene asignación vigente. No puede enumerar
   los demás.
-- `published_at` no se puede setear si el cliente no otorgó photo release.
 - `CANCELLED` no borra nada: las horas trabajadas siguen siendo horas pagables.
 
 ## Comportamiento offline

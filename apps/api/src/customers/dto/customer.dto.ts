@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsEmail, IsNotEmpty, IsNumber, IsObject, IsOptional, IsPositive, IsString, IsUUID, Max, Min, ValidateNested } from 'class-validator';
+import { IsEnum, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUUID, Max, Min, ValidateNested } from 'class-validator';
 import { CustomerSource } from '../entities/customer.entity';
 import { AddressDto } from '../../common/dto/address.dto';
 

@@ -1,6 +1,35 @@
 # Decisiones tomadas y pendientes
 
-Contexto para arrancar sin repetir discusiones. Última actualización: 2026-08-10.
+Contexto para arrancar sin repetir discusiones. Última actualización: 2026-08-12.
+
+## El photo release sale del producto — 2026-08-12
+
+**Publicar una obra no requiere permiso del cliente.** El gate que exigía
+`customer.photo_release_granted_at` para llegar a `PUBLIC` se elimina: columnas,
+triggers, endpoint y pantalla. Ejecuta [DEBT-0005](tech-debt/0005-photo-release-se-quita.md).
+
+El razonamiento: el contratista está autorizado a fotografiar la obra en la que
+trabaja, la decisión de publicarla es suya, y **no hay dónde subir un permiso
+firmado** — ni pantalla, ni flujo, ni intención de construirlos. Un campo que solo
+se puede otorgar por API es un gate que en la práctica bloquea a todos.
+
+Se decidió con el contraargumento sobre la mesa, que queda anotado: el gate no
+impedía tomar fotos ni mostrárselas al cliente, solo publicarlas, y lo que evitaba
+es que la casa de alguien termine en Instagram sin que nadie lo haya pensado. El
+problema que produce sacarlo se descubre tarde, con la foto ya publicada.
+
+Lo que **sí** queda protegido en la base de datos, ocupando el lugar que deja el
+trigger: **`PUBLIC` exige `exif_stripped_at`** en las fotos. Publicar las
+coordenadas GPS de la casa de un cliente es la fuga concreta, y esa sigue cerrada
+por esquema y no por formulario. La regla 17 del `CLAUDE.md` se reescribió con ese
+contenido, conservando su número.
+
+Consecuencias: la ficha de [[domain/cliente|cliente]] pierde el campo y sus dos
+eventos, [[domain/contenido|contenido]] cambia de invariante, y el código de error
+`PHOTO_RELEASE_REQUIRED` se retira del contrato — el ejemplo de
+[ADR-0011](adr/0011-envelope-de-errores/README.md) lo conserva como registro
+histórico. Si un cliente pide que bajen su obra, se despublica: la decisión es
+reversible, solo que no vive en un campo del cliente.
 
 ## Roles de membresía — 2026-08-10
 
@@ -95,7 +124,7 @@ La demo para William no necesita el admin de Angular. Necesita que vea en su tel
 - [ ] **Hablar con el contador de William antes de construir facturación.** Si él factura desde la app, ese contador tiene que aceptar los datos. Es la conversación más barata del proyecto y la que más cuesta si se salta.
 - [ ] **Confirmar el tratamiento de sales tax en Maryland** para servicios de mejora de propiedad, con ese mismo contador. No inventarlo: dejarlo escrito en `domain/factura.md`.
 - [ ] **Consentimiento firmado de ubicación** para los trabajadores, en el onboarding. Registrar GPS de empleados sin consentimiento informado no es una opción.
-- [ ] **Photo release del cliente como cláusula del estimado.** El sistema ya bloquea publicar sin ella; falta el papel.
+- [x] ~~**Photo release del cliente como cláusula del estimado.** El sistema ya bloquea publicar sin ella; falta el papel.~~ **Anulado el 2026-08-12** — el gate salió del producto entero, ver la entrada de esa fecha arriba. No hay cláusula que agregar porque no hay nada que habilitar.
 - [ ] **Revisar el precio.** Si reemplaza QuickBooks y le arma el paquete del contador, el sistema vale bastante más que las tres fases de $1,600 que se cotizaron. No se le cambia el precio a lo ya vendido, pero el producto no se cotiza contra eso.
 - [ ] **Verificar el nombre** en App Store Connect, Google Play Console y USPTO. Ver `NOMBRE.md`.
 - [ ] **No mencionarle a William** que la fase 1 es también la base del prototipo. Para él son dos proyectos separados.

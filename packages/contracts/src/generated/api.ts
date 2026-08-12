@@ -136,22 +136,6 @@ export interface paths {
         patch: operations["Customers_updateSite"];
         trace?: never;
     };
-    "/customers/{id}/photo-release": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["Customers_grantRelease"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/projects": {
         parameters: {
             query?: never;
@@ -1011,9 +995,6 @@ export interface components {
             /** @enum {string|null} */
             source: "REFERRAL" | "WEB" | "SOCIAL" | "REPEAT" | "OTHER" | null;
             notes: string | null;
-            /** Format: date-time */
-            photoReleaseGrantedAt: string | null;
-            photoReleaseDocumentId: string | null;
             /** Format: date-time */
             deletedAt: string | null;
             companyId: string;
@@ -1883,7 +1864,7 @@ export interface components {
              * @description Código estable. No se traduce: es contra lo que ramifica el cliente.
              * @enum {string}
              */
-            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "PHOTO_RELEASE_REQUIRED" | "EXIF_NOT_STRIPPED" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
+            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "EXIF_NOT_STRIPPED" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
             /** @description Texto para mostrar. Esto sí se traduce. */
             message: string;
             /** @description Vacío cuando no aplica; nunca ausente. */
@@ -2758,81 +2739,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Site"];
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-        };
-    };
-    Customers_grantRelease: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Customer"];
                 };
             };
             /** @description Error */

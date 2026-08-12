@@ -37,8 +37,7 @@ export class PublishingService {
 
   /**
    * Publicar exige que todos los assets estén en PUBLIC y con EXIF limpio.
-   * El photo release lo verifica además un trigger de la base: si el cliente no
-   * lo otorgó, el INSERT falla aunque esto pase.
+   * Lo segundo lo verifica además un trigger de la base al subir a PUBLIC.
    */
   @Transactional()
   async publish(projectId: string, dto: PublishProjectDto, tenant: TenantContext): Promise<PublishedProject> {

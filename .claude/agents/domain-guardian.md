@@ -74,8 +74,8 @@ arreglan caro. Verificá las que apliquen al cambio:
 [ ] Numeración de documentos con contador por empresa y lock de fila (16).
     Nunca SERIAL global.
 
-[ ] visibility = PUBLIC exige photo_release_granted_at no nulo, y la regla vive en
-    la BASE DE DATOS, no en una validación de formulario (17).
+[ ] visibility = PUBLIC exige exif_stripped_at no nulo en las fotos, y la regla
+    vive en la BASE DE DATOS, no en una validación de formulario (17).
 
 [ ] IDs UUIDv7 generados en el cliente (18). Sin default en la columna.
 

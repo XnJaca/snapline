@@ -189,12 +189,6 @@
   "customerEdit": "Edit",
   "customerNotFound": "This customer is not on this phone",
 
-  "customerPhotoReleaseGranted": "Photo release signed",
-  "@customerPhotoReleaseGranted": {
-    "description": "Regla 17: es lo único que habilita publicar. El móvil lo muestra, no lo decide."
-  },
-  "customerPhotoReleaseMissing": "No photo release",
-  "customerPhotoReleaseHelp": "Without the signed release, this customer's work cannot be published. It is granted from the office, with the document attached.",
   "customerNoPortalAccess": "Without an email or a phone this customer cannot be invited to the client portal.",
 
   "customerNewTitle": "New customer",

@@ -1097,96 +1097,6 @@
         ]
       }
     },
-    "/customers/{id}/photo-release": {
-      "post": {
-        "operationId": "Customers_grantRelease",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Customer"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Customers"
-        ]
-      }
-    },
     "/projects": {
       "get": {
         "operationId": "Projects_list",
@@ -7381,15 +7291,6 @@
             "type": "string",
             "nullable": true
           },
-          "photoReleaseGrantedAt": {
-            "format": "date-time",
-            "type": "string",
-            "nullable": true
-          },
-          "photoReleaseDocumentId": {
-            "type": "string",
-            "nullable": true
-          },
           "deletedAt": {
             "format": "date-time",
             "type": "string",
@@ -7420,8 +7321,6 @@
           "phone",
           "source",
           "notes",
-          "photoReleaseGrantedAt",
-          "photoReleaseDocumentId",
           "deletedAt",
           "companyId",
           "id",
@@ -10560,7 +10459,6 @@
               "TIME_ENTRY_ALREADY_CLOSED",
               "CANNOT_APPROVE_OWN_HOURS",
               "PAY_RATE_MISSING",
-              "PHOTO_RELEASE_REQUIRED",
               "EXIF_NOT_STRIPPED",
               "UPLOAD_NOT_READY",
               "MEDIA_ALREADY_UPLOADED",

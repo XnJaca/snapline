@@ -48,10 +48,6 @@ class Customers extends Table with SyncedTable {
   /// La dirección entera como JSON. Se guarda tal cual llega para no perder
   /// campos que el servidor agregue antes de que la app los conozca.
   TextColumn get billingAddress => text().nullable()();
-
-  /// Lo único que habilita publicar (regla 17). Acá es solo para mostrarlo: la
-  /// restricción de verdad vive en la base del servidor.
-  DateTimeColumn get photoReleaseGrantedAt => dateTime().nullable()();
 }
 
 @DataClassName('LocalSite')

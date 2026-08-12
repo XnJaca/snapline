@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0004"]
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-12
 tags: [domain, domain/borrador]
 ---
 
@@ -33,6 +33,7 @@ Es el activo del producto: de acá sale lo que se publica y lo que alimenta las 
 | `uploaded_by` | uuid | sí | |
 | `device_lat` / `device_lng` | numeric | no | Dónde se tomó |
 | `checksum` | string | sí | Para desduplicar reintentos |
+| `exif_stripped_at` | timestamptz | no | **Habilita `PUBLIC`** en una foto |
 | `upload_status` | enum | sí | `pendiente`, `subiendo`, `listo`, `fallido` |
 | `visibility` | enum | sí | `INTERNAL` (default), `CLIENT`, `PUBLIC` |
 | `document_type` | enum | no | Si es documento: contrato, permiso, plano, seguro, W-9, recibo |
@@ -49,11 +50,12 @@ de marketing del producto, no una foto más.
 ## Invariantes
 
 - **La visibilidad es una escalera**: `INTERNAL` → `CLIENT` → `PUBLIC`. No se salta.
-- **`PUBLIC` exige `customer.photo_release_granted_at` no nulo**, y la restricción
-  vive en la base de datos. Es lo que evita publicar la casa de alguien sin permiso.
-- **El EXIF se limpia antes de publicar.** Las fotos llevan coordenadas GPS;
-  publicarlas expone la dirección exacta de la vivienda de un cliente. La app
-  captura ubicación a propósito, así que el riesgo es concreto.
+- **`PUBLIC` exige `exif_stripped_at` no nulo en las fotos**, y la restricción vive
+  en la base de datos. Las fotos llevan coordenadas GPS; publicarlas expone la
+  dirección exacta de la vivienda de un cliente. La app captura ubicación a
+  propósito, así que el riesgo es concreto.
+- **Quién publica es la empresa, no el cliente.** No hay permiso del cliente que
+  habilite `PUBLIC`; decidido el 2026-08-12, ver [[../DECISIONES]].
 - **Las URLs son firmadas y de vida corta.** El bucket no es público: si lo fuera,
   las fotos de las casas de los clientes estarían en internet abierto para quien
   adivine la ruta.
@@ -79,7 +81,7 @@ El asset existe en el dispositivo desde el momento del disparo, no desde que sub
 ## Relaciones con otros agregados
 
 - [[proyecto]] — de dónde cuelga
-- [[cliente]] — su photo release es lo que habilita `PUBLIC`
+- [[cliente]] — de quién es la obra que se ve en la foto
 - [[registro-de-tiempo]] — la foto de marcaje es un asset
 - [[publicacion]] — qué sale al portafolio
 - [[acceso-del-cliente]] — qué ve el cliente
@@ -98,5 +100,6 @@ como `PUBLIC` al terminar. Arma un par antes/después con dos de ellas.
 **Borde** — Foto tomada sin señal a las 9:00, subida a las 18:00. `captured_at` es
 9:00 y aparece en el orden correcto de la obra, no al final del día.
 
-**Borde hostil** — Alguien intenta pasar un asset a `PUBLIC` en un proyecto cuyo
-cliente no firmó el release. La base de datos lo rechaza, no el formulario.
+**Borde hostil** — Un endpoint nuevo pasa una foto a `PUBLIC` sin haberle limpiado
+el EXIF. La base de datos lo rechaza, no el formulario: publicarla dejaría las
+coordenadas de la casa del cliente en el portafolio.

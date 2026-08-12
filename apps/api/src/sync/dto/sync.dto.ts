@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsDateString, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsDateString, IsEnum, IsObject, IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { Permission } from '../../auth/permissions';
 import { SiteInputDto } from '../../customers/dto/customer.dto';
 import { Customer } from '../../customers/entities/customer.entity';

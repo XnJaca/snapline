@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { MediaAsset } from '../../media/entities/media-asset.entity';
 import { ProjectUpdate } from './project-update.entity';
 

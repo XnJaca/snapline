@@ -103,8 +103,8 @@ export class MediaService {
   }
 
   /**
-   * La escalera es INTERNAL -> CLIENT -> PUBLIC. Pasar a PUBLIC exige photo
-   * release y EXIF limpio; el trigger de la base rechaza el primero aunque esto falle.
+   * La escalera es INTERNAL -> CLIENT -> PUBLIC. Pasar a PUBLIC exige EXIF
+   * limpio, y un trigger de la base lo rechaza aunque esto falle.
    */
   async setVisibility(id: string, dto: SetVisibilityDto): Promise<MediaAsset> {
     const asset = await this.get(id);

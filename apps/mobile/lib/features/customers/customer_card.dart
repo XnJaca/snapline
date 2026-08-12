@@ -65,37 +65,15 @@ class CustomerCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              SizedBox(height: spacing.sm),
-              // `Wrap` y no `Row`: un chip impone su ancho intrínseco y no cede,
-              // así que en la misma fila que el contacto desbordaba con los
-              // textos en español. Acá, si no entran, bajan de línea.
-              Wrap(
-                spacing: spacing.sm,
-                runSpacing: spacing.sm,
-                children: [
-                  // Decide si sus obras se pueden publicar, así que se ve de un
-                  // vistazo y no entrando a la ficha.
-                  StatusChip(
-                    tone: customer.hasPhotoRelease
-                        ? StatusTone.success
-                        : StatusTone.warning,
-                    label: customer.hasPhotoRelease
-                        ? l10n.customerPhotoReleaseGranted
-                        : l10n.customerPhotoReleaseMissing,
-                    icon: customer.hasPhotoRelease
-                        ? Icons.verified_outlined
-                        : Icons.no_photography_outlined,
-                    subtle: true,
-                  ),
-                  if (customer.pending)
-                    StatusChip(
-                      tone: StatusTone.info,
-                      label: l10n.customerPendingSync,
-                      icon: Icons.cloud_upload_outlined,
-                      subtle: true,
-                    ),
-                ],
-              ),
+              if (customer.pending) ...[
+                SizedBox(height: spacing.sm),
+                StatusChip(
+                  tone: StatusTone.info,
+                  label: l10n.customerPendingSync,
+                  icon: Icons.cloud_upload_outlined,
+                  subtle: true,
+                ),
+              ],
             ],
           ),
         ),

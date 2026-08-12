@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: []
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-12
 tags: [domain, domain/borrador]
 ---
 
@@ -52,13 +52,15 @@ Enganchado al proyecto que lo originó — es la fase 3 que ya se le cotizó a W
 
 ## Invariantes
 
-- **Publicar exige photo release del cliente.** Restricción en base de datos.
 - Solo entran assets en nivel `PUBLIC`, y con **EXIF limpio**: publicar las
-  coordenadas GPS de la casa de un cliente es una fuga de privacidad real, no teórica.
+  coordenadas GPS de la casa de un cliente es una fuga de privacidad real, no
+  teórica. Es restricción de base de datos, en [[contenido]].
 - **Se despublica, no se borra.** `unpublished_at` en vez de `DELETE`: el link ya
   está indexado y una URL que devuelve 404 de golpe es peor que una que explica.
 - El `slug` es único por empresa y no cambia después de publicado.
-- Revocar el photo release despublica en cascada.
+- **Publicar no requiere permiso del cliente.** La decisión es de la empresa, que
+  es quien hizo la obra; decidido el 2026-08-12, ver [[../DECISIONES]]. Si un
+  cliente pide que bajen su obra, se despublica.
 - Un testimonio no se publica sin `approved_at`.
 
 ## Comportamiento offline

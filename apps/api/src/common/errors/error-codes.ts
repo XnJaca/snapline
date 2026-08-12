@@ -34,7 +34,6 @@ export const ERROR_CODES = [
   'PAY_RATE_MISSING',
 
   // contenido y publicación
-  'PHOTO_RELEASE_REQUIRED',
   'EXIF_NOT_STRIPPED',
   'UPLOAD_NOT_READY',
   'MEDIA_ALREADY_UPLOADED',

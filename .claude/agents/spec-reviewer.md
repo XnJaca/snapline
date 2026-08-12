@@ -70,7 +70,8 @@ entre aprobar y devolver, devolvé.
 [ ] REGLAS DEL DOMINIO. Según lo que toque, verificá que el spec las respete:
     dos marcas de tiempo (10), is_mock_location (11), horas inmutables y conflicto
     revisado por humano (12), tarifa congelada (13), líneas que copian (14),
-    centavos enteros (15), numeración por empresa (16), photo release (17),
+    centavos enteros (15), numeración por empresa (16), EXIF limpio para
+    publicar (17),
     UUIDv7 del cliente (18), idempotencia (19), borrado suave (20).
 
 [ ] CONTRATO DE API. Si toca el BE: endpoint, método, request y response con

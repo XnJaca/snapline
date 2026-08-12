@@ -65,11 +65,4 @@ export class CustomersController {
   ): Promise<Site> {
     return this.service.updateSite(siteId, dto, id);
   }
-
-  @RequirePermission('customers.write')
-  @Post(':id/photo-release')
-  @HttpCode(200)
-  grantRelease(@Param('id', ParseUUIDPipe) id: string, @Body() body: { granted: boolean; documentId?: string }): Promise<Customer> {
-    return this.service.setPhotoRelease(id, body.granted, body.documentId);
-  }
 }

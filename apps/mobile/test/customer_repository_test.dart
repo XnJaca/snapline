@@ -57,18 +57,6 @@ void main() {
       expect(pendientes.first.targetId, id);
     });
 
-    test('el payload no manda el photo release', () async {
-      await repo.create(const CustomerInput(displayName: 'Martínez'));
-
-      final payload =
-          jsonDecode((await outbox.pending()).first.payload)
-              as Map<String, Object?>;
-      // Regla 17: otorgarlo necesita el documento firmado y no se puede hacer
-      // desde el móvil. Si la clave viajara, el servidor la aceptaría.
-      expect(payload.containsKey('photoReleaseGrantedAt'), isFalse);
-      expect(payload.containsKey('photoReleaseDocumentId'), isFalse);
-    });
-
     test('los campos vacíos no viajan', () async {
       await repo.create(
         const CustomerInput(displayName: 'Martínez', email: '', phone: ''),
@@ -223,23 +211,6 @@ void main() {
       expect(lista.first.phone, '+13015550142');
       expect(lista.first.pending, isTrue);
       expect(await outbox.pending(), hasLength(1));
-    });
-
-    test('no toca el photo release que ya estaba', () async {
-      final otorgado = DateTime(2026, 8, 1);
-      await seedCustomer(
-        db,
-        id: 'c1',
-        displayName: 'Martínez',
-        photoReleaseGrantedAt: otorgado,
-      );
-
-      await repo.update('c1', const CustomerInput(displayName: 'Corregido'));
-
-      final ficha = await repo.watchOne('c1').first;
-      // Es de solo lectura en el móvil: una corrección de nombre no puede
-      // revocarlo, porque revocar despublica en cascada.
-      expect(ficha!.photoReleaseGrantedAt, otorgado);
     });
 
     test('la dirección de facturación va y vuelve entera', () async {
