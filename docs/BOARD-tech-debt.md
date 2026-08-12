@@ -18,10 +18,10 @@ kanban-plugin: board
 
 ## 🔥 Activa (causando fricción hoy)
 
-- [ ] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — **severidad alta**: decidido sacarlo, y cada semana suma código que lo asume (trigger: antes del spec de publicación)
-
 
 ## 🛠️ En resolución
+
+- [ ] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — **severidad alta**: eran once lugares, no cuatro. En su lugar entra un trigger de EXIF, para que `PUBLIC` no quede sin invariante en la base
 
 
 ## ✅ Resuelta

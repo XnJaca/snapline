@@ -58,7 +58,7 @@ transacción del request. Si el GUC no está seteado, la policy no devuelve fila
 Mejor DX y migraciones más simples de leer.
 
 **Por qué no:** este esquema necesita constraints que Prisma no modela y hay que
-escribir como SQL crudo igual — trigger de photo release, índices parciales,
+escribir como SQL crudo igual — trigger de EXIF limpio, índices parciales,
 constraint de exclusión para rangos de fechas de cuadrilla, función de numeración
 con lock de fila, y las policies de RLS. Si la mitad del esquema es SQL a mano, el
 ORM aporta menos. Y salir del stack que ya se conoce cuesta tiempo que no hay.

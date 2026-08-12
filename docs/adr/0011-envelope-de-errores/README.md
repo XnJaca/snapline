@@ -9,7 +9,7 @@ supersedes: null
 superseded_by: null
 related_specs: []
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-12
 deciders:
   - jaca
 tags:
@@ -105,6 +105,14 @@ es mapear campos.
 ## Impacto en el modelo
 
 Ninguno. Impacta `apps/api/src/common/errors/` y a los tres consumidores.
+
+## Nota posterior — 2026-08-12
+
+`PHOTO_RELEASE_REQUIRED`, el código que este ADR usa de ejemplo, **se retiró del
+catálogo** al sacar el gate de photo release (DEBT-0005). El ejemplo se conserva
+tal como se escribió: es el caso que motivó la decisión —dos rechazos distintos del
+mismo endpoint, con acciones distintas— y reescribirlo borraría el razonamiento. La
+decisión de este ADR no cambia.
 
 ## Referencias
 

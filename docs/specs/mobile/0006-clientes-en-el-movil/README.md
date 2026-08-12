@@ -32,6 +32,14 @@ tags:
 >   [[../0004-capa-local-y-sincronizacion/README|SPEC-0004]]
 > - Frente: `administrativo`
 
+> **Superado en parte el 2026-08-12** por
+> [[../../../tech-debt/0005-photo-release-se-quita|DEBT-0005]]
+> - **Todo lo que este spec dice del photo release quedó sin efecto**: el campo, su
+>   `StatusChip`, su hoja de ayuda y las reglas de dominio que lo sostenían.
+> - Vale para "No entra", "Las reglas del dominio que aplican", el diseño de la
+>   ficha y su criterio de aceptación.
+> - El resto del spec sigue vigente y el goal no cambia.
+
 ---
 
 ## Problema
@@ -133,8 +141,9 @@ ya garantiza. Si esto no funciona, el prototipo no sirve.
 - [x] Cliente, propiedad y obra creados offline en ese orden llegan al servidor
       en ese orden y sin duplicarse.
 - [x] El id del cliente creado en el móvil es el mismo que queda en el servidor.
-- [x] `photo_release_granted_at` es de solo lectura: no hay forma de otorgarlo ni
-      revocarlo desde esta pantalla.
+- [x] ~~`photo_release_granted_at` es de solo lectura: no hay forma de otorgarlo ni
+      revocarlo desde esta pantalla.~~ *Retirado el 2026-08-12: el campo dejó de
+      existir y la ficha del cliente ya no lo muestra.*
 - [x] Un cliente sin `email` ni `phone` se puede guardar, y la pantalla avisa que
       no va a poder entrar al portal.
 - [x] Una propiedad nueva queda asociada a su cliente, y la consulta de sitios de

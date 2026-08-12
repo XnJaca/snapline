@@ -15,6 +15,39 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-08-12 — el photo release sale, el EXIF se queda
+
+- **Publicar una obra ya no pide permiso al cliente**
+  ([[tech-debt/0005-photo-release-se-quita|DEBT-0005]], y la entrada del 2026-08-12
+  en [[DECISIONES]]): el contratista está autorizado a fotografiar la obra en la
+  que trabaja y no hay dónde subir un papel firmado, así que el campo que en la
+  práctica bloqueaba a todos se fue entero — columnas, dos triggers, endpoint,
+  código de error y la ficha del móvil.
+- **No eran cuatro lugares, eran once.** El `domain-guardian` los encontró antes de
+  escribir la migración: la deuda no listaba el segundo trigger, la FK al documento,
+  el endpoint, el código `PHOTO_RELEASE_REQUIRED` con su test, dos requests de
+  Bruno, tres fichas de dominio ni los dos specs Implementados que lo afirmaban.
+- **`PUBLIC` no se quedó sin invariante en la base.** Sacando el trigger tal cual,
+  publicar pasaba a depender de que ningún endpoint futuro se saltee una validación
+  de aplicación. En su lugar entra `enforce_exif_stripped`: una foto no llega a
+  `PUBLIC` con el EXIF adentro, que es la fuga concreta —las coordenadas de la casa
+  del cliente— y ya estaba declarada como invariante sin estar aplicada. La regla 17
+  se reescribió con eso y conservó su número.
+- **Dos cosas que este cambio destapó y no causó**: la escalera
+  `INTERNAL → CLIENT → PUBLIC` no está aplicada en ningún lado —hoy se salta a
+  `PUBLIC` directo— y *"revocar el release despublica en cascada"* nunca se
+  implementó. Lo segundo se resuelve solo al no haber gate; lo primero queda anotado.
+- **El edge case del EXIF estaba mintiendo.** Aseguraba un rechazo 400 que no
+  ocurre: subir a `PUBLIC` limpia sola en vez de rechazar, a propósito. Ahora
+  verifica lo que de verdad importa — que no existe camino a `PUBLIC` con EXIF
+  adentro.
+- **El diagrama del flujo del sistema quedó legible fuera de Obsidian.** Su JSON
+  estaba en `compressed-json`, contra la convención que pide `compress: false`
+  justamente para poder editarlo — la caja que decía *"Aceptar estimado + photo
+  release"* no se podía corregir sin abrir el plugin.
+
+---
+
 ## 2026-08-11 — la propiedad en el mapa
 
 - **Toda propiedad puede tener su punto y su radio de geocerca**

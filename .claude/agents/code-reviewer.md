@@ -100,8 +100,9 @@ factura o `time_entry` es fuga de datos entre contratistas competidores.
 - ¿El token viaja en la URL? Entonces se filtra por `Referer` y por analytics.
 
 ### Escalada de visibilidad de fotos
-- ¿Se puede setear `visibility = PUBLIC` sin `photo_release_granted_at`? La regla
-  vive en la base de datos; verificá que exista ahí y no solo en el formulario.
+- ¿Se puede setear `visibility = PUBLIC` en una foto sin `exif_stripped_at`? La
+  regla vive en la base de datos —el trigger `enforce_exif_stripped`—; verificá que
+  exista ahí y no solo en el formulario.
 - ¿Un portador de token de cliente puede pedir una foto `INTERNAL`?
 
 ### Fotos en Backblaze B2

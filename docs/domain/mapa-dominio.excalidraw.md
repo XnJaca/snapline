@@ -495,11 +495,11 @@ Mapa del dominio — Snapline ^title
 			"locked": false,
 			"fontSize": 13,
 			"fontFamily": 1,
-			"text": "Cliente\nsite (geocerca)\nphoto_release_granted_at",
+			"text": "Cliente\nsite (geocerca)\nbilling_address",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"containerId": "box-cliente",
-			"originalText": "Cliente\nsite (geocerca)\nphoto_release_granted_at",
+			"originalText": "Cliente\nsite (geocerca)\nbilling_address",
 			"lineHeight": 1.25,
 			"baseline": 9
 		},

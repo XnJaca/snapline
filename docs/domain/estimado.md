@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0001"]
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-12
 tags: [domain, domain/borrador]
 ---
 
@@ -28,7 +28,7 @@ convierte en la base de la factura.
 | `status` | enum | sí | Ver abajo |
 | `issued_at` / `expires_at` | timestamptz | no | |
 | `subtotal_cents` / `tax_cents` / `total_cents` | int | sí | **Calculados en el servidor** |
-| `terms` | text | no | Acá va la cláusula de photo release |
+| `terms` | text | no | Condiciones del trabajo, texto libre |
 | `accepted_at` | timestamptz | no | |
 | `accepted_signature_asset_id` | uuid | no | |
 | `accepted_ip` | inet | no | |

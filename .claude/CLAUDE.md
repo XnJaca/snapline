@@ -219,13 +219,19 @@ una empresa no pueden saltar porque otra empresa insertó.
 
 Una factura enviada no se edita: se anula y se emite otra.
 
-### 17. Publicar exige photo release
+### 17. Publicar exige EXIF limpio
 
-`visibility = PUBLIC` requiere `customer.photo_release_granted_at` no nulo, y la
-regla vive **en la base de datos**, no en una validación de formulario. Es lo que
-evita publicar la casa de alguien sin permiso.
+`visibility = PUBLIC` requiere `exif_stripped_at` no nulo en las fotos, y la regla
+vive **en la base de datos**, no en una validación de formulario. Las fotos llevan
+coordenadas GPS porque la app captura ubicación a propósito: publicarlas expone la
+dirección exacta de la casa de un cliente.
 
 La visibilidad es una escalera: `INTERNAL` → `CLIENT` → `PUBLIC`.
+
+Esta regla pedía el **photo release del cliente** hasta el 2026-08-12. Se retiró
+—no hay permiso del cliente que habilite publicar, la decisión es de la empresa— y
+el número se conserva con el invariante que sí sobrevive. Ver DEBT-0005 y la
+entrada de esa fecha en `docs/DECISIONES.md`.
 
 ### 18. IDs UUIDv7 generados en el cliente
 

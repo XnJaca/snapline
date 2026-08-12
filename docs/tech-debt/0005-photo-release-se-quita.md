@@ -4,7 +4,7 @@ title: "El photo release se quita, y está en cuatro lugares"
 aliases:
   - "DEBT-0005: El photo release se quita, y está en cuatro lugares"
 type: tech-debt
-status: abierta
+status: en-resolucion
 severity: alta
 origin: "SPEC-0007"
 apps:
@@ -12,10 +12,10 @@ apps:
   - mobile
 trigger: "Antes de implementar el spec de publicación, o antes de la primera foto que William quiera publicar de verdad"
 created: 2026-08-10
-updated: 2026-08-10
+updated: 2026-08-12
 tags:
   - tech-debt
-  - tech-debt/abierta
+  - tech-debt/en-resolucion
   - publicacion
 ---
 
@@ -76,3 +76,41 @@ todavía no tiene pantalla en el móvil.
   frente con esto.
 - O **antes de la primera foto que William quiera publicar de verdad**, lo que llegue
   primero.
+
+## Al empezar a resolverla — 2026-08-12
+
+El `domain-guardian` revisó el modelo antes de tocarlo. **No eran cuatro lugares.**
+Lo que la tabla de arriba no listaba:
+
+| Dónde | Qué faltaba |
+|---|---|
+| `1786168800002-IndexesAndInvariants.ts` | **Dos** triggers con sus funciones: `media_asset_photo_release` y `published_project_release` |
+| `1786168800000-InitialSchema.ts:298` | La FK `customer_release_doc_fk` hacia `media_asset` |
+| `customers.controller.ts` · `.service.ts` | El endpoint `POST /customers/:id/photo-release` entero |
+| `error-codes.ts` · `http-exception.filter.ts` · `error-envelope.spec.ts` | El código `PHOTO_RELEASE_REQUIRED`, su firma de trigger y el test que lo cubre |
+| `requests/` | Dos requests de Bruno, uno de ellos en `edge-cases/` |
+| [[../domain/publicacion\|publicación]] · [[../domain/proyecto\|proyecto]] · [[../domain/estimado\|estimado]] | Tres fichas más con el invariante o su cláusula |
+| SPEC-0005 y SPEC-0006 | Dos specs **Implementados** con criterios `[x]` que lo afirman |
+| `tables.dart` | La columna de Drift, que obliga a un `schemaVersion` nuevo |
+
+Y dos hallazgos que no causa esta deuda pero que se cruzan con ella:
+
+- **La escalera `INTERNAL → CLIENT → PUBLIC` no está aplicada en ningún lado.**
+  `media.service.ts` deja saltar de `INTERNAL` a `PUBLIC` directo, hoy.
+- **"Revocar despublica en cascada" nunca se implementó.** `setPhotoRelease` solo
+  pone el campo en null. Sacar el gate lo resuelve: no queda nada que cascadear.
+
+### Lo que se decidió al resolverla
+
+- **El trigger no se va sin reemplazo.** Sacándolo tal cual, `PUBLIC` quedaba sin
+  ningún invariante en la base y todo pasaba a depender de que ningún endpoint
+  futuro se saltee la validación. En su lugar entra `enforce_exif_stripped`:
+  `PUBLIC` exige `exif_stripped_at` en las fotos. El invariante ya estaba declarado
+  en [[../domain/contenido|contenido]] y el camino feliz ya limpia solo, así que no
+  cambia ningún comportamiento visible. La regla 17 se reescribió con eso,
+  conservando su número.
+- **La columna de Drift se dropea** en `schemaVersion` 5 con `TableMigration`, en
+  vez de dejarla muerta. La justificación de "se agregan columnas, no se recrea la
+  base" protege la bandeja de salida, y la bandeja vive en otra tabla.
+- **`document_kind` conserva `PHOTO_RELEASE`.** Postgres no deja quitar un valor de
+  un enum sin reconstruir el tipo; es una etiqueta inerte que ningún DTO asigna.

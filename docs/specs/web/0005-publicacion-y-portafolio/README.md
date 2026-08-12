@@ -53,8 +53,14 @@ GET  /api/public/:companySlug/portfolio     ← anónimo
 
 ## Criterios de aceptación
 
+> **Superado en parte el 2026-08-12 por DEBT-0005.** El gate del photo release
+> salió del producto; el trigger que lo verificaba ya no existe. Lo demás sigue
+> vigente y el goal no cambia.
+
 - [x] Publicar exige que **todas** las fotos estén en `PUBLIC` y con EXIF limpio
-- [x] El photo release del cliente lo verifica además un trigger de la base
+- [x] ~~El photo release del cliente lo verifica además un trigger de la base~~
+      *Retirado el 2026-08-12. En su lugar, el trigger de la base verifica que las
+      fotos `PUBLIC` tengan el EXIF limpio.*
 - [x] Se despublica con `unpublished_at`, no se borra: el link ya está indexado
 - [x] **Republicar conserva el slug** y vuelve a la misma URL
 - [x] El portafolio público no filtra entre empresas

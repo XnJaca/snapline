@@ -45,7 +45,7 @@ del esquema.
 - Auth, empresa, membresías y roles
 - Clientes con propiedades
 - Proyectos con estado y asignación
-- Fotos con la escalera de visibilidad y el photo release
+- Fotos con la escalera de visibilidad y el EXIF limpio antes de publicar
 - Publicación al sitio
 
 ## Fase 2 — Campo
