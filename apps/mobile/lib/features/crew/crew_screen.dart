@@ -11,8 +11,9 @@ import 'crew_detail_screen.dart';
 
 /// El eje Cuadrilla: una lista de cuadrillas, no una pantalla de acción.
 ///
-/// Con una sola —el caso normal— se entra directo, sin lista intermedia que
-/// solo tenga un renglón.
+/// **Siempre la lista, aunque haya una sola** — decisión de producto al
+/// probarlo: entrar directo se sentía como caer en una pantalla que no se
+/// pidió. El toque de más compra saber dónde se está.
 class CrewScreen extends ConsumerWidget {
   const CrewScreen({super.key});
 
@@ -24,14 +25,6 @@ class CrewScreen extends ConsumerWidget {
 
     final cuadrillas =
         ref.watch(myCrewsProvider(sesion.membership.id)).value ?? const [];
-
-    if (cuadrillas.length == 1) {
-      return CrewDetailScreen(
-        crewId: cuadrillas.single.id,
-        crewName: cuadrillas.single.name,
-        enEje: true,
-      );
-    }
 
     return AppScaffold(
       title: l10n.crewTitle,
@@ -47,13 +40,28 @@ class CrewScreen extends ConsumerWidget {
                 SizedBox(height: context.spacing.sm),
                 for (final cuadrilla in cuadrillas) ...[
                   Material(
-                    color: context.colors.surfaceContainerHighest,
+                    color: context.colors.primaryContainer,
                     borderRadius:
                         BorderRadius.circular(context.spacing.radiusMd),
                     child: ListTile(
-                      leading: const Icon(Icons.groups_outlined),
-                      title: Text(cuadrilla.name),
-                      trailing: const Icon(Icons.chevron_right),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(context.spacing.radiusMd),
+                      ),
+                      leading: Icon(
+                        Icons.groups_outlined,
+                        color: context.colors.onPrimaryContainer,
+                      ),
+                      title: Text(
+                        cuadrilla.name,
+                        style: context.texts.titleMedium?.copyWith(
+                          color: context.colors.onPrimaryContainer,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: context.colors.onPrimaryContainer,
+                      ),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => CrewDetailScreen(

@@ -155,18 +155,41 @@ async function seed(): Promise<void> {
     ),
   );
 
+  // La ficha que ve el campo en el tab Detalle. COALESCE y no re-INSERT: las
+  // bases ya sembradas también la reciben al volver a correr el seed.
+  await ds.query(
+    `UPDATE project SET
+       updated_at = now(),
+       start_date = COALESCE(start_date, CURRENT_DATE - 12),
+       target_end_date = COALESCE(target_end_date, CURRENT_DATE + 14),
+       description = COALESCE(description,
+         'Reemplazo completo del techo con teja arquitectónica. Incluye tablado nuevo donde haga falta.')
+     WHERE id = $1`,
+    [projectId],
+  );
+
   const georgiaSiteId = (await ds.query(
     `SELECT id FROM site WHERE customer_id = $1 AND address->>'line1' = $2`,
     [customerId, '9800 Georgia Ave'],
   ) as Array<{ id: string }>)[0]?.id;
   if (georgiaSiteId) {
-    await obtenerOCrear(
+    const banoId = await obtenerOCrear(
       ds, 'project', 'company_id = $1 AND name = $2', [companyId, 'Baño Martinez'],
       (id) => ds.query(
         `INSERT INTO project (id, company_id, customer_id, site_id, name, service_type, status)
          VALUES ($1,$2,$3,$4,'Baño Martinez','bathroom','IN_PROGRESS')`,
         [id, companyId, customerId, georgiaSiteId],
       ),
+    );
+    await ds.query(
+      `UPDATE project SET
+         updated_at = now(),
+         start_date = COALESCE(start_date, CURRENT_DATE - 3),
+         target_end_date = COALESCE(target_end_date, CURRENT_DATE + 10),
+         description = COALESCE(description,
+           'Remodelación del baño principal: ducha nueva, piso y vanidad.')
+       WHERE id = $1`,
+      [banoId],
     );
   }
 

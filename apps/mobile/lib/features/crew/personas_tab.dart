@@ -19,7 +19,12 @@ import '../obras/obras_screen.dart';
 /// pantalla que solo dejara elegir de la lista convertiría la bandera en
 /// bloqueo por la puerta de atrás.
 class PersonasTab extends ConsumerStatefulWidget {
-  const PersonasTab({super.key});
+  const PersonasTab({super.key, this.projectId});
+
+  /// Con obra fija —el tab Cuadrilla dentro de una obra— la lista es de ESA
+  /// obra, sin selector. Sin ella, la del eje: la primera de hoy, con chips
+  /// para cambiar.
+  final String? projectId;
 
   @override
   ConsumerState<PersonasTab> createState() => _PersonasTabState();
@@ -83,10 +88,12 @@ class _PersonasTabState extends ConsumerState<PersonasTab> {
     final sesion = ref.watch(sessionControllerProvider).value;
     if (sesion == null) return const SizedBox.shrink();
 
-    final obras =
-        ref.watch(todayProjectsProvider(sesion.membership.id)).value ??
-        const <TodayProject>[];
+    final obras = widget.projectId != null
+        ? const <TodayProject>[]
+        : ref.watch(todayProjectsProvider(sesion.membership.id)).value ??
+            const <TodayProject>[];
     final obraId =
+        widget.projectId ??
         (obras.any((o) => o.id == _obraElegida) ? _obraElegida : null) ??
         (obras.isNotEmpty ? obras.first.id : null);
 

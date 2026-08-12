@@ -67,13 +67,22 @@ intactos: esto reorganiza dónde viven.
   calendario. La jornada abierta cuenta en vivo, hasta el momento de mirar.
 - **Tocar una obra abre su pantalla, con tabs** — el mismo patrón del detalle
   de obra del OWNER, con el contenido del campo:
-  - **[Registro]** — la acción y la historia en un solo lugar. Marcar entrada
-    despliega el cronómetro con su obra y su ánimo; abajo, las jornadas de esa
-    obra como **lista colapsable**: cerrada muestra fecha y horas trabajadas,
-    abierta muestra el detalle — a qué hora entró, a qué hora salió, el total,
-    sus banderas y su estado de aprobación.
-  - **[Detalle]** — la dirección, el punto en Mapas, el cliente no (la cuadrilla
-    no navega cartera: solo el lugar).
+  - **[Registro]** — la acción y la historia en un solo lugar. El botón dice de
+    quién es la acción — **"Marcar mi entrada"** — porque quien puede marcar
+    por otros necesita saber que este tab es el propio. Marcar despliega el
+    cronómetro con su obra y su ánimo; abajo, las jornadas de esa obra como
+    **lista colapsable**: cerrada muestra fecha y horas trabajadas, abierta
+    muestra el detalle — a qué hora entró, a qué hora salió, el total, sus
+    banderas y su estado de aprobación.
+  - **[Cuadrilla]** — solo para quien tiene `crews.read` (foreman, OWNER,
+    ADMIN): la gente de ESTA obra, con marcar por otro y "Otra persona…" — la
+    misma pantalla del eje Cuadrilla, fijada a la obra en la que se está. El
+    permiso lo dice el servidor; el móvil no replica la tabla de roles.
+  - **[Detalle]** — la ficha del lugar: estado, dirección, tipo de trabajo,
+    fecha de inicio, fecha objetivo y descripción — **solo lo que ya baja al
+    teléfono**. El cliente no (la cuadrilla no navega cartera). **Fases
+    tampoco, todavía**: no existen en el dominio — el día que se quieran,
+    primero su ficha en `docs/domain/`, después su spec.
 
 **Jornada abierta en otra obra.** El invariante del dominio es global — no puede
 haber dos registros abiertos del mismo membership — y la estructura por-obra
@@ -96,7 +105,9 @@ app no da ningún camino — y cerrar la jornada sí podría fallar.
 **Para el foreman, además:**
 
 - **La pestaña Cuadrilla es una lista de cuadrillas** — las que lidera o
-  integra. Con una sola, se entra directo.
+  integra. **Siempre la lista, aunque haya una sola**: el atajo de entrar
+  directo se probó y se descartó — caer de una en el detalle se sentía como
+  una pantalla que nadie pidió. El toque de más compra saber dónde se está.
 - **Tocar una cuadrilla abre su pantalla, con tabs:**
   - **[Personas]** — lo que hoy es la pantalla de cuadrilla: quién está adentro,
     quién salió, quién no marcó, marcar por otro y "Otra persona…". Sin cambios
@@ -160,17 +171,22 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
       entrada, salida, total, banderas y estado.
 - [x] Con la jornada abierta en otra obra, el Registro de esta no ofrece botón
       de marcar y el aviso nombra la obra donde está abierta.
-- [x] El tab Detalle muestra dirección y camino a Mapas, y **ningún dato del
-      cliente** — nombre, teléfono, nada.
+- [x] El tab Detalle muestra la ficha del lugar — estado, dirección, tipo de
+      trabajo, fechas y descripción, omitiendo lo que no tenga valor — con su
+      camino a Mapas, y **ningún dato del cliente**: nombre, teléfono, nada.
+- [x] Quien tiene `crews.read` ve el tab Cuadrilla dentro de la obra, fijado a
+      esa obra; el WORKER no lo ve.
+- [x] El botón del Registro dice "Marcar mi entrada" / "Marcar mi salida": el
+      tab es personal y el que marca por otros lo hace desde Cuadrilla.
 - [x] Marcar cuesta un toque más que antes — obra → botón, con Registro ya
       abierto como primer tab — y es a propósito: el home es la lista con el
       resumen y la dirección, y **no se salta ni con una sola obra**, porque
       saltarla escondería el resumen en el caso más común.
 - [x] La obra con la jornada abierta aparece en la lista de Obras aunque ya no
       tenga asignación hoy, marcada como tal, y desde ahí se marca la salida.
-- [x] La pestaña Cuadrilla lista cuadrillas; con una sola entra directo; adentro,
-      Personas se comporta idéntico a hoy y Horas muestra el acumulado semanal
-      por persona.
+- [x] La pestaña Cuadrilla lista cuadrillas — siempre, aunque haya una sola —
+      y el toque abre el detalle; adentro, Personas se comporta idéntico a hoy
+      y Horas muestra el acumulado semanal por persona, en cards.
 - [x] "Mi semana" no existe más como pantalla: el total vive en el resumen del
       home y el desglose por jornada en el Registro de cada obra (alcanzable
       mientras la obra esté en la lista — ver Riesgos).
@@ -183,8 +199,11 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
   Ahora: abrir → obra → botón. La lista **no se salta ni con una sola obra** —
   el resumen semanal vive ahí y saltarla lo escondería justo en el caso más
   común. El Registro es el primer tab y abre activo, así que nunca hay que
-  elegir tab. (Cuadrilla sí entra directo con una sola: ahí no hay resumen que
-  perder.)
+  elegir tab. Cuadrilla sigue la misma regla: siempre su lista.
+- **Nada flota sobre el fondo.** El resumen semanal y las filas de Horas van
+  en cards con borde; las tarjetas de obra y de cuadrilla usan el
+  `primaryContainer` del tema — color con calidez, nunca el naranja saturado,
+  que sigue siendo exclusivo de la acción primaria (la regla del naranja).
 - **El desglose de una obra que salió de la asignación.** El Registro de cada
   obra muestra sus jornadas de la semana, pero la obra es alcanzable mientras
   esté en la lista — asignada hoy o con la jornada abierta. Las jornadas
@@ -207,6 +226,7 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-11 | en implementación | Tanda de diseño, dictada probando en el teléfono como María: nada flota (resumen y Horas en cards), las tarjetas toman el `primaryContainer` del tema, la lista de cuadrillas no se salta nunca, el foreman gana el tab Cuadrilla dentro de la obra, el botón pasa a "Marcar mi entrada" y el Detalle se llena con la ficha que ya baja (estado, fechas, tipo, descripción). Fases quedan fuera: sin ficha de dominio no se inventan. |
 | 2026-08-11 | en implementación | Hallazgos de los revisores incorporados. Del `spec-reviewer`: el caso de jornada abierta en otra obra, la resolución con SPEC-0003, el criterio del tab Detalle y la definición de "semana". Del `code-reviewer` (GRAVE): la obra con jornada abierta entra a la lista sin asignación de hoy — sin eso, cerrar la jornada podía quedar sin camino. El "costo cero" de Riesgos se corrigió: la decisión real es la lista siempre visible, un toque más a conciencia. |
 | 2026-08-11 | en implementación | Aprobado de palabra por quien lo diseñó — el spec ES su decisión de producto, dictada probando SPEC-0008. El `spec-reviewer` corre en paralelo y sus hallazgos entran como fixes antes del PR. |
 | 2026-08-11 | borrador | Creado desde la prueba en teléfono de SPEC-0008: "la obra debe ser un lugar, no un botón". Incidentes queda nombrado como futuro y fuera: es dominio nuevo y necesita su ficha primero. El tab "Otros" se descartó — un cajón sin definición nace vacío y muere lleno. |

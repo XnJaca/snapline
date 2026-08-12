@@ -10,6 +10,15 @@ import '../local/tables.dart';
 import '../sync/outbox.dart';
 
 /// Una obra con asignación para hoy, como la ofrece la pantalla Hoy.
+typedef ObraDetalle = ({
+  String status,
+  String? serviceType,
+  String? description,
+  DateTime? startDate,
+  DateTime? targetEndDate,
+  DateTime? actualEndDate,
+});
+
 class TodayProject {
   const TodayProject({
     required this.id,
@@ -350,6 +359,25 @@ class TimeEntryRepository {
     lat: f.readNullable<double>('lat'),
     lng: f.readNullable<double>('lng'),
   );
+
+  /// La ficha de la obra para el tab Detalle: estado, fechas y descripción —
+  /// solo lo que ya baja al teléfono. Fases no: no existen en el dominio.
+  Stream<ObraDetalle?> watchObraDetalle(String projectId) {
+    final consulta = _db.select(_db.projects)
+      ..where((p) => p.id.equals(projectId) & p.deletedAt.isNull());
+    return consulta.watchSingleOrNull().map(
+      (p) => p == null
+          ? null
+          : (
+              status: p.status,
+              serviceType: p.serviceType,
+              description: p.description,
+              startDate: p.startDate,
+              targetEndDate: p.targetEndDate,
+              actualEndDate: p.actualEndDate,
+            ),
+    );
+  }
 
   /// La gente asignada a una obra **hoy** —directa o por cuadrilla— con el
   /// estado de su jornada: es la lista del foreman, quién marcó y quién no.

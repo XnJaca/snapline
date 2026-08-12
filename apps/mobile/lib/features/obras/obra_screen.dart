@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../api/models/project_status.dart';
 import '../../core/location/open_in_maps.dart';
+import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/labeled_value.dart';
+import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../crew/personas_tab.dart';
+import '../projects/project_status_display.dart';
 import 'obras_screen.dart';
 import 'registro_tab.dart';
 
 /// La obra del trabajador, con tabs — el mismo patrón que el detalle del
 /// OWNER, con el contenido del campo: acá se marca y se mira el registro.
+///
+/// Quien puede ver a la cuadrilla (`crews.read`) tiene además el tab
+/// Cuadrilla: la gente de ESTA obra, marcar por otro incluido. El permiso lo
+/// dice el servidor; el móvil no replica la tabla de roles.
 class ObraScreen extends ConsumerWidget {
   const ObraScreen({super.key, required this.obra});
 
@@ -19,15 +28,19 @@ class ObraScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final sesion = ref.watch(sessionControllerProvider).value;
+    final conCuadrilla =
+        sesion?.membership.permissions.contains('crews.read') ?? false;
 
     return DefaultTabController(
-      length: 2,
+      length: conCuadrilla ? 3 : 2,
       child: Scaffold(
         appBar: AppBar(
           title: Text(obra.name),
           bottom: TabBar(
             tabs: [
               Tab(text: l10n.obraTabRegistro),
+              if (conCuadrilla) Tab(text: l10n.obraTabCuadrilla),
               Tab(text: l10n.obraTabDetalle),
             ],
           ),
@@ -35,6 +48,7 @@ class ObraScreen extends ConsumerWidget {
         body: TabBarView(
           children: [
             RegistroTab(obra: obra),
+            if (conCuadrilla) PersonasTab(projectId: obra.id),
             _DetalleTab(obra: obra),
           ],
         ),
@@ -43,8 +57,9 @@ class ObraScreen extends ConsumerWidget {
   }
 }
 
-/// El lugar: la dirección y cómo llegar. El cliente no — la cuadrilla no
-/// navega cartera.
+/// El lugar y su ficha: estado, fechas, tipo de trabajo y descripción — lo
+/// que ya baja al teléfono. El cliente no: la cuadrilla no navega cartera.
+/// Fases tampoco, todavía: no existen en el dominio.
 class _DetalleTab extends ConsumerWidget {
   const _DetalleTab({required this.obra});
 
@@ -53,17 +68,50 @@ class _DetalleTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final material = MaterialLocalizations.of(context);
     // Del stream, no del argumento: si la dirección cambia por el pull, la
     // pantalla se entera.
     final lugar = ref.watch(placeProvider(obra.id)).value ?? obra;
+    final ficha = ref.watch(obraDetalleProvider(obra.id)).value;
+
+    final estado = ficha == null
+        ? null
+        : ProjectStatus.values.firstWhere(
+            (s) => s.json == ficha.status,
+            orElse: () => ProjectStatus.$unknown,
+          );
+
+    String? fecha(DateTime? d) =>
+        d == null ? null : material.formatMediumDate(d.toLocal());
 
     return ListView(
       padding: EdgeInsets.all(context.spacing.lg),
       children: [
+        if (estado != null && estado != ProjectStatus.$unknown) ...[
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: StatusChip(tone: estado.tone, label: estado.label(l10n)),
+          ),
+          SizedBox(height: context.spacing.lg),
+        ],
         if (lugar.address.isNotEmpty)
           LabeledValue(label: l10n.detalleDireccion, value: lugar.address),
+        LabeledValue(label: l10n.detalleServicio, value: ficha?.serviceType),
+        LabeledValue(label: l10n.detalleInicio, value: fecha(ficha?.startDate)),
+        LabeledValue(
+          label: l10n.detalleObjetivo,
+          value: fecha(ficha?.targetEndDate),
+        ),
+        LabeledValue(
+          label: l10n.detalleTerminada,
+          value: fecha(ficha?.actualEndDate),
+        ),
+        LabeledValue(
+          label: l10n.detalleDescripcion,
+          value: ficha?.description,
+        ),
         if (lugar.address.isNotEmpty || lugar.hasLocation) ...[
-          SizedBox(height: context.spacing.lg),
+          SizedBox(height: context.spacing.sm),
           OutlinedButton.icon(
             onPressed: () => openInMaps(
               lat: lugar.lat,
@@ -78,3 +126,8 @@ class _DetalleTab extends ConsumerWidget {
     );
   }
 }
+
+final obraDetalleProvider =
+    StreamProvider.family<ObraDetalle?, String>((ref, projectId) {
+  return ref.watch(timeEntryRepositoryProvider).watchObraDetalle(projectId);
+});

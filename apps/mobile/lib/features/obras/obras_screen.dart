@@ -71,7 +71,8 @@ class ObrasScreen extends ConsumerWidget {
 }
 
 /// Cuánto se trabajó esta semana, sumado de las jornadas locales. La abierta
-/// cuenta hasta ahora.
+/// cuenta hasta ahora. En card, no flotando: un dato suelto sobre el fondo
+/// parece un error de layout, no información.
 class _ResumenSemanal extends ConsumerWidget {
   const _ResumenSemanal({required this.membershipId});
 
@@ -90,21 +91,47 @@ class _ResumenSemanal extends ConsumerWidget {
       total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
     }
 
-    return Row(
-      children: [
-        Icon(
-          Icons.schedule_outlined,
-          size: context.spacing.xl,
-          color: context.colors.onSurfaceVariant,
-        ),
-        SizedBox(width: context.spacing.sm),
-        Text(
-          l10n.obrasWeekSummary(
-            l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+    return Container(
+      padding: EdgeInsets.all(context.spacing.lg),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
+        border: Border.all(color: context.colors.outline),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(context.spacing.sm),
+            decoration: BoxDecoration(
+              color: context.colors.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.schedule_outlined,
+              color: context.colors.onPrimaryContainer,
+            ),
           ),
-          style: context.texts.titleSmall,
-        ),
-      ],
+          SizedBox(width: context.spacing.md),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.obrasWeekTitle,
+                style: context.texts.bodySmall?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: context.spacing.xs),
+              Text(
+                l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+                style: context.texts.titleLarge?.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -122,8 +149,10 @@ class _ObraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // El container tenue del tema, nunca el naranja saturado: ese es solo de
+    // la acción primaria (la regla del naranja).
     return Material(
-      color: context.colors.surfaceContainerHighest,
+      color: context.colors.primaryContainer,
       borderRadius: BorderRadius.circular(context.spacing.radiusMd),
       child: InkWell(
         onTap: onTap,
@@ -134,20 +163,25 @@ class _ObraCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.construction_outlined,
-                color: context.colors.onSurfaceVariant,
+                color: context.colors.onPrimaryContainer,
               ),
               SizedBox(width: context.spacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(obra.name, style: context.texts.titleMedium),
+                    Text(
+                      obra.name,
+                      style: context.texts.titleMedium?.copyWith(
+                        color: context.colors.onPrimaryContainer,
+                      ),
+                    ),
                     if (obra.address.isNotEmpty) ...[
                       SizedBox(height: context.spacing.xs),
                       Text(
                         obra.address,
                         style: context.texts.bodySmall?.copyWith(
-                          color: context.colors.onSurfaceVariant,
+                          color: context.colors.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -171,13 +205,13 @@ class _ObraCard extends StatelessWidget {
                   ),
                   icon: Icon(
                     Icons.directions_outlined,
-                    color: context.colors.onSurfaceVariant,
+                    color: context.colors.onPrimaryContainer,
                   ),
                 )
               else
                 Icon(
                   Icons.chevron_right,
-                  color: context.colors.onSurfaceVariant,
+                  color: context.colors.onPrimaryContainer,
                 ),
             ],
           ),

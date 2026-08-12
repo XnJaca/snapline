@@ -93,7 +93,7 @@ void main() {
     deviceLocation: _GpsFijo(),
   );
 
-  testWidgets('con una sola cuadrilla se entra directo, con sus dos tabs', (tester) async {
+  testWidgets('el eje lista la cuadrilla — aunque sea una sola — y el toque la abre', (tester) async {
     await cuadrilla('cr1', 'Cuadrilla A', gente: [('m1', 'María López'), ('m2', 'Carlos Ruiz')]);
     await asignadaHoy('m1');
     await asignadaHoy('m2');
@@ -101,7 +101,14 @@ void main() {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
 
-    expect(find.text('Cuadrilla A'), findsOneWidget, reason: 'el nombre en la barra, sin lista intermedia');
+    expect(find.text('Tus cuadrillas'), findsOneWidget,
+        reason: 'siempre la lista: entrar directo caía en una pantalla no pedida');
+    expect(find.text('Cuadrilla A'), findsOneWidget);
+    expect(find.text('Personas'), findsNothing);
+
+    await tester.tap(find.text('Cuadrilla A'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Personas'), findsOneWidget);
     expect(find.text('Horas'), findsOneWidget);
     expect(find.text('Carlos Ruiz'), findsOneWidget);
@@ -115,6 +122,9 @@ void main() {
     await asignadaHoy('m2');
 
     await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cuadrilla A'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('Marcar entrada de Carlos Ruiz'));
@@ -150,6 +160,9 @@ void main() {
     );
 
     await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cuadrilla A'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Horas'));

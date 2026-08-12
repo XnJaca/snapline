@@ -87,7 +87,7 @@ void main() {
     expect(find.text('Obras'), findsWidgets);
     expect(find.text('Techo Martinez'), findsOneWidget);
     expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
-    expect(find.textContaining('Esta semana:'), findsOneWidget);
+    expect(find.text('Esta semana'), findsOneWidget);
     expect(find.byType(FieldActionButton), findsNothing,
         reason: 'la acción vive adentro de la obra, no en el home');
     await desmontar(tester);
@@ -107,7 +107,7 @@ void main() {
 
     final filas = await db.select(db.timeEntries).get();
     expect(filas, hasLength(1));
-    expect(find.text('Marcar salida'), findsOneWidget);
+    expect(find.text('Marcar mi salida'), findsOneWidget);
     expect(find.textContaining('Arrancó la jornada'), findsOneWidget);
     expect(find.byType(ExpansionTile), findsNothing,
         reason: 'la abierta vive en el cronómetro, no repetida como pasada');
@@ -268,8 +268,47 @@ void main() {
 
     expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
     expect(find.text('Abrir en Mapas'), findsOneWidget);
+    expect(find.text('En proceso'), findsOneWidget,
+        reason: 'el estado de la obra es parte de la ficha');
     expect(find.textContaining('Martínez'), findsNothing,
         reason: 'ningún dato del cliente: la cuadrilla no navega cartera');
+    expect(
+      find.descendant(
+        of: find.byType(TabBar),
+        matching: find.text('Cuadrilla'),
+      ),
+      findsNothing,
+      reason: 'el WORKER no tiene crews.read: su obra son dos tabs',
+    );
+    await desmontar(tester);
+  });
+
+  testWidgets('el foreman ve el tercer tab: la cuadrilla de esta obra', (tester) async {
+    await asignadaHoy('m1');
+    await tester.pumpWidget(
+      testApp(
+        db: db,
+        session: buildSession(
+          name: 'María López',
+          role: AuthMembershipDtoRole.foreman,
+        ),
+        deviceLocation: const _GpsFijo(_gpsOk),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await entrarALaObra(tester);
+
+    // Acotado al TabBar: el eje de abajo también se llama Cuadrilla.
+    final tabCuadrilla = find.descendant(
+      of: find.byType(TabBar),
+      matching: find.text('Cuadrilla'),
+    );
+    expect(tabCuadrilla, findsOneWidget);
+    await tester.tap(tabCuadrilla);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Otra persona…'), findsOneWidget,
+        reason: 'marcar por alguien fuera de la lista vive acá también');
     await desmontar(tester);
   });
 

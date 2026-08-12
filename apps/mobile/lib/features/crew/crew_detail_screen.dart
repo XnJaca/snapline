@@ -2,27 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme_extensions.dart';
-import '../../core/widgets/account_button.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'personas_tab.dart';
 
-/// Una cuadrilla, con tabs: la gente y sus horas.
-///
-/// `enEje` cuando se renderiza directo en la pestaña —una sola cuadrilla, sin
-/// lista intermedia—: ahí lleva el botón de cuenta, como toda pantalla de eje.
+/// Una cuadrilla, con tabs: la gente y sus horas. Siempre llega pusheada
+/// desde la lista del eje.
 class CrewDetailScreen extends ConsumerWidget {
   const CrewDetailScreen({
     super.key,
     required this.crewId,
     required this.crewName,
-    this.enEje = false,
   });
 
   final String crewId;
   final String crewName;
-  final bool enEje;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,8 +28,6 @@ class CrewDetailScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(crewName),
-          automaticallyImplyLeading: !enEje,
-          actions: [if (enEje) const AccountButton()],
           bottom: TabBar(
             tabs: [
               Tab(text: l10n.crewTabPeople),
@@ -93,30 +86,71 @@ class _HorasTab extends ConsumerWidget {
     return ListView(
       padding: EdgeInsets.all(context.spacing.lg),
       children: [
-        for (final persona in orden)
-          Padding(
-            padding: EdgeInsets.only(bottom: context.spacing.sm),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    persona.value.name,
-                    style: context.texts.titleSmall,
-                  ),
-                ),
-                Text(
-                  l10n.obrasDuration(
-                    persona.value.total.inHours,
-                    persona.value.total.inMinutes % 60,
-                  ),
-                  style: context.texts.bodyMedium?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
+        for (final persona in orden) ...[
+          _PersonaHoras(name: persona.value.name, total: persona.value.total),
+          SizedBox(height: context.spacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+/// Una persona y su acumulado, en card: iniciales, nombre y horas.
+class _PersonaHoras extends StatelessWidget {
+  const _PersonaHoras({required this.name, required this.total});
+
+  final String name;
+  final Duration total;
+
+  String get _iniciales {
+    final partes = name.trim().split(RegExp(r'\s+'));
+    final letras = partes
+        .take(2)
+        .where((p) => p.isNotEmpty)
+        .map((p) => p[0].toUpperCase());
+    return letras.join();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      padding: EdgeInsets.all(context.spacing.md),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
+        border: Border.all(color: context.colors.outline),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: context.spacing.xl * 2,
+            height: context.spacing.xl * 2,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: context.colors.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              _iniciales,
+              style: context.texts.titleSmall?.copyWith(
+                color: context.colors.onPrimaryContainer,
+              ),
             ),
           ),
-      ],
+          SizedBox(width: context.spacing.md),
+          Expanded(
+            child: Text(name, style: context.texts.titleSmall),
+          ),
+          Text(
+            l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+            style: context.texts.titleMedium?.copyWith(
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
