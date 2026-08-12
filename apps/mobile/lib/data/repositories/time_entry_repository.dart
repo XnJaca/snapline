@@ -10,6 +10,23 @@ import '../local/tables.dart';
 import '../sync/outbox.dart';
 
 /// Una obra con asignación para hoy, como la ofrece la pantalla Hoy.
+extension TimeEntryWorked on TimeEntrySummary {
+  /// Lo trabajado en la jornada. La abierta corre hasta ahora — y se calcula
+  /// en un solo lugar, para que ninguna pantalla la cuente distinto.
+  Duration get worked =>
+      (clockOutAt ?? DateTime.now()).difference(clockInAt) -
+      Duration(minutes: breakMinutes);
+}
+
+typedef ObraDetalle = ({
+  String status,
+  String? serviceType,
+  String? description,
+  DateTime? startDate,
+  DateTime? targetEndDate,
+  DateTime? actualEndDate,
+});
+
 class TodayProject {
   const TodayProject({
     required this.id,
@@ -163,6 +180,105 @@ class TimeEntryRepository {
         .map((filas) => filas.map(_resumen).toList(growable: false));
   }
 
+  /// Las jornadas de una persona en una obra puntual: el tab Registro.
+  Stream<List<TimeEntrySummary>> watchForProject(
+    String membershipId,
+    String projectId,
+    DateTime desde,
+  ) {
+    return (_db.select(_db.timeEntries)
+          ..where(
+            (t) =>
+                t.membershipId.equals(membershipId) &
+                t.projectId.equals(projectId) &
+                t.clockInAt.isBiggerOrEqualValue(desde) &
+                t.deletedAt.isNull(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.clockInAt)]))
+        .watch()
+        .map((filas) => filas.map(_resumen).toList(growable: false));
+  }
+
+  /// Las cuadrillas que la persona lidera o integra hoy: la lista del eje.
+  Stream<List<({String id, String name})>> watchMyCrews(String membershipId) {
+    final consulta = _db.customSelect(
+      '''
+      SELECT DISTINCT c.id AS id, c.name AS name
+      FROM crews c
+      LEFT JOIN crew_members cm ON cm.crew_id = c.id AND cm.deleted_at IS NULL
+      WHERE c.deleted_at IS NULL
+        AND (c.foreman_membership_id = ?1
+             OR (cm.membership_id = ?1
+                 AND cm.from_date <= ?2
+                 AND (cm.to_date IS NULL OR cm.to_date >= ?2)))
+      ORDER BY c.name
+      ''',
+      variables: [
+        Variable<String>(membershipId),
+        Variable<DateTime>(DateTime.now()),
+      ],
+      readsFrom: {_db.crews, _db.crewMembers},
+    );
+    return consulta.watch().map(
+      (filas) => filas
+          .map((f) => (id: f.read<String>('id'), name: f.read<String>('name')))
+          .toList(growable: false),
+    );
+  }
+
+  /// Las jornadas de la semana de toda la gente de una cuadrilla, para que el
+  /// tab Horas las sume. Vienen crudas y se agregan en Dart: la jornada
+  /// abierta cuenta con el reloj corriendo, y eso no se congela en SQL.
+  Stream<List<({String membershipId, String name, TimeEntrySummary? entry})>>
+      watchCrewWeekEntries(String crewId, DateTime desde) {
+    final consulta = _db.customSelect(
+      '''
+      SELECT pe.membership_id AS membership_id, pe.name AS name,
+             t.id AS entry_id, t.project_id AS project_id,
+             t.recorded_by_membership_id AS recorded_by,
+             t.clock_in_at AS clock_in_at, t.clock_out_at AS clock_out_at,
+             t.break_minutes AS break_minutes, t.method AS method,
+             t.status AS status, t.flags AS flags, t.sync_status AS sync_status
+      FROM crew_members cm
+      JOIN people pe ON pe.membership_id = cm.membership_id
+      LEFT JOIN time_entries t ON t.membership_id = cm.membership_id
+        AND t.deleted_at IS NULL AND t.clock_in_at >= ?2
+      WHERE cm.crew_id = ?1 AND cm.deleted_at IS NULL
+      ORDER BY pe.name ASC, t.clock_in_at DESC
+      ''',
+      variables: [Variable<String>(crewId), Variable<DateTime>(desde)],
+      readsFrom: {_db.crewMembers, _db.people, _db.timeEntries},
+    );
+    return consulta.watch().map(
+      (filas) => filas
+          .map(
+            (f) => (
+              membershipId: f.read<String>('membership_id'),
+              name: f.read<String>('name'),
+              entry: f.readNullable<String>('entry_id') == null
+                  ? null
+                  : TimeEntrySummary(
+                      id: f.read<String>('entry_id'),
+                      projectId: f.read<String>('project_id'),
+                      membershipId: f.read<String>('membership_id'),
+                      recordedByMembershipId: f.read<String>('recorded_by'),
+                      clockInAt: f.read<DateTime>('clock_in_at'),
+                      clockOutAt: f.readNullable<DateTime>('clock_out_at'),
+                      breakMinutes: f.read<int>('break_minutes'),
+                      method: f.read<String>('method'),
+                      status: f.read<String>('status'),
+                      flags: (jsonDecode(f.read<String>('flags'))
+                              as List<dynamic>)
+                          .cast<String>(),
+                      syncStatus: SyncStatus
+                          .values[f.read<int>('sync_status')],
+                    ),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
   /// Las jornadas en conflicto. Se muestran y las resuelve un humano; ninguna
   /// pantalla puede resolverlas sola (regla 12).
   Stream<List<TimeEntrySummary>> watchConflicts() {
@@ -182,6 +298,50 @@ class TimeEntryRepository {
   /// Solo asignadas: la cuadrilla no navega la cartera (SPEC-0003), así que la
   /// obra del día llega por `project_assignment` o no llega. El estado vacío lo
   /// explica la pantalla.
+  /// Las obras donde **esta cuadrilla** trabaja hoy: las asignadas a la
+  /// cuadrilla y las que tenga asignada su gente a título propio.
+  ///
+  /// Es lo que acota el tab Personas cuando se entra por una cuadrilla y no
+  /// por el eje: sin esto, la pantalla de la Cuadrilla B mostraría la gente de
+  /// la obra de la A.
+  Stream<List<TodayProject>> watchTodayProjectsForCrew(String crewId) {
+    final hoy = DateTime.now();
+    final inicio = DateTime(hoy.year, hoy.month, hoy.day);
+    final fin = inicio.add(const Duration(days: 1));
+
+    final consulta = _db.customSelect(
+      '''
+      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng
+      FROM project_assignments a
+      JOIN projects p ON p.id = a.project_id AND p.deleted_at IS NULL
+      LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
+      LEFT JOIN crew_members cm ON cm.crew_id = ?1
+        AND cm.deleted_at IS NULL
+        AND a.work_date >= cm.from_date
+        AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+      WHERE a.deleted_at IS NULL
+        AND a.work_date >= ?2 AND a.work_date < ?3
+        AND (a.crew_id = ?1 OR a.membership_id = cm.membership_id)
+      ORDER BY p.name
+      ''',
+      variables: [
+        Variable<String>(crewId),
+        Variable<DateTime>(inicio),
+        Variable<DateTime>(fin),
+      ],
+      readsFrom: {
+        _db.projectAssignments,
+        _db.projects,
+        _db.sites,
+        _db.crewMembers,
+      },
+    );
+    return consulta.watch().map(
+      (filas) => filas.map(_obraDeHoy).toList(growable: false),
+    );
+  }
+
   Stream<List<TodayProject>> watchTodayProjects(String membershipId) {
     final hoy = DateTime.now();
     final inicio = DateTime(hoy.year, hoy.month, hoy.day);
@@ -251,6 +411,25 @@ class TimeEntryRepository {
     lat: f.readNullable<double>('lat'),
     lng: f.readNullable<double>('lng'),
   );
+
+  /// La ficha de la obra para el tab Detalle: estado, fechas y descripción —
+  /// solo lo que ya baja al teléfono. Fases no: no existen en el dominio.
+  Stream<ObraDetalle?> watchObraDetalle(String projectId) {
+    final consulta = _db.select(_db.projects)
+      ..where((p) => p.id.equals(projectId) & p.deletedAt.isNull());
+    return consulta.watchSingleOrNull().map(
+      (p) => p == null
+          ? null
+          : (
+              status: p.status,
+              serviceType: p.serviceType,
+              description: p.description,
+              startDate: p.startDate,
+              targetEndDate: p.targetEndDate,
+              actualEndDate: p.actualEndDate,
+            ),
+    );
+  }
 
   /// La gente asignada a una obra **hoy** —directa o por cuadrilla— con el
   /// estado de su jornada: es la lista del foreman, quién marcó y quién no.
