@@ -4,7 +4,7 @@ title: "El photo release se quita, y está en cuatro lugares"
 aliases:
   - "DEBT-0005: El photo release se quita, y está en cuatro lugares"
 type: tech-debt
-status: en-resolucion
+status: resuelta
 severity: alta
 origin: "SPEC-0007"
 apps:
@@ -15,7 +15,7 @@ created: 2026-08-10
 updated: 2026-08-12
 tags:
   - tech-debt
-  - tech-debt/en-resolucion
+  - tech-debt/resuelta
   - publicacion
 ---
 

@@ -23,10 +23,10 @@ kanban-plugin: board
 
 ## 🛠️ En resolución
 
-- [ ] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — **severidad alta**: eran once lugares, no cuatro. En su lugar entra un trigger de EXIF, para que `PUBLIC` no quede sin invariante en la base
-
 
 ## ✅ Resuelta
+
+- [x] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — PR #22 mergeado. Eran once lugares, no cuatro. En su lugar quedó `enforce_exif_stripped`, para que `PUBLIC` no se quedara sin invariante en la base. Queda anotado que la escalera `INTERNAL → CLIENT → PUBLIC` sigue sin aplicarse en orden
 
 - [x] [[tech-debt/0002-login-elige-membresia-arbitraria|DEBT-0002: El login elige la membresía sin criterio de orden]] — `ORDER BY m.id` explícito y `memberships[]` en la respuesta. Queda abierto en otro nivel: no hay endpoint para cambiar de empresa sin re-login.
 - [x] [[tech-debt/0003-telefono-sin-normalizar|DEBT-0003: El teléfono se compara sin normalizar]] — normaliza a E.164 **al leer**. Pendiente declarado: normalizar al escribir y migrar lo existente antes de cargar trabajadores reales.

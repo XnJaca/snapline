@@ -16,15 +16,15 @@ Monorepo pnpm + Turborepo. `apps/mobile` con scaffold: tema en los dos modos, i1
 `en`/`es` y cliente generado desde el contrato. `apps/web` y `apps/site` sin scaffold.
 Alcance reestructurado el 2026-08-08.
 
-`apps/api` — esquema completo (34 tablas, 34 entities, RLS en 28), **56 endpoints**
-y 15 tests:
+`apps/api` — esquema completo (34 tablas, 34 entities, RLS en 28), **76 endpoints**
+y 56 tests:
 
 | Módulo | Estado |
 |---|---|
 | auth · customers · projects · media · time-entries | Completo |
 | catalog · crews · billing · reports | Completo, **sin spec** — ver deuda abajo |
 | publishing | Completo — publicar, antes/después, feed público y de redes |
-| client-portal | Entities y tablas listas, **sin controller** |
+| client-portal | Completo — magic link y las cinco rutas del portal |
 
 Lo único que separa la demo de tener fotos reales: **cargar las credenciales de
 Backblaze**. Todo lo demás del recorrido corre. Ver `docs/PENDIENTES.md`.
