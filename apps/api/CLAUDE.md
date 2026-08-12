@@ -90,6 +90,23 @@ se rompió una regla dura.
 Convención de nombres: `{recurso}.bru` lista, `-create`, `-update`, `-delete`,
 `-{caso-borde}`.
 
+## Antes de abrir PR
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm check:drift      # si tocaste entities o migraciones
+```
+
+ESLint corre con flat config en `eslint.config.mjs`: `js.configs.recommended` más
+`tseslint.configs.recommended`, sin reglas con tipos. Un nombre que empieza con `_`
+queda exento de `no-unused-vars` — es el descarte deliberado de
+`const { site: _site, ...rest } = dto`, no un olvido.
+
+Endurecerlo a `recommendedTypeChecked` es una decisión aparte: cuesta una pasada de
+arreglos y todavía no se hizo.
+
 ## Qué NO hacer
 
 - `synchronize: true` ni `dropSchema: true`, en ningún entorno.

@@ -12,6 +12,7 @@ const item = (over: Partial<ServiceItem> = {}): ServiceItem => ({
   taxable: false,
   category: null,
   active: true,
+  ...over,
 } as ServiceItem);
 
 const catalog = (i: ServiceItem) => new Map([[i.id, i]]);

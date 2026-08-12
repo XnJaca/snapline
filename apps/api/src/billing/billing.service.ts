@@ -1,5 +1,5 @@
 import { ApiError } from '../common/errors/api-error';
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -234,8 +234,9 @@ export class BillingService {
   }
 
   // Una factura enviada no se edita: se anula y se emite otra.
+  // `_dto.reason` se exige y hoy no se guarda: no hay dónde. Ver DEBT-0006.
   @Transactional()
-  async voidInvoice(id: string, dto: VoidInvoiceDto): Promise<Invoice> {
+  async voidInvoice(id: string, _dto: VoidInvoiceDto): Promise<Invoice> {
     const invoice = await this.getInvoice(id);
     if (invoice.status === 'PAID') throw new ConflictException('No se anula una factura pagada');
     if (invoice.status === 'VOID') throw new ConflictException('Ya está anulada');

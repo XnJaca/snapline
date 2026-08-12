@@ -18,6 +18,8 @@ kanban-plugin: board
 
 ## 🔥 Activa (causando fricción hoy)
 
+- [ ] [[tech-debt/0006-razon-de-anulacion-se-descarta|DEBT-0006: La razón de anular una factura se exige y se tira]] — **severidad media**: el DTO la pide obligatoria, el servicio la descarta y no hay columna donde guardarla (trigger: la primera factura real, o el spec retroactivo de billing)
+
 
 ## 🛠️ En resolución
 

@@ -45,6 +45,17 @@ Se agrega con `/changelog <descripción>`.
   estaba en `compressed-json`, contra la convención que pide `compress: false`
   justamente para poder editarlo — la caja que decía *"Aceptar estimado + photo
   release"* no se podía corregir sin abrir el plugin.
+- **El API tiene lint, por primera vez.** El script `eslint "src/**/*.ts"` venía del
+  scaffold de Nest y nunca tuvo ni config ni dependencia: fallaba con
+  `command not found`, así que la regla 25 —*typecheck y lint verdes antes del PR*—
+  se venía cumpliendo a medias sin que nadie lo notara. Flat config con
+  `tseslint.configs.recommended`, 15 hallazgos, todos arreglados.
+- **Dos cosas que el lint destapó y no eran ruido.** El fixture de
+  `document-lines.spec.ts` aceptaba overrides y los descartaba —un test de impuestos
+  creía estar probando un item gravable—; y `voidInvoice` recibe un `reason`
+  obligatorio que **no guarda en ningún lado**, porque no hay columna donde
+  ([[tech-debt/0006-razon-de-anulacion-se-descarta|DEBT-0006]]). Pedir un motivo y
+  tirarlo es peor que no pedirlo: quien lo escribe cree que quedó registrado.
 
 ---
 
