@@ -83,22 +83,6 @@ void main() {
     );
   }
 
-  /// Una obra asignada hoy **a la cuadrilla**, que es como se reparte el
-  /// trabajo de verdad: por cuadrilla, no persona por persona.
-  Future<void> obraDeCuadrilla(String crewId, String projectId, String nombre) async {
-    await seedProject(db, id: projectId, name: nombre, customerName: 'Martínez');
-    await db.into(db.projectAssignments).insertOnConflictUpdate(
-      ProjectAssignmentsCompanion.insert(
-        id: 'a-$projectId-$crewId',
-        companyId: 'c1',
-        updatedAt: DateTime.now(),
-        projectId: projectId,
-        crewId: Value(crewId),
-        workDate: DateTime.now(),
-      ),
-    );
-  }
-
   Widget app() => testApp(
     db: db,
     session: buildSession(
@@ -214,31 +198,23 @@ void main() {
     await desmontar(tester);
   });
 
-  testWidgets('con dos cuadrillas, Personas muestra la gente de la que se abrió', (tester) async {
+  // El dominio no deja a una persona en dos cuadrillas a la vez, y el foreman
+  // tiene que ser miembro de la que lidera: **una cuadrilla por foreman**. Lo
+  // que sí varía es la obra, y ahí es donde Personas tiene que mirar a su
+  // cuadrilla y no a las asignaciones de quien la abrió.
+  testWidgets('Personas ofrece la obra donde trabaja su gente, no solo la del foreman', (tester) async {
     await cuadrilla('cr1', 'Cuadrilla A', gente: [('m1', 'María López'), ('m2', 'Carlos Ruiz')]);
-    await cuadrilla('cr2', 'Cuadrilla B', gente: [('m1', 'María López'), ('m3', 'Pedro Mora')]);
-    // Cada cuadrilla en su obra, y la de la A **primera alfabéticamente**: sin
-    // el scope por cuadrilla, la pantalla de la B caería en la obra de la A y
-    // el caso pasaría por casualidad del orden.
-    await obraDeCuadrilla('cr1', 'p1', 'Ampliación Alvarado');
-    await obraDeCuadrilla('cr2', 'p2', 'Baño González');
+    // La obra del día la tiene asignada Carlos a título propio; María no.
+    await asignadaHoy('m2');
 
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
-
-    expect(find.text('Cuadrilla A'), findsOneWidget);
-    expect(find.text('Cuadrilla B'), findsOneWidget);
-    expect(find.text('Personas'), findsNothing, reason: 'todavía no se entró a ninguna');
-
-    await tester.tap(find.text('Cuadrilla B'));
+    await tester.tap(find.text('Cuadrilla A'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Personas'), findsOneWidget);
-    expect(find.text('Horas'), findsOneWidget);
-    expect(find.text('Pedro Mora'), findsOneWidget,
-        reason: 'la gente sale de la obra de ESTA cuadrilla');
-    expect(find.text('Carlos Ruiz'), findsNothing,
-        reason: 'Carlos trabaja en la obra de la Cuadrilla A, no acá');
+    expect(find.text('Carlos Ruiz'), findsOneWidget,
+        reason: 'la cuadrilla trabaja ahí aunque el foreman no esté asignado');
+    expect(find.text('Personas asignadas a esta obra'), findsOneWidget);
     await desmontar(tester);
   });
 }

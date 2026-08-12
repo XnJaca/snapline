@@ -108,6 +108,13 @@ app no da ningún camino — y cerrar la jornada sí podría fallar.
   integra. **Siempre la lista, aunque haya una sola**: el atajo de entrar
   directo se probó y se descartó — caer de una en el detalle se sentía como
   una pantalla que nadie pidió. El toque de más compra saber dónde se está.
+
+  **Hoy esa lista siempre trae exactamente una fila**, y no por casualidad:
+  `docs/domain/cuadrilla.md` exige que el foreman sea miembro de la cuadrilla
+  que lidera, y nadie puede estar en dos cuadrillas con fechas solapadas —
+  hay un constraint de exclusión en la base que lo impide. La lista queda
+  igual: es la pantalla correcta el día que el dominio permita más de una, y
+  entre tanto nombra dónde se está parado.
 - **Tocar una cuadrilla abre su pantalla, con tabs:**
   - **[Personas]** — lo que hoy es la pantalla de cuadrilla: quién está adentro,
     quién salió, quién no marcó, marcar por otro y "Otra persona…". Sin cambios
