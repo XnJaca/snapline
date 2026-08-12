@@ -124,8 +124,8 @@ class _DetalleTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // El estado es un campo más de la ficha, con su etiqueta:
-                // suelto arriba pesaba como un título y no lo es.
+                // El estado es un campo más de la ficha, con el mismo peso que
+                // los demás: como chip se llevaba todo el protagonismo.
                 if (estado != null && estado != ProjectStatus.$unknown) ...[
                   Text(
                     l10n.detalleEstado,
@@ -134,13 +134,7 @@ class _DetalleTab extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(height: context.spacing.xs),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: StatusChip(
-                      tone: estado.tone,
-                      label: estado.label(l10n),
-                    ),
-                  ),
+                  StatusLine(tone: estado.tone, label: estado.label(l10n)),
                   SizedBox(height: context.spacing.md),
                 ],
                 LabeledValue(

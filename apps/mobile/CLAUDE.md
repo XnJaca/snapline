@@ -183,7 +183,7 @@ dispara. Va con `Listener` sobre los eventos de puntero, y **excluye los toques 
 caen sobre otro campo** con un hit test, o el teclado parpadearía al saltar de uno
 al siguiente.
 
-### Los estados se muestran con `StatusChip`
+### Los estados se muestran con `StatusChip` o `StatusLine`, según cuántos haya
 
 No se arma a mano un contenedor de color: `core/widgets/status_chip.dart` ya trae
 el par `container`/`onContainer` y el icono obligatorio por tono.
@@ -191,10 +191,17 @@ el par `container`/`onContainer` y el icono obligatorio por tono.
 ```dart
 StatusChip(tone: StatusTone.warning, label: l10n.flagOutsideGeofence)
 StatusChip(tone: StatusTone.danger, label: mensaje, expand: true)  // error de formulario
+StatusLine(tone: StatusTone.success, label: l10n.crewInSince(hora))  // fila de lista
 ```
 
 `expand: true` ocupa el ancho, para errores de formulario. Sin él queda compacto,
 para banderas.
+
+**`StatusChip` es para lo que aparece de a uno**: una bandera, un aviso, el estado
+de una jornada abierta. **En una lista va `StatusLine`** —icono con el color del
+tono y texto atenuado, sin relleno—: un chip por fila convierte cada renglón en un
+globo que pesa más que el nombre y más que el botón, y el estado es lectura, no
+acción.
 
 ### Sesión
 

@@ -105,34 +105,39 @@ class _ResumenSemanal extends ConsumerWidget {
       total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
     }
 
-    return Column(
+    // El mensaje va bajo el número y alineado con él, no bajo el icono:
+    // suelto a la izquierda parecía un pie de página huérfano.
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(context.spacing.sm),
-              decoration: BoxDecoration(
-                color: context.colors.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.schedule_outlined,
-                color: context.colors.onPrimaryContainer,
-              ),
-            ),
-            SizedBox(width: context.spacing.md),
-            Text(
-              l10n.obrasDuration(total.inHours, total.inMinutes % 60),
-              style: context.texts.displaySmall,
-            ),
-          ],
+        Container(
+          padding: EdgeInsets.all(context.spacing.sm),
+          decoration: BoxDecoration(
+            color: context.colors.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.schedule_outlined,
+            color: context.colors.onPrimaryContainer,
+          ),
         ),
-        SizedBox(height: context.spacing.sm),
-        Text(
-          _animoSemanal(l10n, total),
-          style: context.texts.bodyMedium?.copyWith(
-            color: context.colors.onSurfaceVariant,
+        SizedBox(width: context.spacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+                style: context.texts.displaySmall,
+              ),
+              SizedBox(height: context.spacing.xs),
+              Text(
+                _animoSemanal(l10n, total),
+                style: context.texts.bodyMedium?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ],

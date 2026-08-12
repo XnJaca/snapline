@@ -364,6 +364,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.scrollUntilVisible(find.text('English'), 200);
+      // El scroll lo deja pegado al borde de abajo: sin esto el toque cae
+      // fuera del viewport y no pasa nada.
+      await tester.ensureVisible(find.text('English'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
 

@@ -5,7 +5,7 @@ import '../../api/models/auth_membership_dto_role.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/theme/theme_providers.dart';
-import '../../core/widgets/section_header.dart';
+import '../../core/widgets/section_card.dart';
 import '../../l10n/app_localizations.dart';
 
 /// La cuenta: quién está adentro, cómo se ve la app y cómo salir.
@@ -46,50 +46,56 @@ class AccountScreen extends ConsumerWidget {
                 ),
                 SizedBox(height: spacing.xl),
 
-                SectionHeader(title: l10n.accountSectionCompany),
-                SizedBox(height: spacing.sm),
-                _Ficha(
-                  filas: [
-                    (
-                      Icons.business_outlined,
-                      l10n.accountCompanyName,
-                      session.membership.companyName,
-                    ),
-                    (
-                      Icons.badge_outlined,
-                      l10n.accountRole,
-                      session.membership.role.label(l10n),
-                    ),
-                  ],
+                SectionCard(
+                  label: l10n.accountSectionCompany,
+                  padded: false,
+                  child: _Filas(
+                    filas: [
+                      (
+                        Icons.business_outlined,
+                        l10n.accountCompanyName,
+                        session.membership.companyName,
+                      ),
+                      (
+                        Icons.badge_outlined,
+                        l10n.accountRole,
+                        session.membership.role.label(l10n),
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: spacing.xl),
+                SizedBox(height: spacing.lg),
 
-                SectionHeader(title: l10n.accountSectionContact),
-                SizedBox(height: spacing.sm),
-                _Ficha(
-                  filas: [
-                    (
-                      Icons.mail_outline,
-                      l10n.accountEmail,
-                      session.user.email ?? l10n.accountNoEmail,
-                    ),
-                    (
-                      Icons.phone_outlined,
-                      l10n.accountPhone,
-                      session.user.phone ?? l10n.accountNoEmail,
-                    ),
-                  ],
+                SectionCard(
+                  label: l10n.accountSectionContact,
+                  padded: false,
+                  child: _Filas(
+                    filas: [
+                      (
+                        Icons.mail_outline,
+                        l10n.accountEmail,
+                        session.user.email ?? l10n.accountNoEmail,
+                      ),
+                      (
+                        Icons.phone_outlined,
+                        l10n.accountPhone,
+                        session.user.phone ?? l10n.accountNoEmail,
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: spacing.xl),
+                SizedBox(height: spacing.lg),
 
-                SectionHeader(title: l10n.settingsLanguage),
-                SizedBox(height: spacing.sm),
-                const _SelectorDeIdioma(),
-                SizedBox(height: spacing.xl),
+                SectionCard(
+                  label: l10n.settingsLanguage,
+                  child: const _SelectorDeIdioma(),
+                ),
+                SizedBox(height: spacing.lg),
 
-                SectionHeader(title: l10n.accountSectionAppearance),
-                SizedBox(height: spacing.sm),
-                const _SelectorDeTema(),
+                SectionCard(
+                  label: l10n.accountSectionAppearance,
+                  child: const _SelectorDeTema(),
+                ),
                 SizedBox(height: spacing.xxl),
 
                 OutlinedButton.icon(
@@ -166,10 +172,10 @@ class _Identidad extends StatelessWidget {
   }
 }
 
-/// Filas de dato dentro de un contenedor con borde: agrupa lo que va junto en
-/// vez de dejar texto suelto sobre el fondo.
-class _Ficha extends StatelessWidget {
-  const _Ficha({required this.filas});
+/// Filas de dato dentro de una [SectionCard]: el marco y el nombre los pone
+/// ella, acá van los renglones de borde a borde.
+class _Filas extends StatelessWidget {
+  const _Filas({required this.filas});
 
   final List<(IconData, String, String)> filas;
 
@@ -178,14 +184,8 @@ class _Ficha extends StatelessWidget {
     final spacing = context.spacing;
     final colors = context.colors;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.outline),
-        borderRadius: BorderRadius.circular(spacing.radiusLg),
-      ),
-      child: Column(
-        children: [
+    return Column(
+      children: [
           for (final (indice, (icono, etiqueta, valor)) in filas.indexed) ...[
             if (indice > 0) Divider(height: 1, color: colors.outline),
             Padding(
@@ -209,12 +209,11 @@ class _Ficha extends StatelessWidget {
                       ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }

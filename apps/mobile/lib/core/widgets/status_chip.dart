@@ -4,6 +4,57 @@ import '../theme/theme_extensions.dart';
 
 enum StatusTone { warning, success, danger, info }
 
+extension StatusToneDisplay on StatusTone {
+  IconData get icon => switch (this) {
+    StatusTone.warning => Icons.warning_amber_rounded,
+    StatusTone.success => Icons.check_circle_outline,
+    StatusTone.danger => Icons.error_outline,
+    StatusTone.info => Icons.info_outline,
+  };
+
+  /// El color del tono sobre una superficie normal — para el icono de una
+  /// [StatusLine], donde no hay relleno que lo sostenga.
+  Color color(BuildContext context) => switch (this) {
+    StatusTone.warning => context.statusColors.warning,
+    StatusTone.success => context.statusColors.success,
+    StatusTone.danger => context.colors.error,
+    StatusTone.info => context.colors.onSurfaceVariant,
+  };
+}
+
+/// El estado **en una fila de lista**: icono con el color del tono y el texto
+/// atenuado, sin relleno.
+///
+/// Un [StatusChip] por fila convierte cada renglón en un globo de color que
+/// pesa más que el nombre y más que la acción — y el estado es lectura, no
+/// acción. El chip queda para lo que aparece de a uno: una bandera, un aviso,
+/// el estado de una jornada abierta.
+class StatusLine extends StatelessWidget {
+  const StatusLine({super.key, required this.tone, required this.label});
+
+  final StatusTone tone;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(tone.icon, size: context.spacing.lg, color: tone.color(context)),
+        SizedBox(width: context.spacing.xs),
+        Flexible(
+          child: Text(
+            label,
+            style: context.texts.bodyMedium?.copyWith(
+              color: context.colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// La forma en que la app muestra un estado: fondo tenue, texto oscuro e icono.
 ///
 /// Existe para que la regla del ADR-0009 se cumpla por construcción. El naranja
@@ -87,12 +138,7 @@ class StatusChip extends StatelessWidget {
     );
   }
 
-  IconData get _defaultIcon => switch (tone) {
-    StatusTone.warning => Icons.warning_amber_rounded,
-    StatusTone.success => Icons.check_circle_outline,
-    StatusTone.danger => Icons.error_outline,
-    StatusTone.info => Icons.info_outline,
-  };
+  IconData get _defaultIcon => tone.icon;
 
   (Color, Color) _colors(BuildContext context) {
     final status = context.statusColors;

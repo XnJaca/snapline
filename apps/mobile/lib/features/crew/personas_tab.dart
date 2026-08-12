@@ -207,7 +207,7 @@ class _PersonaRow extends StatelessWidget {
     final material = MaterialLocalizations.of(context);
 
     final estado = persona.adentro
-        ? StatusChip(
+        ? StatusLine(
             tone: StatusTone.success,
             label: l10n.crewInSince(
               material.formatTimeOfDay(
@@ -216,7 +216,7 @@ class _PersonaRow extends StatelessWidget {
             ),
           )
         : persona.marcoHoy
-            ? StatusChip(
+            ? StatusLine(
                 tone: StatusTone.info,
                 label: l10n.crewOutAt(
                   material.formatTimeOfDay(
@@ -224,7 +224,7 @@ class _PersonaRow extends StatelessWidget {
                   ),
                 ),
               )
-            : StatusChip(tone: StatusTone.warning, label: l10n.crewNotClockedIn);
+            : StatusLine(tone: StatusTone.warning, label: l10n.crewNotClockedIn);
 
     // Quién y cómo está a la izquierda; la acción a la derecha. Un botón de
     // ancho completo debajo del estado ponía a los dos a pelear por el mismo
