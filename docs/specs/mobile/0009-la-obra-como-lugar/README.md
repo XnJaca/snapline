@@ -200,13 +200,17 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
   el resumen semanal vive ahí y saltarla lo escondería justo en el caso más
   común. El Registro es el primer tab y abre activo, así que nunca hay que
   elegir tab. Cuadrilla sigue la misma regla: siempre su lista.
-- **Nada flota sobre el fondo.** Toda sección se nombra con una etiqueta
-  (`ListLabel`: "Tu tiempo", "Obras en las que estás asignado hoy", "Tus
-  cuadrillas", "La gente de esta obra, hoy") y su contenido va en cards
-  (`InfoCard`): el resumen, las filas de Horas, la ficha del Detalle y las
-  personas. Las tarjetas tocables de obra y cuadrilla usan el
-  `primaryContainer` del tema — color con calidez, nunca el naranja saturado,
-  que sigue siendo exclusivo de la acción primaria (la regla del naranja).
+- **Nada flota sobre el fondo, y el nombre de la sección tampoco.** Nace
+  `SectionCard`: un marco con **banda de fondo arriba** —donde vive el
+  label— y el contenido pegado abajo, todo en la misma pieza. Un texto
+  suelto sobre el lienzo no se lee como el título de lo que sigue; se lee
+  como algo que quedó ahí. Lo usan las seis secciones: "Tu tiempo esta
+  semana", "Obras en las que estás asignado hoy", "Tus cuadrillas", "La
+  gente de esta obra, hoy", "Horas de esta semana, por persona", "Tus
+  jornadas en esta obra", y las dos del Detalle. Adentro, las filas van de
+  borde a borde separadas por hairlines — las de obra y cuadrilla en
+  `primaryContainer`, color con calidez, nunca el naranja saturado, que
+  sigue siendo exclusivo de la acción primaria (la regla del naranja).
 - **Las acciones dicen qué hacen, con palabras.** En Personas el icono murió:
   el botón dice "Marcar entrada" o "Marcar salida" según el estado — adentro
   no se ofrece una segunda entrada — y el estado es explícito: "Marcó entrada
@@ -234,7 +238,8 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
-| 2026-08-11 | en implementación | Segunda pasada de diseño probando como María: nace la convención `ListLabel` + `InfoCard` (ninguna sección sin nombre, ningún dato suelto), el Detalle se agrupa en "El lugar" y "La obra", y en Personas el icono se reemplaza por botones con palabras y estado explícito con "hoy". |
+| 2026-08-11 | en implementación | Tercera pasada: el label con fondo. `ListLabel` + `InfoCard` se funden en `SectionCard` —banda arriba, filas de borde a borde abajo— porque un título sin fondo seguía flotando sobre el lienzo. Ninguna sección de la app queda sin marco. |
+| 2026-08-11 | en implementación | Segunda pasada de diseño probando como María: ninguna sección sin nombre y ningún dato suelto, el Detalle se agrupa en "El lugar" y "La obra", y en Personas el icono se reemplaza por botones con palabras y estado explícito con "hoy". |
 | 2026-08-11 | en implementación | Tanda de diseño, dictada probando en el teléfono como María: nada flota (resumen y Horas en cards), las tarjetas toman el `primaryContainer` del tema, la lista de cuadrillas no se salta nunca, el foreman gana el tab Cuadrilla dentro de la obra, el botón pasa a "Marcar mi entrada" y el Detalle se llena con la ficha que ya baja (estado, fechas, tipo, descripción). Fases quedan fuera: sin ficha de dominio no se inventan. |
 | 2026-08-11 | en implementación | Hallazgos de los revisores incorporados. Del `spec-reviewer`: el caso de jornada abierta en otra obra, la resolución con SPEC-0003, el criterio del tab Detalle y la definición de "semana". Del `code-reviewer` (GRAVE): la obra con jornada abierta entra a la lista sin asignación de hoy — sin eso, cerrar la jornada podía quedar sin camino. El "costo cero" de Riesgos se corrigió: la decisión real es la lista siempre visible, un toque más a conciencia. |
 | 2026-08-11 | en implementación | Aprobado de palabra por quien lo diseñó — el spec ES su decisión de producto, dictada probando SPEC-0008. El `spec-reviewer` corre en paralelo y sus hallazgos entran como fixes antes del PR. |

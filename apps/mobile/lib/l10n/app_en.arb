@@ -249,8 +249,9 @@
   "crewOutAt": "Clocked out today at {hora}",
   "@crewOutAt": { "placeholders": { "hora": { "type": "String" } } },
   "crewNotClockedIn": "Not clocked in today",
-  "obrasSectionTiempo": "Your time",
+  "obrasSectionTiempo": "Your time this week",
   "obrasSectionAsignadas": "Jobs you're assigned to today",
+  "crewHoursHeader": "This week's hours, per person",
   "detalleSeccionLugar": "The place",
   "detalleSeccionFicha": "The job",
   "crewTodayHeader": "This job's people, today",
@@ -260,7 +261,6 @@
   "crewSomeoneElseHelp": "Anyone who came to the site today can be clocked in, even if they are not on the list. The office will see it flagged if they were not assigned.",
   "crewMarkedBy": "Clocked in — the entry syncs on its own",
 
-  "obrasWeekTitle": "This week",
   "obraTabCuadrilla": "Crew",
   "detalleServicio": "Type of work",
   "detalleInicio": "Start date",

@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/info_card.dart';
-import '../../core/widgets/list_label.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -156,19 +155,26 @@ class _Gente extends ConsumerWidget {
           ),
           SizedBox(height: context.spacing.lg),
         ],
-        ListLabel(label: l10n.crewTodayHeader),
-        for (final persona in gente) ...[
-          _PersonaCard(
-            persona: persona,
-            ocupada: marcando == persona.membershipId,
-            // Un marcaje a la vez: los demás botones se apagan de verdad, no
-            // solo el de la persona en curso — un botón que parece vivo y no
-            // hace nada es peor que uno gris.
-            onMarcar: marcando != null ? null : () => onMarcar(persona),
+        SectionCard(
+          label: l10n.crewTodayHeader,
+          padded: false,
+          child: Column(
+            children: [
+              for (final (i, persona) in gente.indexed) ...[
+                if (i > 0) Divider(height: 1, color: context.colors.outline),
+                _PersonaRow(
+                  persona: persona,
+                  ocupada: marcando == persona.membershipId,
+                  // Un marcaje a la vez: los demás botones se apagan de
+                  // verdad, no solo el de la persona en curso — un botón que
+                  // parece vivo y no hace nada es peor que uno gris.
+                  onMarcar: marcando != null ? null : () => onMarcar(persona),
+                ),
+              ],
+            ],
           ),
-          SizedBox(height: context.spacing.sm),
-        ],
-        SizedBox(height: context.spacing.md),
+        ),
+        SizedBox(height: context.spacing.lg),
         OutlinedButton.icon(
           onPressed: marcando != null ? null : onOtraPersona,
           icon: const Icon(Icons.person_add_alt_outlined),
@@ -184,8 +190,8 @@ class _Gente extends ConsumerWidget {
 ///
 /// Adentro solo se ofrece marcar salida: la segunda entrada no existe como
 /// opción, ni acá ni en el servidor (un registro abierto por persona).
-class _PersonaCard extends StatelessWidget {
-  const _PersonaCard({
+class _PersonaRow extends StatelessWidget {
+  const _PersonaRow({
     required this.persona,
     required this.ocupada,
     required this.onMarcar,
@@ -220,7 +226,7 @@ class _PersonaCard extends StatelessWidget {
               )
             : StatusChip(tone: StatusTone.warning, label: l10n.crewNotClockedIn);
 
-    return InfoCard(
+    return Padding(
       padding: EdgeInsets.all(context.spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

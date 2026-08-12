@@ -208,8 +208,9 @@
   "crewOutAt": "Salió hoy a las {hora}",
   "@crewOutAt": { "placeholders": { "hora": { "type": "String" } } },
   "crewNotClockedIn": "Sin marcar hoy",
-  "obrasSectionTiempo": "Tu tiempo",
+  "obrasSectionTiempo": "Tu tiempo esta semana",
   "obrasSectionAsignadas": "Obras en las que estás asignado hoy",
+  "crewHoursHeader": "Horas de esta semana, por persona",
   "detalleSeccionLugar": "El lugar",
   "detalleSeccionFicha": "La obra",
   "crewTodayHeader": "La gente de esta obra, hoy",
@@ -219,7 +220,6 @@
   "crewSomeoneElseHelp": "Se puede marcar por cualquiera que haya venido a la obra hoy, aunque no esté en la lista. Si no estaba asignado, la oficina lo va a ver señalado.",
   "crewMarkedBy": "Marcado — la entrada se sincroniza sola",
 
-  "obrasWeekTitle": "Esta semana",
   "obraTabCuadrilla": "Cuadrilla",
   "detalleServicio": "Tipo de trabajo",
   "detalleInicio": "Inicio",

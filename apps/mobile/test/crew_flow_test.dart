@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_membership_dto_role.dart';
 import 'package:snapline/core/location/device_location.dart';
-import 'package:snapline/core/widgets/info_card.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/local/tables.dart';
@@ -128,10 +127,11 @@ void main() {
     await tester.tap(find.text('Cuadrilla A'));
     await tester.pumpAndSettle();
 
+    // La fila de Carlos: su nombre y su botón viven en la misma Column.
     final cardCarlos = find.ancestor(
       of: find.text('Carlos Ruiz'),
-      matching: find.byType(InfoCard),
-    );
+      matching: find.byType(Column),
+    ).first;
     await tester.tap(
       find.descendant(of: cardCarlos, matching: find.text('Marcar entrada')),
     );

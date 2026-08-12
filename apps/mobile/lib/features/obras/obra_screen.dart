@@ -5,9 +5,8 @@ import '../../api/models/project_status.dart';
 import '../../core/location/open_in_maps.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
-import '../../core/widgets/info_card.dart';
 import '../../core/widgets/labeled_value.dart';
-import '../../core/widgets/list_label.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -92,8 +91,8 @@ class _DetalleTab extends ConsumerWidget {
       padding: EdgeInsets.all(context.spacing.lg),
       children: [
         if (lugar.address.isNotEmpty || lugar.hasLocation) ...[
-          ListLabel(label: l10n.detalleSeccionLugar),
-          InfoCard(
+          SectionCard(
+            label: l10n.detalleSeccionLugar,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -120,8 +119,8 @@ class _DetalleTab extends ConsumerWidget {
           SizedBox(height: context.spacing.lg),
         ],
         if (ficha != null) ...[
-          ListLabel(label: l10n.detalleSeccionFicha),
-          InfoCard(
+          SectionCard(
+            label: l10n.detalleSeccionFicha,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

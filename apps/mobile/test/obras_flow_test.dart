@@ -87,7 +87,7 @@ void main() {
     expect(find.text('Obras'), findsWidgets);
     expect(find.text('Techo Martinez'), findsOneWidget);
     expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
-    expect(find.text('Esta semana'), findsOneWidget);
+    expect(find.text('Tu tiempo esta semana'), findsOneWidget);
     expect(find.byType(FieldActionButton), findsNothing,
         reason: 'la acción vive adentro de la obra, no en el home');
     await desmontar(tester);

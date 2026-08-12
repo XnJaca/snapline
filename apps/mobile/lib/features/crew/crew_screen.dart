@@ -5,7 +5,7 @@ import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/list_label.dart';
+import '../../core/widgets/section_card.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'crew_detail_screen.dart';
@@ -37,43 +37,45 @@ class CrewScreen extends ConsumerWidget {
           : ListView(
               padding: EdgeInsets.all(context.spacing.lg),
               children: [
-                ListLabel(label: l10n.crewPickOne),
-                for (final cuadrilla in cuadrillas) ...[
-                  Material(
-                    color: context.colors.primaryContainer,
-                    borderRadius:
-                        BorderRadius.circular(context.spacing.radiusMd),
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(context.spacing.radiusMd),
-                      ),
-                      leading: Icon(
-                        Icons.groups_outlined,
-                        color: context.colors.onPrimaryContainer,
-                      ),
-                      title: Text(
-                        cuadrilla.name,
-                        style: context.texts.titleMedium?.copyWith(
-                          color: context.colors.onPrimaryContainer,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.chevron_right,
-                        color: context.colors.onPrimaryContainer,
-                      ),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => CrewDetailScreen(
-                            crewId: cuadrilla.id,
-                            crewName: cuadrilla.name,
+                SectionCard(
+                  label: l10n.crewPickOne,
+                  padded: false,
+                  child: Column(
+                    children: [
+                      for (final (i, cuadrilla) in cuadrillas.indexed) ...[
+                        if (i > 0)
+                          Divider(height: 1, color: context.colors.outline),
+                        Material(
+                          color: context.colors.primaryContainer,
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.groups_outlined,
+                              color: context.colors.onPrimaryContainer,
+                            ),
+                            title: Text(
+                              cuadrilla.name,
+                              style: context.texts.titleMedium?.copyWith(
+                                color: context.colors.onPrimaryContainer,
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: context.colors.onPrimaryContainer,
+                            ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => CrewDetailScreen(
+                                  crewId: cuadrilla.id,
+                                  crewName: cuadrilla.name,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      ],
+                    ],
                   ),
-                  SizedBox(height: context.spacing.sm),
-                ],
+                ),
               ],
             ),
     );

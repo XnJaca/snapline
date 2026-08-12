@@ -6,8 +6,7 @@ import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/info_card.dart';
-import '../../core/widgets/list_label.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -42,9 +41,11 @@ class ObrasScreen extends ConsumerWidget {
       conJornada = ref.watch(placeProvider(abierta.projectId)).value;
     }
 
+    final lista = [?conJornada, ...obras];
+
     return AppScaffold(
       title: l10n.navToday,
-      body: obras.isEmpty && conJornada == null
+      body: lista.isEmpty
           ? EmptyState(
               icon: Icons.event_busy_outlined,
               message: l10n.todayNoAssignments,
@@ -52,22 +53,32 @@ class ObrasScreen extends ConsumerWidget {
           : ListView(
               padding: EdgeInsets.all(context.spacing.lg),
               children: [
-                ListLabel(label: l10n.obrasSectionTiempo),
-                _ResumenSemanal(membershipId: membershipId),
+                SectionCard(
+                  label: l10n.obrasSectionTiempo,
+                  child: _ResumenSemanal(membershipId: membershipId),
+                ),
                 SizedBox(height: context.spacing.lg),
-                ListLabel(label: l10n.obrasSectionAsignadas),
-                for (final obra in [?conJornada, ...obras]) ...[
-                  _ObraCard(
-                    obra: obra,
-                    conJornadaAbierta: obra.id == abierta?.projectId,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ObraScreen(obra: obra),
-                      ),
-                    ),
+                SectionCard(
+                  label: l10n.obrasSectionAsignadas,
+                  padded: false,
+                  child: Column(
+                    children: [
+                      for (final (i, obra) in lista.indexed) ...[
+                        if (i > 0)
+                          Divider(height: 1, color: context.colors.outline),
+                        _ObraTile(
+                          obra: obra,
+                          conJornadaAbierta: obra.id == abierta?.projectId,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => ObraScreen(obra: obra),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  SizedBox(height: context.spacing.sm),
-                ],
+                ),
               ],
             ),
     );
@@ -75,8 +86,7 @@ class ObrasScreen extends ConsumerWidget {
 }
 
 /// Cuánto se trabajó esta semana, sumado de las jornadas locales. La abierta
-/// cuenta hasta ahora. En card, no flotando: un dato suelto sobre el fondo
-/// parece un error de layout, no información.
+/// cuenta hasta ahora.
 class _ResumenSemanal extends ConsumerWidget {
   const _ResumenSemanal({required this.membershipId});
 
@@ -95,47 +105,33 @@ class _ResumenSemanal extends ConsumerWidget {
       total += fin.difference(j.clockInAt) - Duration(minutes: j.breakMinutes);
     }
 
-    return InfoCard(
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(context.spacing.sm),
-            decoration: BoxDecoration(
-              color: context.colors.primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.schedule_outlined,
-              color: context.colors.onPrimaryContainer,
-            ),
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(context.spacing.sm),
+          decoration: BoxDecoration(
+            color: context.colors.primaryContainer,
+            shape: BoxShape.circle,
           ),
-          SizedBox(width: context.spacing.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.obrasWeekTitle,
-                style: context.texts.bodySmall?.copyWith(
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ),
-              SizedBox(height: context.spacing.xs),
-              Text(
-                l10n.obrasDuration(total.inHours, total.inMinutes % 60),
-                style: context.texts.titleLarge?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
+          child: Icon(
+            Icons.schedule_outlined,
+            color: context.colors.onPrimaryContainer,
           ),
-        ],
-      ),
+        ),
+        SizedBox(width: context.spacing.md),
+        Text(
+          l10n.obrasDuration(total.inHours, total.inMinutes % 60),
+          style: context.texts.displaySmall,
+        ),
+      ],
     );
   }
 }
 
-class _ObraCard extends StatelessWidget {
-  const _ObraCard({
+/// Una obra dentro de la sección: fila de ancho completo, sin marco propio —
+/// el marco es el de la sección.
+class _ObraTile extends StatelessWidget {
+  const _ObraTile({
     required this.obra,
     required this.onTap,
     this.conJornadaAbierta = false,
@@ -151,10 +147,8 @@ class _ObraCard extends StatelessWidget {
     // la acción primaria (la regla del naranja).
     return Material(
       color: context.colors.primaryContainer,
-      borderRadius: BorderRadius.circular(context.spacing.radiusMd),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(context.spacing.radiusMd),
         child: Padding(
           padding: EdgeInsets.all(context.spacing.lg),
           child: Row(
@@ -184,7 +178,7 @@ class _ObraCard extends StatelessWidget {
                       ),
                     ],
                     if (conJornadaAbierta) ...[
-                      SizedBox(height: context.spacing.xs),
+                      SizedBox(height: context.spacing.sm),
                       StatusChip(
                         tone: StatusTone.success,
                         label: AppLocalizations.of(context).obrasAbiertaAca,

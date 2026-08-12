@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/info_card.dart';
+import '../../core/widgets/section_card.dart';
 import '../../data/repositories/time_entry_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'personas_tab.dart';
@@ -87,10 +87,21 @@ class _HorasTab extends ConsumerWidget {
     return ListView(
       padding: EdgeInsets.all(context.spacing.lg),
       children: [
-        for (final persona in orden) ...[
-          _PersonaHoras(name: persona.value.name, total: persona.value.total),
-          SizedBox(height: context.spacing.sm),
-        ],
+        SectionCard(
+          label: l10n.crewHoursHeader,
+          padded: false,
+          child: Column(
+            children: [
+              for (final (i, persona) in orden.indexed) ...[
+                if (i > 0) Divider(height: 1, color: context.colors.outline),
+                _PersonaHoras(
+                  name: persona.value.name,
+                  total: persona.value.total,
+                ),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -116,7 +127,7 @@ class _PersonaHoras extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return InfoCard(
+    return Padding(
       padding: EdgeInsets.all(context.spacing.md),
       child: Row(
         children: [
