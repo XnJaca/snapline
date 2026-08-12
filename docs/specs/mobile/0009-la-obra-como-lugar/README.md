@@ -222,10 +222,16 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
   En el Detalle, por lo mismo, el estado de la obra es un campo con su
   etiqueta ("Estado") y no un chip suelto arriba de todo.
 - **El tiempo se cuenta donde se ganó.** En Obras, el total de la semana con
-  un ánimo que rota según las horas —de "Semana nueva" a "Semana completa"—;
-  en el Registro de cada obra, el acumulado **de esa obra** titulando la
-  sección: "Tu tiempo de esta semana en Techo Martinez", con las jornadas que
-  lo suman debajo.
+  un mensaje que rota según las horas; en el Registro de cada obra, el
+  acumulado **de esa obra** titulando la sección: "Tu tiempo de esta semana en
+  Techo Martinez", con las jornadas que lo suman debajo.
+- **El mensaje reconoce el trabajo; nunca mide el rendimiento.** "Vas a buen
+  ritmo" se lee como alguien mirando el cronómetro por encima del hombro, y
+  esta app la usa quien ya sospecha que lo vigilan. El registro es *suyo* —
+  su defensa en una disputa de horas (regla 12)—, así que el mensaje dice eso:
+  "Cada minuto que marcás queda guardado", "Tu trabajo no pasa desapercibido",
+  "Increíble progreso, se nota el trabajo de esta semana". Ninguno compara,
+  ninguno apura, ninguno reprocha al que apenas arranca el lunes.
 - **El desglose de una obra que salió de la asignación.** El Registro de cada
   obra muestra sus jornadas de la semana, pero la obra es alcanzable mientras
   esté en la lista — asignada hoy o con la jornada abierta. Las jornadas

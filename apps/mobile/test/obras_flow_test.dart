@@ -88,8 +88,8 @@ void main() {
     expect(find.text('Techo Martinez'), findsOneWidget);
     expect(find.textContaining('412 Ellsworth Dr'), findsOneWidget);
     expect(find.text('Tu tiempo de esta semana'), findsOneWidget);
-    expect(find.textContaining('Semana nueva'), findsOneWidget,
-        reason: 'el ánimo rota con las horas y arranca sin reproche');
+    expect(find.textContaining('Tu tiempo empieza a contar'), findsOneWidget,
+        reason: 'el ánimo reconoce el trabajo, nunca mide el rendimiento');
     expect(find.byType(FieldActionButton), findsNothing,
         reason: 'la acción vive adentro de la obra, no en el home');
     await desmontar(tester);
