@@ -225,13 +225,21 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
   un mensaje que rota según las horas; en el Registro de cada obra, el
   acumulado **de esa obra** titulando la sección: "Tu tiempo de esta semana en
   Techo Martinez", con las jornadas que lo suman debajo.
-- **El mensaje reconoce el trabajo; nunca mide el rendimiento.** "Vas a buen
-  ritmo" se lee como alguien mirando el cronómetro por encima del hombro, y
-  esta app la usa quien ya sospecha que lo vigilan. El registro es *suyo* —
-  su defensa en una disputa de horas (regla 12)—, así que el mensaje dice eso:
-  "Cada minuto que marcás queda guardado", "Tu trabajo no pasa desapercibido",
-  "Increíble progreso, se nota el trabajo de esta semana". Ninguno compara,
-  ninguno apura, ninguno reprocha al que apenas arranca el lunes.
+- **El mensaje reconoce el trabajo. No lo mide, no lo fiscaliza.** Esta es la
+  regla, y es de producto, no de estilo: **Snapline no le habla al trabajador
+  como quien lo vigila.** Quedan afuera dos familias enteras de copy —
+  la que evalúa el rendimiento ("vas a buen ritmo", "buen arranque") y la que
+  narra lo que el sistema hace con él ("tu tiempo empieza a contar", "queda
+  registrado")—. Lo que queda es lo que le diría un compañero: "Que sea una
+  buena semana", "Cada minuto cuenta", "Tu trabajo no pasa desapercibido",
+  "Increíble progreso, se nota el trabajo", "Semana completa. Gracias por el
+  trabajo de estos días". Sin horas todavía **no hay nada que reconocer: se
+  saluda y ya.**
+
+  El costo de equivocarse acá no es cosmético. El frente entero descansa en
+  que el trabajador use la app todos los días (por eso la regla 9); una que se
+  siente un capataz mirando por encima del hombro se deja de abrir, y ahí no
+  hay asistencia, ni fotos, ni obra publicada.
 - **El desglose de una obra que salió de la asignación.** El Registro de cada
   obra muestra sus jornadas de la semana, pero la obra es alcanzable mientras
   esté en la lista — asignada hoy o con la jornada abierta. Las jornadas
