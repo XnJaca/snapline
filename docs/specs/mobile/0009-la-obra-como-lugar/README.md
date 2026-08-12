@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0009: La obra como lugar, no como botón"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "El trabajador entra a su obra y ahí adentro marca, ve su registro con cada jornada desglosada y el detalle del lugar; el foreman entra a su cuadrilla y ve a su gente con sus horas — las pestañas Obras y Cuadrilla son listas de lugares, no pantallas de acción."
 apps:
   - mobile
@@ -17,10 +17,10 @@ domain:
   - proyecto
 frente: campo
 created: 2026-08-11
-updated: 2026-08-11
+updated: 2026-08-12
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -273,6 +273,7 @@ Idéntico a SPEC-0008 — esta reorganización no agrega ninguna lectura de red:
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-08-12 | implementado | PR #20 mergeado. 269 tests. Siete tandas de diseño probando en el teléfono dejaron tres piezas de sistema —`SectionCard`, `StatusLine` y la regla de que el copy reconoce el trabajo pero no lo fiscaliza— que ya valen para toda la app, no solo para este spec. |
 | 2026-08-11 | en implementación | Hallazgos del `code-reviewer` sobre las tandas de diseño: Personas dentro de una cuadrilla mostraba la gente de la obra que saliera primero, sin mirar qué cuadrilla se abrió; el total por obra no contaba la jornada abierta mientras el resumen del home sí; y el seed rompía su propia idempotencia bumpeando `updated_at` en cada corrida. Los tres arreglados, con un test que se verificó contra el código roto. |
 | 2026-08-11 | en implementación | Cuarta pasada: copy y peso. "La gente de esta obra" suena seco y pasa a "Personas asignadas a esta obra"; el estado deja de competir con el botón en Personas y de flotar como título en el Detalle; y el tiempo se cuenta por obra, con ánimo semanal en el home. |
 | 2026-08-11 | en implementación | Tercera pasada: el label con fondo. `ListLabel` + `InfoCard` se funden en `SectionCard` —banda arriba, filas de borde a borde abajo— porque un título sin fondo seguía flotando sobre el lienzo. Ninguna sección de la app queda sin marco. |
