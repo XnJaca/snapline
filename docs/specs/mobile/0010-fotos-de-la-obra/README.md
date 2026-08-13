@@ -5,8 +5,8 @@ aliases:
   - "SPEC-0010: Fotos de la obra"
 type: spec
 platform: mobile
-status: borrador
-goal: "Una foto tomada en la obra sin señal aparece etiquetada en la galería de esa obra, sube sola cuando vuelve la red, y solo OWNER o ADMIN pueden subirla de nivel."
+status: review
+goal: "Una foto tomada en la obra sin señal aparece en la galería de esa obra con la etiqueta que se le haya puesto, sube sola cuando vuelve la red, y solo OWNER o ADMIN pueden subirla de nivel, de a un escalón."
 apps:
   - mobile
   - api
@@ -22,7 +22,7 @@ created: 2026-08-12
 updated: 2026-08-12
 tags:
   - spec
-  - spec/borrador
+  - spec/review
   - mobile
 ---
 
@@ -67,13 +67,19 @@ de dónde elegir, y el `before_after_pair` —que la ficha de [[contenido]] llam
   dominio: `BEFORE` · `DURING` · `AFTER` · `DETAIL` · `PROBLEM` · `RECEIPT`.
 - **Verlas en un tab de la obra**, en grilla, más nuevas primero.
 - **Subir de nivel** `INTERNAL → CLIENT → PUBLIC`, visible solo para quien tiene
-  el permiso.
+  el permiso, **de a un escalón**.
 - **En `apps/api`: `POST /media/:id/tags`**, que hoy no existe — `media_tag` tiene
   tabla y entity y ningún endpoint. Entra acá por la misma razón que
   [[../0006-clientes-en-el-movil/README|SPEC-0006]] trajo `site.update`: es este
   spec el que lo necesita.
-- **En `apps/api`: `mediaTags` en el pull de `/sync`** y la operación `media.tag`
-  en el push, o la etiqueta puesta sin señal no llega nunca.
+- **En `apps/api`: las etiquetas dentro de `mediaAssets`** en el pull de `/sync`,
+  y la operación `media.tag` en el push, o la etiqueta puesta sin señal no llega
+  nunca. Por qué embebidas y no como colección propia, abajo.
+- **En `apps/api`: la escalera se aplica en `setVisibility`** (decidido el
+  2026-08-12). Hoy el servicio acepta cualquier salto: `INTERNAL → PUBLIC` directo
+  pasa, contra lo que declara [[contenido]] desde la migración inicial. Este es el
+  primer spec que pone ese botón frente a un usuario, así que es el que cierra el
+  hueco en vez de dejarlo vivir en la pantalla.
 
 ### No entra
 
@@ -95,16 +101,40 @@ de dónde elegir, y el `before_after_pair` —que la ficha de [[contenido]] llam
 - [[contenido]] — `media_asset`, `media_tag` y la escalera de visibilidad
 - [[proyecto]] — de dónde cuelgan las fotos
 
-**No agrega ningún agregado ni campo nuevo al servidor.** Todo lo que este spec
-necesita ya está en el esquema desde la migración inicial; lo que falta es
-exponerlo y consumirlo.
+No agrega ningún agregado nuevo, y **ninguna migración**. Pero eso último no sale
+gratis: hay que elegir cómo sincronizan las etiquetas.
+
+### Por qué las etiquetas viajan dentro del asset
+
+`media_tag` tiene `id`, `company_id`, `asset_id`, `tag` y `created_at`. **No tiene
+`updated_at` ni `deleted_at`**, y el pull incremental depende estructuralmente de
+las dos: `vivos()` filtra por `updated_at > desde`, `borrados()` busca
+`deleted_at IS NOT NULL`. Como colección propia del pull, `media_tag` no se puede
+construir.
+
+Hay dos salidas y este spec toma la segunda:
+
+| Salida | Costo |
+|---|---|
+| Migración que agrega las dos columnas | `media_tag` pasa a ser una tabla que sincroniza, con borrado suave propio (regla 20) para propagar una etiqueta quitada |
+| **Las etiquetas viajan dentro de `mediaAssets`** | Cero migración. Cambiarlas toca `media_asset.updated_at`, y el asset viaja con su lista completa |
+
+Se elige la segunda porque **las etiquetas no son un agregado**: nadie las consulta
+sueltas, siempre se leen con su foto. Y como lo que se propaga al teléfono es el
+asset con su lista entera, borrar filas de `media_tag` en el servidor deja de ser
+un borrado que haya que propagar — el dispositivo recibe el conjunto nuevo y
+reemplaza el suyo. El `UNIQUE (asset_id, tag)` que ya existe evita duplicados.
+
+> **Lo que sí exige:** que el servicio toque `media_asset.updated_at` al cambiar
+> las etiquetas. Si no lo hace, el pull incremental no se entera y la etiqueta
+> puesta en un teléfono no aparece en el otro.
 
 ### Lo que sí cambia en la base local
 
 | Tabla Drift | Cambio | Por qué |
 |---|---|---|
 | `MediaAssets` | **Nueva** | Hoy una foto registrada solo vive en `pending_uploads` hasta que sube, y después desaparece del teléfono. Sin tabla no hay galería offline |
-| `MediaTags` | **Nueva** | Un asset tiene varias etiquetas; guardarlas como fila y no como JSON deja el filtro por etiqueta en una consulta |
+| `MediaAssets.tags` | JSON | Mismo patrón que `TimeEntries.flags`: la lista se lee siempre con su fila y un valor nuevo del servidor no rompe la base local |
 | `TimeEntries` | `clockInPhotoId` y `clockOutPhotoId` | Ya viajan en el contrato y hoy se descartan al mapear. Son el criterio para separar la foto de fichaje de la de obra |
 
 Sube a `schemaVersion` 6, con `addColumn` y `createTable` — nada que recrear.
@@ -146,8 +176,21 @@ desaparecería de su propia galería en cuanto hay señal. Se conserva y se limp
 por antigüedad, no por subida.
 
 > **Decisión pendiente de la implementación:** cuánto se conserva. Un mes de fotos
-> de dos cuadrillas no es trivial en un teléfono de trabajo. Si aparece un número
-> defendible se registra acá; si no, va a `/debt-new` con su trigger.
+> de dos cuadrillas no es trivial en un teléfono de trabajo, y con la calidad de
+> obra pesan el triple que las de marcaje. Si aparece un número defendible se
+> registra acá; si no, va a `/debt-new` con su trigger.
+
+### Lo que puede fallar y no es la red
+
+La red no es la única forma de que esto se caiga. Ninguno de estos casos bloquea
+al trabajador, pero todos tienen que **decir qué pasó**:
+
+| Falla | Qué hace la app |
+|---|---|
+| **Permiso de cámara denegado** | No hay escalera de evidencia alternativa acá: sacar la foto *es* la pantalla. Se explica qué falta y se ofrece abrir los ajustes del sistema. Nunca un diálogo vacío ni un botón que no responde |
+| **No sube tras varios intentos** | La foto **nunca se descarta**. `MediaUploader` incrementa `attempts` sin tope; a partir del quinto la galería lo dice —"no se pudo subir"— con acción de reintentar. Hoy la UI solo distingue "en el teléfono" de "subida", y ese silencio es el problema |
+| **El servidor la rechaza** por tipo o tamaño | El invariante se valida en el servidor, no solo acá ([[contenido]]). El rechazo se muestra con su `code` del envelope (ADR-0011), no con prosa traducida, y la foto queda marcada para que no se reintente para siempre |
+| **El trigger rechaza `PUBLIC`** por EXIF sin limpiar | No debería pasar —el servicio limpia solo—, pero si pasa llega como `EXIF_NOT_STRIPPED` y se muestra como tal |
 
 ## Flujo de usuario
 
@@ -158,28 +201,63 @@ por antigüedad, no por subida.
    extra. Se puede saltar: una foto sin etiqueta entra igual.
 4. La foto aparece en la grilla al instante, con su marca de "guardado en el
    teléfono" hasta que sube.
-5. William, desde la misma grilla, abre una foto y la sube de nivel.
+5. William, desde la misma grilla, abre una foto y la sube **un** escalón.
+
+### La calidad no es la del marcaje
+
+`ImagePickerPhotoCapture` está acotada a 2048px y 85% con un comentario que lo
+dice: *"es evidencia, no portafolio"*. Estas fotos son lo contrario — son las
+candidatas a `PUBLIC` y a los pares antes/después, y terminan en la web de William
+y en sus redes, donde se ven grandes.
+
+| Origen | Resolución | Peso aproximado |
+|---|---|---|
+| Marcaje | 2048px · 85% | ~0,5 MB |
+| **Obra** | **3024px · 90%** | **~1,5 MB** |
+
+`PhotoCapture` recibe la calidad como parámetro en vez de tenerla fija. Pesa el
+triple, y eso alimenta la decisión abierta sobre cuánto se conserva en el
+teléfono — no son dos temas separados.
 
 ## Contrato de API
 
-Un endpoint nuevo. El resto ya existe y no se toca.
+Un endpoint nuevo y un endpoint que se endurece.
 
 ```http
 POST /api/media/:id/tags
 Permiso: media.capture
 
 { "tags": ["BEFORE", "DETAIL"] }
-→ 200  MediaAsset con sus etiquetas
+→ 200  MediaAssetDto
 ```
 
 Reemplaza el conjunto entero en vez de agregar de a una: quitar una etiqueta sin
 señal necesitaría una operación de borrado propagable, y mandar el set completo la
 vuelve idempotente sin nada extra (regla 19).
 
+**La respuesta se declara como DTO.** `MediaAsset` no tiene hoy relación a sus
+etiquetas ni en la entity ni en `openapi.json`, y devolver `{ ...asset, tags }` a
+mano sale al spec como `{"type":"object"}` sin propiedades: el cliente Dart lo tipa
+`dynamic`, parsea, descarta y **no falla** (regla 8). Va un `MediaAssetDto` con
+`tags: MediaTagKind[]`, y es el mismo que devuelven los demás handlers de media.
+
+```http
+POST /api/media/:id/visibility
+```
+
+Suma la validación de la escalera: subir es de a un escalón, bajar no se
+restringe. El rechazo lleva código propio y estable, `VISIBILITY_SKIPS_STEP`,
+porque el cliente necesita distinguirlo de los otros rechazos del mismo endpoint
+(ADR-0011). Va con su caso en `requests/edge-cases/`, que es donde vive un request
+por invariante.
+
 En `/sync`:
 
-- **Push**: operación `media.tag`, con su DTO validado como las demás.
-- **Pull**: colección `mediaTags`, con el mismo scope por rol que `mediaAssets`.
+- **Push**: operación `media.tag`, declarada en `SYNC_OPERATIONS` con su DTO y en
+  `OPERATION_PERMISSION` con `media.capture` — el mismo permiso que la REST, o el
+  lote se convierte en la puerta de atrás del guard.
+- **Pull**: **no hay colección nueva.** Las etiquetas viajan dentro de
+  `mediaAssets`, que ya baja con scope por rol. Ver arriba por qué.
 
 `openapi.json` se regenera en el mismo commit (regla 8).
 
@@ -217,6 +295,16 @@ tabs cuando cambian los permisos.
       por ella.
 - [ ] Etiquetar sin señal y volver a etiquetar la misma foto deja un solo conjunto
       de etiquetas, no dos.
+- [ ] Una etiqueta puesta en un teléfono aparece en otro después de sincronizar:
+      cambiar las etiquetas toca `media_asset.updated_at` y por eso entra en el
+      pull incremental.
+- [ ] `INTERNAL → PUBLIC` en una sola llamada se rechaza con
+      `VISIBILITY_SKIPS_STEP`, y bajar de nivel sigue sin restricción.
+- [ ] Con el permiso de cámara denegado la pantalla explica qué falta y ofrece los
+      ajustes, en vez de un botón que no hace nada.
+- [ ] Una foto que no sube se ve como no subida, y nunca se descarta sola.
+- [ ] La respuesta de `POST /media/:id/tags` sale en `openapi.json` con sus
+      propiedades, no como `{"type":"object"}`.
 - [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`
       (`api_isolation_test.dart`).
 - [ ] La pantalla se ve completa en claro y en oscuro, y en los dos idiomas.
@@ -230,10 +318,15 @@ tabs cuando cambian los permisos.
 - **Ver las fotos de otros exige red.** Se sirven con URL firmada de vida corta
   (ADR-0010) y el bucket no es público. Cachearlas es otro spec; acá se muestra el
   estado con honestidad en vez de un error.
-- **La escalera `INTERNAL → CLIENT → PUBLIC` no está aplicada en ningún lado.**
-  Hoy se salta a `PUBLIC` directo, en el servicio y en la base. Es anterior a este
-  spec y quedó anotado al cerrar DEBT-0005; si la pantalla ofrece los tres niveles,
-  conviene decidir si el orden se aplica o se acepta el salto.
+- **La escalera se endurece en este spec**, y eso puede romper un flujo que hoy
+  funciona: cualquier consumidor que subiera de `INTERNAL` a `PUBLIC` de una vez
+  empieza a recibir `VISIBILITY_SKIPS_STEP`. No hay datos reales ni `apps/web`
+  todavía, así que el radio es el propio móvil y los `.bru`, pero el spec de
+  publicación tiene que contar con que llegar a `PUBLIC` son dos pasos.
+- **Queda sin aplicar en la base.** La validación entra en el servicio, no como
+  trigger. Es una decisión consciente: el orden depende del estado anterior de la
+  fila y un trigger que lo mire es más caro de mantener que el chequeo del
+  servicio. El invariante duro de la base sigue siendo el EXIF (regla 17).
 - **El pull con muchas fotos.** `GET /sync?since=` trae `mediaAssets` sin paginar.
   Una obra de dos semanas con dos cuadrillas puede ser un lote grande en la
   primera sincronización de un teléfono nuevo.
@@ -252,3 +345,4 @@ tabs cuando cambian los permisos.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-12 | borrador | Creado. Desbloqueado por DEBT-0005: publicar dejó de exigir un permiso que no se podía otorgar |
+| 2026-08-12 | review | Tres bloqueantes del `spec-reviewer`. `media_tag` no puede sincronizar como colección propia —le faltan `updated_at` y `deleted_at`—, así que las etiquetas pasan a viajar dentro del asset. La escalera de visibilidad se endurece acá en vez de quedar como riesgo. Y el comportamiento sin señal suma los tres casos de falla que no eran de red |
