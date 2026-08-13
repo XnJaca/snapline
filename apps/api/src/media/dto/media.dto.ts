@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ArrayUnique, IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 import { MediaAsset, MediaKind, MediaVisibility } from '../entities/media-asset.entity';
+import { MEDIA_TAG_KINDS, MediaTagKind } from '../entities/media-tag.entity';
 
 export class RegisterAssetDto {
   @IsOptional() @IsUUID() id?: string;
@@ -19,6 +20,31 @@ export class RegisterAssetDto {
 
 export class SetVisibilityDto {
   @IsEnum(['INTERNAL', 'CLIENT', 'PUBLIC']) visibility!: MediaVisibility;
+}
+
+/**
+ * Reemplaza el conjunto entero de etiquetas, no agrega de a una: quitar una sin
+ * señal necesitaría una operación de borrado propagable, y mandar el set
+ * completo la vuelve idempotente sin nada extra (regla 19).
+ */
+export class SetTagsDto {
+  // Sin ArrayMaxSize: con el enum acotado y sin repetidos, el tope ya es el
+  // largo del enum. Un número suelto ahí solo se desincroniza al agregar una.
+  @IsArray()
+  @ArrayUnique()
+  @IsEnum(MEDIA_TAG_KINDS, { each: true })
+  @ApiProperty({ enum: MEDIA_TAG_KINDS, isArray: true })
+  tags!: MediaTagKind[];
+}
+
+/**
+ * El asset con sus etiquetas. Viajan adentro y no como colección propia porque
+ * `media_tag` no tiene `updated_at` ni `deleted_at`, de las que depende el pull
+ * incremental — ver SPEC-0010.
+ */
+export class MediaAssetDto extends MediaAsset {
+  @ApiProperty({ enum: MEDIA_TAG_KINDS, isArray: true })
+  tags!: MediaTagKind[];
 }
 
 /**

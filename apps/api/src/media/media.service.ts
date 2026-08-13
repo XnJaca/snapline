@@ -1,13 +1,14 @@
 import { ApiError } from '../common/errors/api-error';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 import { newId } from '../common/entities/base.entity';
 import { TenantContext } from '../tenant/tenant-context';
 import { Project } from '../projects/entities/project.entity';
-import { MediaAsset } from './entities/media-asset.entity';
-import { RegisterAssetDto, RegisterAssetResponseDto, SetVisibilityDto, SignedUrlDto } from './dto/media.dto';
+import { MediaAsset, MediaVisibility } from './entities/media-asset.entity';
+import { MediaTag, MediaTagKind } from './entities/media-tag.entity';
+import { MediaAssetDto, RegisterAssetDto, RegisterAssetResponseDto, SetTagsDto, SetVisibilityDto, SignedUrlDto } from './dto/media.dto';
 import sharp from 'sharp';
 import { DOWNLOAD_TTL_SECONDS, StorageService, UPLOAD_TTL_SECONDS } from '../storage/storage.service';
 
@@ -24,25 +25,76 @@ function extensionFor(mime: string): string {
   return MIME_EXTENSIONS[mime] ?? '';
 }
 
+const VISIBILITY_LADDER: readonly MediaVisibility[] = ['INTERNAL', 'CLIENT', 'PUBLIC'];
+
 @Injectable()
 export class MediaService {
   constructor(
     @InjectRepository(MediaAsset) private readonly assets: Repository<MediaAsset>,
+    @InjectRepository(MediaTag) private readonly tags: Repository<MediaTag>,
     @InjectRepository(Project) private readonly projects: Repository<Project>,
     private readonly storage: StorageService,
   ) {}
 
-  list(projectId: string): Promise<MediaAsset[]> {
-    return this.assets.find({
+  async list(projectId: string): Promise<MediaAssetDto[]> {
+    const assets = await this.assets.find({
       where: { project: { id: projectId }, deletedAt: IsNull() },
       order: { capturedAt: 'ASC', createdAt: 'ASC' },
     });
+    return this.conEtiquetas(assets);
   }
 
   async get(id: string): Promise<MediaAsset> {
     const found = await this.assets.findOne({ where: { id, deletedAt: IsNull() } });
     if (!found) throw new NotFoundException('Asset no encontrado');
     return found;
+  }
+
+  async getWithTags(id: string): Promise<MediaAssetDto> {
+    const [dto] = await this.conEtiquetas([await this.get(id)]);
+    return dto;
+  }
+
+  /**
+   * Reemplaza el conjunto entero y toca el asset.
+   *
+   * El `updated_at` no es cosmético: las etiquetas viajan dentro de `mediaAssets`
+   * en el pull, así que sin tocar la fila el cambio no entra en el incremental y
+   * la etiqueta puesta en un teléfono no llega al otro.
+   */
+  @Transactional()
+  async setTags(id: string, dto: SetTagsDto, tenant: TenantContext): Promise<MediaAssetDto> {
+    await this.get(id);
+
+    await this.tags.delete({ asset: { id } });
+    if (dto.tags.length) {
+      await this.tags.insert(dto.tags.map((tag) => ({
+        id: newId(),
+        companyId: tenant.companyId,
+        asset: { id } as MediaTag['asset'],
+        tag,
+      })));
+    }
+    await this.assets.update({ id }, { updatedAt: new Date() });
+
+    return this.getWithTags(id);
+  }
+
+  /** Las etiquetas de un lote, en una consulta. Lo usa el pull de `/sync`. */
+  withTags(assets: MediaAsset[]): Promise<MediaAssetDto[]> {
+    return this.conEtiquetas(assets);
+  }
+
+  private async conEtiquetas(assets: MediaAsset[]): Promise<MediaAssetDto[]> {
+    if (!assets.length) return [];
+    const filas = await this.tags.find({ where: { asset: { id: In(assets.map((a) => a.id)) } } });
+    const porAsset = new Map<string, MediaTagKind[]>();
+    for (const fila of filas) {
+      porAsset.set(fila.assetId, [...(porAsset.get(fila.assetId) ?? []), fila.tag]);
+    }
+    return assets.map((asset) => Object.assign(new MediaAssetDto(), asset, {
+      tags: porAsset.get(asset.id) ?? [],
+    }));
   }
 
   /**
@@ -103,11 +155,22 @@ export class MediaService {
   }
 
   /**
-   * La escalera es INTERNAL -> CLIENT -> PUBLIC. Pasar a PUBLIC exige EXIF
-   * limpio, y un trigger de la base lo rechaza aunque esto falle.
+   * La escalera es INTERNAL -> CLIENT -> PUBLIC y sube de a un escalón. Bajar no
+   * se restringe: sacar algo de la vista es siempre urgente.
+   *
+   * Pasar a PUBLIC exige además EXIF limpio, y eso lo rechaza un trigger de la
+   * base aunque esto falle.
    */
   async setVisibility(id: string, dto: SetVisibilityDto): Promise<MediaAsset> {
     const asset = await this.get(id);
+
+    const actual = VISIBILITY_LADDER.indexOf(asset.visibility);
+    const pedido = VISIBILITY_LADDER.indexOf(dto.visibility);
+    if (pedido > actual + 1) {
+      throw ApiError.badRequest('VISIBILITY_SKIPS_STEP',
+        `La visibilidad sube de a un nivel: ${asset.visibility} no puede pasar a ${dto.visibility} de una vez`);
+    }
+
     if (dto.visibility === 'PUBLIC') {
       if (asset.uploadStatus !== 'READY') {
         throw ApiError.badRequest('UPLOAD_NOT_READY', 'El asset todavía no terminó de subir');

@@ -280,6 +280,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/media/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Media_setTags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/time-entries": {
         parameters: {
             query?: never;
@@ -1197,9 +1213,10 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        MediaAsset: {
+        MediaAssetDto: {
             project?: components["schemas"]["Project"];
             uploadedBy?: components["schemas"]["Membership"] | null;
+            tags: ("BEFORE" | "DURING" | "AFTER" | "DETAIL" | "PROBLEM" | "RECEIPT")[];
             projectId: string;
             /** @enum {string} */
             kind: "PHOTO" | "VIDEO" | "DOCUMENT";
@@ -1247,6 +1264,40 @@ export interface components {
             deviceLat?: number;
             deviceLng?: number;
         };
+        MediaAsset: {
+            project?: components["schemas"]["Project"];
+            uploadedBy?: components["schemas"]["Membership"] | null;
+            projectId: string;
+            /** @enum {string} */
+            kind: "PHOTO" | "VIDEO" | "DOCUMENT";
+            /** @enum {string|null} */
+            documentKind: "OTHER" | "CONTRACT" | "PERMIT" | "BLUEPRINT" | "INSURANCE" | "W9" | "RECEIPT" | "PHOTO_RELEASE" | "SIGNATURE" | null;
+            storageKey: string;
+            mime: string;
+            bytes: number | null;
+            width: number | null;
+            height: number | null;
+            /** Format: date-time */
+            capturedAt: string | null;
+            uploadedByMembershipId: string | null;
+            deviceLat: number | null;
+            deviceLng: number | null;
+            checksum: string;
+            /** @enum {string} */
+            uploadStatus: "FAILED" | "PENDING" | "UPLOADING" | "READY";
+            /** @enum {string} */
+            visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
+            /** Format: date-time */
+            exifStrippedAt: string | null;
+            /** Format: date-time */
+            deletedAt: string | null;
+            companyId: string;
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         RegisterAssetResponseDto: {
             asset: components["schemas"]["MediaAsset"];
             uploadUrl: string;
@@ -1259,6 +1310,9 @@ export interface components {
         SetVisibilityDto: {
             /** @enum {string} */
             visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
+        };
+        SetTagsDto: {
+            tags: ("BEFORE" | "DURING" | "AFTER" | "DETAIL" | "PROBLEM" | "RECEIPT")[];
         };
         TimeEntry: {
             project?: components["schemas"]["Project"];
@@ -1804,7 +1858,7 @@ export interface components {
             sites: components["schemas"]["Site"][];
             projects: components["schemas"]["Project"][];
             assignments: components["schemas"]["ProjectAssignment"][];
-            mediaAssets: components["schemas"]["MediaAsset"][];
+            mediaAssets: components["schemas"]["MediaAssetDto"][];
             timeEntries: components["schemas"]["TimeEntry"][];
             crews: components["schemas"]["Crew"][];
             crewMembers: components["schemas"]["CrewMember"][];
@@ -1821,7 +1875,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            type: "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.
@@ -1864,7 +1918,7 @@ export interface components {
              * @description Código estable. No se traduce: es contra lo que ramifica el cliente.
              * @enum {string}
              */
-            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "EXIF_NOT_STRIPPED" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
+            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
             /** @description Texto para mostrar. Esto sí se traduce. */
             message: string;
             /** @description Vacío cuando no aplica; nunca ausente. */
@@ -3344,7 +3398,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MediaAsset"][];
+                    "application/json": components["schemas"]["MediaAssetDto"][];
                 };
             };
             /** @description Error */
@@ -3801,6 +3855,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MediaAsset"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Media_setTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetTagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaAssetDto"];
                 };
             };
             /** @description Error */

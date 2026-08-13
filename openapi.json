@@ -1751,7 +1751,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/MediaAsset"
+                    "$ref": "#/components/schemas/MediaAssetDto"
                   }
                 }
               }
@@ -2302,6 +2302,106 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MediaAsset"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/media/{id}/tags": {
+      "post": {
+        "operationId": "Media_setTags",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetTagsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAssetDto"
                 }
               }
             }
@@ -8016,6 +8116,217 @@
           "updatedAt"
         ]
       },
+      "MediaAssetDto": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "uploadedBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Membership"
+              }
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "BEFORE",
+                "DURING",
+                "AFTER",
+                "DETAIL",
+                "PROBLEM",
+                "RECEIPT"
+              ]
+            }
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "PHOTO",
+              "VIDEO",
+              "DOCUMENT"
+            ],
+            "type": "string"
+          },
+          "documentKind": {
+            "nullable": true,
+            "enum": [
+              "OTHER",
+              "CONTRACT",
+              "PERMIT",
+              "BLUEPRINT",
+              "INSURANCE",
+              "W9",
+              "RECEIPT",
+              "PHOTO_RELEASE",
+              "SIGNATURE"
+            ],
+            "type": "string"
+          },
+          "storageKey": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "number",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          },
+          "capturedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedByMembershipId": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceLat": {
+            "type": "number",
+            "nullable": true
+          },
+          "deviceLng": {
+            "type": "number",
+            "nullable": true
+          },
+          "checksum": {
+            "type": "string"
+          },
+          "uploadStatus": {
+            "enum": [
+              "FAILED",
+              "PENDING",
+              "UPLOADING",
+              "READY"
+            ],
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "INTERNAL",
+              "CLIENT",
+              "PUBLIC"
+            ],
+            "type": "string"
+          },
+          "exifStrippedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tags",
+          "projectId",
+          "kind",
+          "documentKind",
+          "storageKey",
+          "mime",
+          "bytes",
+          "width",
+          "height",
+          "capturedAt",
+          "uploadedByMembershipId",
+          "deviceLat",
+          "deviceLng",
+          "checksum",
+          "uploadStatus",
+          "visibility",
+          "exifStrippedAt",
+          "deletedAt",
+          "companyId",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RegisterAssetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "VIDEO",
+              "DOCUMENT"
+            ]
+          },
+          "mime": {
+            "type": "string"
+          },
+          "checksum": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "capturedAt": {
+            "type": "string"
+          },
+          "deviceLat": {
+            "type": "number"
+          },
+          "deviceLng": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "projectId",
+          "kind",
+          "mime",
+          "checksum"
+        ]
+      },
       "MediaAsset": {
         "type": "object",
         "properties": {
@@ -8161,57 +8472,6 @@
           "updatedAt"
         ]
       },
-      "RegisterAssetDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "projectId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "PHOTO",
-              "VIDEO",
-              "DOCUMENT"
-            ]
-          },
-          "mime": {
-            "type": "string"
-          },
-          "checksum": {
-            "type": "string"
-          },
-          "bytes": {
-            "type": "number"
-          },
-          "width": {
-            "type": "number"
-          },
-          "height": {
-            "type": "number"
-          },
-          "capturedAt": {
-            "type": "string"
-          },
-          "deviceLat": {
-            "type": "number"
-          },
-          "deviceLng": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "projectId",
-          "kind",
-          "mime",
-          "checksum"
-        ]
-      },
       "RegisterAssetResponseDto": {
         "type": "object",
         "properties": {
@@ -8260,6 +8520,29 @@
         },
         "required": [
           "visibility"
+        ]
+      },
+      "SetTagsDto": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "BEFORE",
+                "DURING",
+                "AFTER",
+                "DETAIL",
+                "PROBLEM",
+                "RECEIPT"
+              ]
+            }
+          }
+        },
+        "required": [
+          "tags"
         ]
       },
       "TimeEntry": {
@@ -10249,7 +10532,7 @@
           "mediaAssets": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MediaAsset"
+              "$ref": "#/components/schemas/MediaAssetDto"
             }
           },
           "timeEntries": {
@@ -10319,6 +10602,7 @@
               "project.create",
               "project.update",
               "media.register",
+              "media.tag",
               "timeEntry.clockIn",
               "timeEntry.clockOut"
             ]
@@ -10460,6 +10744,7 @@
               "CANNOT_APPROVE_OWN_HOURS",
               "PAY_RATE_MISSING",
               "EXIF_NOT_STRIPPED",
+              "VISIBILITY_SKIPS_STEP",
               "UPLOAD_NOT_READY",
               "MEDIA_ALREADY_UPLOADED",
               "ASSET_NOT_PUBLIC",

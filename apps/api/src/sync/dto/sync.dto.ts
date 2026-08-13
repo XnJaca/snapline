@@ -7,7 +7,7 @@ import { Customer } from '../../customers/entities/customer.entity';
 import { Site } from '../../customers/entities/site.entity';
 import { Project } from '../../projects/entities/project.entity';
 import { ProjectAssignment } from '../../projects/entities/project-assignment.entity';
-import { MediaAsset } from '../../media/entities/media-asset.entity';
+import { MediaAssetDto } from '../../media/dto/media.dto';
 import { TimeEntry } from '../../time-entries/entities/time-entry.entity';
 import { Crew } from '../../crews/entities/crew.entity';
 import { CrewMember } from '../../crews/entities/crew-member.entity';
@@ -21,6 +21,7 @@ export const SYNC_OPERATIONS = [
   'project.create',
   'project.update',
   'media.register',
+  'media.tag',
   'timeEntry.clockIn',
   'timeEntry.clockOut',
 ] as const;
@@ -43,6 +44,7 @@ export const OPERATION_PERMISSION = {
   'project.create': 'projects.write',
   'project.update': 'projects.write',
   'media.register': 'media.capture',
+  'media.tag': 'media.capture',
   'timeEntry.clockIn': 'time.clock',
   'timeEntry.clockOut': 'time.clock',
 } as const satisfies Record<SyncOperationType, Permission>;
@@ -127,7 +129,9 @@ export class SyncPullResponseDto {
   @ApiProperty({ type: [Site] }) sites!: Site[];
   @ApiProperty({ type: [Project] }) projects!: Project[];
   @ApiProperty({ type: [ProjectAssignment] }) assignments!: ProjectAssignment[];
-  @ApiProperty({ type: [MediaAsset] }) mediaAssets!: MediaAsset[];
+  // Con sus etiquetas adentro: media_tag no puede ser colección propia del pull
+  // porque no tiene updated_at ni deleted_at. Ver SPEC-0010.
+  @ApiProperty({ type: [MediaAssetDto] }) mediaAssets!: MediaAssetDto[];
   @ApiProperty({ type: [TimeEntry] }) timeEntries!: TimeEntry[];
   @ApiProperty({ type: [Crew] }) crews!: Crew[];
   @ApiProperty({ type: [CrewMember] }) crewMembers!: CrewMember[];
