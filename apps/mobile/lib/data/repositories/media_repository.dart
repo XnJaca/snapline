@@ -136,12 +136,13 @@ class MediaRepository {
           'checksum': checksum,
           'bytes': bytes.length,
           'capturedAt': cuando.toUtc().toIso8601String(),
+          // Adentro del registro y no como operación aparte: dos operaciones
+          // con el mismo instante no tienen orden garantizado en el lote, y la
+          // etiqueta llegaba antes que la foto la mitad de las veces.
+          if (tags.isNotEmpty) 'tags': tags.map((t) => t.json).toList(),
         },
         occurredAt: cuando,
       );
-      if (tags.isNotEmpty) {
-        await _encolarEtiquetas(id, tags, cuando);
-      }
     });
 
     return id;
@@ -286,10 +287,19 @@ class MediaRepository {
   }
 
   /// El binario llegó: la fila se marca y el archivo local ya no hace falta.
+  /// El binario llegó: se marca la subida **y el asset**.
+  ///
+  /// Sin lo segundo la galería sigue diciendo "guardada en el teléfono" hasta
+  /// que un pull posterior traiga el estado — y ese pull no llega solo, porque
+  /// nada vuelve a encolarse. La foto quedaba con cara de no haber subido.
   Future<void> markUploaded(String assetId) async {
-    await (_db.update(_db.pendingUploads)
-          ..where((p) => p.assetId.equals(assetId)))
-        .write(PendingUploadsCompanion(uploadedAt: Value(DateTime.now())));
+    await _db.transaction(() async {
+      await (_db.update(_db.pendingUploads)
+            ..where((p) => p.assetId.equals(assetId)))
+          .write(PendingUploadsCompanion(uploadedAt: Value(DateTime.now())));
+      await (_db.update(_db.mediaAssets)..where((m) => m.id.equals(assetId)))
+          .write(const MediaAssetsCompanion(uploadStatus: Value('READY')));
+    });
   }
 
   Future<void> incrementAttempts(String assetId) async {

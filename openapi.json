@@ -8279,6 +8279,22 @@
       "RegisterAssetDto": {
         "type": "object",
         "properties": {
+          "tags": {
+            "type": "array",
+            "description": "Las etiquetas van acá y no en una operación aparte: la foto se etiqueta en\nel mismo gesto en que se toma, y dos operaciones con el mismo instante no\ntienen orden garantizado dentro del lote.",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "BEFORE",
+                "DURING",
+                "AFTER",
+                "DETAIL",
+                "PROBLEM",
+                "RECEIPT"
+              ]
+            }
+          },
           "id": {
             "type": "string",
             "format": "uuid"

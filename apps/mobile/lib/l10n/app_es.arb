@@ -86,6 +86,8 @@
   "photosTagProblem": "Problema",
   "photosTagReceipt": "Recibo",
   "photosGroupUntagged": "Sin etiqueta",
+  "photosAddTags": "Poner etiqueta",
+  "photosEditTags": "Cambiar la etiqueta",
   "photosVisibilityInternal": "Solo interna",
   "photosVisibilityClient": "La ve el cliente",
   "photosVisibilityPublic": "Publicada",

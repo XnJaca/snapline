@@ -65,19 +65,26 @@ export class MediaService {
   @Transactional()
   async setTags(id: string, dto: SetTagsDto, tenant: TenantContext): Promise<MediaAssetDto> {
     await this.get(id);
-
-    await this.tags.delete({ asset: { id } });
-    if (dto.tags.length) {
-      await this.tags.insert(dto.tags.map((tag) => ({
-        id: newId(),
-        companyId: tenant.companyId,
-        asset: { id } as MediaTag['asset'],
-        tag,
-      })));
-    }
+    await this.guardarEtiquetas(id, dto.tags, tenant);
+    // Tocar el asset no es cosmético: las etiquetas viajan dentro de él en el
+    // pull, así que sin esto el cambio no entra en el incremental.
     await this.assets.update({ id }, { updatedAt: new Date() });
-
     return this.getWithTags(id);
+  }
+
+  private async guardarEtiquetas(
+    assetId: string,
+    tags: MediaTagKind[],
+    tenant: TenantContext,
+  ): Promise<void> {
+    await this.tags.delete({ asset: { id: assetId } });
+    if (!tags.length) return;
+    await this.tags.insert(tags.map((tag) => ({
+      id: newId(),
+      companyId: tenant.companyId,
+      asset: { id: assetId } as MediaTag['asset'],
+      tag,
+    })));
   }
 
   /** Las etiquetas de un lote, en una consulta. Lo usa el pull de `/sync`. */
@@ -141,6 +148,7 @@ export class MediaService {
       deletedAt: null,
     });
     await this.assets.save(asset);
+    if (dto.tags?.length) await this.guardarEtiquetas(id, dto.tags, tenant);
     return {
       asset: await this.get(id),
       uploadUrl: await this.storage.presignUpload(asset.storageKey, asset.mime),

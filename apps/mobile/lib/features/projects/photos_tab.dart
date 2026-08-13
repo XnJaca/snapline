@@ -12,7 +12,7 @@ import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'photo_tag_sheet.dart';
-import 'photo_visibility_sheet.dart';
+import 'photo_actions_sheet.dart';
 
 /// Las fotos de la obra.
 ///
@@ -35,6 +35,9 @@ class PhotosTab extends ConsumerWidget {
         ref.watch(sessionControllerProvider).value?.membership.permissions ??
             const <String>[];
     final puedeCambiarNivel = permisos.contains('media.visibility');
+    // Corregir qué muestra una foto es parte de capturarla: el trabajador que
+    // la sacó puede etiquetarla, aunque publicar no sea suyo.
+    final puedeEtiquetar = permisos.contains('media.capture');
 
     return Column(
       children: [
@@ -46,8 +49,14 @@ class PhotosTab extends ConsumerWidget {
               ),
             AsyncData(:final value) => _Grupos(
                 grupos: agruparPorEtiqueta(value),
-                onTap: puedeCambiarNivel
-                    ? (foto) => mostrarHojaDeVisibilidad(context, ref, foto)
+                onTap: puedeEtiquetar || puedeCambiarNivel
+                    ? (foto) => mostrarAccionesDeFoto(
+                          context,
+                          ref,
+                          foto,
+                          puedeEtiquetar: puedeEtiquetar,
+                          puedeCambiarNivel: puedeCambiarNivel,
+                        )
                     : null,
               ),
             AsyncError() => EmptyState(

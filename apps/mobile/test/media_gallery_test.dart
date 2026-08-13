@@ -217,4 +217,56 @@ void main() {
           SyncOp.mediaTag);
     });
   });
+
+  group('lo que se vio probando en el teléfono', () {
+    test('la etiqueta viaja dentro del registro, no como operación aparte',
+        () async {
+      final archivo = File('${dir.path}/foto.jpg')..writeAsBytesSync([1, 2, 3]);
+
+      await media.registerPhoto(
+        projectId: 'p1',
+        filePath: archivo.path,
+        companyId: 'co1',
+        tags: [MediaTag.before],
+      );
+
+      final pendientes = await Outbox(db, const Uuid()).pending();
+      // Una sola operación: dos con el mismo instante no tienen orden
+      // garantizado en el lote, y la etiqueta llegaba antes que su foto.
+      expect(pendientes, hasLength(1));
+      expect(pendientes.single.type, SyncOp.mediaRegister);
+      expect(jsonDecode(pendientes.single.payload)['tags'], ['BEFORE']);
+    });
+
+    test('sin etiquetas el payload no manda la clave vacía', () async {
+      final archivo = File('${dir.path}/foto2.jpg')..writeAsBytesSync([1]);
+
+      await media.registerPhoto(
+        projectId: 'p1',
+        filePath: archivo.path,
+        companyId: 'co1',
+      );
+
+      final payload = jsonDecode(
+          (await Outbox(db, const Uuid()).pending()).single.payload) as Map;
+      expect(payload.containsKey('tags'), isFalse);
+    });
+
+    test('subir el binario apaga "guardada en el teléfono"', () async {
+      final archivo = File('${dir.path}/foto3.jpg')..writeAsBytesSync([1]);
+      final id = await media.registerPhoto(
+        projectId: 'p1',
+        filePath: archivo.path,
+        companyId: 'co1',
+      );
+
+      expect((await media.watchDeLaObra('p1').first).single.subida, isFalse);
+
+      await media.markUploaded(id);
+
+      // Sin esto la galería esperaba un pull que no llega solo: nada vuelve a
+      // encolarse, así que la foto quedaba con cara de no haber subido.
+      expect((await media.watchDeLaObra('p1').first).single.subida, isTrue);
+    });
+  });
 }

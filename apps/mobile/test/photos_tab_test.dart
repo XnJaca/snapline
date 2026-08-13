@@ -144,7 +144,8 @@ void main() {
     await disposeApp(tester);
   });
 
-  testWidgets('el WORKER no ve dónde tocar para cambiar el nivel', timeout: limite, (tester) async {
+  testWidgets('el WORKER puede tocar la foto: etiquetar es parte de capturar',
+      timeout: limite, (tester) async {
     await sembrarFoto('a1');
 
     await tester.pumpWidget(pantalla(permisos: const [
@@ -156,20 +157,61 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     final celda = tester.widget<InkWell>(find.byType(InkWell).first);
-    expect(celda.onTap, isNull,
-        reason: 'sin media.visibility la miniatura no abre la hoja');
+    expect(celda.onTap, isNotNull);
     await disposeApp(tester);
   });
 
-  testWidgets('el OWNER sí', timeout: limite, (tester) async {
+  testWidgets('quien solo mira no puede tocar nada', timeout: limite,
+      (tester) async {
+    await sembrarFoto('a1');
+
+    await tester.pumpWidget(
+        pantalla(permisos: const ['media.read', 'projects.read']));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final celda = tester.widget<InkWell>(find.byType(InkWell).first);
+    expect(celda.onTap, isNull,
+        reason: 'sin media.capture ni media.visibility no hay nada que hacer');
+    await disposeApp(tester);
+  });
+
+  testWidgets('el WORKER no ve las acciones de visibilidad en la hoja',
+      timeout: limite, (tester) async {
+    await sembrarFoto('a1');
+
+    await tester.pumpWidget(pantalla(permisos: const [
+      'media.read',
+      'media.capture',
+      'projects.read',
+    ]));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Poner etiqueta'), findsOne);
+    expect(find.text('Mostrar al cliente'), findsNothing);
+    expect(find.text('Publicar'), findsNothing);
+    await disposeApp(tester);
+  });
+
+  testWidgets('el OWNER sí las ve, y solo el próximo escalón',
+      timeout: limite, (tester) async {
     await sembrarFoto('a1');
 
     await tester.pumpWidget(pantalla());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
 
-    final celda = tester.widget<InkWell>(find.byType(InkWell).first);
-    expect(celda.onTap, isNotNull);
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mostrar al cliente'), findsOne);
+    // Desde INTERNAL no se ofrece publicar: la escalera sube de a uno y el
+    // servidor lo rechazaría.
+    expect(find.text('Publicar'), findsNothing);
     await disposeApp(tester);
   });
 

@@ -16,6 +16,18 @@ export class RegisterAssetDto {
   @IsOptional() @IsDateString() capturedAt?: string;
   @IsOptional() @IsNumber() deviceLat?: number;
   @IsOptional() @IsNumber() deviceLng?: number;
+
+  /**
+   * Las etiquetas van acá y no en una operación aparte: la foto se etiqueta en
+   * el mismo gesto en que se toma, y dos operaciones con el mismo instante no
+   * tienen orden garantizado dentro del lote.
+   */
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsEnum(MEDIA_TAG_KINDS, { each: true })
+  @ApiProperty({ enum: MEDIA_TAG_KINDS, isArray: true, required: false })
+  tags?: MediaTagKind[];
 }
 
 export class SetVisibilityDto {

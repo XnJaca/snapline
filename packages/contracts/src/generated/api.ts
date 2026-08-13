@@ -1249,6 +1249,12 @@ export interface components {
             updatedAt: string;
         };
         RegisterAssetDto: {
+            /**
+             * @description Las etiquetas van acá y no en una operación aparte: la foto se etiqueta en
+             *     el mismo gesto en que se toma, y dos operaciones con el mismo instante no
+             *     tienen orden garantizado dentro del lote.
+             */
+            tags?: ("BEFORE" | "DURING" | "AFTER" | "DETAIL" | "PROBLEM" | "RECEIPT")[];
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
