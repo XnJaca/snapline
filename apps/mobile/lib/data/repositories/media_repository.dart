@@ -164,6 +164,8 @@ class MediaRepository {
               ..where(_db.timeEntries.clockInPhotoId.equalsExp(m.id) |
                   _db.timeEntries.clockOutPhotoId.equalsExp(m.id)),
           ))
+      // Por fecha en la base; el agrupado por etiqueta lo hace la pantalla, que
+      // es donde se sabe qué grupos mostrar.
       ..orderBy([
         (m) => OrderingTerm.desc(m.capturedAt),
         (m) => OrderingTerm.desc(m.updatedAt),

@@ -102,7 +102,8 @@
   "photosOpenSettings": "Open settings",
   "photosCameraFailed": "The camera could not be opened",
   "photosTagQuestion": "What does it show?",
-  "photosTagSkip": "Skip",
+  "photosTagHelp": "Before and after go together: tagging them is what builds the pair that gets published.",
+  "photosTagSaveWithout": "Save without a tag",
   "photosTagSave": "Save",
   "photosTagBefore": "Before",
   "photosTagAfter": "After",
@@ -113,6 +114,7 @@
   "@photosTagReceipt": {
     "description": "Etiqueta de contenido: un recibo o factura fotografiada en la obra."
   },
+  "photosGroupUntagged": "No tag",
   "photosVisibilityInternal": "Internal only",
   "photosVisibilityClient": "Visible to the customer",
   "photosVisibilityPublic": "Published",

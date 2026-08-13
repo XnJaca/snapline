@@ -44,20 +44,11 @@ class PhotosTab extends ConsumerWidget {
                 icon: Icons.photo_camera_outlined,
                 message: '${l10n.photosEmptyTitle}\n\n${l10n.photosEmptyBody}',
               ),
-            AsyncData(:final value) => GridView.builder(
-                padding: EdgeInsets.all(spacing.md),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: spacing.sm,
-                  mainAxisSpacing: spacing.sm,
-                ),
-                itemCount: value.length,
-                itemBuilder: (context, i) => _Miniatura(
-                  foto: value[i],
-                  onTap: puedeCambiarNivel
-                      ? () => mostrarHojaDeVisibilidad(context, ref, value[i])
-                      : null,
-                ),
+            AsyncData(:final value) => _Grupos(
+                grupos: agruparPorEtiqueta(value),
+                onTap: puedeCambiarNivel
+                    ? (foto) => mostrarHojaDeVisibilidad(context, ref, foto)
+                    : null,
               ),
             AsyncError() => EmptyState(
                 icon: Icons.error_outline,
@@ -138,6 +129,107 @@ class PhotosTab extends ConsumerWidget {
   }
 }
 
+/// Un grupo de la galería: una etiqueta y sus fotos.
+class GrupoDeFotos {
+  const GrupoDeFotos({required this.tag, required this.fotos});
+
+  /// `null` es el grupo de las que no tienen etiqueta, que va último.
+  final MediaTag? tag;
+  final List<ObraFoto> fotos;
+}
+
+/// Agrupa por etiqueta, en el orden del dominio: antes, después, en proceso…
+///
+/// El orden importa para lo que se hace con esto: armar el par antes/después
+/// es la pieza de marketing del producto, y con todo mezclado por fecha hay que
+/// ir a buscar cuál era cuál. Una foto con dos etiquetas aparece en las dos —
+/// es una foto, no una copia.
+List<GrupoDeFotos> agruparPorEtiqueta(List<ObraFoto> fotos) {
+  final grupos = <GrupoDeFotos>[];
+
+  for (final tag in MediaTag.values) {
+    final delGrupo = fotos.where((f) => f.tags.contains(tag)).toList();
+    if (delGrupo.isNotEmpty) {
+      grupos.add(GrupoDeFotos(tag: tag, fotos: delGrupo));
+    }
+  }
+
+  final sinEtiqueta = fotos.where((f) => f.tags.isEmpty).toList();
+  if (sinEtiqueta.isNotEmpty) {
+    grupos.add(GrupoDeFotos(tag: null, fotos: sinEtiqueta));
+  }
+
+  return grupos;
+}
+
+class _Grupos extends StatelessWidget {
+  const _Grupos({required this.grupos, this.onTap});
+
+  final List<GrupoDeFotos> grupos;
+  final void Function(ObraFoto)? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final spacing = context.spacing;
+
+    return ListView.builder(
+      padding: EdgeInsets.all(spacing.md),
+      itemCount: grupos.length,
+      itemBuilder: (context, i) {
+        final grupo = grupos[i];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (i > 0) SizedBox(height: spacing.lg),
+            Padding(
+              padding: EdgeInsets.only(bottom: spacing.sm),
+              child: Row(
+                children: [
+                  Icon(
+                    grupo.tag == null
+                        ? Icons.label_off_outlined
+                        : etiquetaEnIcono(grupo.tag!),
+                    size: 18,
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                  SizedBox(width: spacing.xs),
+                  Text(
+                    grupo.tag == null
+                        ? l10n.photosGroupUntagged
+                        : etiquetaEnTexto(grupo.tag!, l10n),
+                    style: context.texts.titleSmall,
+                  ),
+                  SizedBox(width: spacing.xs),
+                  Text(
+                    '${grupo.fotos.length}',
+                    style: context.texts.bodySmall
+                        ?.copyWith(color: context.colors.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: spacing.sm,
+                mainAxisSpacing: spacing.sm,
+              ),
+              itemCount: grupo.fotos.length,
+              itemBuilder: (context, j) => _Miniatura(
+                foto: grupo.fotos[j],
+                onTap: onTap == null ? null : () => onTap!(grupo.fotos[j]),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _Miniatura extends StatelessWidget {
   const _Miniatura({required this.foto, this.onTap});
 
@@ -170,7 +262,9 @@ class _Miniatura extends StatelessWidget {
                     ),
                   ),
           ),
-          if (foto.tags.isNotEmpty || foto.fallida || !foto.subida)
+          // La etiqueta ya la dice el encabezado del grupo: acá solo va lo que
+          // no se sabe de otra forma —que no subió, que falló, que ya salió.
+          if (foto.fallida || !foto.subida || foto.visibility != 'INTERNAL')
             Positioned(
               left: spacing.xs,
               right: spacing.xs,
@@ -213,11 +307,7 @@ class _Estado extends StatelessWidget {
           l10n.photosVisibilityClient,
           Icons.visibility_outlined
         ),
-      _ => (
-          StatusTone.info,
-          etiquetasEnTexto(foto.tags, l10n),
-          Icons.label_outline
-        ),
+      _ => (StatusTone.info, l10n.photosVisibilityInternal, Icons.lock_outline),
     };
 
     return Container(
