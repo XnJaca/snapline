@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0010: Fotos de la obra"
 type: spec
 platform: mobile
-status: review
+status: en-implementacion
 goal: "Una foto tomada en la obra sin señal aparece en la galería de esa obra con la etiqueta que se le haya puesto, sube sola cuando vuelve la red, y solo OWNER o ADMIN pueden subirla de nivel, de a un escalón."
 apps:
   - mobile
@@ -22,7 +22,7 @@ created: 2026-08-12
 updated: 2026-08-12
 tags:
   - spec
-  - spec/review
+  - spec/en-implementacion
   - mobile
 ---
 
@@ -175,10 +175,20 @@ y se limpia al confirmar; si se borrara, la foto que el trabajador acaba de toma
 desaparecería de su propia galería en cuanto hay señal. Se conserva y se limpia
 por antigüedad, no por subida.
 
-> **Decisión pendiente de la implementación:** cuánto se conserva. Un mes de fotos
-> de dos cuadrillas no es trivial en un teléfono de trabajo, y con la calidad de
-> obra pesan el triple que las de marcaje. Si aparece un número defendible se
-> registra acá; si no, va a `/debt-new` con su trigger.
+**Cuánto se conserva: un tope de 500 MB**, no una ventana de días (decidido el
+2026-08-12). El límite que importa es el disco del teléfono, y una cuadrilla que
+toma 200 fotos en dos días llena lo mismo que otra en dos meses — el calendario no
+mide eso. A 1,5 MB por foto son unas 330 siempre disponibles sin señal.
+
+Al pasar del tope se borran las **más viejas ya subidas**, hasta volver debajo.
+Dos cosas no se borran nunca, por más que se pase:
+
+- **Lo que todavía no subió.** Es la única copia que existe.
+- **Lo que falló al subir.** Borrarlo sería descartar en silencio el trabajo del
+  día, que es exactamente lo que la regla 9 evita en el marcaje.
+
+Si el pendiente solo llegara a llenar el disco, el problema no es la retención
+sino que algo no está subiendo, y eso se ve en la galería.
 
 ### Lo que puede fallar y no es la red
 

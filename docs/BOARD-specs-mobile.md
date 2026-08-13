@@ -21,13 +21,13 @@ kanban-plugin: board
 
 ## 🔍 Review (listo para revisar)
 
-- [ ] [[specs/mobile/0010-fotos-de-la-obra/README|SPEC-0010: Fotos de la obra]] — la segunda pata de la visión no tiene camino: el API publica y el móvil solo captura fotos de fichaje. Trae `POST /media/:id/tags` al API y endurece la escalera de visibilidad, que estaba declarada y sin aplicar
-
 
 ## ✅ Aprobado (listo para implementar)
 
 
 ## 🛠️ En implementación
+
+- [ ] [[specs/mobile/0010-fotos-de-la-obra/README|SPEC-0010: Fotos de la obra]] — la segunda pata de la visión no tiene camino: el API publica y el móvil solo captura fotos de fichaje. Trae `POST /media/:id/tags` al API y endurece la escalera de visibilidad, que estaba declarada y sin aplicar
 
 
 ## 🎉 Implementado
