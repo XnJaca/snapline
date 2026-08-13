@@ -70,7 +70,7 @@ void main() {
 
   setUp(() {
     db = testDatabase();
-    media = MediaRepository(db, Outbox(db, const Uuid()), const Uuid());
+    media = MediaRepository(db, Outbox(db, const Uuid()), const Uuid(), MediaClientNulo());
     dir = Directory.systemTemp.createTempSync('snapline_subida');
   });
 

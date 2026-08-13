@@ -218,6 +218,43 @@ void main() {
     despues.close();
   });
 
+  /// El salto largo es el que rompe: `createTable` usa el esquema de hoy, así
+  /// que una base vieja crea `time_entries` **ya con** las columnas de la v6 y
+  /// volver a agregarlas falla por duplicado. Un teléfono que no se actualiza
+  /// hace meses recorre exactamente este camino.
+  test('de v1 a v6 de un salto, sin chocar con columnas que ya existen', () async {
+    crearEsquemaV1();
+
+    final previa = sqlite3.open(archivo.path);
+    previa.execute(
+      'INSERT INTO outbox_operations (client_id, type, target_id, payload, '
+      'occurred_at) VALUES (?, ?, ?, ?, ?)',
+      ['op1', 'media.register', 'a1', '{}', 1754700000],
+    );
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    // La galería existe y se puede escribir.
+    await db.into(db.mediaAssets).insert(
+      MediaAssetsCompanion.insert(
+        id: 'a1',
+        companyId: 'co1',
+        updatedAt: DateTime(2026, 8, 12),
+        projectId: 'p1',
+        kind: 'PHOTO',
+        mime: 'image/jpeg',
+        visibility: 'INTERNAL',
+        uploadStatus: 'PENDING',
+      ),
+    );
+    expect(await db.select(db.mediaAssets).get(), hasLength(1));
+
+    // Y la bandeja llegó entera del otro lado del salto.
+    expect(await db.select(db.outboxOperations).get(), hasLength(1));
+  });
+
   test('una base nueva arranca directamente en el esquema de ahora', () async {
     final db = AppDatabase(NativeDatabase(archivo));
     addTearDown(db.close);

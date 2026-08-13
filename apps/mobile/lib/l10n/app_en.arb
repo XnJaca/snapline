@@ -90,6 +90,37 @@
   "projectTabHours": "Hours",
   "projectTabDetails": "Details",
 
+  "photosEmptyTitle": "No photos yet",
+  "photosEmptyBody": "Photos you take here end up on the website. Take the before shot before the crew starts.",
+  "photosTakeAction": "Take photo",
+  "photosOnThisPhone": "Saved on this phone",
+  "photosUploadFailed": "Could not upload",
+  "photosRetryUpload": "Retry",
+  "photosNeedsNetwork": "Needs signal to open",
+  "photosCameraDeniedTitle": "Camera permission is off",
+  "photosCameraDeniedBody": "Snapline needs the camera to take photos of the job. It is turned on from the phone settings.",
+  "photosOpenSettings": "Open settings",
+  "photosCameraFailed": "The camera could not be opened",
+  "photosTagQuestion": "What does it show?",
+  "photosTagSkip": "Skip",
+  "photosTagSave": "Save",
+  "photosTagBefore": "Before",
+  "photosTagAfter": "After",
+  "photosTagDuring": "In progress",
+  "photosTagDetail": "Detail",
+  "photosTagProblem": "Problem",
+  "photosTagReceipt": "Receipt",
+  "@photosTagReceipt": {
+    "description": "Etiqueta de contenido: un recibo o factura fotografiada en la obra."
+  },
+  "photosVisibilityInternal": "Internal only",
+  "photosVisibilityClient": "Visible to the customer",
+  "photosVisibilityPublic": "Published",
+  "photosRaiseToClient": "Show to the customer",
+  "photosRaiseToPublic": "Publish",
+  "photosLowerVisibility": "Make internal again",
+  "photosLadderNote": "Visibility goes up one step at a time.",
+
   "projectUntitled": "Project",
   "@projectUntitled": {
     "description": "Título cuando se llega a un proyecto que no está en local."

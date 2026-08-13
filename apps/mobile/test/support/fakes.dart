@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter/material.dart' show MaterialApp, Scaffold, ThemeMode;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +26,10 @@ import 'package:snapline/api/models/auth_user_dto.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/core/location/device_location.dart';
+import 'package:snapline/api/clients/media_client.dart';
+import 'package:snapline/core/network/api_client.dart';
+import 'package:snapline/core/theme/app_theme.dart';
+import 'package:snapline/l10n/app_localizations.dart';
 import 'package:snapline/core/media/photo_capture.dart';
 import 'package:snapline/core/session/session.dart';
 
@@ -197,9 +201,23 @@ class FakeSyncController extends SyncController {
   Future<bool> build() async => true;
 }
 
+/// El cliente de media que nunca se llama.
+///
+/// Solo `cambiarVisibilidad` toca la red desde el repositorio, y ningún test de
+/// captura o de subida pasa por ahí.
+class MediaClientNulo implements MediaClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('el test no debería llamar al API de media');
+}
+
 class _CamaraNula implements PhotoCapture {
   @override
   Future<String?> takePhoto() async => null;
+
+  @override
+  Future<PhotoResult> capture(PhotoQuality calidad) async =>
+      const PhotoResult.failed(PhotoFailure.cancelled);
 }
 
 /// La app montada para un test: base en memoria, sin red, con la sesión que se
@@ -237,6 +255,42 @@ Widget testApp({
       themeStoreProvider.overrideWithValue(themeStore ?? FakeThemeStore()),
     ],
     child: const SnaplineApp(),
+  );
+}
+
+/// Monta **un widget suelto** con lo mínimo: base, sesión y tema, sin el router
+/// ni el shell. Para probar una pantalla entera dentro de la app está `testApp`.
+///
+/// Trae el `MaterialApp` con los dos temas y los delegados de idioma, que es lo
+/// que hace falta para verificar que nada esté quemado y que se vea en oscuro.
+Widget testWidget({
+  required AppDatabase db,
+  required Widget child,
+  Session? session,
+  AuthUserDtoLocale locale = AuthUserDtoLocale.es,
+  ThemeMode themeMode = ThemeMode.light,
+  PhotoCapture? photoCapture,
+}) {
+  return ProviderScope(
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      photoCaptureProvider.overrideWithValue(photoCapture ?? _CamaraNula()),
+      mediaClientProvider.overrideWithValue(MediaClientNulo()),
+      sessionStorageProvider.overrideWithValue(
+        FakeSessionStorage(session ?? buildSession(locale: locale)),
+      ),
+      syncControllerProvider.overrideWith(FakeSyncController.new),
+      connectivityProvider.overrideWith((ref) => Stream.value(true)),
+    ],
+    child: MaterialApp(
+      locale: Locale(locale.name),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
+      home: Scaffold(body: child),
+    ),
   );
 }
 

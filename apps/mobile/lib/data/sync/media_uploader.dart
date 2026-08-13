@@ -58,6 +58,15 @@ class MediaUploader {
         developer.log('subida falló para ${pendiente.assetId}', name: 'media', error: e);
       }
     }
+
+    // Acá y no al arrancar la app: el disco solo crece cuando algo se sube, y
+    // este es el único momento en que eso pasa. Nada de lo pendiente se toca.
+    if (subidos > 0) {
+      final liberadas = await _media.limpiarPorEspacio();
+      if (liberadas > 0) {
+        developer.log('$liberadas foto(s) liberadas por espacio', name: 'media');
+      }
+    }
     return subidos;
   }
 }

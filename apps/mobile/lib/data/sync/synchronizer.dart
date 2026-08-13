@@ -222,6 +222,9 @@ class Synchronizer {
         if (local?.syncStatus == SyncStatus.conflict) continue;
         await _db.into(_db.timeEntries).insertOnConflictUpdate(SyncMapper.timeEntry(dto));
       }
+      for (final dto in respuesta.mediaAssets) {
+        await _db.into(_db.mediaAssets).insertOnConflictUpdate(SyncMapper.mediaAsset(dto));
+      }
       for (final dto in respuesta.crews) {
         await _db.into(_db.crews).insertOnConflictUpdate(SyncMapper.crew(dto));
       }
@@ -269,6 +272,7 @@ class Synchronizer {
     await marcar('projects', _db.projects);
     await marcar('assignments', _db.projectAssignments);
     await marcar('timeEntries', _db.timeEntries);
+    await marcar('mediaAssets', _db.mediaAssets);
     await marcar('crews', _db.crews);
     await marcar('crewMembers', _db.crewMembers);
 

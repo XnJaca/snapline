@@ -11,6 +11,7 @@ import '../../core/widgets/placeholder_list.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
+import 'photos_tab.dart';
 import 'project_details_tab.dart';
 import 'project_status_display.dart';
 
@@ -132,6 +133,8 @@ class ProjectScreen extends ConsumerWidget {
                   for (final tab in tabs)
                     if (tab == ProjectTab.details)
                       ProjectDetailsTab(projectId: projectId)
+                    else if (tab == ProjectTab.photos)
+                      PhotosTab(projectId: projectId)
                     else
                       // Cada una se reemplaza cuando su spec llegue.
                       PlaceholderList(storageKey: '$projectId.${tab.name}'),

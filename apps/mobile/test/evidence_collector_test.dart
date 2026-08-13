@@ -30,6 +30,14 @@ class _Camara implements PhotoCapture {
     llamada = true;
     return ruta;
   }
+
+  @override
+  Future<PhotoResult> capture(PhotoQuality calidad) async {
+    llamada = true;
+    return ruta == null
+        ? const PhotoResult.failed(PhotoFailure.cancelled)
+        : PhotoResult.taken(ruta!);
+  }
 }
 
 void main() {
@@ -41,7 +49,7 @@ void main() {
   setUp(() {
     db = testDatabase();
     outbox = Outbox(db, const Uuid());
-    media = MediaRepository(db, outbox, const Uuid());
+    media = MediaRepository(db, outbox, const Uuid(), MediaClientNulo());
     dir = Directory.systemTemp.createTempSync('snapline_foto');
   });
 
