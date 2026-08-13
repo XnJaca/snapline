@@ -71,6 +71,7 @@
   "photosUploadFailed": "No se pudo subir",
   "photosRetryUpload": "Reintentar",
   "photosNeedsNetwork": "Necesita señal para abrirse",
+  "photosMissingFile": "Esta foto ya no está en el teléfono y no llegó a subir",
   "photosCameraDeniedTitle": "El permiso de cámara está apagado",
   "photosCameraDeniedBody": "Snapline necesita la cámara para tomar fotos de la obra. Se activa desde los ajustes del teléfono.",
   "photosOpenSettings": "Abrir ajustes",

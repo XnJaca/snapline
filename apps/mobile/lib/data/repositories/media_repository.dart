@@ -242,6 +242,16 @@ class MediaRepository {
     ));
   }
 
+  /// Dónde ver una foto que ya no está en este teléfono.
+  ///
+  /// El bucket no es público (ADR-0010): se sirve con URL firmada y de vida
+  /// corta, así que esto exige red. Es el caso de toda foto que tomó otro —
+  /// baja del pull sin su binario.
+  Future<String> urlParaVer(String assetId) async {
+    final firmada = await _media.mediaDownloadUrl(id: assetId);
+    return firmada.url;
+  }
+
   /// Libera espacio sin perder nada que no esté a salvo en el servidor.
   ///
   /// El tope es de disco y no de calendario: una cuadrilla que toma 200 fotos en

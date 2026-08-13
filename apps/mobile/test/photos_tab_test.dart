@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ void main() {
     String id, {
     List<String> tags = const [],
     DateTime? cuando,
+    String uploadStatus = 'READY',
   }) async {
     await db.into(db.mediaAssets).insert(
       MediaAssetsCompanion.insert(
@@ -39,7 +41,7 @@ void main() {
         kind: 'PHOTO',
         mime: 'image/jpeg',
         visibility: 'INTERNAL',
-        uploadStatus: 'READY',
+        uploadStatus: uploadStatus,
         capturedAt: Value(cuando ?? DateTime(2026, 8, 12)),
         tags: Value(jsonEncode(tags)),
       ),
@@ -295,4 +297,63 @@ void main() {
       await disposeApp(tester);
     });
   });
+
+  group('de dónde sale la imagen', () {
+    testWidgets('la que está en el teléfono se dibuja desde el archivo',
+        timeout: limite, (tester) async {
+      final archivo = File('${Directory.systemTemp.path}/snapline-mini.jpg')
+        ..writeAsBytesSync(_jpegDeUnPixel);
+      addTearDown(() => archivo.deleteSync());
+
+      await sembrarFoto('a1', uploadStatus: 'PENDING');
+      await db.into(db.pendingUploads).insert(
+        PendingUploadsCompanion.insert(
+          assetId: 'a1',
+          filePath: archivo.path,
+          mime: 'image/jpeg',
+        ),
+      );
+
+      await tester.pumpWidget(pantalla());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(Image), findsWidgets);
+      await disposeApp(tester);
+    });
+
+    testWidgets('la que ya no está y no subió lo dice, sin cuadro roto',
+        timeout: limite, (tester) async {
+      // Pasa tras cerrar sesión: se limpia lo local y el binario nunca llegó.
+      await sembrarFoto('a1', uploadStatus: 'PENDING');
+
+      await tester.pumpWidget(pantalla());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byIcon(Icons.image_not_supported_outlined), findsOne);
+      expect(tester.takeException(), isNull);
+      await disposeApp(tester);
+    });
+
+    testWidgets('la subida sin archivo local se pide firmada al servidor',
+        timeout: limite, (tester) async {
+      await sembrarFoto('a1');
+
+      await tester.pumpWidget(pantalla());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // El cliente de media del test lanza: lo que importa es que se haya
+      // intentado por red en vez de mostrar el marcador de "no está".
+      expect(find.byIcon(Icons.image_not_supported_outlined), findsNothing);
+      await disposeApp(tester);
+    });
+  });
 }
+
+/// El JPEG válido más chico que existe. Sin bytes reales `Image.file` lanza.
+final _jpegDeUnPixel = base64Decode(
+  '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a'
+  'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAA'
+  'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==');

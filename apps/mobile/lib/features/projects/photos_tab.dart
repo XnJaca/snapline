@@ -251,6 +251,8 @@ class _Miniatura extends StatelessWidget {
     final spacing = context.spacing;
     final colors = context.colors;
 
+    final marca = _marcaDe(foto, l10n);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(spacing.radiusMd),
@@ -259,26 +261,26 @@ class _Miniatura extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(spacing.radiusMd),
-            child: foto.enElTelefono
-                ? Image.file(File(foto.localPath!), fit: BoxFit.cover)
-                // Sin el archivo local hace falta señal: se dice, no se muestra
-                // un error ni un cuadro roto.
-                : ColoredBox(
-                    color: colors.surfaceContainerHighest,
-                    child: Center(
-                      child: Icon(Icons.cloud_outlined,
-                          color: colors.onSurfaceVariant),
-                    ),
-                  ),
+            child: FotoDeObra(foto: foto, fit: BoxFit.cover),
           ),
-          // La etiqueta ya la dice el encabezado del grupo: acá solo va lo que
-          // no se sabe de otra forma —que no subió, que falló, que ya salió.
-          if (foto.fallida || !foto.subida || foto.visibility != 'INTERNAL')
+          // Solo el icono: en un tercio de ancho no entra una palabra sin
+          // cortarse, y un texto truncado no dice nada. El detalle está a un
+          // toque, en la hoja.
+          if (marca != null)
             Positioned(
-              left: spacing.xs,
+              top: spacing.xs,
               right: spacing.xs,
-              bottom: spacing.xs,
-              child: _Estado(foto: foto, l10n: l10n),
+              child: Tooltip(
+                message: marca.$2,
+                child: Container(
+                  padding: EdgeInsets.all(spacing.xs),
+                  decoration: BoxDecoration(
+                    color: colors.surface.withValues(alpha: 0.92),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(marca.$3, size: 16, color: marca.$1.color(context)),
+                ),
+              ),
             ),
         ],
       ),
@@ -286,68 +288,85 @@ class _Miniatura extends StatelessWidget {
   }
 }
 
-/// Lo que hay que saber de la foto sin abrirla, en una línea.
-class _Estado extends StatelessWidget {
-  const _Estado({required this.foto, required this.l10n});
+/// Lo que hay que saber de la foto sin abrirla. `null` cuando no hay nada que
+/// avisar: una foto interna y subida es el caso normal y no lleva marca.
+(StatusTone, String, IconData)? _marcaDe(ObraFoto foto, AppLocalizations l10n) {
+  if (foto.fallida) {
+    return (StatusTone.danger, l10n.photosUploadFailed, Icons.cloud_off_outlined);
+  }
+  if (!foto.subida) {
+    return (StatusTone.info, l10n.photosOnThisPhone, Icons.smartphone_outlined);
+  }
+  return switch (foto.visibility) {
+    'PUBLIC' => (StatusTone.success, l10n.photosVisibilityPublic, Icons.public),
+    'CLIENT' => (
+        StatusTone.info,
+        l10n.photosVisibilityClient,
+        Icons.visibility_outlined
+      ),
+    _ => null,
+  };
+}
+
+/// La foto, de donde esté.
+///
+/// El archivo local es lo que la hace visible sin señal, y es el único camino
+/// mientras no haya subido. Cuando ya no está en el teléfono se pide una URL
+/// firmada: el bucket no es público (ADR-0010), así que esto necesita red.
+class FotoDeObra extends ConsumerWidget {
+  const FotoDeObra({super.key, required this.foto, required this.fit});
 
   final ObraFoto foto;
-  final AppLocalizations l10n;
+  final BoxFit fit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (foto.enElTelefono) {
+      return Image.file(File(foto.localPath!), fit: fit);
+    }
+
+    // Sin archivo y sin subir no hay de dónde sacarla: pasó por un cierre de
+    // sesión, que limpia lo local, antes de que el binario llegara al servidor.
+    if (!foto.subida) {
+      return _Aviso(icono: Icons.image_not_supported_outlined, mensaje: AppLocalizations.of(context).photosMissingFile);
+    }
+
+    return switch (ref.watch(urlDeFotoProvider(foto.id))) {
+      AsyncData(:final value) => Image.network(value, fit: fit),
+      AsyncError() => _Aviso(
+          icono: Icons.wifi_off_outlined,
+          mensaje: AppLocalizations.of(context).photosNeedsNetwork,
+        ),
+      _ => const ColoredBox(color: Colors.transparent),
+    };
+  }
+}
+
+class _Aviso extends StatelessWidget {
+  const _Aviso({required this.icono, required this.mensaje});
+
+  final IconData icono;
+  final String mensaje;
 
   @override
   Widget build(BuildContext context) {
-    final (tono, texto, icono) = switch (foto) {
-      _ when foto.fallida => (
-          StatusTone.danger,
-          l10n.photosUploadFailed,
-          Icons.cloud_off_outlined
+    return ColoredBox(
+      color: context.colors.surfaceContainerHighest,
+      child: Center(
+        child: Tooltip(
+          message: mensaje,
+          child: Icon(icono, color: context.colors.onSurfaceVariant),
         ),
-      _ when !foto.subida => (
-          StatusTone.info,
-          l10n.photosOnThisPhone,
-          Icons.smartphone_outlined
-        ),
-      _ when foto.visibility == 'PUBLIC' => (
-          StatusTone.success,
-          l10n.photosVisibilityPublic,
-          Icons.public
-        ),
-      _ when foto.visibility == 'CLIENT' => (
-          StatusTone.info,
-          l10n.photosVisibilityClient,
-          Icons.visibility_outlined
-        ),
-      _ => (StatusTone.info, l10n.photosVisibilityInternal, Icons.lock_outline),
-    };
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.xs,
-        vertical: context.spacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: context.colors.surface.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(context.spacing.radiusSm),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // El icono lleva el color del tono: en una miniatura no hay relleno
-          // que lo sostenga, y el color solo nunca alcanza.
-          Icon(icono, size: 14, color: tono.color(context)),
-          SizedBox(width: context.spacing.xs),
-          Flexible(
-            child: Text(
-              texto,
-              style: context.texts.labelSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
       ),
     );
   }
 }
+
+/// La URL firmada de una foto. Vive diez minutos del lado del servidor, así que
+/// se vuelve a pedir sola cuando el provider se recrea.
+final urlDeFotoProvider = FutureProvider.family<String, String>((ref, assetId) {
+  return ref.watch(mediaRepositoryProvider).urlParaVer(assetId);
+});
 
 final fotosDeLaObraProvider =
     StreamProvider.family<List<ObraFoto>, String>((ref, projectId) {

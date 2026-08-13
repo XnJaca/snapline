@@ -6,6 +6,7 @@ import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'photo_tag_sheet.dart';
+import 'photos_tab.dart';
 
 /// Qué se puede hacer con una foto ya tomada.
 ///
@@ -59,12 +60,22 @@ class _AccionesState extends ConsumerState<_Acciones> {
     final siguiente = _siguienteEscalon(foto.visibility);
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // La foto grande acá y no en la grilla: en un tercio de ancho no se
+            // distingue un techo de otro, y esto es lo que se va a publicar.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(spacing.radiusMd),
+              child: AspectRatio(
+                aspectRatio: 4 / 3,
+                child: FotoDeObra(foto: foto, fit: BoxFit.cover),
+              ),
+            ),
+            SizedBox(height: spacing.md),
             StatusLine(
               tone: switch (foto.visibility) {
                 'PUBLIC' => StatusTone.success,

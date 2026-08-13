@@ -97,6 +97,7 @@
   "photosUploadFailed": "Could not upload",
   "photosRetryUpload": "Retry",
   "photosNeedsNetwork": "Needs signal to open",
+  "photosMissingFile": "This photo is no longer on the phone and never finished uploading",
   "photosCameraDeniedTitle": "Camera permission is off",
   "photosCameraDeniedBody": "Snapline needs the camera to take photos of the job. It is turned on from the phone settings.",
   "photosOpenSettings": "Open settings",
