@@ -20,6 +20,7 @@ Future<void> mostrarAccionesDeFoto(
   ObraFoto foto, {
   required bool puedeEtiquetar,
   required bool puedeCambiarNivel,
+  required bool puedeBorrar,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -29,6 +30,7 @@ Future<void> mostrarAccionesDeFoto(
       foto: foto,
       puedeEtiquetar: puedeEtiquetar,
       puedeCambiarNivel: puedeCambiarNivel,
+      puedeBorrar: puedeBorrar,
     ),
   );
 }
@@ -38,11 +40,13 @@ class _Acciones extends ConsumerStatefulWidget {
     required this.foto,
     required this.puedeEtiquetar,
     required this.puedeCambiarNivel,
+    required this.puedeBorrar,
   });
 
   final ObraFoto foto;
   final bool puedeEtiquetar;
   final bool puedeCambiarNivel;
+  final bool puedeBorrar;
 
   @override
   ConsumerState<_Acciones> createState() => _AccionesState();
@@ -132,6 +136,16 @@ class _AccionesState extends ConsumerState<_Acciones> {
                     ?.copyWith(color: context.colors.onSurfaceVariant),
               ),
             ],
+
+            if (widget.puedeBorrar) ...[
+              SizedBox(height: spacing.lg),
+              _Accion(
+                icon: Icons.delete_outline,
+                label: l10n.photosDelete,
+                destructiva: true,
+                onTap: _enCurso ? null : _borrar,
+              ),
+            ],
           ],
         ),
       ),
@@ -147,6 +161,33 @@ class _AccionesState extends ConsumerState<_Acciones> {
 
     // Va por la bandeja: corregir qué muestra una foto no exige señal.
     await ref.read(mediaRepositoryProvider).setTags(widget.foto.id, elegidas);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  /// Preguntar antes: la foto se va de las dos puntas y no hay pantalla para
+  /// traerla de vuelta. El "antes" de una obra no se puede volver a sacar.
+  Future<void> _borrar() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.photosDeleteConfirmTitle),
+        content: Text(l10n.photosDeleteConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.photosDeleteConfirmAccept),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !mounted) return;
+
+    await ref.read(mediaRepositoryProvider).borrar(widget.foto.id);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -180,6 +221,7 @@ class _Accion extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.destacada = false,
+    this.destructiva = false,
   });
 
   final IconData icon;
@@ -189,6 +231,10 @@ class _Accion extends StatelessWidget {
   /// La que sigue en la escalera. Una sola por hoja, o ninguna es la acción.
   final bool destacada;
 
+  /// Se lleva la foto de las dos puntas. Va abajo del todo y en rojo: separada
+  /// de lo demás para que no se toque de paso.
+  final bool destructiva;
+
   @override
   Widget build(BuildContext context) {
     final spacing = context.spacing;
@@ -197,7 +243,11 @@ class _Accion extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: spacing.sm),
       child: Material(
-        color: destacada ? colors.primaryContainer : colors.surfaceContainerHighest,
+        color: switch ((destacada, destructiva)) {
+          (true, _) => colors.primaryContainer,
+          (_, true) => colors.errorContainer,
+          _ => colors.surfaceContainerHighest,
+        },
         borderRadius: BorderRadius.circular(spacing.radiusMd),
         child: InkWell(
           onTap: onTap,
@@ -206,19 +256,13 @@ class _Accion extends StatelessWidget {
             padding: EdgeInsets.all(spacing.md),
             child: Row(
               children: [
-                Icon(icon,
-                    color: destacada
-                        ? colors.onPrimaryContainer
-                        : colors.onSurfaceVariant),
+                Icon(icon, color: _colorDelTexto(context)),
                 SizedBox(width: spacing.md),
                 Expanded(
                   child: Text(
                     label,
-                    style: context.texts.titleMedium?.copyWith(
-                      color: destacada
-                          ? colors.onPrimaryContainer
-                          : colors.onSurface,
-                    ),
+                    style: context.texts.titleMedium
+                        ?.copyWith(color: _colorDelTexto(context)),
                   ),
                 ),
               ],
@@ -228,6 +272,14 @@ class _Accion extends StatelessWidget {
       ),
     );
   }
+}
+
+extension on _Accion {
+  Color _colorDelTexto(BuildContext context) => switch ((destacada, destructiva)) {
+        (true, _) => context.colors.onPrimaryContainer,
+        (_, true) => context.colors.onErrorContainer,
+        _ => context.colors.onSurface,
+      };
 }
 
 String? _siguienteEscalon(String actual) => switch (actual) {

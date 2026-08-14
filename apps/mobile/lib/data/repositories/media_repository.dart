@@ -242,6 +242,45 @@ class MediaRepository {
     ));
   }
 
+  /// Borra la foto: acá y en el servidor.
+  ///
+  /// **Suave en la base, duro en el disco.** La fila queda con `deletedAt` para
+  /// que la baja se pueda propagar (regla 20) y la operación viaja por la
+  /// bandeja, así que funciona sin señal. El archivo del teléfono sí se borra
+  /// de verdad: es una copia, y lo que se pidió fue sacarla de en medio.
+  Future<void> borrar(String assetId) async {
+    final cuando = DateTime.now();
+
+    final pendiente = await (_db.select(_db.pendingUploads)
+          ..where((p) => p.assetId.equals(assetId)))
+        .getSingleOrNull();
+
+    await _db.transaction(() async {
+      await (_db.update(_db.mediaAssets)..where((m) => m.id.equals(assetId)))
+          .write(MediaAssetsCompanion(
+        deletedAt: Value(cuando),
+        updatedAt: Value(cuando),
+        syncStatus: const Value(SyncStatus.pending),
+      ));
+      // Sale de la cola de subida: no tiene sentido seguir empujando el binario
+      // de algo que se acaba de borrar.
+      await (_db.delete(_db.pendingUploads)
+            ..where((p) => p.assetId.equals(assetId)))
+          .go();
+      await _outbox.enqueue(
+        type: SyncOp.mediaDelete,
+        targetId: assetId,
+        payload: const {},
+        occurredAt: cuando,
+      );
+    });
+
+    if (pendiente != null) {
+      final archivo = File(pendiente.filePath);
+      if (archivo.existsSync()) archivo.deleteSync();
+    }
+  }
+
   /// Dónde ver una foto que ya no está en este teléfono.
   ///
   /// El bucket no es público (ADR-0010): se sirve con URL firmada y de vida

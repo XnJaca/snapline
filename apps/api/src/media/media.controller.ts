@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
@@ -61,6 +61,13 @@ export class MediaController {
   @HttpCode(200)
   setVisibility(@Param('id', ParseUUIDPipe) id: string, @Body() dto: SetVisibilityDto): Promise<MediaAsset> {
     return this.service.setVisibility(id, dto);
+  }
+
+  @RequirePermission('media.delete')
+  @Delete(':id')
+  @HttpCode(204)
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.service.remove(id);
   }
 
   // Etiquetar es parte de capturar: quien toma la foto sabe si es el antes.

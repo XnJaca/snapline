@@ -28,6 +28,7 @@ import { RegisterAssetDto, SetTagsDto } from '../media/dto/media.dto';
 import { ClockInDto, ClockOutDto } from '../time-entries/dto/time-entry.dto';
 import {
   OPERATION_PERMISSION,
+  EmptyPayloadDto,
   SyncOperationDto, SyncOperationType, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto,
   SyncResultDto, SyncSiteCreateDto,
   SyncPersonDto,
@@ -45,6 +46,8 @@ const PAYLOAD_DTO = {
   'project.update': UpdateProjectDto,
   'media.register': RegisterAssetDto,
   'media.tag': SetTagsDto,
+  // Sin payload: el id de la foto viaja en targetId.
+  'media.delete': EmptyPayloadDto,
   'timeEntry.clockIn': ClockInDto,
   'timeEntry.clockOut': ClockOutDto,
   // El `satisfies` es el que obliga: una operación agregada a `SYNC_OPERATIONS`
@@ -199,6 +202,11 @@ export class SyncService {
           case 'media.register': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
             return ok((await this.media.register(dto, tenant)).asset.id);
+          }
+          // Borrado suave: reintentarlo sobre algo ya borrado es inofensivo.
+          case 'media.delete': {
+            await this.media.remove(op.targetId);
+            return ok(op.targetId);
           }
           // Reemplaza el conjunto entero, así que reintentarla es inofensiva.
           case 'media.tag': {

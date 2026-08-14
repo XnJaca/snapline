@@ -22,6 +22,7 @@ export const SYNC_OPERATIONS = [
   'project.update',
   'media.register',
   'media.tag',
+  'media.delete',
   'timeEntry.clockIn',
   'timeEntry.clockOut',
 ] as const;
@@ -45,9 +46,17 @@ export const OPERATION_PERMISSION = {
   'project.update': 'projects.write',
   'media.register': 'media.capture',
   'media.tag': 'media.capture',
+  'media.delete': 'media.delete',
   'timeEntry.clockIn': 'time.clock',
   'timeEntry.clockOut': 'time.clock',
 } as const satisfies Record<SyncOperationType, Permission>;
+
+/**
+ * Una operación cuyo objetivo entero es su `targetId`: borrar no necesita más.
+ * Existe para que `PAYLOAD_DTO` no tenga huecos — el `satisfies` obliga a que
+ * toda operación declare el suyo, y sin esto habría que romper esa garantía.
+ */
+export class EmptyPayloadDto {}
 
 /**
  * Payload de `site.create`. Una propiedad no existe suelta, así que de qué

@@ -280,6 +280,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["Media_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/media/{id}/tags": {
         parameters: {
             query?: never;
@@ -1881,7 +1897,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            type: "media.delete" | "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.
@@ -3862,6 +3878,79 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MediaAsset"];
                 };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Media_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error */
             400: {

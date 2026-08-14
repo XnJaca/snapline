@@ -600,6 +600,33 @@ describe('invariantes del dominio (e2e)', () => {
       expect(res.body.code).toBe('VISIBILITY_SKIPS_STEP');
     });
 
+    it('el WORKER no borra fotos: son la evidencia de la obra', async () => {
+      const suyo = await registrar();
+      await http.delete(`/api/media/${suyo}`)
+        .set('Authorization', `Bearer ${workerA}`).expect(403);
+    });
+
+    it('borrar es suave y la baja viaja en el pull', async () => {
+      const victima = await registrar();
+      const antes = new Date().toISOString();
+
+      await http.delete(`/api/media/${victima}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(204);
+
+      const res = await http.get(`/api/sync?since=${encodeURIComponent(antes)}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      expect(res.body.deleted.mediaAssets).toContain(victima);
+      expect(res.body.mediaAssets.map((m: { id: string }) => m.id))
+        .not.toContain(victima);
+
+      // La fila sigue: un borrado duro no se puede propagar a un teléfono que
+      // estuvo sin señal (regla 20).
+      const [fila] = await admin.query(
+        `SELECT deleted_at FROM media_asset WHERE id = $1`, [victima]);
+      expect(fila.deleted_at).not.toBeNull();
+    });
+
     it('escalón por escalón sí, y bajar no se restringe', async () => {
       // Llegar a PUBLIC exige subida terminada y EXIF limpio. Lo segundo lo
       // resuelve el servicio llamando al bucket, que acá no está configurado:

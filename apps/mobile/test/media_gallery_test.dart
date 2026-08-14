@@ -269,4 +269,48 @@ void main() {
       expect((await media.watchDeLaObra('p1').first).single.subida, isTrue);
     });
   });
+
+  group('borrar una foto', () {
+    test('la saca de la galería y encola la baja', () async {
+      await sembrarAsset('a1');
+
+      await media.borrar('a1');
+
+      expect(await media.watchDeLaObra('p1').first, isEmpty);
+      final pendientes = await Outbox(db, const Uuid()).pending();
+      expect(pendientes.single.type, SyncOp.mediaDelete);
+      expect(pendientes.single.targetId, 'a1');
+    });
+
+    test('es borrado suave: la fila queda para poder propagar la baja',
+        () async {
+      await sembrarAsset('a1');
+
+      await media.borrar('a1');
+
+      final fila = await (db.select(db.mediaAssets)
+            ..where((m) => m.id.equals('a1')))
+          .getSingle();
+      expect(fila.deletedAt != null, isTrue,
+          reason: 'un borrado duro no llega a un teléfono que estuvo sin señal');
+    });
+
+    test('el archivo del teléfono sí se borra de verdad', () async {
+      final archivo = File('${dir.path}/borrable.jpg')..writeAsBytesSync([1]);
+      await sembrarAsset('a1');
+      await db.into(db.pendingUploads).insert(
+        PendingUploadsCompanion.insert(
+          assetId: 'a1',
+          filePath: archivo.path,
+          mime: 'image/jpeg',
+        ),
+      );
+
+      await media.borrar('a1');
+
+      expect(archivo.existsSync(), isFalse);
+      // Y deja de intentar subir algo que ya no existe.
+      expect(await media.pendingUploads(), isEmpty);
+    });
+  });
 }

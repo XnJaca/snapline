@@ -72,6 +72,20 @@ export class MediaService {
     return this.getWithTags(id);
   }
 
+  /**
+   * Borrado suave: la fila queda con `deleted_at` y el pull la propaga como
+   * baja (regla 20). Un borrado duro no llegaría nunca a un teléfono que estuvo
+   * sin señal, y la foto reaparecería sola en la próxima sincronización.
+   *
+   * El objeto del bucket **no se toca**: mientras la fila exista, borrarlo
+   * dejaría un registro apuntando a nada. Se limpia aparte — ver DEBT-0007.
+   */
+  @Transactional()
+  async remove(id: string): Promise<void> {
+    await this.get(id);
+    await this.assets.update({ id }, { deletedAt: new Date() });
+  }
+
   private async guardarEtiquetas(
     assetId: string,
     tags: MediaTagKind[],

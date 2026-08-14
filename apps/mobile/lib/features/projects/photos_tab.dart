@@ -38,6 +38,7 @@ class PhotosTab extends ConsumerWidget {
     // Corregir qué muestra una foto es parte de capturarla: el trabajador que
     // la sacó puede etiquetarla, aunque publicar no sea suyo.
     final puedeEtiquetar = permisos.contains('media.capture');
+    final puedeBorrar = permisos.contains('media.delete');
 
     return Column(
       children: [
@@ -49,13 +50,14 @@ class PhotosTab extends ConsumerWidget {
               ),
             AsyncData(:final value) => _Grupos(
                 grupos: agruparPorEtiqueta(value),
-                onTap: puedeEtiquetar || puedeCambiarNivel
+                onTap: puedeEtiquetar || puedeCambiarNivel || puedeBorrar
                     ? (foto) => mostrarAccionesDeFoto(
                           context,
                           ref,
                           foto,
                           puedeEtiquetar: puedeEtiquetar,
                           puedeCambiarNivel: puedeCambiarNivel,
+                          puedeBorrar: puedeBorrar,
                         )
                     : null,
               ),
