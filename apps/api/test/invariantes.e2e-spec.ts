@@ -627,6 +627,24 @@ describe('invariantes del dominio (e2e)', () => {
       expect(fila.deleted_at).not.toBeNull();
     });
 
+    it('la foto de un marcaje no se puede borrar: es la evidencia', async () => {
+      const foto = await registrar();
+      // Se ata a un marcaje cualquiera de la empresa: lo que se prueba es la
+      // negativa del endpoint, no cómo llegó a estar atada.
+      const [marcaje] = await admin.query(
+        `SELECT id FROM time_entry WHERE company_id = $1 LIMIT 1`, [a.companyId]);
+      await admin.query(
+        `UPDATE time_entry SET clock_in_photo_id = $1 WHERE id = $2`,
+        [foto, marcaje.id]);
+
+      const res = await http.delete(`/api/media/${foto}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(409);
+      expect(res.body.code).toBe('ASSET_IN_USE');
+
+      await admin.query(
+        `UPDATE time_entry SET clock_in_photo_id = NULL WHERE id = $1`, [marcaje.id]);
+    });
+
     it('escalón por escalón sí, y bajar no se restringe', async () => {
       // Llegar a PUBLIC exige subida terminada y EXIF limpio. Lo segundo lo
       // resuelve el servicio llamando al bucket, que acá no está configurado:

@@ -1,0 +1,17 @@
+meta { name: Borrar la foto de un marcaje
+  type: http
+  seq: 24
+}
+delete { url: {{base_url}}/media/{{asset_id_de_marcaje}}
+  auth: none
+}
+docs {
+  La foto de un clock-in es la evidencia de que alguien estuvo ahí, y las horas
+  se defienden en una disputa (regla 12). Borrarla sería borrar la prueba.
+
+  Que la galería del móvil no la ofrezca no alcanza: el endpoint tiene que
+  negarse solo.
+}
+assert { res.status: eq 409
+  res.body.code: eq ASSET_IN_USE
+}

@@ -36,6 +36,7 @@ export const ERROR_CODES = [
   // contenido y publicación
   'EXIF_NOT_STRIPPED',
   'VISIBILITY_SKIPS_STEP',
+  'ASSET_IN_USE',
   'UPLOAD_NOT_READY',
   'MEDIA_ALREADY_UPLOADED',
   'ASSET_NOT_PUBLIC',

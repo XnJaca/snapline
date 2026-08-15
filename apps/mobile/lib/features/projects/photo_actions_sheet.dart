@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -201,10 +202,19 @@ class _AccionesState extends ConsumerState<_Acciones> {
           .read(mediaRepositoryProvider)
           .cambiarVisibilidad(widget.foto.id, visibility);
       if (mounted) Navigator.of(context).pop();
+    } on DioException catch (e) {
+      if (!mounted) return;
+      // El rechazo del servidor no es lo mismo que quedarse sin señal, y decir
+      // "necesita señal" cuando el problema es otro manda a buscar donde no
+      // está. El código viene en el envelope (ADR-0011).
+      final data = e.response?.data;
+      final code = data is Map ? data['code'] as String? : null;
+      setState(() {
+        _enCurso = false;
+        _error = _mensajeDe(code, AppLocalizations.of(context));
+      });
     } on Object {
       if (!mounted) return;
-      // Sin red o rechazo del servidor: se dice y la hoja queda abierta, en vez
-      // de cerrarse como si hubiera funcionado.
       setState(() {
         _enCurso = false;
         _error = AppLocalizations.of(context).photosNeedsNetwork;
@@ -281,6 +291,17 @@ extension on _Accion {
         _ => context.colors.onSurface,
       };
 }
+
+/// Un rechazo conocido se dice con sus palabras; lo que no reconocemos cae en
+/// el genérico en vez de inventar una causa.
+String _mensajeDe(String? code, AppLocalizations l10n) => switch (code) {
+      'VISIBILITY_SKIPS_STEP' => l10n.photosLadderNote,
+      'UPLOAD_NOT_READY' => l10n.photosNotUploadedYet,
+      'EXIF_NOT_STRIPPED' => l10n.photosExifPending,
+      'PERMISSION_DENIED' => l10n.photosNotAllowed,
+      null => l10n.photosNeedsNetwork,
+      _ => l10n.photosChangeFailed,
+    };
 
 String? _siguienteEscalon(String actual) => switch (actual) {
       'INTERNAL' => 'CLIENT',

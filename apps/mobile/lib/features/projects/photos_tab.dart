@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/media/photo_capture.dart';
 import '../../core/session/session_controller.dart';
@@ -132,6 +133,16 @@ class PhotosTab extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.actionCancel),
+          ),
+          // Abre los ajustes de la app de verdad. Un botón que dice "Abrir
+          // ajustes" y solo cierra el diálogo deja a la persona igual de
+          // trabada, y acá tomar la foto es la pantalla entera.
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              openAppSettings();
+            },
             child: Text(l10n.photosOpenSettings),
           ),
         ],
@@ -339,7 +350,9 @@ class FotoDeObra extends ConsumerWidget {
           icono: Icons.wifi_off_outlined,
           mensaje: AppLocalizations.of(context).photosNeedsNetwork,
         ),
-      _ => const ColoredBox(color: Colors.transparent),
+      // Mientras llega la URL: el mismo fondo que el resto de los marcos, no
+      // un hueco transparente que deja ver la grilla por debajo.
+      _ => ColoredBox(color: context.colors.surfaceContainerHighest),
     };
   }
 }

@@ -255,6 +255,79 @@ void main() {
     expect(await db.select(db.outboxOperations).get(), hasLength(1));
   });
 
+  /// El salto que de verdad va a hacer un teléfono con la app instalada: v5 es
+  /// la versión anterior a este cambio. Es el único camino que ejercita el
+  /// `addColumn` sobre `time_entries` — desde v1 la tabla ya nace con esas
+  /// columnas y esa rama nunca corre.
+  test('de v5 a v6 agrega las columnas sobre la tabla que ya existía', () async {
+    crearEsquemaV1();
+    final previa = sqlite3.open(archivo.path);
+    // La base como la dejó la v5: columnas de la v2, tablas de la v3 y v4, y
+    // `customers` ya sin el photo release.
+    previa.execute('ALTER TABLE customers ADD COLUMN first_name TEXT');
+    previa.execute('ALTER TABLE customers ADD COLUMN last_name TEXT');
+    previa.execute('ALTER TABLE customers ADD COLUMN source TEXT');
+    previa.execute('ALTER TABLE customers ADD COLUMN notes TEXT');
+    previa.execute('''
+      CREATE TABLE time_entries (
+        id TEXT NOT NULL,
+        company_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        deleted_at INTEGER,
+        sync_status INTEGER NOT NULL DEFAULT 0,
+        project_id TEXT NOT NULL,
+        membership_id TEXT NOT NULL,
+        recorded_by_membership_id TEXT NOT NULL,
+        clock_in_at INTEGER NOT NULL,
+        clock_out_at INTEGER,
+        break_minutes INTEGER NOT NULL DEFAULT 0,
+        method TEXT NOT NULL,
+        status TEXT NOT NULL,
+        flags TEXT NOT NULL DEFAULT '[]',
+        PRIMARY KEY (id)
+      )
+    ''');
+    previa.execute('''
+      CREATE TABLE pending_uploads (
+        asset_id TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        mime TEXT NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        uploaded_at INTEGER,
+        PRIMARY KEY (asset_id)
+      )
+    ''');
+    previa.execute('CREATE TABLE crews (id TEXT NOT NULL PRIMARY KEY)');
+    previa.execute('CREATE TABLE crew_members (id TEXT NOT NULL PRIMARY KEY)');
+    previa.execute('CREATE TABLE people (membership_id TEXT NOT NULL PRIMARY KEY)');
+    previa.execute(
+      'INSERT INTO time_entries (id, company_id, updated_at, project_id, '
+      'membership_id, recorded_by_membership_id, clock_in_at, method, status) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      ['t1', 'co1', 1754700000, 'p1', 'm1', 'm1', 1754700000, 'SELF', 'PENDING'],
+    );
+    previa.execute(
+      'INSERT INTO outbox_operations (client_id, type, target_id, payload, '
+      'occurred_at) VALUES (?, ?, ?, ?, ?)',
+      ['op1', 'media.register', 'a1', '{}', 1754700000],
+    );
+    previa.execute('PRAGMA user_version = 5');
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    // Las columnas nuevas existen y se pueden escribir sobre la fila que ya
+    // estaba, que es lo que el salto desde v1 no llega a probar.
+    await (db.update(db.timeEntries)..where((t) => t.id.equals('t1')))
+        .write(const TimeEntriesCompanion(clockInPhotoId: Value('foto-1')));
+    final marcaje = await db.select(db.timeEntries).getSingle();
+    expect(marcaje.clockInPhotoId, 'foto-1');
+
+    expect(await db.select(db.mediaAssets).get(), isEmpty);
+    expect(await db.select(db.outboxOperations).get(), hasLength(1));
+  });
+
   test('una base nueva arranca directamente en el esquema de ahora', () async {
     final db = AppDatabase(NativeDatabase(archivo));
     addTearDown(db.close);

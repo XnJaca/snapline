@@ -78,11 +78,33 @@ export class MediaService {
    * sin señal, y la foto reaparecería sola en la próxima sincronización.
    *
    * El objeto del bucket **no se toca**: mientras la fila exista, borrarlo
-   * dejaría un registro apuntando a nada. Se limpia aparte — ver DEBT-0007.
+   * dejaría un registro apuntando a nada. Ver DEBT-0007.
    */
   @Transactional()
   async remove(id: string): Promise<void> {
     await this.get(id);
+
+    // La foto de un marcaje es la evidencia de que alguien estuvo ahí, y las
+    // horas se defienden en una disputa (regla 12). Que la galería del móvil no
+    // la ofrezca no alcanza: el endpoint también tiene que negarse.
+    const marcaje = await this.assets.manager.query(
+      `SELECT 1 FROM time_entry
+        WHERE (clock_in_photo_id = $1 OR clock_out_photo_id = $1) AND deleted_at IS NULL
+        LIMIT 1`,
+      [id],
+    );
+    if (marcaje.length) {
+      throw ApiError.conflict('ASSET_IN_USE',
+        'Esa foto es la evidencia de un marcaje y no se puede borrar');
+    }
+
+    const logo = await this.assets.manager.query(
+      `SELECT 1 FROM company WHERE logo_asset_id = $1 LIMIT 1`, [id]);
+    if (logo.length) {
+      throw ApiError.conflict('ASSET_IN_USE',
+        'Esa foto es el logo de la empresa y no se puede borrar');
+    }
+
     await this.assets.update({ id }, { deletedAt: new Date() });
   }
 
@@ -132,6 +154,9 @@ export class MediaService {
       where: { project: { id: dto.projectId }, checksum: dto.checksum, deletedAt: IsNull() },
     });
     if (existing) {
+      // El reintento puede traer etiquetas que el intento anterior no alcanzó a
+      // guardar. Se aplican igual: reemplazan el conjunto, así que es inofensivo.
+      if (dto.tags?.length) await this.guardarEtiquetas(existing.id, dto.tags, tenant);
       return {
         asset: existing,
         uploadUrl: await this.storage.presignUpload(existing.storageKey, existing.mime),
