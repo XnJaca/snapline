@@ -136,6 +136,7 @@ const permisosOwner = [
   'media.capture',
   'media.read',
   'media.visibility',
+  'media.delete',
   'catalog.read',
   'catalog.write',
   'billing.read',

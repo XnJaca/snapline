@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme_extensions.dart';
+import '../../core/widgets/confirm_sheet.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -169,24 +170,14 @@ class _AccionesState extends ConsumerState<_Acciones> {
   /// traerla de vuelta. El "antes" de una obra no se puede volver a sacar.
   Future<void> _borrar() async {
     final l10n = AppLocalizations.of(context);
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.photosDeleteConfirmTitle),
-        content: Text(l10n.photosDeleteConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.photosDeleteConfirmAccept),
-          ),
-        ],
-      ),
+    final confirmado = await confirmarAccionDestructiva(
+      context,
+      titulo: l10n.photosDeleteConfirmTitle,
+      cuerpo: l10n.photosDeleteConfirmBody,
+      confirmar: l10n.photosDeleteConfirmAccept,
+      cancelar: l10n.actionCancel,
     );
-    if (confirmado != true || !mounted) return;
+    if (!confirmado || !mounted) return;
 
     await ref.read(mediaRepositoryProvider).borrar(widget.foto.id);
     if (mounted) Navigator.of(context).pop();

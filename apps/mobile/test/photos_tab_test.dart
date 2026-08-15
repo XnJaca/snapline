@@ -350,10 +350,54 @@ void main() {
       await disposeApp(tester);
     });
   });
+
+  group('borrar desde la hoja', () {
+    Future<void> abrirAcciones(WidgetTester tester) async {
+      await sembrarFoto('a1');
+      await tester.pumpWidget(pantalla());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+    }
+    testWidgets('pregunta antes, y las dos salidas se ven como botones',
+        timeout: limite, (tester) async {
+      await abrirAcciones(tester);
+      // La hoja es más alta que la pantalla del test: sin esto el toque cae
+      // fuera del árbol y no pasa nada.
+      await tester.ensureVisible(find.text('Borrar la foto'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Borrar la foto'));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Borrar esta foto?'), findsOne);
+      // Las dos son botones de verdad, no texto suelto: con guantes, un
+      // TextButton de diálogo no se lee ni se acierta.
+      expect(find.widgetWithText(FilledButton, 'Sí, borrar'), findsOne);
+      expect(find.widgetWithText(OutlinedButton, 'Cancelar'), findsOne);
+      await disposeApp(tester);
+    });
+    testWidgets('cancelar no borra nada', timeout: limite, (tester) async {
+      await abrirAcciones(tester);
+      // La hoja es más alta que la pantalla del test: sin esto el toque cae
+      // fuera del árbol y no pasa nada.
+      await tester.ensureVisible(find.text('Borrar la foto'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Borrar la foto'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      final fila = await (db.select(db.mediaAssets)
+            ..where((m) => m.id.equals('a1')))
+          .getSingle();
+      expect(fila.deletedAt == null, isTrue);
+      await disposeApp(tester);
+    });
+  });
 }
 
 /// El JPEG válido más chico que existe. Sin bytes reales `Image.file` lanza.
 final _jpegDeUnPixel = base64Decode(
   '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a'
   'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAA'
-  'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==');
+  'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==')
+;
