@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snapline/core/media/media_paths.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/repositories/media_repository.dart';
 import 'package:snapline/data/sync/outbox.dart';
@@ -21,6 +22,8 @@ void main() {
     media = MediaRepository(
         db, Outbox(db, const Uuid()), const Uuid(), MediaClientNulo());
     dir = Directory.systemTemp.createTempSync('snapline_galeria');
+    // Sin `path_provider` en un test: se le dice dónde están los archivos.
+    MediaPaths.usarCarpeta(dir.path);
   });
 
   tearDown(() async {
@@ -311,6 +314,49 @@ void main() {
       expect(archivo.existsSync(), isFalse);
       // Y deja de intentar subir algo que ya no existe.
       expect(await media.pendingUploads(), isEmpty);
+    });
+  });
+
+  group('la ruta del archivo sobrevive a una reinstalación', () {
+    test('la foto se sigue viendo aunque el contenedor haya cambiado',
+        () async {
+      final archivo = File('${dir.path}/techo.jpg')..writeAsBytesSync([1, 2, 3]);
+      final id = await media.registerPhoto(
+        projectId: 'p1',
+        filePath: archivo.path,
+        companyId: 'co1',
+      );
+
+      // Lo que hace iOS al reinstalar: mismo archivo, contenedor nuevo.
+      final nuevoContenedor =
+          Directory.systemTemp.createTempSync('snapline_contenedor');
+      addTearDown(() => nuevoContenedor.deleteSync(recursive: true));
+      File('${nuevoContenedor.path}/techo.jpg').writeAsBytesSync([1, 2, 3]);
+      MediaPaths.usarCarpeta(nuevoContenedor.path);
+
+      final foto = (await media.watchDeLaObra('p1').first).single;
+      expect(foto.id, id);
+      expect(foto.enElTelefono, isTrue,
+          reason: 'la ruta se resuelve contra la carpeta de hoy');
+      expect(foto.localPath, '${nuevoContenedor.path}/techo.jpg');
+
+      MediaPaths.usarCarpeta(dir.path);
+    });
+
+    test('si el binario ya no está, no se dice que está en el teléfono',
+        () async {
+      final archivo = File('${dir.path}/perdida.jpg')..writeAsBytesSync([1]);
+      await media.registerPhoto(
+        projectId: 'p1',
+        filePath: archivo.path,
+        companyId: 'co1',
+      );
+      archivo.deleteSync();
+
+      final foto = (await media.watchDeLaObra('p1').first).single;
+      // Antes decía "guardada en el teléfono" y `Image.file` explotaba con un
+      // archivo que no existe.
+      expect(foto.enElTelefono, isFalse);
     });
   });
 }

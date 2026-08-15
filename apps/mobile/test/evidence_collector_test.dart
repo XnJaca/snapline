@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/core/location/device_location.dart';
 import 'package:snapline/core/media/photo_capture.dart';
+import 'package:path/path.dart' as p;
+import 'package:snapline/core/media/media_paths.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/repositories/media_repository.dart';
 import 'package:snapline/data/sync/outbox.dart';
@@ -51,6 +53,8 @@ void main() {
     outbox = Outbox(db, const Uuid());
     media = MediaRepository(db, outbox, const Uuid(), MediaClientNulo());
     dir = Directory.systemTemp.createTempSync('snapline_foto');
+    // Sin `path_provider` en un test: se le dice dónde están los archivos.
+    MediaPaths.usarCarpeta(dir.path);
   });
 
   tearDown(() async {
@@ -107,7 +111,10 @@ void main() {
     // Y el binario espera su subida.
     final pendientes = await media.pendingUploads();
     expect(pendientes.single.assetId, capturada.evidence.photoId);
-    expect(pendientes.single.filePath, foto.path);
+    // Se guarda el nombre, no la ruta: el contenedor de la app cambia de lugar
+    // entre instalaciones y una ruta absoluta deja de existir.
+    expect(pendientes.single.filePath, p.basename(foto.path));
+    expect(MediaPaths.absoluta(pendientes.single.filePath), foto.path);
   });
 
   test('una foto que no se puede leer cuenta como sin foto, jamás tumba el marcaje', () async {

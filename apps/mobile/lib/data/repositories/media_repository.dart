@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../../api/clients/media_client.dart';
 import '../../api/models/set_visibility_dto.dart';
 import '../../api/models/set_visibility_dto_visibility.dart';
+import '../../core/media/media_paths.dart';
 import '../../core/network/api_client.dart';
 import '../local/app_database.dart';
 import '../local/tables.dart';
@@ -101,7 +102,9 @@ class MediaRepository {
       await _db.into(_db.pendingUploads).insert(
         PendingUploadsCompanion.insert(
           assetId: id,
-          filePath: filePath,
+          // El nombre, no la ruta: el contenedor de la app cambia de lugar y
+          // una ruta absoluta guardada hoy no existe después de reinstalar.
+          filePath: MediaPaths.nombreDe(filePath),
           mime: mime,
           bytes: Value(bytes.length),
         ),
@@ -186,7 +189,11 @@ class MediaRepository {
         tags: _leerTags(asset.tags),
         // El archivo local es lo que hace que la galería funcione sin señal.
         // Cuando ya no está, la foto necesita red para verse.
-        localPath: pendiente?.filePath,
+        // Solo si el archivo está de verdad: una fila con nombre no garantiza
+        // que el binario siga ahí, y `Image.file` de algo inexistente explota.
+        localPath: pendiente != null && MediaPaths.existe(pendiente.filePath)
+            ? MediaPaths.absoluta(pendiente.filePath)
+            : null,
         subida: asset.uploadStatus == 'READY',
         fallida: (pendiente?.attempts ?? 0) >= intentosParaMarcarFallida &&
             pendiente?.uploadedAt == null,
@@ -276,8 +283,8 @@ class MediaRepository {
     });
 
     if (pendiente != null) {
-      final archivo = File(pendiente.filePath);
-      if (archivo.existsSync()) archivo.deleteSync();
+      final ruta = MediaPaths.absoluta(pendiente.filePath);
+      if (ruta != null && File(ruta).existsSync()) File(ruta).deleteSync();
     }
   }
 
@@ -309,8 +316,8 @@ class MediaRepository {
       acumulado += fila.bytes;
       if (acumulado <= topeBytes) continue;
 
-      final archivo = File(fila.filePath);
-      if (archivo.existsSync()) archivo.deleteSync();
+      final ruta = MediaPaths.absoluta(fila.filePath);
+      if (ruta != null && File(ruta).existsSync()) File(ruta).deleteSync();
       await (_db.delete(_db.pendingUploads)
             ..where((p) => p.assetId.equals(fila.assetId)))
           .go();

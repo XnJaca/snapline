@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/clients/media_client.dart';
 import 'package:snapline/api/models/media_asset.dart';
 import 'package:snapline/api/models/signed_url_dto.dart';
+import 'package:snapline/core/media/media_paths.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/repositories/media_repository.dart';
 import 'package:snapline/data/sync/media_uploader.dart';
@@ -72,6 +73,8 @@ void main() {
     db = testDatabase();
     media = MediaRepository(db, Outbox(db, const Uuid()), const Uuid(), MediaClientNulo());
     dir = Directory.systemTemp.createTempSync('snapline_subida');
+    // Sin `path_provider` en un test: se le dice dónde están los archivos.
+    MediaPaths.usarCarpeta(dir.path);
   });
 
   tearDown(() async {

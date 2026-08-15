@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
+import 'package:snapline/core/media/media_paths.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/repositories/media_repository.dart';
 import 'package:snapline/features/projects/photo_tag_sheet.dart';
@@ -304,6 +305,9 @@ void main() {
       final archivo = File('${Directory.systemTemp.path}/snapline-mini.jpg')
         ..writeAsBytesSync(_jpegDeUnPixel);
       addTearDown(() => archivo.deleteSync());
+      // Sin `path_provider` en un test: se le dice dónde buscar los archivos.
+      MediaPaths.usarCarpeta(Directory.systemTemp.path);
+      addTearDown(() => MediaPaths.usarCarpeta(''));
 
       await sembrarFoto('a1', uploadStatus: 'PENDING');
       await db.into(db.pendingUploads).insert(
