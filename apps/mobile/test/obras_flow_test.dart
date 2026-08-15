@@ -28,6 +28,11 @@ class _CamaraFija implements PhotoCapture {
   final String? ruta;
   @override
   Future<String?> takePhoto() async => ruta;
+
+  @override
+  Future<PhotoResult> capture(PhotoQuality calidad) async => ruta == null
+      ? const PhotoResult.failed(PhotoFailure.cancelled)
+      : PhotoResult.taken(ruta!);
 }
 
 const _gpsOk = LocationResult.ok(39.0042, -77.0261);

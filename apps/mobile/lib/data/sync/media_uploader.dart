@@ -2,6 +2,8 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+
+import '../../core/media/media_paths.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/clients/media_client.dart';
@@ -32,7 +34,13 @@ class MediaUploader {
     for (final pendiente in await _media.pendingUploads()) {
       try {
         final destino = await _api.mediaUploadUrl(id: pendiente.assetId);
-        final bytes = await File(pendiente.filePath).readAsBytes();
+        final ruta = MediaPaths.absoluta(pendiente.filePath);
+        if (ruta == null || !File(ruta).existsSync()) {
+          // El binario ya no está: se deja de intentar y la galería lo dice.
+          await _media.incrementAttempts(pendiente.assetId);
+          continue;
+        }
+        final bytes = await File(ruta).readAsBytes();
         await _send(destino.url, bytes, pendiente.mime);
         await _api.mediaMarkUploaded(id: pendiente.assetId);
         await _media.markUploaded(pendiente.assetId);
@@ -56,6 +64,15 @@ class MediaUploader {
       } catch (e) {
         await _media.incrementAttempts(pendiente.assetId);
         developer.log('subida falló para ${pendiente.assetId}', name: 'media', error: e);
+      }
+    }
+
+    // Acá y no al arrancar la app: el disco solo crece cuando algo se sube, y
+    // este es el único momento en que eso pasa. Nada de lo pendiente se toca.
+    if (subidos > 0) {
+      final liberadas = await _media.limpiarPorEspacio();
+      if (liberadas > 0) {
+        developer.log('$liberadas foto(s) liberadas por espacio', name: 'media');
       }
     }
     return subidos;

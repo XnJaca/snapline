@@ -18,6 +18,8 @@ abstract final class SyncOp {
   static const timeEntryClockIn = 'timeEntry.clockIn';
   static const timeEntryClockOut = 'timeEntry.clockOut';
   static const mediaRegister = 'media.register';
+  static const mediaTag = 'media.tag';
+  static const mediaDelete = 'media.delete';
 }
 
 /// La cola de lo que todavía no llegó al servidor.

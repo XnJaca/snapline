@@ -1,7 +1,8 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
 import { MediaAsset } from './media-asset.entity';
 
-export type MediaTagKind = 'BEFORE' | 'DURING' | 'AFTER' | 'DETAIL' | 'PROBLEM' | 'RECEIPT';
+export const MEDIA_TAG_KINDS = ['BEFORE', 'DURING', 'AFTER', 'DETAIL', 'PROBLEM', 'RECEIPT'] as const;
+export type MediaTagKind = (typeof MEDIA_TAG_KINDS)[number];
 
 @Entity('media_tag')
 export class MediaTag {
@@ -18,7 +19,7 @@ export class MediaTag {
   @RelationId((t: MediaTag) => t.asset)
   assetId!: string;
 
-  @Column({ type: 'enum', enum: ['BEFORE', 'DURING', 'AFTER', 'DETAIL', 'PROBLEM', 'RECEIPT'], enumName: 'media_tag_kind' })
+  @Column({ type: 'enum', enum: MEDIA_TAG_KINDS, enumName: 'media_tag_kind' })
   tag!: MediaTagKind;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
