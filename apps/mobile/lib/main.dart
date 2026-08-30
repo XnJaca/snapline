@@ -9,10 +9,15 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/locale_store.dart';
 import 'core/theme/theme_store.dart';
 import 'core/theme/theme_providers.dart';
+import 'core/media/media_paths.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Dónde viven las fotos, una sola vez: la galería lo lee de forma síncrona
+  // desde un stream y no puede esperar a un Future por cada miniatura.
+  await MediaPaths.init();
 
   // Antes de montar nada: leer el idioma después dejaría la primera pantalla en
   // el idioma equivocado por un frame, y esa pantalla es el login.

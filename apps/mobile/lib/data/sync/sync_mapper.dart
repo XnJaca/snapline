@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../api/models/crew.dart';
 import '../../api/models/crew_member.dart';
 import '../../api/models/customer.dart';
+import '../../api/models/media_asset_dto.dart';
 import '../../api/models/project.dart';
 import '../../api/models/project_assignment.dart';
 import '../../api/models/site.dart';
@@ -38,6 +39,26 @@ abstract final class SyncMapper {
     method: Value(dto.method.json ?? 'SELF'),
     status: Value(dto.status.json ?? 'PENDING'),
     flags: Value(jsonEncode(dto.flags)),
+    clockInPhotoId: Value(dto.clockInPhotoId),
+    clockOutPhotoId: Value(dto.clockOutPhotoId),
+  );
+
+  /// Las etiquetas llegan adentro del asset, no como colección aparte:
+  /// `media_tag` no tiene `updated_at` y no puede entrar al pull incremental.
+  static MediaAssetsCompanion mediaAsset(MediaAssetDto dto) => MediaAssetsCompanion(
+    id: Value(dto.id),
+    companyId: Value(dto.companyId),
+    updatedAt: Value(dto.updatedAt),
+    deletedAt: Value(dto.deletedAt),
+    syncStatus: const Value(SyncStatus.synced),
+    projectId: Value(dto.projectId),
+    kind: Value(dto.kind.json ?? 'PHOTO'),
+    mime: Value(dto.mime),
+    visibility: Value(dto.visibility.json ?? 'INTERNAL'),
+    uploadStatus: Value(dto.uploadStatus.json ?? 'PENDING'),
+    capturedAt: Value(dto.capturedAt),
+    exifStrippedAt: Value(dto.exifStrippedAt),
+    tags: Value(jsonEncode(dto.tags.map((t) => t.json).toList())),
   );
 
   static CrewsCompanion crew(Crew dto) => CrewsCompanion(

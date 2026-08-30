@@ -7,7 +7,7 @@ import { Customer } from '../../customers/entities/customer.entity';
 import { Site } from '../../customers/entities/site.entity';
 import { Project } from '../../projects/entities/project.entity';
 import { ProjectAssignment } from '../../projects/entities/project-assignment.entity';
-import { MediaAsset } from '../../media/entities/media-asset.entity';
+import { MediaAssetDto } from '../../media/dto/media.dto';
 import { TimeEntry } from '../../time-entries/entities/time-entry.entity';
 import { Crew } from '../../crews/entities/crew.entity';
 import { CrewMember } from '../../crews/entities/crew-member.entity';
@@ -21,6 +21,8 @@ export const SYNC_OPERATIONS = [
   'project.create',
   'project.update',
   'media.register',
+  'media.tag',
+  'media.delete',
   'timeEntry.clockIn',
   'timeEntry.clockOut',
 ] as const;
@@ -43,9 +45,18 @@ export const OPERATION_PERMISSION = {
   'project.create': 'projects.write',
   'project.update': 'projects.write',
   'media.register': 'media.capture',
+  'media.tag': 'media.capture',
+  'media.delete': 'media.delete',
   'timeEntry.clockIn': 'time.clock',
   'timeEntry.clockOut': 'time.clock',
 } as const satisfies Record<SyncOperationType, Permission>;
+
+/**
+ * Una operación cuyo objetivo entero es su `targetId`: borrar no necesita más.
+ * Existe para que `PAYLOAD_DTO` no tenga huecos — el `satisfies` obliga a que
+ * toda operación declare el suyo, y sin esto habría que romper esa garantía.
+ */
+export class EmptyPayloadDto {}
 
 /**
  * Payload de `site.create`. Una propiedad no existe suelta, así que de qué
@@ -127,7 +138,9 @@ export class SyncPullResponseDto {
   @ApiProperty({ type: [Site] }) sites!: Site[];
   @ApiProperty({ type: [Project] }) projects!: Project[];
   @ApiProperty({ type: [ProjectAssignment] }) assignments!: ProjectAssignment[];
-  @ApiProperty({ type: [MediaAsset] }) mediaAssets!: MediaAsset[];
+  // Con sus etiquetas adentro: media_tag no puede ser colección propia del pull
+  // porque no tiene updated_at ni deleted_at. Ver SPEC-0010.
+  @ApiProperty({ type: [MediaAssetDto] }) mediaAssets!: MediaAssetDto[];
   @ApiProperty({ type: [TimeEntry] }) timeEntries!: TimeEntry[];
   @ApiProperty({ type: [Crew] }) crews!: Crew[];
   @ApiProperty({ type: [CrewMember] }) crewMembers!: CrewMember[];

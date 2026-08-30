@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0010: Fotos de la obra"
 type: spec
 platform: mobile
-status: review
+status: en-implementacion
 goal: "Una foto tomada en la obra sin señal aparece en la galería de esa obra con la etiqueta que se le haya puesto, sube sola cuando vuelve la red, y solo OWNER o ADMIN pueden subirla de nivel, de a un escalón."
 apps:
   - mobile
@@ -22,7 +22,7 @@ created: 2026-08-12
 updated: 2026-08-12
 tags:
   - spec
-  - spec/review
+  - spec/en-implementacion
   - mobile
 ---
 
@@ -91,10 +91,35 @@ de dónde elegir, y el `before_after_pair` —que la ficha de [[contenido]] llam
   pero elegir cuál con cuál es del spec de publicación.
 - **Editar la foto.** Recorte y filtros son otra categoría, y la ficha de
   [[contenido]] ya lo declara fuera.
-- **Borrar una foto.** Necesita borrado suave propagable (regla 20) y no hay caso
-  de uso pedido todavía.
+- ~~**Borrar una foto.** Necesita borrado suave propagable (regla 20) y no hay
+  caso de uso pedido todavía.~~ **Entró el 2026-08-13**, ver abajo.
 - **Documentos.** `kind = DOCUMENT` y su `document_kind` no se capturan desde el
   teléfono en este alcance.
+
+### Lo que se agregó al alcance mientras se implementaba
+
+Probando en el teléfono aparecieron dos cosas que el spec no había previsto. Van
+acá y no en otro spec porque son la misma pantalla y el mismo agregado.
+
+**Borrar una foto — 2026-08-13.** Estaba declarado fuera con la razón de que no
+había caso de uso; apareció uno concreto: fotos registradas cuyo binario no está
+ni en el teléfono ni en el servidor —pasa si se cierra sesión antes de que suba—
+no se pueden ver ni recuperar, y no había forma de sacarlas de en medio.
+
+Entra con **permiso propio `media.delete`, acotado a `OWNER` y `ADMIN`**. La foto
+es la evidencia de la obra y el "antes" no se puede volver a sacar cuando el
+trabajo ya empezó: quien borra puede estar borrando la prueba de algo. Un
+trabajador que saca una foto mala la deja sin etiqueta y no molesta a nadie.
+
+Es **suave en la base y duro en el disco**: la fila queda con `deleted_at` para
+que la baja se propague (regla 20) y el archivo local se borra de verdad, porque
+es una copia y lo que se pidió fue liberar el espacio. El objeto del bucket no se
+toca mientras la fila exista.
+
+**Ver una foto que no está en el teléfono — 2026-08-13.** El spec decía que
+"exige red" y lo daba por resuelto; no estaba implementado. Sin eso, toda foto
+que baja del pull —la que tomó otro— se veía como un cuadro vacío. Se pide con
+`GET /media/:id/url`, que ya existía.
 
 ## Modelo de dominio afectado
 
@@ -175,10 +200,20 @@ y se limpia al confirmar; si se borrara, la foto que el trabajador acaba de toma
 desaparecería de su propia galería en cuanto hay señal. Se conserva y se limpia
 por antigüedad, no por subida.
 
-> **Decisión pendiente de la implementación:** cuánto se conserva. Un mes de fotos
-> de dos cuadrillas no es trivial en un teléfono de trabajo, y con la calidad de
-> obra pesan el triple que las de marcaje. Si aparece un número defendible se
-> registra acá; si no, va a `/debt-new` con su trigger.
+**Cuánto se conserva: un tope de 500 MB**, no una ventana de días (decidido el
+2026-08-12). El límite que importa es el disco del teléfono, y una cuadrilla que
+toma 200 fotos en dos días llena lo mismo que otra en dos meses — el calendario no
+mide eso. A 1,5 MB por foto son unas 330 siempre disponibles sin señal.
+
+Al pasar del tope se borran las **más viejas ya subidas**, hasta volver debajo.
+Dos cosas no se borran nunca, por más que se pase:
+
+- **Lo que todavía no subió.** Es la única copia que existe.
+- **Lo que falló al subir.** Borrarlo sería descartar en silencio el trabajo del
+  día, que es exactamente lo que la regla 9 evita en el marcaje.
+
+Si el pendiente solo llegara a llenar el disco, el problema no es la retención
+sino que algo no está subiendo, y eso se ve en la galería.
 
 ### Lo que puede fallar y no es la red
 
@@ -229,6 +264,17 @@ Permiso: media.capture
 
 { "tags": ["BEFORE", "DETAIL"] }
 → 200  MediaAssetDto
+```
+
+**`RegisterAssetDto` acepta `tags` también.** Al tomar la foto, la etiqueta va
+adentro del registro y no como una segunda operación: son un solo gesto, y una
+operación sola no puede quedar a medias. El endpoint dedicado queda para
+corregir después.
+
+```http
+DELETE /api/media/:id
+Permiso: media.delete
+→ 204
 ```
 
 Reemplaza el conjunto entero en vez de agregar de a una: quitar una etiqueta sin
@@ -305,6 +351,11 @@ tabs cuando cambian los permisos.
 - [ ] Una foto que no sube se ve como no subida, y nunca se descarta sola.
 - [ ] La respuesta de `POST /media/:id/tags` sale en `openapi.json` con sus
       propiedades, no como `{"type":"object"}`.
+- [ ] Un `WORKER` no puede borrar una foto, y el `OWNER` sí.
+- [ ] Borrar la deja fuera de la galería en las dos puntas, y la baja llega a
+      otro teléfono por el pull.
+- [ ] Una foto que ya no está en el teléfono se ve igual con señal, y sin señal
+      lo dice en vez de mostrar un cuadro roto.
 - [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`
       (`api_isolation_test.dart`).
 - [ ] La pantalla se ve completa en claro y en oscuro, y en los dos idiomas.
@@ -345,4 +396,5 @@ tabs cuando cambian los permisos.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-12 | borrador | Creado. Desbloqueado por DEBT-0005: publicar dejó de exigir un permiso que no se podía otorgar |
+| 2026-08-13 | en-implementacion | El alcance creció probando en el teléfono: entra borrar una foto —con permiso propio `media.delete`— y la carga remota por URL firmada, que el spec daba por resuelta sin estarlo |
 | 2026-08-12 | review | Tres bloqueantes del `spec-reviewer`. `media_tag` no puede sincronizar como colección propia —le faltan `updated_at` y `deleted_at`—, así que las etiquetas pasan a viajar dentro del asset. La escalera de visibilidad se endurece acá en vez de quedar como riesgo. Y el comportamiento sin señal suma los tres casos de falla que no eran de red |

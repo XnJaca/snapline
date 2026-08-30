@@ -18,7 +18,7 @@ function servicio(asset: Partial<MediaAsset>): MediaService {
   const storage = {
     presignUpload: jest.fn().mockResolvedValue('https://firmada.example/put'),
   };
-  return new MediaService(assets as never, {} as never, storage as never);
+  return new MediaService(assets as never, {} as never, {} as never, storage as never);
 }
 
 const base: Partial<MediaAsset> = {

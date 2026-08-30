@@ -22,6 +22,9 @@ export const PERMISSIONS = {
   'media.capture': ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER'],
   'media.read': ['OWNER', 'ADMIN', 'FOREMAN', 'WORKER'],
   'media.visibility': ['OWNER', 'ADMIN'],
+  // Borrar es de oficina: la foto es evidencia de la obra, y el "antes" no se
+  // puede volver a sacar cuando el trabajo ya empezó.
+  'media.delete': ['OWNER', 'ADMIN'],
 
   'catalog.read': ['OWNER', 'ADMIN', 'ACCOUNTANT'],
   'catalog.write': ['OWNER', 'ADMIN'],

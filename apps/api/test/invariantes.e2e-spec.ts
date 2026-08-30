@@ -518,4 +518,147 @@ describe('invariantes del dominio (e2e)', () => {
       await admin.query(`UPDATE site SET deleted_at = NULL WHERE id = $1`, [a.siteId]);
     });
   });
+
+  // ------------------------------------------------- fotos de la obra
+
+  describe('etiquetas y escalera de visibilidad', () => {
+    const uuid = (): string => randomUUID();
+    let assetId: string;
+
+    /** Registrar por la bandeja: no toca el bucket, así que no exige credenciales. */
+    const registrar = async (): Promise<string> => {
+      const id = uuid();
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'media.register', targetId: id,
+          occurredAt: new Date().toISOString(),
+          payload: { projectId: a.projectId, kind: 'PHOTO', mime: 'image/jpeg', checksum: uuid() },
+        }] })
+        .expect(200);
+      return id;
+    };
+
+    beforeAll(async () => { assetId = await registrar(); });
+
+    it('etiquetar reemplaza el conjunto entero', async () => {
+      await http.post(`/api/media/${assetId}/tags`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ tags: ['BEFORE', 'DETAIL'] }).expect(200);
+
+      const res = await http.post(`/api/media/${assetId}/tags`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ tags: ['AFTER'] }).expect(200);
+
+      expect(res.body.tags).toEqual(['AFTER']);
+    });
+
+    /**
+     * La condición que el diseño de "etiquetas adentro del asset" deja
+     * implícita: sin tocar la fila, el cambio no entra en el pull incremental y
+     * la etiqueta puesta en un teléfono no llega al otro.
+     */
+    it('etiquetar toca el asset, así que entra en el pull incremental', async () => {
+      const otro = await registrar();
+      const antes = new Date().toISOString();
+
+      await http.post(`/api/media/${otro}/tags`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ tags: ['PROBLEM'] }).expect(200);
+
+      const res = await http.get(`/api/sync?since=${encodeURIComponent(antes)}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      const asset = res.body.mediaAssets.find((m: { id: string }) => m.id === otro);
+      expect(asset).toBeDefined();
+      expect(asset.tags).toEqual(['PROBLEM']);
+    });
+
+    it('una etiqueta que no existe en el dominio se rechaza', async () => {
+      await http.post(`/api/media/${assetId}/tags`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ tags: ['SELFIE'] }).expect(400);
+    });
+
+    it('el WORKER etiqueta: es parte de capturar', async () => {
+      const suyo = await registrar();
+      await http.post(`/api/media/${suyo}/tags`)
+        .set('Authorization', `Bearer ${workerA}`)
+        .send({ tags: ['DURING'] }).expect(200);
+    });
+
+    it('el WORKER no sube de nivel: eso es de oficina', async () => {
+      await http.post(`/api/media/${assetId}/visibility`)
+        .set('Authorization', `Bearer ${workerA}`)
+        .send({ visibility: 'CLIENT' }).expect(403);
+    });
+
+    it('INTERNAL no salta a PUBLIC de una vez', async () => {
+      const res = await http.post(`/api/media/${assetId}/visibility`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ visibility: 'PUBLIC' }).expect(400);
+
+      expect(res.body.code).toBe('VISIBILITY_SKIPS_STEP');
+    });
+
+    it('el WORKER no borra fotos: son la evidencia de la obra', async () => {
+      const suyo = await registrar();
+      await http.delete(`/api/media/${suyo}`)
+        .set('Authorization', `Bearer ${workerA}`).expect(403);
+    });
+
+    it('borrar es suave y la baja viaja en el pull', async () => {
+      const victima = await registrar();
+      const antes = new Date().toISOString();
+
+      await http.delete(`/api/media/${victima}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(204);
+
+      const res = await http.get(`/api/sync?since=${encodeURIComponent(antes)}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      expect(res.body.deleted.mediaAssets).toContain(victima);
+      expect(res.body.mediaAssets.map((m: { id: string }) => m.id))
+        .not.toContain(victima);
+
+      // La fila sigue: un borrado duro no se puede propagar a un teléfono que
+      // estuvo sin señal (regla 20).
+      const [fila] = await admin.query(
+        `SELECT deleted_at FROM media_asset WHERE id = $1`, [victima]);
+      expect(fila.deleted_at).not.toBeNull();
+    });
+
+    it('la foto de un marcaje no se puede borrar: es la evidencia', async () => {
+      const foto = await registrar();
+      // Se ata a un marcaje cualquiera de la empresa: lo que se prueba es la
+      // negativa del endpoint, no cómo llegó a estar atada.
+      const [marcaje] = await admin.query(
+        `SELECT id FROM time_entry WHERE company_id = $1 LIMIT 1`, [a.companyId]);
+      await admin.query(
+        `UPDATE time_entry SET clock_in_photo_id = $1 WHERE id = $2`,
+        [foto, marcaje.id]);
+
+      const res = await http.delete(`/api/media/${foto}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(409);
+      expect(res.body.code).toBe('ASSET_IN_USE');
+
+      await admin.query(
+        `UPDATE time_entry SET clock_in_photo_id = NULL WHERE id = $1`, [marcaje.id]);
+    });
+
+    it('escalón por escalón sí, y bajar no se restringe', async () => {
+      // Llegar a PUBLIC exige subida terminada y EXIF limpio. Lo segundo lo
+      // resuelve el servicio llamando al bucket, que acá no está configurado:
+      // se deja puesto para que el caso pruebe la escalera y no el storage.
+      await admin.query(
+        `UPDATE media_asset SET upload_status = 'READY', exif_stripped_at = now() WHERE id = $1`,
+        [assetId]);
+
+      const mover = (visibility: string) => http.post(`/api/media/${assetId}/visibility`)
+        .set('Authorization', `Bearer ${ownerA}`).send({ visibility }).expect(200);
+
+      await mover('CLIENT');
+      await mover('PUBLIC');
+      await mover('INTERNAL');
+    });
+  });
 });

@@ -22,6 +22,7 @@ part 'app_database.g.dart';
     Crews,
     CrewMembers,
     People,
+    MediaAssets,
     PendingUploads,
     OutboxOperations,
     SyncCursors,
@@ -32,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -60,6 +61,20 @@ class AppDatabase extends _$AppDatabase {
         // El photo release salió del producto (DEBT-0005). Es la primera columna
         // que se va: recrea `customers` y copia lo demás, sin tocar la bandeja.
         await m.alterTable(TableMigration(customers));
+      }
+      if (from < 6) {
+        await m.createTable(mediaAssets);
+        // `createTable` usa el esquema de HOY, no el de la versión que creó la
+        // tabla: si el salto viene de antes de la v3, `time_entries` ya nació
+        // con estas dos columnas y agregarlas otra vez falla por duplicado.
+        if (from >= 3) {
+          // Para excluir de la galería lo que es evidencia de asistencia.
+          await m.addColumn(timeEntries, timeEntries.clockInPhotoId);
+          await m.addColumn(timeEntries, timeEntries.clockOutPhotoId);
+        }
+        if (from >= 4) {
+          await m.addColumn(pendingUploads, pendingUploads.bytes);
+        }
       }
     },
   );

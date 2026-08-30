@@ -24,10 +24,11 @@ import { CreateCustomerDto, UpdateCustomerDto, UpdateSiteDto } from '../customer
 import { CreateProjectDto, UpdateProjectDto } from '../projects/dto/project.dto';
 import { roleHasPermission } from '../auth/permissions';
 import { newId } from '../common/entities/base.entity';
-import { RegisterAssetDto } from '../media/dto/media.dto';
+import { RegisterAssetDto, SetTagsDto } from '../media/dto/media.dto';
 import { ClockInDto, ClockOutDto } from '../time-entries/dto/time-entry.dto';
 import {
   OPERATION_PERMISSION,
+  EmptyPayloadDto,
   SyncOperationDto, SyncOperationType, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto,
   SyncResultDto, SyncSiteCreateDto,
   SyncPersonDto,
@@ -44,6 +45,9 @@ const PAYLOAD_DTO = {
   'project.create': CreateProjectDto,
   'project.update': UpdateProjectDto,
   'media.register': RegisterAssetDto,
+  'media.tag': SetTagsDto,
+  // Sin payload: el id de la foto viaja en targetId.
+  'media.delete': EmptyPayloadDto,
   'timeEntry.clockIn': ClockInDto,
   'timeEntry.clockOut': ClockOutDto,
   // El `satisfies` es el que obliga: una operación agregada a `SYNC_OPERATIONS`
@@ -198,6 +202,16 @@ export class SyncService {
           case 'media.register': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
             return ok((await this.media.register(dto, tenant)).asset.id);
+          }
+          // Borrado suave: reintentarlo sobre algo ya borrado es inofensivo.
+          case 'media.delete': {
+            await this.media.remove(op.targetId);
+            return ok(op.targetId);
+          }
+          // Reemplaza el conjunto entero, así que reintentarla es inofensiva.
+          case 'media.tag': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
+            return ok((await this.media.setTags(op.targetId, dto, tenant)).id);
           }
           case 'timeEntry.clockIn': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {
@@ -361,9 +375,15 @@ export class SyncService {
 
     const people = await this.gente(desde, acotado ? tenant.membershipId : null);
 
+    // Las etiquetas viajan dentro del asset, no como colección: `media_tag` no
+    // tiene `updated_at` ni `deleted_at`, de los que depende este pull.
+    const mediaAssetsConTags = await this.media.withTags(mediaAssets);
+
     return {
       serverTime: new Date(now).toISOString(),
-      customers, sites, projects, assignments, mediaAssets, timeEntries,
+      customers, sites, projects, assignments,
+      mediaAssets: mediaAssetsConTags,
+      timeEntries,
       crews, crewMembers, people,
       // Las seis colecciones que el pull trae vivas emiten también sus bajas: si
       // una falta, ese borrado nunca llega al dispositivo y la fila queda para

@@ -1,0 +1,19 @@
+meta { name: Media — borrar la foto
+  type: http
+  seq: 34
+}
+delete { url: {{base_url}}/media/{{asset_id}}
+  auth: none
+}
+docs {
+  Borrado suave: la fila queda con `deleted_at` y el pull la propaga como baja
+  (regla 20). Un borrado duro no llegaría a un teléfono que estuvo sin señal y
+  la foto reaparecería sola.
+
+  Entra con `media.delete`, que solo tienen OWNER y ADMIN: la foto es la
+  evidencia de la obra y el "antes" no se puede volver a sacar.
+
+  El objeto del bucket no se toca — ver DEBT-0007.
+}
+assert { res.status: eq 204
+}

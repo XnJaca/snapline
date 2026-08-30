@@ -152,6 +152,7 @@ class Synchronizer {
       _db.sites,
       _db.projects,
       _db.timeEntries,
+      _db.mediaAssets,
     ];
     for (final tabla in tablas) {
       await _db.customUpdate(
@@ -222,6 +223,16 @@ class Synchronizer {
         if (local?.syncStatus == SyncStatus.conflict) continue;
         await _db.into(_db.timeEntries).insertOnConflictUpdate(SyncMapper.timeEntry(dto));
       }
+      for (final dto in respuesta.mediaAssets) {
+        // Una fila con cambios sin empujar no se pisa: la etiqueta que se acaba
+        // de poner todavía no está en el servidor, y traerla de vuelta vacía la
+        // borraría de la pantalla. Se resuelve sola cuando el push entre.
+        final local = await (_db.select(_db.mediaAssets)
+              ..where((m) => m.id.equals(dto.id)))
+            .getSingleOrNull();
+        if (local?.syncStatus == SyncStatus.pending) continue;
+        await _db.into(_db.mediaAssets).insertOnConflictUpdate(SyncMapper.mediaAsset(dto));
+      }
       for (final dto in respuesta.crews) {
         await _db.into(_db.crews).insertOnConflictUpdate(SyncMapper.crew(dto));
       }
@@ -269,6 +280,7 @@ class Synchronizer {
     await marcar('projects', _db.projects);
     await marcar('assignments', _db.projectAssignments);
     await marcar('timeEntries', _db.timeEntries);
+    await marcar('mediaAssets', _db.mediaAssets);
     await marcar('crews', _db.crews);
     await marcar('crewMembers', _db.crewMembers);
 

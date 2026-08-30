@@ -1,0 +1,25 @@
+meta { name: Media — etiquetar la foto
+  type: http
+  seq: 33
+}
+post { url: {{base_url}}/media/{{asset_id}}/tags
+  body: json
+  auth: none
+}
+body:json {
+  { "tags": ["BEFORE", "DETAIL"] }
+}
+docs {
+  Reemplaza el conjunto entero, no agrega de a una: mandar el set completo la
+  vuelve idempotente sin necesitar una operación de borrado propagable.
+
+  Etiquetar entra con `media.capture` y no con `media.visibility` — quien toma
+  la foto sabe si es el antes.
+
+  Las etiquetas viajan dentro del asset también en el pull de /sync, así que
+  esta llamada toca `media_asset.updated_at`. Sin eso el cambio no entra en el
+  incremental y la etiqueta no llega al otro teléfono.
+}
+assert { res.status: eq 200
+  res.body.tags[0]: eq BEFORE
+}

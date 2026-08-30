@@ -9,7 +9,7 @@ supersedes: null
 superseded_by: null
 related_specs: []
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-14
 deciders:
   - jaca
 tags:
@@ -71,6 +71,18 @@ La UI **nunca** lee de la red. Lee de Drift y observa sus streams; la sincroniza
 escribe en Drift y la pantalla se actualiza sola. Esa inversión es lo que hace que
 la regla 9 se cumpla sin código especial por pantalla: sin señal no hay ninguna
 ruta distinta que recorrer, porque la ruta con señal ya pasaba por la base local.
+
+**Dos excepciones, ambas de SPEC-0010 y ambas de lectura o de acción deliberada.**
+`MediaRepository` toca el API directo para pedir la URL firmada de una foto que
+ya no está en el teléfono, y para subirle el nivel de visibilidad. La primera es
+lectura de algo que por diseño no puede vivir en local —la URL vence en diez
+minutos y el bucket no es público, ver ADR-0010—. La segunda es una decisión que
+no debe ejecutarse sola horas después: publicar con el autor mirando otra cosa es
+peor que fallar y decirlo.
+
+No se generaliza: **toda escritura que represente trabajo de campo sigue yendo
+por la bandeja.** Si aparece una tercera excepción, conviene revisar esta
+decisión antes de sumarla.
 
 Cada tabla que sincroniza lleva su estado propio:
 

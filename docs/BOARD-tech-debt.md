@@ -12,6 +12,8 @@ kanban-plugin: board
 
 ## 📥 Backlog (registrada, sin trigger disparado)
 
+- [ ] [[tech-debt/0007-el-objeto-borrado-queda-en-el-bucket|DEBT-0007: Borrar una foto no libera el objeto en Backblaze]] — **severidad baja**: el borrado es suave para poder propagarlo, y el binario queda pagándose (trigger: cuando el almacenamiento se note en la factura, o la segunda empresa)
+
 - [ ] [[tech-debt/0001-tokens-a-dart-a-mano|DEBT-0001: Los tokens se traducen a Dart a mano]] (trigger: scaffold de `apps/web`)
 - [ ] [[tech-debt/0004-radio-de-geocerca-hardcodeado|DEBT-0004: El radio de geocerca por default es una constante, no un ajuste de la empresa]] (trigger: la segunda empresa, o el primer ajuste de radio que pida William)
 

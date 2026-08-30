@@ -111,6 +111,11 @@ class TimeEntries extends Table with SyncedTable {
 
   /// La lista de banderas como JSON. Informan, nunca bloquean (regla 9).
   TextColumn get flags => text().withDefault(const Constant('[]'))();
+
+  /// Las fotos del marcaje. Se guardan para poder **excluirlas** de la galería
+  /// de la obra: son evidencia de asistencia, no material para publicar.
+  TextColumn get clockInPhotoId => text().nullable()();
+  TextColumn get clockOutPhotoId => text().nullable()();
 }
 
 /// Las cuadrillas que la persona lidera o integra. Se cachean para que el
@@ -148,6 +153,39 @@ class People extends Table {
   Set<Column> get primaryKey => {membershipId};
 }
 
+/// Las fotos de un proyecto, para verlas sin señal.
+///
+/// Antes de esto una foto registrada solo existía en `pending_uploads` hasta
+/// que subía, y después desaparecía del teléfono: no había de dónde leer la
+/// galería. Baja también del servidor, con el scope por rol que aplica el pull.
+@DataClassName('LocalMediaAsset')
+class MediaAssets extends Table with SyncedTable {
+  TextColumn get projectId => text()();
+
+  /// `PHOTO`, `VIDEO` o `DOCUMENT`, como texto: un valor nuevo del servidor
+  /// llega sin romper la base local.
+  TextColumn get kind => text()();
+
+  TextColumn get mime => text()();
+
+  /// `INTERNAL` → `CLIENT` → `PUBLIC`. Sube de a un escalón, y quién puede
+  /// hacerlo lo dice el servidor.
+  TextColumn get visibility => text()();
+
+  /// `PENDING`, `UPLOADING`, `READY` o `FAILED`.
+  TextColumn get uploadStatus => text()();
+
+  /// Del EXIF de la foto, no de cuándo subió (regla 10). Con offline la
+  /// diferencia puede ser de días y el orden de la obra depende de esto.
+  DateTimeColumn get capturedAt => dateTime().nullable()();
+
+  DateTimeColumn get exifStrippedAt => dateTime().nullable()();
+
+  /// Las etiquetas como JSON, igual que las banderas del marcaje. Viajan
+  /// adentro del asset porque `media_tag` no puede sincronizar sola.
+  TextColumn get tags => text().withDefault(const Constant('[]'))();
+}
+
 /// Las fotos que esperan subir su binario.
 ///
 /// El registro del asset viaja por la bandeja; el archivo pesa y sube aparte,
@@ -162,6 +200,10 @@ class PendingUploads extends Table {
   TextColumn get mime => text()();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   DateTimeColumn get uploadedAt => dateTime().nullable()();
+
+  /// Lo que pesa el archivo. Se guarda al registrar para que la limpieza por
+  /// espacio no tenga que ir al disco por cada foto.
+  IntColumn get bytes => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {assetId};

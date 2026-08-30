@@ -58,6 +58,7 @@ dependencies:
   url_launcher: ^6.3.2
   image_picker: ^1.2.3
   crypto: ^3.0.7
+  permission_handler: ^13.0.1
 
 dev_dependencies:
   flutter_test:
