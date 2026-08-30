@@ -133,9 +133,6 @@
   "photosRaiseToPublic": "Publish",
   "photosLowerVisibility": "Keep it to the team",
   "photosLadderBlocked": "Show it to the customer first.",
-  "photosVisibilityInternalHelp": "Only the team sees it.",
-  "photosVisibilityClientHelp": "The customer sees it in this job's portal.",
-  "photosVisibilityPublicHelp": "Anyone sees it on the website and social media.",
   "photosConfirmClientTitle": "Show this photo to the customer?",
   "photosConfirmClientBody": "The customer will see this photo in this job's portal. You can undo it whenever you want.",
   "photosConfirmClientAccept": "Yes, show it",
@@ -145,7 +142,6 @@
   "photosConfirmInternalTitle": "Keep it to the team?",
   "photosConfirmInternalBody": "Only the team will see this photo.",
   "photosConfirmInternalAccept": "Yes, take it down",
-  "photosSectionThis": "This photo",
   "photosWhoSees": "Who sees it",
   "photosTagLabel": "Tag",
 

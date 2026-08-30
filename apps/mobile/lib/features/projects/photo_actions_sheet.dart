@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/confirm_sheet.dart';
-import '../../core/widgets/section_card.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -100,47 +99,46 @@ class _AccionesState extends ConsumerState<_Acciones> {
               ),
             ),
             SizedBox(height: spacing.md),
-            // Una tarjeta con los campos adentro, como la ficha de la obra. Una
-            // tarjeta por dato no existe en ninguna otra pantalla.
-            SectionCard(
-              label: l10n.photosSectionThis,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _CampoNombrado(nombre: l10n.photosWhoSees),
-                  StatusLine(
-                    tone: switch (foto.visibility) {
-                      'PUBLIC' => StatusTone.success,
-                      'CLIENT' => StatusTone.info,
-                      _ => StatusTone.info,
-                    },
-                    label: _nivelEnTexto(foto.visibility, l10n),
-                  ),
-                  SizedBox(height: spacing.xs),
-                  // El nivel nombra; esto dice qué significa. Sin la segunda
-                  // línea hay que saberse la escalera para entender la primera.
-                  Text(
-                    _nivelExplicado(foto.visibility, l10n),
-                    style: context.texts.bodySmall
-                        ?.copyWith(color: context.colors.onSurfaceVariant),
-                  ),
-                  if (foto.tags.isNotEmpty) ...[
-                    SizedBox(height: spacing.md),
-                    _CampoNombrado(nombre: l10n.photosTagLabel),
-                    Wrap(
-                      spacing: spacing.sm,
-                      runSpacing: spacing.sm,
-                      children: [
-                        for (final tag in foto.tags)
-                          Chip(
-                            avatar: Icon(etiquetaEnIcono(tag), size: spacing.lg),
-                            label: Text(etiquetaEnTexto(tag, l10n)),
-                          ),
-                      ],
+            // Dos campos apoyados en la hoja, sin marco: en una hoja cuyo
+            // motivo es la foto, un bloque con borde compite con ella.
+            //
+            // En columnas y no apilados —al revés que `LabeledValue`, que las
+            // descartó— porque acá los dos valores son cortos y el ancho se
+            // reparte con `Expanded`. Lo que allá se rompía era el ancho fijo
+            // del label, no la columna.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (foto.tags.isNotEmpty)
+                  Expanded(
+                    child: _Campo(
+                      nombre: l10n.photosTagLabel,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final tag in foto.tags)
+                            _IconoYTexto(
+                              icono: etiquetaEnIcono(tag),
+                              texto: etiquetaEnTexto(tag, l10n),
+                            ),
+                        ],
+                      ),
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                Expanded(
+                  child: _Campo(
+                    nombre: l10n.photosWhoSees,
+                    child: StatusLine(
+                      tone: switch (foto.visibility) {
+                        'PUBLIC' => StatusTone.success,
+                        'CLIENT' => StatusTone.info,
+                        _ => StatusTone.info,
+                      },
+                      label: _nivelEnTexto(foto.visibility, l10n),
+                    ),
+                  ),
+                ),
+              ],
             ),
             if (_error != null) ...[
               SizedBox(height: spacing.md),
@@ -379,13 +377,6 @@ String? _siguienteEscalon(String actual) => switch (actual) {
       _ => null,
     };
 
-String _nivelExplicado(String visibility, AppLocalizations l10n) =>
-    switch (visibility) {
-      'PUBLIC' => l10n.photosVisibilityPublicHelp,
-      'CLIENT' => l10n.photosVisibilityClientHelp,
-      _ => l10n.photosVisibilityInternalHelp,
-    };
-
 String _nivelEnTexto(String visibility, AppLocalizations l10n) =>
     switch (visibility) {
       'PUBLIC' => l10n.photosVisibilityPublic,
@@ -393,22 +384,56 @@ String _nivelEnTexto(String visibility, AppLocalizations l10n) =>
       _ => l10n.photosVisibilityInternal,
     };
 
-/// El nombre de un campo cuyo valor no es texto plano y por eso no puede ir en
-/// un [LabeledValue]. Mismo tratamiento que el estado en la ficha de la obra.
-class _CampoNombrado extends StatelessWidget {
-  const _CampoNombrado({required this.nombre});
+/// Un campo cuyo valor no es texto plano y por eso no entra en un
+/// [LabeledValue]. Mismo nombre arriba y mismo espaciado que él, para que los
+/// dos se lean como el mismo tipo de dato.
+class _Campo extends StatelessWidget {
+  const _Campo({required this.nombre, required this.child});
 
   final String nombre;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.xs),
-      child: Text(
-        nombre,
-        style: context.texts.bodySmall
-            ?.copyWith(color: context.colors.onSurfaceVariant),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          nombre,
+          style: context.texts.bodySmall
+              ?.copyWith(color: context.colors.onSurfaceVariant),
+        ),
+        SizedBox(height: context.spacing.xs),
+        child,
+      ],
+    );
+  }
+}
+
+/// La etiqueta con su icono, con la misma forma que una [StatusLine]: las dos
+/// columnas son el mismo tipo de dato y tienen que verse igual.
+class _IconoYTexto extends StatelessWidget {
+  const _IconoYTexto({required this.icono, required this.texto});
+
+  final IconData icono;
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icono, size: context.spacing.lg,
+            color: context.colors.onSurfaceVariant),
+        SizedBox(width: context.spacing.xs),
+        Flexible(
+          child: Text(
+            texto,
+            style: context.texts.bodyMedium
+                ?.copyWith(color: context.colors.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }

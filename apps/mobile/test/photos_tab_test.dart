@@ -265,7 +265,7 @@ void main() {
     await disposeApp(tester);
   });
 
-  testWidgets('el nivel dice qué significa, no solo cómo se llama',
+  testWidgets('cada dato de la foto va con su nombre',
       timeout: limite, (tester) async {
     await sembrarFoto('a1', tags: ['BEFORE']);
 
@@ -277,7 +277,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Solo el equipo'), findsOne);
-    expect(find.text('Solo el equipo la ve.'), findsOne);
+    // El nombre del campo, no el dato suelto: sin él las dos columnas se leen
+    // como dos textos sin relación.
+    expect(find.text('Quién la ve'), findsOne);
+    expect(find.text('Etiqueta'), findsOne);
 
     await disposeApp(tester);
   });

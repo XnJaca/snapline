@@ -104,9 +104,6 @@
   "photosRaiseToPublic": "Publicar",
   "photosLowerVisibility": "Dejarla solo para el equipo",
   "photosLadderBlocked": "Primero hay que mostrársela al cliente.",
-  "photosVisibilityInternalHelp": "Solo el equipo la ve.",
-  "photosVisibilityClientHelp": "El cliente la ve en el portal de esta obra.",
-  "photosVisibilityPublicHelp": "Cualquiera la ve en la página web y en las redes.",
   "photosConfirmClientTitle": "¿Mostrarle esta foto al cliente?",
   "photosConfirmClientBody": "Esta foto la verá el cliente en el portal de esta obra. Puede volver atrás cuando quiera.",
   "photosConfirmClientAccept": "Sí, mostrarla",
@@ -116,7 +113,6 @@
   "photosConfirmInternalTitle": "¿Dejarla solo para el equipo?",
   "photosConfirmInternalBody": "Esta foto solo la verá el equipo.",
   "photosConfirmInternalAccept": "Sí, quitarla",
-  "photosSectionThis": "Esta foto",
   "photosWhoSees": "Quién la ve",
   "photosTagLabel": "Etiqueta",
 
