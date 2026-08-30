@@ -116,6 +116,7 @@
   "photosConfirmInternalTitle": "¿Dejarla solo para el equipo?",
   "photosConfirmInternalBody": "Esta foto solo la verá el equipo.",
   "photosConfirmInternalAccept": "Sí, quitarla",
+  "photosSectionThis": "Esta foto",
   "photosWhoSees": "Quién la ve",
   "photosTagLabel": "Etiqueta",
 

@@ -100,13 +100,14 @@ class _AccionesState extends ConsumerState<_Acciones> {
               ),
             ),
             SizedBox(height: spacing.md),
-            // Cada dato dentro de su marco: un label suelto sobre el lienzo no
-            // se lee como el título de lo que sigue.
+            // Una tarjeta con los campos adentro, como la ficha de la obra. Una
+            // tarjeta por dato no existe en ninguna otra pantalla.
             SectionCard(
-              label: l10n.photosWhoSees,
+              label: l10n.photosSectionThis,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _CampoNombrado(nombre: l10n.photosWhoSees),
                   StatusLine(
                     tone: switch (foto.visibility) {
                       'PUBLIC' => StatusTone.success,
@@ -123,26 +124,24 @@ class _AccionesState extends ConsumerState<_Acciones> {
                     style: context.texts.bodySmall
                         ?.copyWith(color: context.colors.onSurfaceVariant),
                   ),
+                  if (foto.tags.isNotEmpty) ...[
+                    SizedBox(height: spacing.md),
+                    _CampoNombrado(nombre: l10n.photosTagLabel),
+                    Wrap(
+                      spacing: spacing.sm,
+                      runSpacing: spacing.sm,
+                      children: [
+                        for (final tag in foto.tags)
+                          Chip(
+                            avatar: Icon(etiquetaEnIcono(tag), size: spacing.lg),
+                            label: Text(etiquetaEnTexto(tag, l10n)),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
-            if (foto.tags.isNotEmpty) ...[
-              SizedBox(height: spacing.md),
-              SectionCard(
-                label: l10n.photosTagLabel,
-                child: Wrap(
-                  spacing: spacing.sm,
-                  runSpacing: spacing.sm,
-                  children: [
-                    for (final tag in foto.tags)
-                      Chip(
-                        avatar: Icon(etiquetaEnIcono(tag), size: spacing.lg),
-                        label: Text(etiquetaEnTexto(tag, l10n)),
-                      ),
-                  ],
-                ),
-              ),
-            ],
             if (_error != null) ...[
               SizedBox(height: spacing.md),
               StatusChip(tone: StatusTone.danger, label: _error!, expand: true),
@@ -393,3 +392,23 @@ String _nivelEnTexto(String visibility, AppLocalizations l10n) =>
       'CLIENT' => l10n.photosVisibilityClient,
       _ => l10n.photosVisibilityInternal,
     };
+
+/// El nombre de un campo cuyo valor no es texto plano y por eso no puede ir en
+/// un [LabeledValue]. Mismo tratamiento que el estado en la ficha de la obra.
+class _CampoNombrado extends StatelessWidget {
+  const _CampoNombrado({required this.nombre});
+
+  final String nombre;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.xs),
+      child: Text(
+        nombre,
+        style: context.texts.bodySmall
+            ?.copyWith(color: context.colors.onSurfaceVariant),
+      ),
+    );
+  }
+}
