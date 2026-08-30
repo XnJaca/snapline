@@ -98,20 +98,27 @@ class _AccionesState extends ConsumerState<_Acciones> {
               ),
             ),
             SizedBox(height: spacing.md),
-            StatusLine(
-              tone: switch (foto.visibility) {
-                'PUBLIC' => StatusTone.success,
-                'CLIENT' => StatusTone.info,
-                _ => StatusTone.info,
-              },
-              label: _nivelEnTexto(foto.visibility, l10n),
+            // Dos datos distintos, y sueltos no se distinguían: quién la ve y
+            // en qué grupo está se leían como una sola cosa sin nombre.
+            _Dato(
+              nombre: l10n.photosWhoSees,
+              child: StatusLine(
+                tone: switch (foto.visibility) {
+                  'PUBLIC' => StatusTone.success,
+                  'CLIENT' => StatusTone.info,
+                  _ => StatusTone.info,
+                },
+                label: _nivelEnTexto(foto.visibility, l10n),
+              ),
             ),
             if (foto.tags.isNotEmpty) ...[
-              SizedBox(height: spacing.xs),
-              Text(
-                etiquetasEnTexto(foto.tags, l10n),
-                style: context.texts.bodySmall
-                    ?.copyWith(color: context.colors.onSurfaceVariant),
+              SizedBox(height: spacing.md),
+              _Dato(
+                nombre: l10n.photosTagLabel,
+                child: Text(
+                  etiquetasEnTexto(foto.tags, l10n),
+                  style: context.texts.bodyMedium,
+                ),
               ),
             ],
             if (_error != null) ...[
@@ -147,12 +154,6 @@ class _AccionesState extends ConsumerState<_Acciones> {
                   label: l10n.photosLowerVisibility,
                   onTap: _enCurso ? null : () => _mover('INTERNAL'),
                 ),
-              SizedBox(height: spacing.sm),
-              Text(
-                l10n.photosLadderNote,
-                style: context.texts.bodySmall
-                    ?.copyWith(color: context.colors.onSurfaceVariant),
-              ),
             ],
 
             if (widget.puedeBorrar) ...[
@@ -304,7 +305,7 @@ extension on _Accion {
 /// Un rechazo conocido se dice con sus palabras; lo que no reconocemos cae en
 /// el genérico en vez de inventar una causa.
 String _mensajeDe(String? code, AppLocalizations l10n) => switch (code) {
-      'VISIBILITY_SKIPS_STEP' => l10n.photosLadderNote,
+      'VISIBILITY_SKIPS_STEP' => l10n.photosLadderBlocked,
       'UPLOAD_NOT_READY' => l10n.photosNotUploadedYet,
       'EXIF_NOT_STRIPPED' => l10n.photosExifPending,
       'PERMISSION_DENIED' => l10n.photosNotAllowed,
@@ -324,3 +325,30 @@ String _nivelEnTexto(String visibility, AppLocalizations l10n) =>
       'CLIENT' => l10n.photosVisibilityClient,
       _ => l10n.photosVisibilityInternal,
     };
+
+/// Un dato de la foto con su nombre encima. El nombre en chico y apagado, el
+/// valor en el cuerpo: sin él, dos líneas seguidas se leen como una sola.
+class _Dato extends StatelessWidget {
+  const _Dato({required this.nombre, required this.child});
+
+  final String nombre;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = context.spacing;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          nombre,
+          style: context.texts.labelSmall
+              ?.copyWith(color: context.colors.onSurfaceVariant),
+        ),
+        SizedBox(height: spacing.xs),
+        child,
+      ],
+    );
+  }
+}

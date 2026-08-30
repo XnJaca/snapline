@@ -243,6 +243,16 @@ grupo **Sin etiqueta** de la galería se conserva para las fotos anteriores a es
 cambio: no se les puede inventar una, y verlas agrupadas ahí es lo que hace que
 alguien las etiquete.
 
+**Y es una sola etiqueta, no varias — 2026-08-30.** La hoja permitía marcar las
+seis. La galería agrupa por etiqueta, así que una foto con dos aparecía dos veces:
+duplicarla en la vista es el desorden que esto viene a ordenar, y "antes" y
+"después" a la vez no significa nada.
+
+El contrato no cambia —`tags` sigue siendo un arreglo, sin migración— y
+`agruparPorEtiqueta` sigue tratando las de antes, que sí pueden traer varias. Lo
+que cambia es que la app ya no las produce, y la fila lo dice con un radio en vez
+de un check.
+
 ## Flujo de usuario
 
 1. El trabajador abre su obra y toca el tab **Fotos**.

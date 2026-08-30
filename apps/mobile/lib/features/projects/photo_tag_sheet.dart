@@ -76,7 +76,9 @@ class _HojaDeEtiquetas extends StatefulWidget {
 }
 
 class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
-  late final Set<MediaTag> _elegidas = {...widget.iniciales};
+  /// Una sola. La galería agrupa por etiqueta, así que una foto con dos
+  /// aparecería dos veces — el desorden que esto viene a ordenar.
+  late MediaTag? _elegida = widget.iniciales.firstOrNull;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +90,14 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.md),
+          // Sin agarradera —el caso de la foto nueva— el título quedaba
+          // pegado al borde de la hoja.
+          padding: EdgeInsets.fromLTRB(
+            spacing.lg,
+            widget.esFotoNueva ? spacing.lg : 0,
+            spacing.lg,
+            spacing.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -110,12 +119,8 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
               for (final tag in MediaTag.values)
                 _Opcion(
                   tag: tag,
-                  elegida: _elegidas.contains(tag),
-                  onTap: () => setState(() {
-                    _elegidas.contains(tag)
-                        ? _elegidas.remove(tag)
-                        : _elegidas.add(tag);
-                  }),
+                  elegida: _elegida == tag,
+                  onTap: () => setState(() => _elegida = tag),
                 ),
             ],
           ),
@@ -129,9 +134,9 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
                 child: FilledButton(
                   // Sin etiqueta no hay dónde guardarla: el botón apagado dice
                   // que falta elegir, y el texto de arriba dice por qué.
-                  onPressed: _elegidas.isEmpty
+                  onPressed: _elegida == null
                       ? null
-                      : () => Navigator.of(context).pop(_elegidas.toList()),
+                      : () => Navigator.of(context).pop([_elegida!]),
                   child: Text(l10n.photosTagSave),
                 ),
               ),
@@ -201,7 +206,9 @@ class _Opcion extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  elegida ? Icons.check_circle : Icons.circle_outlined,
+                  elegida
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   color: elegida ? colors.onPrimaryContainer : colors.outline,
                 ),
               ],
