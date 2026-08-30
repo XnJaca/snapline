@@ -72,6 +72,24 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     if (n > 0) engine.sincronizar();
   });
   ref.onDispose(sub.cancel);
+
+  // Volver la red, por la misma razón y con el mismo remedio. Estaba solo en
+  // el `watch` de [SyncController], que se pausa con el shell tapado: salir del
+  // sótano con la obra abierta no disparaba nada hasta volver atrás y tirar de
+  // la lista.
+  //
+  // Y va con una suscripción de Dart, como la bandeja: un `ref.listen` acá no
+  // sirve —este provider no tiene observadores, y sin ellos sus suscripciones
+  // de Riverpod no corren—. Se comprobó, no se dedujo.
+  final red = ref
+      .read(connectivityWatcherProvider)
+      .hayInterfaz()
+      .distinct()
+      .listen((hay) {
+    if (hay) engine.sincronizar();
+  });
+  ref.onDispose(red.cancel);
+
   return engine;
 });
 
@@ -88,9 +106,9 @@ class SyncController extends AsyncNotifier<bool> {
   Future<bool> build() async {
     final haySesion = ref.watch(sessionControllerProvider).value != null;
 
-    // Observar la conectividad hace que esto se reintente solo cuando el
-    // dispositivo recupera una interfaz de red. Sin esto, volver del sótano no
-    // cambiaba nada hasta que alguien tocara el botón.
+    // Se observa para el estado que se muestra —el botón y el aviso de sin
+    // señal—, no como disparo: tapado el shell esto se pausa. Quien garantiza
+    // que volver la red sincronice es [syncEngineProvider].
     final hayInterfaz = ref.watch(connectivityProvider).value ?? true;
 
     // `read` y no `watch`: el motor no debe quedar atado al ciclo de vida de

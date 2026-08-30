@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/clients/sync_client.dart';
@@ -31,6 +33,62 @@ import 'support/fakes.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  /// Espera hasta que la condición se cumpla, o se rinde. El disparo es
+  /// asíncrono y no hay nada a lo que hacerle `await`.
+  Future<void> esperar(bool Function() listo) async {
+    for (var i = 0; i < 100 && !listo(); i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+  }
+
+  test('volver la red dispara una sincronización con el controlador pausado',
+      () async {
+    final db = testDatabase();
+    final api = _SyncClientQueRegistra();
+    final red = StreamController<bool>.broadcast();
+
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        sessionStorageProvider.overrideWithValue(
+          FakeSessionStorage(buildSession()),
+        ),
+        connectivityWatcherProvider
+            .overrideWithValue(_RedControlada(red.stream)),
+        syncClientProvider.overrideWithValue(api),
+      ],
+    );
+    addTearDown(() async {
+      container.dispose();
+      await red.close();
+      await db.close();
+    });
+
+    // Leer el controlador crea el motor, y el motor es quien se suscribe.
+    container.read(syncControllerProvider);
+
+    final sesion = container.listen(sessionControllerProvider, (_, _) {});
+    await esperar(
+        () => container.read(sessionControllerProvider).value != null);
+    expect(container.read(sessionControllerProvider).value, isNotNull);
+    sesion.close();
+
+    // Se cuenta el pull y no el push: toda sincronización trae lo del servidor,
+    // haya o no algo que mandar. Lo que se prueba es que el disparo corra, no
+    // qué lleva encima.
+    final antes = api.pulls;
+
+    // Vuelve la red, con nadie observando al controlador: el shell tapado por
+    // la pantalla de la obra. El bug era que acá no pasaba nada y había que
+    // salir y tirar de la lista.
+    red.add(true);
+    await esperar(() => api.pulls > antes);
+
+    expect(api.pulls, greaterThan(antes),
+        reason: 'volver del sótano tiene que sincronizar sin que nadie toque '
+            'nada, aunque el shell esté tapado');
+  });
+
   test('encolar dispara el push con el controlador pausado', () async {
     final db = testDatabase();
     final api = _SyncClientQueRegistra();
@@ -42,6 +100,8 @@ void main() {
           FakeSessionStorage(buildSession()),
         ),
         connectivityProvider.overrideWith((ref) => Stream.value(true)),
+        connectivityWatcherProvider
+            .overrideWithValue(_RedControlada(Stream.value(true))),
         syncClientProvider.overrideWithValue(api),
       ],
     );
@@ -94,6 +154,7 @@ void main() {
 /// Registra cada push y responde `applied` a todo.
 class _SyncClientQueRegistra implements SyncClient {
   final pushes = <SyncPushDto>[];
+  var pulls = 0;
 
   @override
   Future<SyncPushResponseDto> syncPush({required SyncPushDto body}) async {
@@ -115,6 +176,7 @@ class _SyncClientQueRegistra implements SyncClient {
 
   @override
   Future<SyncPullResponseDto> syncPull({String? since}) async {
+    pulls++;
     return SyncPullResponseDto(
       serverTime: DateTime.utc(2026, 8, 11),
       customers: const [],
@@ -129,4 +191,14 @@ class _SyncClientQueRegistra implements SyncClient {
       deleted: const {},
     );
   }
+}
+
+/// La red que el test enciende y apaga a mano.
+class _RedControlada implements ConnectivityWatcher {
+  const _RedControlada(this.stream);
+
+  final Stream<bool> stream;
+
+  @override
+  Stream<bool> hayInterfaz() => stream;
 }
