@@ -277,7 +277,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Solo el equipo'), findsOne);
-    expect(find.text('Nadie fuera de la empresa la ve.'), findsOne);
+    expect(find.text('Solo el equipo la ve.'), findsOne);
 
     await disposeApp(tester);
   });
