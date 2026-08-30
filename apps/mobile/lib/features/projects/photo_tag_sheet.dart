@@ -29,7 +29,7 @@ IconData etiquetaEnIcono(MediaTag tag) => switch (tag) {
 String etiquetasEnTexto(List<MediaTag> tags, AppLocalizations l10n) =>
     tags.map((t) => etiquetaEnTexto(t, l10n)).join(' · ');
 
-/// Qué muestra la foto, elegido en el mismo gesto que tomarla.
+/// La etapa o categoría de la foto, elegida en el mismo gesto que tomarla.
 ///
 /// **Filas altas y no chips**: esto se toca con guantes arriba de un techo, y
 /// un chip de texto es un blanco de 32dp. Cada fila llega al mínimo táctil y
@@ -76,18 +76,7 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.photosTagQuestion, style: context.texts.titleLarge),
-              SizedBox(height: spacing.xs),
-              Text(
-                l10n.photosTagHelp,
-                style: context.texts.bodySmall
-                    ?.copyWith(color: context.colors.onSurfaceVariant),
-              ),
-            ],
-          ),
+          child: Text(l10n.photosTagTitle, style: context.texts.titleLarge),
         ),
         Flexible(
           child: ListView(
