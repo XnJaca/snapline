@@ -385,6 +385,14 @@ tabs cuando cambian los permisos.
 - [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`
       (`api_isolation_test.dart`).
 - [ ] La pantalla se ve completa en claro y en oscuro, y en los dos idiomas.
+- [ ] Una foto recién tomada no se puede guardar sin etiqueta, y la hoja no se
+      esquiva: ni deslizando ni con el atrás del sistema. Se guarda o se descarta.
+- [ ] Descartar borra el binario del teléfono y no deja fila que sincronizar.
+- [ ] Corregir la etiqueta de una foto anterior al 2026-08-30 que tenía varias no
+      pierde ninguna sin que la persona lo vea: se muestran todas puestas, y
+      tocar una es lo que las reemplaza.
+- [ ] Cada cambio de nivel se confirma antes, incluida la bajada: lo que sale de
+      la empresa no se des-ve.
 - [ ] `openapi.json` regenerado y el cliente Dart al día.
 
 ## Riesgos / consideraciones
@@ -424,3 +432,4 @@ tabs cuando cambian los permisos.
 | 2026-08-12 | borrador | Creado. Desbloqueado por DEBT-0005: publicar dejó de exigir un permiso que no se podía otorgar |
 | 2026-08-13 | en-implementacion | El alcance creció probando en el teléfono: entra borrar una foto —con permiso propio `media.delete`— y la carga remota por URL firmada, que el spec daba por resuelta sin estarlo |
 | 2026-08-12 | review | Tres bloqueantes del `spec-reviewer`. `media_tag` no puede sincronizar como colección propia —le faltan `updated_at` y `deleted_at`—, así que las etiquetas pasan a viajar dentro del asset. La escalera de visibilidad se endurece acá en vez de quedar como riesgo. Y el comportamiento sin señal suma los tres casos de falla que no eran de red |
+| 2026-08-30 | en-implementacion | Segunda tanda, salida de probar en el teléfono: etiquetar pasa a ser obligatorio y de a una sola, se puede descartar una foto recién tomada, cada cambio de nivel se confirma, y el copy deja de explicar el sistema. Se arregla además que volver la red no sincronizaba con la obra abierta — Riverpod 3 pausa los listeners de los widgets tapados |

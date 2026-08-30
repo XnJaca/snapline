@@ -26,9 +26,6 @@ IconData etiquetaEnIcono(MediaTag tag) => switch (tag) {
       MediaTag.receipt => Icons.receipt_long_outlined,
     };
 
-String etiquetasEnTexto(List<MediaTag> tags, AppLocalizations l10n) =>
-    tags.map((t) => etiquetaEnTexto(t, l10n)).join(' · ');
-
 /// La etapa o categoría de la foto, elegida en el mismo gesto que tomarla.
 ///
 /// **Filas altas y no chips**: esto se toca con guantes arriba de un techo, y
@@ -76,9 +73,12 @@ class _HojaDeEtiquetas extends StatefulWidget {
 }
 
 class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
-  /// Una sola. La galería agrupa por etiqueta, así que una foto con dos
-  /// aparecería dos veces — el desorden que esto viene a ordenar.
-  late MediaTag? _elegida = widget.iniciales.firstOrNull;
+  /// Conjunto y no una sola, aunque desde el 2026-08-30 solo se pueda elegir
+  /// una: las fotos anteriores pueden traer varias, y arrancar mostrando solo
+  /// la primera hacía que guardar sin tocar nada **borrara el resto sin
+  /// decirlo**. Se muestran todas las que tiene; tocar una las reemplaza, que
+  /// es un cambio que la persona ve.
+  late final Set<MediaTag> _elegidas = {...widget.iniciales};
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +119,12 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
               for (final tag in MediaTag.values)
                 _Opcion(
                   tag: tag,
-                  elegida: _elegida == tag,
-                  onTap: () => setState(() => _elegida = tag),
+                  elegida: _elegidas.contains(tag),
+                  onTap: () => setState(() {
+                    _elegidas
+                      ..clear()
+                      ..add(tag);
+                  }),
                 ),
             ],
           ),
@@ -134,9 +138,9 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
                 child: FilledButton(
                   // Sin etiqueta no hay dónde guardarla: el botón apagado dice
                   // que falta elegir, y el texto de arriba dice por qué.
-                  onPressed: _elegida == null
+                  onPressed: _elegidas.isEmpty
                       ? null
-                      : () => Navigator.of(context).pop([_elegida!]),
+                      : () => Navigator.of(context).pop(_elegidas.toList()),
                   child: Text(l10n.photosTagSave),
                 ),
               ),

@@ -252,8 +252,8 @@ objetivo vive en una lista horizontal virtualizada, después del scroll va un
 
 Material pinta varios controles con `primary` por defecto, y cada uno de esos es
 un naranja saturado que compite con la acción de la pantalla. Ya están cubiertos
-en `AppTheme` — `TextButton`, `Chip`, `SegmentedButton`, `NavigationBar` y
-`TabBar`—, pero **un control nuevo probablemente traiga el suyo**: se revisa en
+en `AppTheme` — `TextButton`, `OutlinedButton`, `Chip`, `SegmentedButton`,
+`NavigationBar` y `TabBar`—, pero **un control nuevo probablemente traiga el suyo**: se revisa en
 captura, no leyendo el código.
 
 ### Tipografía y tamaño de toque

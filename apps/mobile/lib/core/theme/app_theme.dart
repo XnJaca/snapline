@@ -98,7 +98,7 @@ abstract final class AppTheme {
       fontFamily: Tokens.fontFamily,
       textTheme: _textTheme,
       filledButtonTheme: _primaryActionTheme,
-      outlinedButtonTheme: _secondaryActionTheme,
+      outlinedButtonTheme: _secondaryActionTheme(scheme),
       textButtonTheme: _textButtonTheme(scheme),
       inputDecorationTheme: _inputTheme(scheme),
       navigationBarTheme: _navigationBarTheme(scheme),
@@ -292,23 +292,32 @@ abstract final class AppTheme {
   /// píldora, y contra un `FilledButton` de radio 8 se lee como si vinieran de
   /// dos sistemas distintos.
   ///
+  /// **El color va explícito, como en `TextButton`**: sin `foregroundColor`,
+  /// Material lo pinta en `primary`, y ahí el "Descartar la foto" que está al
+  /// lado del "Guardar" sale naranja también. Dos naranjas en una hoja y
+  /// ninguno es la acción. Ver la regla del naranja en el `CLAUDE.md` de acá.
+  ///
   /// **Alto mínimo, ancho libre.** El primario puede pedir ancho completo
   /// porque siempre va solo en su fila; este también vive dentro de otra —el
   /// "marcar" de cada persona en la cuadrilla— y ahí `Size.fromHeight`, que es
   /// ancho infinito, revienta el layout.
-  static final _secondaryActionTheme = OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      minimumSize: const Size(0, Tokens.touchTargetPrimary),
-      textStyle: const TextStyle(
-        fontFamily: Tokens.fontFamily,
-        fontSize: Tokens.fontSizeBody,
-        fontWeight: Tokens.weightMedium,
+  static OutlinedButtonThemeData _secondaryActionTheme(ColorScheme scheme) {
+    return OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: scheme.onSurface,
+        side: BorderSide(color: scheme.outline),
+        minimumSize: const Size(0, Tokens.touchTargetPrimary),
+        textStyle: const TextStyle(
+          fontFamily: Tokens.fontFamily,
+          fontSize: Tokens.fontSizeBody,
+          fontWeight: Tokens.weightMedium,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Tokens.radiusMd),
+        ),
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Tokens.radiusMd),
-      ),
-    ),
-  );
+    );
+  }
 
   static const _textTheme = TextTheme(
     // Cifras tabulares: el cronómetro de jornada corre en pantalla y con dígitos

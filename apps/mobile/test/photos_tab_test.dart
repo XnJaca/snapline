@@ -381,6 +381,88 @@ void main() {
       await disposeApp(tester);
     });
 
+    testWidgets('una foto vieja con dos etiquetas no pierde la segunda',
+        timeout: limite, (tester) async {
+      List<MediaTag>? devuelto;
+      await tester.pumpWidget(testWidget(
+        db: db,
+        child: Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () async => devuelto = await mostrarHojaDeEtiquetas(
+                context,
+                iniciales: const [MediaTag.before, MediaTag.detail],
+              ),
+              child: const Text('abrir'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      // Las dos se ven puestas: mostrar solo la primera haría que guardar sin
+      // tocar nada borrara la otra en silencio.
+      expect(find.byIcon(Icons.radio_button_checked), findsNWidgets(2));
+
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(devuelto, hasLength(2));
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('y tocar una de ellas la deja sola, que es un cambio visible',
+        timeout: limite, (tester) async {
+      List<MediaTag>? devuelto;
+      await tester.pumpWidget(testWidget(
+        db: db,
+        child: Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () async => devuelto = await mostrarHojaDeEtiquetas(
+                context,
+                iniciales: const [MediaTag.before, MediaTag.detail],
+              ),
+              child: const Text('abrir'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Después'));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.radio_button_checked), findsOne);
+
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(devuelto, [MediaTag.after]);
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('el atrás del sistema no esquiva la hoja de una foto nueva',
+        timeout: limite, (tester) async {
+      await abrir(tester, esFotoNueva: true);
+      expect(find.text('Guardar'), findsOne);
+
+      // Lo que dispara el gesto y el botón atrás de Android. Los dos botones
+      // de la hoja usan `pop` directo y por eso sí salen.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Guardar'), findsOne,
+          reason: 'esquivarla dejaría la foto sin etiqueta');
+
+      await disposeApp(tester);
+    });
+
     testWidgets('las seis etiquetas del dominio están, cada una con su icono',
         timeout: limite, (tester) async {
       await abrir(tester);
