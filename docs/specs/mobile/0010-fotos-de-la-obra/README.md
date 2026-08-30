@@ -19,7 +19,7 @@ domain:
   - proyecto
 frente: campo
 created: 2026-08-12
-updated: 2026-08-12
+updated: 2026-08-30
 tags:
   - spec
   - spec/en-implementacion
@@ -109,7 +109,7 @@ no se pueden ver ni recuperar, y no había forma de sacarlas de en medio.
 Entra con **permiso propio `media.delete`, acotado a `OWNER` y `ADMIN`**. La foto
 es la evidencia de la obra y el "antes" no se puede volver a sacar cuando el
 trabajo ya empezó: quien borra puede estar borrando la prueba de algo. Un
-trabajador que saca una foto mala la deja sin etiqueta y no molesta a nadie.
+trabajador que saca una foto mala la descarta en el momento, sin registrarla.
 
 Es **suave en la base y duro en el disco**: la fila queda con `deleted_at` para
 que la baja se propague (regla 20) y el archivo local se borra de verdad, porque
@@ -227,13 +227,29 @@ al trabajador, pero todos tienen que **decir qué pasó**:
 | **El servidor la rechaza** por tipo o tamaño | El invariante se valida en el servidor, no solo acá ([[contenido]]). El rechazo se muestra con su `code` del envelope (ADR-0011), no con prosa traducida, y la foto queda marcada para que no se reintente para siempre |
 | **El trigger rechaza `PUBLIC`** por EXIF sin limpiar | No debería pasar —el servicio limpia solo—, pero si pasa llega como `EXIF_NOT_STRIPPED` y se muestra como tal |
 
+**Etiquetar deja de ser opcional — 2026-08-30.** El spec lo dejaba saltable para
+no poner nada entre la cámara y guardar. Se revierte por decisión de producto: el
+sistema existe para curar el desorden, y una foto sin etiqueta es exactamente el
+desorden que viene a arreglar.
+
+La hoja de una foto recién tomada **no se puede esquivar** —ni deslizando ni con
+el botón atrás— y tiene dos salidas: guardar, que exige al menos una etiqueta, o
+**descartar la foto**, que borra el archivo antes de que exista fila. Así no hay
+camino que produzca una foto sin etiqueta, y tampoco hay que quedarse con una que
+salió mal.
+
+Corregir la etiqueta de una foto ya registrada tampoco puede dejarla en cero. El
+grupo **Sin etiqueta** de la galería se conserva para las fotos anteriores a este
+cambio: no se les puede inventar una, y verlas agrupadas ahí es lo que hace que
+alguien las etiquete.
+
 ## Flujo de usuario
 
 1. El trabajador abre su obra y toca el tab **Fotos**.
 2. Toca la acción primaria —`FieldActionButton`, 64dp, se pulsa con guantes— y se
    abre la cámara.
 3. Vuelve de la cámara y elige la etiqueta **en la misma pantalla**, sin paso
-   extra. Se puede saltar: una foto sin etiqueta entra igual.
+   extra. **No se puede saltar**: guarda con su etiqueta o descarta la foto.
 4. La foto aparece en la grilla al instante, con su marca de "guardado en el
    teléfono" hasta que sube.
 5. William, desde la misma grilla, abre una foto y la sube **un** escalón.

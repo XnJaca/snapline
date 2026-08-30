@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../core/media/media_paths.dart';
 import '../../core/media/photo_capture.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
@@ -96,7 +97,16 @@ class PhotosTab extends ConsumerWidget {
       return;
     }
 
-    final etiquetas = await mostrarHojaDeEtiquetas(context);
+    final etiquetas =
+        await mostrarHojaDeEtiquetas(context, esFotoNueva: true);
+
+    // Sin etiqueta no se registra: la foto se descarta con su archivo. Es la
+    // única salida de la hoja además de guardar, y borra antes de que exista
+    // fila, así que no hay nada que sincronizar.
+    if (etiquetas == null || etiquetas.isEmpty) {
+      await MediaPaths.descartar(resultado.path!);
+      return;
+    }
     if (!context.mounted) return;
 
     final sesion = ref.read(sessionControllerProvider).value;
@@ -104,7 +114,7 @@ class PhotosTab extends ConsumerWidget {
           projectId: projectId,
           filePath: resultado.path!,
           companyId: sesion?.membership.companyId,
-          tags: etiquetas ?? const [],
+          tags: etiquetas,
         );
   }
 

@@ -28,11 +28,22 @@ Future<void> mostrarAccionesDeFoto(
     context: context,
     useSafeArea: true,
     showDragHandle: true,
-    builder: (context) => _Acciones(
-      foto: foto,
-      puedeEtiquetar: puedeEtiquetar,
-      puedeCambiarNivel: puedeCambiarNivel,
-      puedeBorrar: puedeBorrar,
+    // Arranca mostrando la foto y sus acciones, y se puede subir hasta casi
+    // toda la pantalla: mirar bien una foto es el motivo de abrir esto, y a
+    // media altura el techo se ve del tamaño de la miniatura que ya se tocó.
+    isScrollControlled: true,
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) => _Acciones(
+        foto: foto,
+        scrollController: scrollController,
+        puedeEtiquetar: puedeEtiquetar,
+        puedeCambiarNivel: puedeCambiarNivel,
+        puedeBorrar: puedeBorrar,
+      ),
     ),
   );
 }
@@ -40,12 +51,14 @@ Future<void> mostrarAccionesDeFoto(
 class _Acciones extends ConsumerStatefulWidget {
   const _Acciones({
     required this.foto,
+    required this.scrollController,
     required this.puedeEtiquetar,
     required this.puedeCambiarNivel,
     required this.puedeBorrar,
   });
 
   final ObraFoto foto;
+  final ScrollController scrollController;
   final bool puedeEtiquetar;
   final bool puedeCambiarNivel;
   final bool puedeBorrar;
@@ -67,6 +80,9 @@ class _AccionesState extends ConsumerState<_Acciones> {
 
     return SafeArea(
       child: SingleChildScrollView(
+        // El de la hoja, no uno propio: es lo que conecta el arrastre del
+        // contenido con la altura, y sin él subirla solo scrollea.
+        controller: widget.scrollController,
         padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -159,7 +175,9 @@ class _AccionesState extends ConsumerState<_Acciones> {
       context,
       iniciales: widget.foto.tags,
     );
-    if (elegidas == null || !mounted) return;
+    // Vacío no llega: el guardar está apagado sin elegir nada. Una foto ya
+    // registrada no se queda sin etiqueta por corregirla.
+    if (elegidas == null || elegidas.isEmpty || !mounted) return;
 
     // Va por la bandeja: corregir qué muestra una foto no exige señal.
     await ref.read(mediaRepositoryProvider).setTags(widget.foto.id, elegidas);

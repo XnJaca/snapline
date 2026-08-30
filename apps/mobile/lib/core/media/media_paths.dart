@@ -39,6 +39,15 @@ abstract final class MediaPaths {
     return p.join(carpeta, p.basename(rutaONombre));
   }
 
+  /// Borra el binario de una foto que se tomó y no se llegó a registrar.
+  /// No pasa por el borrado suave porque no hay fila que dar de baja.
+  static Future<void> descartar(String rutaONombre) async {
+    final ruta = absoluta(rutaONombre);
+    if (ruta == null) return;
+    final archivo = File(ruta);
+    if (archivo.existsSync()) await archivo.delete();
+  }
+
   /// Si el archivo está de verdad. Una ruta guardada no garantiza nada: el
   /// sistema limpia, la app se reinstala, alguien borra.
   static bool existe(String rutaONombre) {
