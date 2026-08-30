@@ -14,6 +14,17 @@ import 'package:snapline/features/projects/photos_tab.dart';
 
 import 'support/fakes.dart';
 
+class _CamaraNegada implements PhotoCapture {
+  const _CamaraNegada();
+
+  @override
+  Future<String?> takePhoto() async => null;
+
+  @override
+  Future<PhotoResult> capture(PhotoQuality calidad) async =>
+      const PhotoResult.failed(PhotoFailure.permissionDenied);
+}
+
 class _CamaraFija implements PhotoCapture {
   const _CamaraFija(this.ruta);
   final String ruta;
@@ -528,6 +539,23 @@ void main() {
 
       await disposeApp(tester);
     });
+  });
+
+  testWidgets('sin permiso de cámara, las dos salidas se ven como botones',
+      timeout: limite, (tester) async {
+    await tester.pumpWidget(pantalla(camara: const _CamaraNegada()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tomar foto'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('El permiso de cámara está apagado'), findsOne);
+    // Lo mismo que el borrado: un `TextButton` de diálogo abajo a la derecha no
+    // se lee como botón, y esto se toca con guantes.
+    expect(find.widgetWithText(FilledButton, 'Abrir ajustes'), findsOne);
+    expect(find.widgetWithText(OutlinedButton, 'Cancelar'), findsOne);
+
+    await disposeApp(tester);
   });
 
   group('de dónde sale la imagen', () {

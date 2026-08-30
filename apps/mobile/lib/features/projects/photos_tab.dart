@@ -8,6 +8,7 @@ import '../../core/media/media_paths.dart';
 import '../../core/media/photo_capture.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
+import '../../core/widgets/confirm_sheet.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/field_action_button.dart';
 import '../../core/widgets/status_chip.dart';
@@ -135,29 +136,21 @@ class PhotosTab extends ConsumerWidget {
       return;
     }
 
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.photosCameraDeniedTitle),
-        content: Text(l10n.photosCameraDeniedBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.actionCancel),
-          ),
-          // Abre los ajustes de la app de verdad. Un botón que dice "Abrir
-          // ajustes" y solo cierra el diálogo deja a la persona igual de
-          // trabada, y acá tomar la foto es la pantalla entera.
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              openAppSettings();
-            },
-            child: Text(l10n.photosOpenSettings),
-          ),
-        ],
-      ),
+    // Hoja y no `AlertDialog`: sus acciones son un `TextButton` abajo a la
+    // derecha, que no se lee como botón sino como texto suelto. Acá las dos
+    // salidas tienen que verse como opciones.
+    final irAAjustes = await confirmarAccion(
+      context,
+      titulo: l10n.photosCameraDeniedTitle,
+      cuerpo: l10n.photosCameraDeniedBody,
+      confirmar: l10n.photosOpenSettings,
+      cancelar: l10n.actionCancel,
+      icono: Icons.photo_camera_outlined,
     );
+    // Abre los ajustes de la app de verdad. Un botón que dice "Abrir ajustes"
+    // y solo cierra la hoja deja a la persona igual de trabada, y acá tomar la
+    // foto es la pantalla entera.
+    if (irAAjustes) await openAppSettings();
   }
 }
 
