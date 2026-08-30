@@ -233,6 +233,55 @@ void main() {
     await disposeApp(tester);
   });
 
+  testWidgets('subir de nivel pregunta antes, y cancelar no la mueve',
+      timeout: limite, (tester) async {
+    await sembrarFoto('a1', tags: ['BEFORE']);
+
+    await tester.pumpWidget(pantalla());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+    // La hoja scrollea: tocar a ciegas una acción que quedó abajo del pliegue
+    // no falla, no hace nada — que es peor.
+    await tester.ensureVisible(find.text('Mostrar al cliente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mostrar al cliente'));
+    await tester.pumpAndSettle();
+
+    // Lo que sale de la empresa se pregunta: el cliente que ya la vio no la
+    // des-ve porque después se baje el nivel.
+    expect(find.text('¿Mostrarle esta foto al cliente?'), findsOne);
+
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+
+    final fila = await (db.select(db.mediaAssets)
+          ..where((f) => f.id.equals('a1')))
+        .getSingle();
+    expect(fila.visibility, 'INTERNAL');
+
+    await disposeApp(tester);
+  });
+
+  testWidgets('el nivel dice qué significa, no solo cómo se llama',
+      timeout: limite, (tester) async {
+    await sembrarFoto('a1', tags: ['BEFORE']);
+
+    await tester.pumpWidget(pantalla());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solo el equipo'), findsOne);
+    expect(find.text('Nadie fuera de la empresa la ve.'), findsOne);
+
+    await disposeApp(tester);
+  });
+
   testWidgets('nada quemado: en inglés sale en inglés', timeout: limite, (tester) async {
     await tester.pumpWidget(pantalla(locale: AuthUserDtoLocale.en));
     await tester.pump();

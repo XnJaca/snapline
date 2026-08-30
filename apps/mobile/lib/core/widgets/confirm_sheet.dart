@@ -19,6 +19,45 @@ Future<bool> confirmarAccionDestructiva(
   required String confirmar,
   required String cancelar,
   IconData icono = Icons.delete_outline,
+}) =>
+    _preguntar(context,
+        titulo: titulo,
+        cuerpo: cuerpo,
+        confirmar: confirmar,
+        cancelar: cancelar,
+        icono: icono,
+        destructiva: true);
+
+/// Confirmar algo que sí se puede deshacer, pero que sale de la empresa.
+///
+/// Mostrarle una foto al cliente o publicarla no se revierte del todo: se puede
+/// bajar el nivel después, no des-verla. Misma forma que la destructiva —dos
+/// botones de ancho completo— sin el rojo, que está reservado para lo que no
+/// tiene vuelta.
+Future<bool> confirmarAccion(
+  BuildContext context, {
+  required String titulo,
+  required String cuerpo,
+  required String confirmar,
+  required String cancelar,
+  required IconData icono,
+}) =>
+    _preguntar(context,
+        titulo: titulo,
+        cuerpo: cuerpo,
+        confirmar: confirmar,
+        cancelar: cancelar,
+        icono: icono,
+        destructiva: false);
+
+Future<bool> _preguntar(
+  BuildContext context, {
+  required String titulo,
+  required String cuerpo,
+  required String confirmar,
+  required String cancelar,
+  required IconData icono,
+  required bool destructiva,
 }) async {
   final confirmado = await showModalBottomSheet<bool>(
     context: context,
@@ -30,6 +69,7 @@ Future<bool> confirmarAccionDestructiva(
       confirmar: confirmar,
       cancelar: cancelar,
       icono: icono,
+      destructiva: destructiva,
     ),
   );
   return confirmado ?? false;
@@ -42,6 +82,7 @@ class _Confirmacion extends StatelessWidget {
     required this.confirmar,
     required this.cancelar,
     required this.icono,
+    required this.destructiva,
   });
 
   final String titulo;
@@ -49,6 +90,7 @@ class _Confirmacion extends StatelessWidget {
   final String confirmar;
   final String cancelar;
   final IconData icono;
+  final bool destructiva;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +106,7 @@ class _Confirmacion extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icono, color: colors.error),
+                Icon(icono, color: destructiva ? colors.error : colors.primary),
                 SizedBox(width: spacing.sm),
                 Expanded(
                   child: Text(titulo, style: context.texts.titleLarge),
@@ -84,10 +126,12 @@ class _Confirmacion extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(true),
                 icon: Icon(icono),
                 label: Text(confirmar),
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.error,
-                  foregroundColor: colors.onError,
-                ),
+                style: destructiva
+                    ? FilledButton.styleFrom(
+                        backgroundColor: colors.error,
+                        foregroundColor: colors.onError,
+                      )
+                    : null,
               ),
             ),
             SizedBox(height: spacing.sm),

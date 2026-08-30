@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/confirm_sheet.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -28,15 +29,16 @@ Future<void> mostrarAccionesDeFoto(
     context: context,
     useSafeArea: true,
     showDragHandle: true,
-    // Arranca mostrando la foto y sus acciones, y se puede subir hasta casi
-    // toda la pantalla: mirar bien una foto es el motivo de abrir esto, y a
-    // media altura el techo se ve del tamaño de la miniatura que ya se tocó.
+    // Abre alto y se puede subir más: mirar bien la foto es el motivo de abrir
+    // esto, y a media altura el techo se ve del tamaño de la miniatura que ya
+    // se tocó. Alto también porque las acciones no pueden quedar abajo del
+    // pliegue — un botón que hay que buscar scrolleando es uno que no existe.
     isScrollControlled: true,
     builder: (context) => DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
       builder: (context, scrollController) => _Acciones(
         foto: foto,
         scrollController: scrollController,
@@ -98,26 +100,46 @@ class _AccionesState extends ConsumerState<_Acciones> {
               ),
             ),
             SizedBox(height: spacing.md),
-            // Dos datos distintos, y sueltos no se distinguían: quién la ve y
-            // en qué grupo está se leían como una sola cosa sin nombre.
-            _Dato(
-              nombre: l10n.photosWhoSees,
-              child: StatusLine(
-                tone: switch (foto.visibility) {
-                  'PUBLIC' => StatusTone.success,
-                  'CLIENT' => StatusTone.info,
-                  _ => StatusTone.info,
-                },
-                label: _nivelEnTexto(foto.visibility, l10n),
+            // Cada dato dentro de su marco: un label suelto sobre el lienzo no
+            // se lee como el título de lo que sigue.
+            SectionCard(
+              label: l10n.photosWhoSees,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  StatusLine(
+                    tone: switch (foto.visibility) {
+                      'PUBLIC' => StatusTone.success,
+                      'CLIENT' => StatusTone.info,
+                      _ => StatusTone.info,
+                    },
+                    label: _nivelEnTexto(foto.visibility, l10n),
+                  ),
+                  SizedBox(height: spacing.xs),
+                  // El nivel nombra; esto dice qué significa. Sin la segunda
+                  // línea hay que saberse la escalera para entender la primera.
+                  Text(
+                    _nivelExplicado(foto.visibility, l10n),
+                    style: context.texts.bodySmall
+                        ?.copyWith(color: context.colors.onSurfaceVariant),
+                  ),
+                ],
               ),
             ),
             if (foto.tags.isNotEmpty) ...[
               SizedBox(height: spacing.md),
-              _Dato(
-                nombre: l10n.photosTagLabel,
-                child: Text(
-                  etiquetasEnTexto(foto.tags, l10n),
-                  style: context.texts.bodyMedium,
+              SectionCard(
+                label: l10n.photosTagLabel,
+                child: Wrap(
+                  spacing: spacing.sm,
+                  runSpacing: spacing.sm,
+                  children: [
+                    for (final tag in foto.tags)
+                      Chip(
+                        avatar: Icon(etiquetaEnIcono(tag), size: spacing.lg),
+                        label: Text(etiquetaEnTexto(tag, l10n)),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -146,13 +168,13 @@ class _AccionesState extends ConsumerState<_Acciones> {
                       ? l10n.photosRaiseToPublic
                       : l10n.photosRaiseToClient,
                   destacada: true,
-                  onTap: _enCurso ? null : () => _mover(siguiente),
+                  onTap: _enCurso ? null : () => _confirmarYMover(siguiente),
                 ),
               if (foto.visibility != 'INTERNAL')
                 _Accion(
                   icon: Icons.visibility_off_outlined,
                   label: l10n.photosLowerVisibility,
-                  onTap: _enCurso ? null : () => _mover('INTERNAL'),
+                  onTap: _enCurso ? null : () => _confirmarYMover('INTERNAL'),
                 ),
             ],
 
@@ -200,6 +222,45 @@ class _AccionesState extends ConsumerState<_Acciones> {
 
     await ref.read(mediaRepositoryProvider).borrar(widget.foto.id);
     if (mounted) Navigator.of(context).pop();
+  }
+
+  /// Preguntar antes de cada escalón. Mostrarle una foto al cliente o
+  /// publicarla no se des-hace: se puede bajar el nivel después, no borrar de
+  /// la cabeza de quien ya la vio. Bajar también pregunta — desde público,
+  /// quita de la página web algo que ya estaba ahí.
+  Future<void> _confirmarYMover(String visibility) async {
+    final l10n = AppLocalizations.of(context);
+    final (titulo, cuerpo, aceptar, icono) = switch (visibility) {
+      'PUBLIC' => (
+          l10n.photosConfirmPublicTitle,
+          l10n.photosConfirmPublicBody,
+          l10n.photosConfirmPublicAccept,
+          Icons.public,
+        ),
+      'CLIENT' => (
+          l10n.photosConfirmClientTitle,
+          l10n.photosConfirmClientBody,
+          l10n.photosConfirmClientAccept,
+          Icons.visibility_outlined,
+        ),
+      _ => (
+          l10n.photosConfirmInternalTitle,
+          l10n.photosConfirmInternalBody,
+          l10n.photosConfirmInternalAccept,
+          Icons.visibility_off_outlined,
+        ),
+    };
+
+    final confirmado = await confirmarAccion(
+      context,
+      titulo: titulo,
+      cuerpo: cuerpo,
+      confirmar: aceptar,
+      cancelar: l10n.actionCancel,
+      icono: icono,
+    );
+    if (!confirmado || !mounted) return;
+    await _mover(visibility);
   }
 
   Future<void> _mover(String visibility) async {
@@ -319,36 +380,16 @@ String? _siguienteEscalon(String actual) => switch (actual) {
       _ => null,
     };
 
+String _nivelExplicado(String visibility, AppLocalizations l10n) =>
+    switch (visibility) {
+      'PUBLIC' => l10n.photosVisibilityPublicHelp,
+      'CLIENT' => l10n.photosVisibilityClientHelp,
+      _ => l10n.photosVisibilityInternalHelp,
+    };
+
 String _nivelEnTexto(String visibility, AppLocalizations l10n) =>
     switch (visibility) {
       'PUBLIC' => l10n.photosVisibilityPublic,
       'CLIENT' => l10n.photosVisibilityClient,
       _ => l10n.photosVisibilityInternal,
     };
-
-/// Un dato de la foto con su nombre encima. El nombre en chico y apagado, el
-/// valor en el cuerpo: sin él, dos líneas seguidas se leen como una sola.
-class _Dato extends StatelessWidget {
-  const _Dato({required this.nombre, required this.child});
-
-  final String nombre;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final spacing = context.spacing;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          nombre,
-          style: context.texts.labelSmall
-              ?.copyWith(color: context.colors.onSurfaceVariant),
-        ),
-        SizedBox(height: spacing.xs),
-        child,
-      ],
-    );
-  }
-}
