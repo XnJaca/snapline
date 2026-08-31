@@ -2,25 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
-export interface TimesheetRow {
-  membershipId: string;
-  workerName: string;
-  projectId: string;
-  projectName: string;
-  entries: number;
-  hours: number;
-  payRateCents: number | null;
-  grossCents: number | null;
-  flagged: number;
-}
+import { JobCostRowDto, TimesheetRowDto } from './dto/report-row.dto';
 
-export interface JobCostRow {
-  projectId: string;
-  projectName: string;
-  laborCents: number;
-  hours: number;
-  invoicedCents: number;
-  estimatedCents: number;
+export type TimesheetRow = TimesheetRowDto;
+export type JobCostRow = JobCostRowDto;
+
+/**
+ * `bigint` y `numeric` llegan como texto desde Postgres. Sin esto el contrato
+ * promete un número y entrega una cadena, y el cliente suma concatenando.
+ */
+function num(value: unknown): number {
+  return value === null || value === undefined ? 0 : Number(value);
 }
 
 @Injectable()
@@ -33,8 +25,8 @@ export class ReportsService {
    *
    * Devuelve horas y bruto. Retenciones e impuestos los hace el contador.
    */
-  timesheet(from: string, to: string): Promise<TimesheetRow[]> {
-    return this.dataSource.query(
+  async timesheet(from: string, to: string): Promise<TimesheetRow[]> {
+    const rows = await this.dataSource.query<TimesheetRow[]>(
       `SELECT
          t.membership_id                                    AS "membershipId",
          u.name                                             AS "workerName",
@@ -64,11 +56,19 @@ export class ReportsService {
        ORDER BY u.name, p.name`,
       [from, to],
     );
+    return rows.map((row) => ({
+      ...row,
+      entries: num(row.entries),
+      hours: num(row.hours),
+      payRateCents: row.payRateCents === null ? null : num(row.payRateCents),
+      grossCents: row.grossCents === null ? null : num(row.grossCents),
+      flagged: num(row.flagged),
+    }));
   }
 
   /** Costo real por proyecto contra lo cotizado. */
-  jobCost(): Promise<JobCostRow[]> {
-    return this.dataSource.query(
+  async jobCost(): Promise<JobCostRow[]> {
+    const rows = await this.dataSource.query<JobCostRow[]>(
       `SELECT
          p.id                                        AS "projectId",
          p.name                                      AS "projectName",
@@ -100,5 +100,12 @@ export class ReportsService {
        WHERE p.deleted_at IS NULL
        ORDER BY p.created_at DESC`,
     );
+    return rows.map((row) => ({
+      ...row,
+      laborCents: num(row.laborCents),
+      hours: num(row.hours),
+      invoicedCents: num(row.invoicedCents),
+      estimatedCents: num(row.estimatedCents),
+    }));
   }
 }

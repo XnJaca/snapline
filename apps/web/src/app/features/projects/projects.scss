@@ -1,0 +1,97 @@
+// El host es un hijo flex del área de contenido: sin esto encoge al tamaño de
+// su contenido y la pantalla queda en una columna angosta.
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--sl-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-4);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-lg);
+  background: var(--mat-sys-surface);
+  transition: border-color 160ms ease-out;
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+  }
+}
+
+.card__top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+}
+
+.card__name {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  font-size: var(--sl-font-size-body);
+  font-weight: var(--sl-font-weight-bold);
+  text-wrap: balance;
+}
+
+.card__customer {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+}
+
+.card__description {
+  display: -webkit-box;
+  margin: var(--sl-space-1) 0 0;
+  overflow: hidden;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2) var(--sl-space-5);
+  margin: var(--sl-space-2) 0 0;
+  padding-top: var(--sl-space-3);
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+    font-size: var(--sl-font-size-caption);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--mat-sys-on-surface);
+    font-size: var(--sl-font-size-caption);
+    font-weight: var(--sl-font-weight-medium);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

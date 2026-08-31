@@ -21,11 +21,11 @@ kanban-plugin: board
 
 ## ✅ Aprobado (listo para implementar)
 
-- [ ] [[0008-sesion-y-shell/README|SPEC-0008 — Sesión y shell del panel]] · entrar, cerrar sesión de verdad, y a dónde navegar. Cookie httpOnly con su camino propio en el API, y la navegación desde los permisos que ya viajan en el login. Depende de SPEC-0007. Trae `membership.token_version`, revisado por `domain-guardian` — su hallazgo del claim ausente evitó que el deploy expulsara a todas las sesiones vivas
-
 
 
 ## 🛠️ En implementación
+
+- [ ] [[0008-sesion-y-shell/README|SPEC-0008 — Sesión y shell del panel]] · entrar, cerrar sesión de verdad, y a dónde navegar. Cookie httpOnly con su camino propio en el API, y la navegación desde los permisos que ya viajan en el login. Depende de SPEC-0007. Trae `membership.token_version`, revisado por `domain-guardian` — su hallazgo del claim ausente evitó que el deploy expulsara a todas las sesiones vivas. **El alcance del contenido creció a conciencia el 2026-08-31**: los ocho ejes leen los endpoints que ya existen en vez de mostrar listas sintéticas. Escribir sigue afuera; cada eje necesita su spec para eso
 
 
 ## 🎉 Implementado

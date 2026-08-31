@@ -1,11 +1,33 @@
 import { Routes } from '@angular/router';
+import { anonymousGuard, sessionGuard } from './core/session/session.guard';
 
 export const routes: Routes = [
-  // Andamiaje de SPEC-0007: no cuelga de ninguna navegación porque el shell llega
-  // con SPEC-0008. Es donde se comprueba la paridad de tokens mirando.
+  {
+    path: 'login',
+    canActivate: [anonymousGuard],
+    loadComponent: () => import('./features/login/login').then((m) => m.Login),
+  },
+  // Andamiaje de SPEC-0007: fuera del shell y sin sesión, porque es donde se
+  // comprueba la paridad de tokens mirando.
   {
     path: 'dev/tokens',
     loadComponent: () => import('./features/dev-tokens/dev-tokens').then((m) => m.DevTokens),
   },
-  { path: '', pathMatch: 'full', redirectTo: 'dev/tokens' },
+  {
+    path: '',
+    canActivate: [sessionGuard],
+    loadComponent: () => import('./features/shell/shell').then((m) => m.Shell),
+    children: [
+      { path: 'projects', loadComponent: () => import('./features/projects/projects').then((m) => m.Projects) },
+      { path: 'customers', loadComponent: () => import('./features/customers/customers').then((m) => m.Customers) },
+      { path: 'crews', loadComponent: () => import('./features/crews/crews').then((m) => m.Crews) },
+      { path: 'hours', loadComponent: () => import('./features/hours/hours').then((m) => m.Hours) },
+      { path: 'catalog', loadComponent: () => import('./features/catalog/catalog').then((m) => m.Catalog) },
+      { path: 'billing', loadComponent: () => import('./features/billing/billing').then((m) => m.Billing) },
+      { path: 'reports', loadComponent: () => import('./features/reports/reports').then((m) => m.Reports) },
+      { path: 'publish', loadComponent: () => import('./features/publish/publish').then((m) => m.Publish) },
+      { path: '', pathMatch: 'full', redirectTo: 'projects' },
+    ],
+  },
+  { path: '**', redirectTo: '' },
 ];

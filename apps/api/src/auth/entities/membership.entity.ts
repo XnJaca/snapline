@@ -32,6 +32,12 @@ export class Membership extends SoftDeletableTenantEntity {
   } })
   payRateCents!: number | null;
 
+  // Sube al cerrar sesión y el refresh lo compara: es lo único que invalida un
+  // JWT autofirmado antes de que venza. Lo escribe el servidor, nunca el cliente.
+  @ApiHideProperty()
+  @Column({ type: 'int', name: 'token_version', default: 0, select: false })
+  tokenVersion!: number;
+
   @Column({ type: 'enum', enum: ['W2', 'CONTRACTOR_1099'], enumName: 'employment_type', name: 'employment_type', nullable: true })
   employmentType!: EmploymentType | null;
 

@@ -1,0 +1,38 @@
+<sl-page
+  *transloco="let t"
+  icon="billing"
+  [heading]="t('nav.billing')"
+  [meta]="t('billing.outstanding', { amount: outstanding() | slMoney })"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('billing.empty')"
+  (retry)="data.reload()"
+>
+  <div class="frame">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ t('billing.number') }}</th>
+          <th class="grow">{{ t('billing.customer') }}</th>
+          <th>{{ t('billing.status') }}</th>
+          <th>{{ t('billing.due') }}</th>
+          <th class="num">{{ t('billing.total') }}</th>
+          <th class="num">{{ t('billing.balance') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (invoice of data.value(); track invoice.id) {
+          <tr>
+            <td>{{ invoice.number || '—' }}</td>
+            <td class="grow">{{ invoice.customer?.displayName }}</td>
+            <td><sl-chip [tone]="tone(invoice.status)">{{ t('invoiceStatus.' + invoice.status) }}</sl-chip></td>
+            <td class="muted">{{ invoice.dueAt | slDate }}</td>
+            <td class="num">{{ invoice.totalCents | slMoney }}</td>
+            <td class="num">{{ invoice.balanceCents | slMoney }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</sl-page>

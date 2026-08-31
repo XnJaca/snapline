@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/errors/http-exception.filter';
 import { newId } from '../src/common/entities/base.entity';
 import { AuthService } from '../src/auth/auth.service';
+import { corsOptions } from '../src/config/cors.config';
 
 export interface Fixture {
   companyId: string;
@@ -19,6 +20,8 @@ export interface Fixture {
   projectId: string;
   serviceItemId: string;
   workerMembershipId: string;
+  ownerMembershipId: string;
+  workerUserId: string;
 }
 
 /**
@@ -46,6 +49,9 @@ export async function bootstrapE2E(): Promise<{ app: INestApplication; ds: DataS
   initializeTransactionalContext();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication();
+  // Como en main.ts: la sesión del panel depende de CORS con credenciales, y sin
+  // esto el e2e probaría una app distinta de la que corre.
+  app.enableCors(corsOptions());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('api');
@@ -69,6 +75,8 @@ export async function seedCompany(ds: DataSource, label: string): Promise<Fixtur
     serviceItemId: newId(),
     userIds: [],
     workerMembershipId: '',
+    ownerMembershipId: '',
+    workerUserId: '',
   };
   const hash = await AuthService.hashPassword(f.password);
   const ownerUser = newId();
@@ -77,6 +85,8 @@ export async function seedCompany(ds: DataSource, label: string): Promise<Fixtur
   const ownerMem = newId();
   const workerMem = newId();
   f.workerMembershipId = workerMem;
+  f.ownerMembershipId = ownerMem;
+  f.workerUserId = workerUser;
 
   await ds.query(`INSERT INTO company (id,name,public_site_slug) VALUES ($1,$2,$3)`,
     [f.companyId, `Test ${label}`, `test-${label}-${Date.now()}`]);

@@ -1,0 +1,47 @@
+<sl-page
+  *transloco="let t"
+  icon="catalog"
+  [heading]="t('nav.catalog')"
+  [meta]="t('catalog.count', { n: data.value().length })"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('catalog.empty')"
+  (retry)="data.reload()"
+>
+  <div class="frame">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="grow">{{ t('catalog.item') }}</th>
+          <th>{{ t('catalog.unit') }}</th>
+          <th class="num">{{ t('catalog.price') }}</th>
+          <th class="num">{{ t('catalog.cost') }}</th>
+          <th class="num">{{ t('catalog.margin') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of data.value(); track item.id) {
+          <tr>
+            <td class="grow">
+              {{ item.name }}
+              @if (item.category) {
+                <span class="muted"> · {{ item.category }}</span>
+              }
+            </td>
+            <td class="muted">{{ t('unit.' + item.unit) }}</td>
+            <td class="num">{{ item.unitPriceCents | slMoney }}</td>
+            <td class="num muted">{{ item.costCents | slMoney }}</td>
+            <td class="num">
+              @if (margin(item); as m) {
+                {{ m | slPercent }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</sl-page>

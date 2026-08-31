@@ -14,6 +14,8 @@ export interface AccessTokenPayload {
   companyId: string;
   membershipId: string;
   role: MembershipRole;
+  // Opcional porque los tokens emitidos antes de ADR-0014 §3b no lo llevan.
+  tv?: number;
 }
 
 // Default deny: sin @Public ni @RequirePermission, el endpoint responde 403.

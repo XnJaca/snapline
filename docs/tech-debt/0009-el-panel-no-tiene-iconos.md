@@ -4,7 +4,7 @@ title: "El panel no tiene sistema de iconos, solo SVG pegados a mano"
 aliases:
   - "DEBT-0009: El panel no tiene sistema de iconos, solo SVG pegados a mano"
 type: tech-debt
-status: abierta
+status: resuelta
 severity: media
 origin: "SPEC-0007"
 apps:
@@ -14,7 +14,7 @@ created: 2026-08-31
 updated: 2026-08-31
 tags:
   - tech-debt
-  - tech-debt/abierta
+  - tech-debt/resuelta
   - ui
 ---
 
@@ -66,3 +66,28 @@ de distancia y conviene resolverlo antes de escribirla.
 
 Un segundo disparador, si llega antes: el tercer icono nuevo pegado a mano. A esa
 altura copiar el `path` deja de ser más barato que montar el sistema.
+
+## Cómo se resolvió
+
+**`MatIconRegistry` con SVG propios**, en
+[[../specs/web/0008-sesion-y-shell/README|SPEC-0008]], que es donde el trigger se
+disparó.
+
+Doce archivos en `apps/web/public/icons/`, registrados una vez en
+`core/icons/icons.ts` y usados con `<mat-icon svgIcon="projects">`. Los ocho ejes
+del shell más `logout`, `language`, `theme` y `menu`.
+
+Por qué este camino y no los otros dos:
+
+- **La fuente completa** son 13 MB para doce dibujos, y el panel tendría que
+  servirla entera porque ADR-0009 §7 no deja el CDN.
+- **El subset** mete una herramienta más al build y un paso que se rompe callado:
+  un icono nuevo que nadie agregó a la lista desaparece en producción y compila.
+- **Los SVG propios** no necesitan nada: son archivos, los sirve la misma app, y
+  cada icono pesa menos de 400 bytes. El precio es dibujarlos, que para un set de
+  interfaz es una vez.
+
+Los SVG llevan `fill="none"` en la raíz a propósito: `.mat-icon` declara
+`fill: currentColor`, y sin ese atributo los trazos se rellenarían sólidos.
+
+El móvil no se tocó: Flutter trae Material Icons en su SDK.
