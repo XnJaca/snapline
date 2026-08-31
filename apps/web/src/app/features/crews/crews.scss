@@ -1,0 +1,31 @@
+@use '../../../styles/data-table' as table;
+
+// El host es un hijo flex del área de contenido: sin esto encoge al tamaño de
+// su contenido y la pantalla queda en una columna angosta.
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.frame {
+  @include table.frame;
+}
+
+.table {
+  @include table.base;
+}
+
+.crew {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+// El color lo elige el usuario al crear la cuadrilla: es dato, no token.
+.crew__color {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--sl-radius-full);
+}

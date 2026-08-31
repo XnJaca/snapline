@@ -1,0 +1,50 @@
+<sl-page
+  *transloco="let t"
+  icon="hours"
+  [heading]="t('nav.hours')"
+  [meta]="t('hours.count', { n: data.value().length })"
+  [loading]="loading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('hours.empty')"
+  (retry)="data.reload()"
+>
+  <div class="frame">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="grow">{{ t('hours.project') }}</th>
+          <th>{{ t('hours.day') }}</th>
+          <th class="num">{{ t('hours.worked') }}</th>
+          <th>{{ t('hours.method') }}</th>
+          <th>{{ t('hours.status') }}</th>
+          <th>{{ t('hours.flags') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of data.value(); track entry.id) {
+          <tr>
+            <td class="grow">{{ project(entry) }}</td>
+            <td class="muted">{{ entry.clockInAt | slDate }}</td>
+            <td class="num">
+              @if (worked(entry); as horas) {
+                {{ horas | slHours }}
+              } @else {
+                <span class="muted">{{ t('hours.open') }}</span>
+              }
+            </td>
+            <td class="muted">{{ t('timeMethod.' + entry.method) }}</td>
+            <td><sl-chip [tone]="tone(entry.status)">{{ t('timeStatus.' + entry.status) }}</sl-chip></td>
+            <td>
+              @if (entry.flags?.length) {
+                <sl-chip tone="warning">{{ t('hours.flagged', { n: entry.flags.length }) }}</sl-chip>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</sl-page>

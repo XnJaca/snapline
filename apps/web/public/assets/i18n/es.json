@@ -6,11 +6,6 @@
     "light": "Claro",
     "dark": "Oscuro"
   },
-  "language": {
-    "label": "Idioma",
-    "en": "Inglés",
-    "es": "Español"
-  },
   "devTokens": {
     "title": "Tokens del tema",
     "subtitle": "Los mismos valores que la app del teléfono, generados desde design-tokens.json",
@@ -26,5 +21,167 @@
     "successExample": "Jornada cerrada",
     "dangerExample": "No se pudo sincronizar",
     "brandNote": "La familia de marca es solo del wordmark: ningún texto de interfaz la usa."
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "Inglés",
+    "es": "Español",
+    "failed": "No se pudo guardar el idioma. Intente de nuevo."
+  },
+  "nav": {
+    "label": "Secciones",
+    "toggle": "Mostrar secciones",
+    "projects": "Proyectos",
+    "customers": "Clientes",
+    "crews": "Cuadrillas",
+    "hours": "Horas",
+    "catalog": "Catálogo",
+    "billing": "Facturación",
+    "reports": "Reportes",
+    "publish": "Publicar",
+    "close": "Cerrar secciones"
+  },
+  "roles": {
+    "OWNER": "Dueño",
+    "ADMIN": "Administrador",
+    "FOREMAN": "Capataz",
+    "WORKER": "Trabajador",
+    "ACCOUNTANT": "Contador"
+  },
+  "login": {
+    "lead": "Panel de administración",
+    "identifier": "Teléfono o correo",
+    "password": "Contraseña",
+    "submit": "Entrar",
+    "retry": "Reintentar",
+    "error": {
+      "credentials": "Teléfono, correo o contraseña incorrectos",
+      "connection": "Sin conexión. Revise su conexión e intente de nuevo.",
+      "server": "El servidor no responde. Intente más tarde.",
+      "unknown": "No se pudo entrar. Intente de nuevo."
+    }
+  },
+  "session": {
+    "menu": "Cuenta",
+    "logout": "Cerrar sesión",
+    "logoutFailed": "Salió de esta pestaña, pero el servidor no lo confirmó. Vuelva a cerrar sesión cuando haya conexión."
+  },
+  "connection": {
+    "title": "Sin conexión",
+    "lead": "El servidor no responde, así que no podemos confirmar su sesión.",
+    "retry": "Reintentar"
+  },
+  "state": {
+    "loading": "Cargando",
+    "retry": "Reintentar",
+    "failedTitle": "No se pudo cargar",
+    "failedText": "El servidor no respondió. Intente de nuevo."
+  },
+  "projects": {
+    "count": "{{n}} proyectos",
+    "empty": "Todavía no hay proyectos.",
+    "city": "Ciudad",
+    "start": "Inicio",
+    "target": "Entrega"
+  },
+  "projectStatus": {
+    "LEAD": "Prospecto",
+    "ESTIMATED": "Cotizado",
+    "SCHEDULED": "Programado",
+    "IN_PROGRESS": "En progreso",
+    "COMPLETED": "Terminado",
+    "ON_HOLD": "En pausa",
+    "CANCELLED": "Cancelado"
+  },
+  "customers": {
+    "count": "{{n}} clientes",
+    "empty": "Todavía no hay clientes. Agregue el primero para poder crear una obra.",
+    "name": "Cliente",
+    "phone": "Teléfono",
+    "email": "Correo",
+    "source": "Origen",
+    "since": "Alta"
+  },
+  "source": {
+    "REFERRAL": "Referido",
+    "WEB": "Web",
+    "SOCIAL": "Redes",
+    "REPEAT": "Recurrente",
+    "OTHER": "Otro"
+  },
+  "crews": {
+    "count": "{{n}} cuadrillas",
+    "empty": "Todavía no hay cuadrillas.",
+    "name": "Cuadrilla"
+  },
+  "hours": {
+    "count": "{{n}} registros",
+    "empty": "Todavía no hay horas registradas.",
+    "project": "Obra",
+    "day": "Día",
+    "worked": "Trabajadas",
+    "status": "Estado",
+    "flags": "Banderas",
+    "open": "Abierto",
+    "flagged": "{{n}} con bandera",
+    "method": "Marcado por"
+  },
+  "timeStatus": {
+    "PENDING": "Pendiente",
+    "APPROVED": "Aprobado",
+    "REJECTED": "Rechazado"
+  },
+  "catalog": {
+    "count": "{{n}} ítems",
+    "empty": "Todavía no hay ítems en el catálogo. Los ítems con su costo son los que muestran el margen.",
+    "item": "Ítem",
+    "unit": "Unidad",
+    "price": "Precio",
+    "cost": "Costo",
+    "margin": "Margen"
+  },
+  "unit": {
+    "HOUR": "Hora",
+    "SQFT": "Pie²",
+    "LINEAR_FT": "Pie lineal",
+    "EACH": "Unidad",
+    "JOB": "Trabajo"
+  },
+  "billing": {
+    "outstanding": "{{amount}} por cobrar",
+    "empty": "Todavía no hay facturas.",
+    "number": "Número",
+    "customer": "Cliente",
+    "status": "Estado",
+    "due": "Vence",
+    "total": "Total",
+    "balance": "Saldo"
+  },
+  "invoiceStatus": {
+    "DRAFT": "Borrador",
+    "SENT": "Enviada",
+    "PARTIAL": "Abonada",
+    "PAID": "Pagada",
+    "OVERDUE": "Vencida",
+    "VOID": "Anulada"
+  },
+  "reports": {
+    "jobCost": "Costo por obra",
+    "jobCostMeta": "Mano de obra y facturación por proyecto",
+    "empty": "Todavía no hay proyectos que reportar.",
+    "project": "Obra",
+    "hours": "Horas",
+    "labor": "Mano de obra",
+    "estimated": "Cotizado",
+    "invoiced": "Facturado"
+  },
+  "publish": {
+    "count": "{{n}} publicados",
+    "empty": "Todavía no hay nada publicado. Un proyecto terminado con las fotos limpias es lo que termina en la página."
+  },
+  "timeMethod": {
+    "SELF": "La persona",
+    "FOREMAN": "Capataz",
+    "ADMIN": "Oficina"
   }
 }

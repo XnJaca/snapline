@@ -1,0 +1,113 @@
+@if (offline()) {
+  <sl-offline />
+} @else {
+  <div class="shell" *transloco="let t">
+    <header class="topbar">
+      <div class="topbar__brand">
+        @if (!collapsed() || narrow()) {
+          <sl-logo />
+        }
+        <button
+          class="topbar__collapse"
+          matIconButton
+          type="button"
+          (click)="toggleNav()"
+          [matTooltip]="t('nav.toggle')"
+          [attr.aria-label]="t('nav.toggle')"
+          [attr.aria-expanded]="narrow() ? drawerOpen() : !collapsed()"
+        >
+          <mat-icon [svgIcon]="collapsed() && !narrow() ? 'brand-mark' : 'menu'" />
+        </button>
+      </div>
+
+      <div class="topbar__bar">
+        <span class="topbar__company">{{ membership()?.companyName }}</span>
+        <span class="topbar__spacer"></span>
+
+        <button
+          matIconButton
+          type="button"
+          [matMenuTriggerFor]="languageMenu"
+          [matTooltip]="t('language.label')"
+          [attr.aria-label]="t('language.label')"
+        >
+          <mat-icon svgIcon="language" />
+        </button>
+        <mat-menu #languageMenu="matMenu">
+          @for (locale of locales; track locale) {
+            <button mat-menu-item type="button" [disabled]="activeLocale() === locale" (click)="changeLocale(locale)">
+              {{ t('language.' + locale) }}
+            </button>
+          }
+        </mat-menu>
+
+        <button
+          matIconButton
+          type="button"
+          [matMenuTriggerFor]="themeMenu"
+          [matTooltip]="t('themeMode.label')"
+          [attr.aria-label]="t('themeMode.label')"
+        >
+          <mat-icon svgIcon="theme" />
+        </button>
+        <mat-menu #themeMenu="matMenu">
+          @for (mode of modes; track mode) {
+            <button mat-menu-item type="button" [disabled]="theme.mode() === mode" (click)="theme.set(mode)">
+              {{ t('themeMode.' + mode) }}
+            </button>
+          }
+        </mat-menu>
+
+        <button
+          class="topbar__account"
+          type="button"
+          [matMenuTriggerFor]="userMenu"
+          [matTooltip]="user()?.name ?? ''"
+          [attr.aria-label]="t('session.menu')"
+        >
+          {{ initials() }}
+        </button>
+        <mat-menu #userMenu="matMenu">
+          <div class="account">
+            <span class="account__name">{{ user()?.name }}</span>
+            <span class="account__role">{{ t('roles.' + (membership()?.role ?? 'WORKER')) }}</span>
+          </div>
+          <button mat-menu-item type="button" (click)="logout()">
+            <mat-icon svgIcon="logout" />
+            <span>{{ t('session.logout') }}</span>
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <div class="shell__main">
+      <nav class="nav" [attr.aria-label]="t('nav.label')">
+        <ul class="nav__list">
+          @for (axis of axes(); track axis.path) {
+            <li>
+              <a
+                class="nav__item"
+                [routerLink]="[axis.path]"
+                routerLinkActive="nav__item--active"
+                (click)="onNavigate()"
+                [matTooltip]="collapsed() && !narrow() ? t(axis.label) : ''"
+                matTooltipPosition="right"
+              >
+                <mat-icon class="nav__icon" [svgIcon]="axis.icon" />
+                <span class="nav__label">{{ t(axis.label) }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+      @if (narrow() && drawerOpen()) {
+        <button class="nav__scrim" type="button" (click)="onNavigate()" [attr.aria-label]="t('nav.close')"></button>
+      }
+
+      <main class="content">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+}

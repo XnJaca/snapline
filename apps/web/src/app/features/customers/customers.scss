@@ -1,0 +1,18 @@
+@use '../../../styles/data-table' as table;
+
+// El host es un hijo flex del área de contenido: sin esto encoge al tamaño de
+// su contenido y la pantalla queda en una columna angosta.
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.frame {
+  @include table.frame;
+}
+
+.table {
+  @include table.base;
+}

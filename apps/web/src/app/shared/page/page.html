@@ -1,0 +1,44 @@
+<section class="page" slKeepScroll *transloco="let t">
+  <header class="page__header">
+    @if (icon()) {
+      <span class="page__icon"><mat-icon [svgIcon]="icon()" /></span>
+    }
+
+    <div class="page__titles">
+      <h1 class="page__heading">{{ heading() }}</h1>
+      @if (meta()) {
+        <p class="page__meta">{{ meta() }}</p>
+      }
+    </div>
+
+    <div class="page__actions">
+      <ng-content select="[slPageActions]" />
+    </div>
+
+    @if (loading()) {
+      <mat-progress-bar class="page__progress" mode="indeterminate" [attr.aria-label]="t('state.loading')" />
+    }
+  </header>
+
+  <div class="page__body">
+    @if (failed()) {
+      <div class="state" role="alert">
+        <p class="state__title">{{ t('state.failedTitle') }}</p>
+        <p class="state__text">{{ t('state.failedText') }}</p>
+        <button matButton="filled" type="button" (click)="retry.emit()">{{ t('state.retry') }}</button>
+      </div>
+    } @else if (loading()) {
+      <div class="skeleton" aria-hidden="true">
+        @for (row of [1, 2, 3, 4, 5]; track row) {
+          <div class="skeleton__row"></div>
+        }
+      </div>
+    } @else if (empty()) {
+      <div class="state">
+        <p class="state__title">{{ emptyText() }}</p>
+      </div>
+    } @else {
+      <ng-content />
+    }
+  </div>
+</section>

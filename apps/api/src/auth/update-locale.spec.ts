@@ -25,6 +25,7 @@ describe('AuthService.updateLocale', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
     return { service, users };
   }

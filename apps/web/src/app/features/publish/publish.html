@@ -1,0 +1,25 @@
+<sl-page
+  *transloco="let t"
+  icon="publish"
+  [heading]="t('nav.publish')"
+  [meta]="t('publish.count', { n: data.value().length })"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('publish.empty')"
+  (retry)="data.reload()"
+>
+  <ul class="cards">
+    @for (published of data.value(); track published.id) {
+      <li class="card">
+        <h2 class="card__title">{{ published.title }}</h2>
+        @if (published.summary) {
+          <p class="card__summary">{{ published.summary }}</p>
+        }
+        <p class="card__meta">
+          {{ published.city }} · {{ published.publishedAt | slDate }}
+        </p>
+      </li>
+    }
+  </ul>
+</sl-page>

@@ -1,0 +1,32 @@
+<main class="login" *transloco="let t">
+  <form class="login__card" [formGroup]="form" [attr.aria-busy]="busy()" (ngSubmit)="submit()">
+    <sl-logo class="login__brand" [stacked]="true" />
+    <p class="login__lead">{{ t('login.lead') }}</p>
+
+    <div class="login__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('login.identifier') }}</mat-label>
+        <input matInput formControlName="identifier" autocomplete="username" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('login.password') }}</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      </mat-form-field>
+    </div>
+
+    @if (error(); as failure) {
+      <p class="login__error" role="alert">{{ t('login.error.' + failure) }}</p>
+    }
+
+    <div class="login__progress" aria-hidden="true">
+      @if (busy()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </div>
+
+    <button class="login__submit" matButton="filled" type="submit" [disabled]="busy()">
+      {{ error() === 'connection' ? t('login.retry') : t('login.submit') }}
+    </button>
+  </form>
+</main>

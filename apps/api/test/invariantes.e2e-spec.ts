@@ -12,7 +12,6 @@ import { adminDataSource, bootstrapE2E, cleanup, cleanupOrphans, Fixture, seedCo
  */
 describe('invariantes del dominio (e2e)', () => {
   let app: INestApplication;
-  let ds: DataSource;
   let admin: DataSource;
   let http: ReturnType<typeof request>;
   let a: Fixture;
@@ -27,7 +26,7 @@ describe('invariantes del dominio (e2e)', () => {
   };
 
   beforeAll(async () => {
-    ({ app, ds } = await bootstrapE2E());
+    ({ app } = await bootstrapE2E());
     http = request(app.getHttpServer());
     admin = await adminDataSource();
     await cleanupOrphans(admin);
@@ -166,23 +165,36 @@ describe('invariantes del dominio (e2e)', () => {
       expect([403]).toContain(res.status);
     });
 
+    /**
+     * La tarifa congelada no baja al cliente con ningún rol: va con
+     * `select: false` y `@ApiHideProperty()`, igual que la de la membresía. El
+     * invariante se comprueba en la base, que es donde vive.
+     */
+    const tarifaCongelada = async (): Promise<number | null> => {
+      const [fila] = await admin.query<Array<{ pay_rate_cents_snapshot: string | null }>>(
+        `SELECT pay_rate_cents_snapshot FROM time_entry WHERE id = $1`, [entryId]);
+      return fila.pay_rate_cents_snapshot === null ? null : Number(fila.pay_rate_cents_snapshot);
+    };
+
     it('aprobar congela la tarifa', async () => {
       const res = await request(app.getHttpServer())
         .post(`/api/time-entries/${entryId}/approve`).set('Authorization', `Bearer ${ownerA}`)
         .send({ reason: 'ok' }).expect(200);
 
       expect(res.body.status).toBe('APPROVED');
-      expect(res.body.payRateCentsSnapshot).toBe(3200);
+      expect(await tarifaCongelada()).toBe(3200);
+      // Y no aparece en la respuesta: es lo que gana esa persona.
+      expect(res.body.payRateCentsSnapshot).toBeUndefined();
     });
 
     it('subir la tarifa después no recalcula lo ya aprobado', async () => {
       await admin.query(`UPDATE membership SET pay_rate_cents = 9999 WHERE company_id = $1 AND role = 'WORKER'`,
         [a.companyId]);
 
-      const res = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get(`/api/time-entries/${entryId}`).set('Authorization', `Bearer ${ownerA}`).expect(200);
 
-      expect(res.body.payRateCentsSnapshot).toBe(3200);
+      expect(await tarifaCongelada()).toBe(3200);
     });
 
     it('la base bloquea el borrado', async () => {

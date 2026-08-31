@@ -171,6 +171,9 @@ importers:
       '@jsverse/transloco':
         specifier: ^8.4.0
         version: 8.4.0(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2))(rxjs@7.8.2)(typescript@6.0.3)
+      '@snapline/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       rxjs:
         specifier: ~7.8.0
         version: 7.8.2

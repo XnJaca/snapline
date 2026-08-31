@@ -1,0 +1,33 @@
+<sl-page
+  *transloco="let t"
+  icon="crews"
+  [heading]="t('nav.crews')"
+  [meta]="t('crews.count', { n: data.value().length })"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('crews.empty')"
+  (retry)="data.reload()"
+>
+  <div class="frame">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="grow">{{ t('crews.name') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (crew of data.value(); track crew.id) {
+          <tr>
+            <td class="grow">
+              <span class="crew">
+                <span class="crew__color" [style.background]="crew.color" aria-hidden="true"></span>
+                {{ crew.name }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</sl-page>

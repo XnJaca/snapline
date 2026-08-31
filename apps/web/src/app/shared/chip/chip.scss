@@ -1,0 +1,34 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--sl-space-2);
+  border-radius: var(--sl-radius-full);
+  font-size: var(--sl-font-size-caption);
+  font-weight: var(--sl-font-weight-medium);
+  white-space: nowrap;
+}
+
+:host(.chip--neutral) {
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+:host(.chip--info) {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+:host(.chip--success) {
+  background: var(--sl-success-container);
+  color: var(--sl-on-success-container);
+}
+
+:host(.chip--warning) {
+  background: var(--sl-warning-container);
+  color: var(--sl-on-warning-container);
+}
+
+:host(.chip--danger) {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

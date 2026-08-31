@@ -1,0 +1,37 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  color: var(--mat-sys-on-surface);
+
+  // Un solo número mueve el lockup entero, como en el móvil.
+  --logo-mark: 1.5rem;
+}
+
+.logo__mark {
+  flex: none;
+  width: var(--logo-mark);
+  height: var(--logo-mark);
+}
+
+.logo__word {
+  font-family: var(--sl-font-family-brand);
+  font-weight: var(--sl-font-weight-brand);
+  // El símbolo no llena su cuadro: la línea deja aire arriba y abajo.
+  font-size: calc(var(--logo-mark) * 0.92);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+:host(.logo--stacked) {
+  flex-direction: column;
+  gap: var(--sl-space-4);
+  --logo-mark: 4.5rem;
+
+  .logo__word {
+    font-size: calc(var(--logo-mark) * 0.44);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+}

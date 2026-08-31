@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0008: Sesión y shell del panel"
 type: spec
 platform: web
-status: aprobado
+status: en-implementacion
 goal: "William entra al panel desde el navegador, ve solo los ejes que su rol habilita, al recargar sigue adentro sin que el refresh token haya estado nunca al alcance de JavaScript, y cuando cierra sesión ese token deja de servir."
 apps:
   - api
@@ -17,10 +17,10 @@ domain:
   - empresa
 frente: plataforma
 created: 2026-08-30
-updated: 2026-08-30
+updated: 2026-08-31
 tags:
   - spec
-  - spec/aprobado
+  - spec/en-implementacion
   - web
 ---
 
@@ -90,8 +90,14 @@ una sola persona, eso alcanza; en una computadora, no.
 
 ### No entra
 
-- **El contenido real de cada pantalla.** Cada eje es un placeholder; proyectos,
-  clientes, facturación, reportes y publicación llevan cada uno su spec.
+- ~~**El contenido real de cada pantalla.** Cada eje es un placeholder; proyectos,
+  clientes, facturación, reportes y publicación llevan cada uno su spec.~~
+  **Entró el 2026-08-31, por decisión explícita.** Las listas sintéticas se veían
+  como andamiaje y no dejaban juzgar el shell, así que los ocho ejes leen los
+  endpoints que ya existen: `/projects` en tarjetas y los otros siete en tabla,
+  con carga, error y vacío. **Lo que sigue sin entrar es escribir**: no hay un
+  solo formulario ni una sola mutación, y cada eje sigue necesitando su spec para
+  eso. El detalle de por qué está en el historial.
 - **Registro y recuperación de contraseña.** No hay endpoint, y el dominio define
   que las cuentas las crea el admin invitando. Igual que en móvil.
 - **Selector de empresa.** `memberships[]` viaja en el login, pero no existe endpoint
@@ -231,7 +237,7 @@ POST /auth/web/login
 
 200 OK
 Set-Cookie: sl_refresh=…; HttpOnly; Secure; SameSite=Strict;
-            Path=/auth/web; Max-Age=2592000
+            Path=/api/auth/web; Max-Age=2592000
 { "accessToken": "…", "expiresInSeconds": 3600, "user": {…},
   "membership": {…}, "memberships": [ … ] }
 ```
@@ -257,7 +263,7 @@ POST /auth/web/logout      ← la cookie viaja sola, sin body
 
 204 No Content
 Set-Cookie: sl_refresh=; HttpOnly; Secure; SameSite=Strict;
-            Path=/auth/web; Max-Age=0
+            Path=/api/auth/web; Max-Age=0
 ```
 
 Es idempotente: llamarlo sin cookie, o dos veces, responde 204 igual. No hay nada
@@ -277,7 +283,7 @@ Lo que esto arrastra en el API:
   servicio. No se define uno propio para web.
 - CORS con `credentials: true` y origen explícito. **Nunca `*`** — con credenciales
   el navegador lo rechaza, y en producción sería un agujero.
-- Defensa CSRF: `SameSite=Strict` con `Path` acotado a `/auth/web` es lo que fija
+- Defensa CSRF: `SameSite=Strict` con `Path` acotado a `/api/auth/web` es lo que fija
   ADR-0014 §5. El double-submit entra solo si aparece un flujo cross-site legítimo.
 - `StrictThrottle` en los tres, como ya lo tienen `login` y `refresh` — aceptan
   credenciales sin autenticación previa.
@@ -323,52 +329,54 @@ decide qué se dibuja.
 
 ## Criterios de aceptación
 
-- [ ] Entrar con teléfono y entrar con email funcionan igual, sin que el formulario
+- [x] Entrar con teléfono y entrar con email funcionan igual, sin que el formulario
       pregunte cuál es.
-- [ ] `localStorage` y `sessionStorage` están vacíos después de un login exitoso.
-- [ ] La respuesta de `/auth/web/login` **no contiene** `refreshToken`, y su DTO en
+- [x] `localStorage` y `sessionStorage` están vacíos después de un login exitoso.
+- [x] La respuesta de `/auth/web/login` **no contiene** `refreshToken`, y su DTO en
       `openapi.json` tampoco declara el campo.
-- [ ] La cookie es `HttpOnly`, `SameSite=Strict`, con `Path=/auth/web` y
-      `Max-Age=2592000`.
-- [ ] Recargar la página mantiene la sesión sin volver a pedir credenciales, y
+- [x] La cookie es `HttpOnly`, `SameSite=Strict`, con `Path=/api/auth/web` y
+      `Max-Age=2592000`. **El `Path` lleva el prefijo global del API**: el spec
+      decía `/auth/web`, y con ese valor la cookie no viajaría a ninguna de las
+      tres rutas, que cuelgan de `/api`.
+- [x] Recargar la página mantiene la sesión sin volver a pedir credenciales, y
       cerrar el navegador y volver a abrirlo también.
-- [ ] Con el access token vencido, la primera llamada dispara el refresh y **se
+- [x] Con el access token vencido, la primera llamada dispara el refresh y **se
       reintenta sola**, sin que el usuario vea un error.
-- [ ] Cerrar sesión sube `membership.token_version`, y **reusar la cookie vieja
+- [x] Cerrar sesión sube `membership.token_version`, y **reusar la cookie vieja
       responde 401 `TOKEN_INVALID`** aunque su firma siga siendo válida. Se verifica
       guardando el valor de la cookie antes del logout y reenviándolo después.
-- [ ] `token_version` no se acepta del cliente por ninguna vía: no está en ningún
+- [x] `token_version` no se acepta del cliente por ninguna vía: no está en ningún
       DTO de entrada, y mandarlo en el body de login o refresh no lo cambia.
-- [ ] `POST /auth/web/logout` es idempotente: sin cookie, o llamado dos veces,
+- [x] `POST /auth/web/logout` es idempotente: sin cookie, o llamado dos veces,
       responde 204.
-- [ ] La migración pone `token_version` en `NOT NULL DEFAULT 0`, y las membresías
+- [x] La migración pone `token_version` en `NOT NULL DEFAULT 0`, y las membresías
       que ya existen quedan en 0.
-- [ ] **Un refresh token emitido antes del deploy sigue funcionando después.** Es el
+- [x] **Un refresh token emitido antes del deploy sigue funcionando después.** Es el
       criterio que el `?? 0` hace posible: con igualdad estricta se caen todas las
       sesiones vivas, y el test tiene que usar un token sin el claim `tv`.
-- [ ] `auth_memberships_for_user()` devuelve `token_version`, extendida en la misma
+- [x] `auth_memberships_for_user()` devuelve `token_version`, extendida en la misma
       migración que agrega la columna.
-- [ ] `token_version` va con `select: false` y `@ApiHideProperty()` en la entity, y
+- [x] `token_version` va con `select: false` y `@ApiHideProperty()` en la entity, y
       no aparece en `openapi.json` ni como propiedad de ningún schema.
-- [ ] Un refresh que falla por red muestra falta de conexión, **no** la pantalla de
+- [x] Un refresh que falla por red muestra falta de conexión, **no** la pantalla de
       login. Un login manual sin red muestra lo mismo, no un error de credenciales.
-- [ ] `Secure` sale de una variable de entorno con default `true`, está en
+- [x] `Secure` sale de una variable de entorno con default `true`, está en
       `.env.example`, y el panel corre en `http://localhost:4200` con la sesión
       funcionando de punta a punta.
-- [ ] El origen permitido por CORS sale de su propia variable de entorno, también en
+- [x] El origen permitido por CORS sale de su propia variable de entorno, también en
       `.env.example`. **No hay `*` en ningún lado**: con `credentials: true` el
       navegador lo rechaza, y un origen distinto del configurado falla el preflight.
-- [ ] La navegación se dibuja desde `membership.permissions[]`. Un rol sin
+- [x] La navegación se dibuja desde `membership.permissions[]`. Un rol sin
       `billing.read` no ve Facturación, y la tabla de roles no está duplicada en
       Angular.
-- [ ] Cambiar de eje y volver conserva la posición de scroll del anterior.
-- [ ] El panel arranca en `user.locale`, y cambiarlo desde la interfaz lo persiste
+- [x] Cambiar de eje y volver conserva la posición de scroll del anterior.
+- [x] El panel arranca en `user.locale`, y cambiarlo desde la interfaz lo persiste
       con `PATCH /auth/me/locale` y sobrevive a la recarga.
-- [ ] **Cero cadenas quemadas** (regla 24): labels, botones, placeholders, errores y
+- [x] **Cero cadenas quemadas** (regla 24): labels, botones, placeholders, errores y
       estados vacíos pasan por Transloco, en `en` y en `es`.
-- [ ] `openapi.json` regenerado con los tres endpoints nuevos, y
+- [x] `openapi.json` regenerado con los tres endpoints nuevos, y
       `packages/contracts` al día (regla 8).
-- [ ] Tests del API para los tres endpoints, incluidos los que verifican que el
+- [x] Tests del API para los tres endpoints, incluidos los que verifican que el
       refresh no sale en el body y que la cookie es `httpOnly`.
 
 ## Riesgos / consideraciones
@@ -411,3 +419,10 @@ decide qué se dibuja.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-30 | borrador | Creado. Sale de partir el spec original de cimientos en dos, tras la revisión de `spec-reviewer` |
+| 2026-08-31 | en-implementacion | Arranca la implementación en `feature/web-0008-sesion`. Los iconos del shell se resuelven con `MatIconRegistry` y SVG propios, que cierra [[../../../tech-debt/0009-el-panel-no-tiene-iconos\|DEBT-0009]] |
+| 2026-08-31 | en-implementacion | Los tres endpoints, la migración y el shell. 34 tests nuevos: 11 e2e de sesión contra Postgres, 7 unitarios del contador, 7 de la cookie y 23 del panel. Dos correcciones al spec, las dos por lo mismo —el `Path` de la cookie y el `Path` del contrato omitían el prefijo global `/api`, y con `/auth/web` la cookie no viaja a ninguna de las tres rutas—. La función `auth_memberships_for_user()` se recrea con `DROP` + `CREATE` y no con `CREATE OR REPLACE`: Postgres no deja cambiar el tipo de retorno. Los iconos entraron con `MatIconRegistry` y SVG propios, cerrando [[../../../tech-debt/0009-el-panel-no-tiene-iconos\|DEBT-0009]] |
+
+| 2026-08-31 | en-implementacion | **Pasada de diseño y de copy sobre lo implementado, y el alcance del contenido creció a conciencia.** Probándolo en el navegador salieron tres cosas que los tests no ven: la cadena de alto y ancho se cortaba en el host de cada componente ruteado —`flex: 1` estaba en el `<section>` de adentro y nunca en el `:host`, así que la pantalla medía 383px de ancho y 4469 de alto y el scroll se lo quedaba Material—, el shell no tenía jerarquía ni forma de plegarse, y el panel no usaba el lockup de marca que `brand/logo-mark.svg` y `apps/mobile/lib/core/brand/` ya definían. El copy se reescribió contra la voz que el móvil ya tiene —usted, no vos— reusando sus cadenas de login en vez de inventar unas paralelas. Entró `sl-page` con encabezado propio y los tres estados de red, `sl-chip`, el parcial de tabla, y pipes de moneda, fecha, horas y porcentaje por Intl con el idioma activo. Los reportes recibieron sus DTO: devolvían `{"type":"object"}` sin propiedades, que es el defecto que la regla 8 describe, y sus agregados llegaban como texto. El seed de desarrollo creció a 6 obras, 4 clientes, 9 registros de horas, 6 ítems, un estimado, dos facturas y un pago. Dos huecos del contrato quedaron registrados en [[../../../tech-debt/0010-listados-sin-la-persona\|DEBT-0010]] |
+| 2026-08-31 | en-implementacion | `code-reviewer` pasado: **listo para PR, sin hallazgos GRAVE**. Un MEDIO propio, corregido: el scrim del cajón angosto tenía `rgb(0 0 0 / 40%)` literal, contra la regla 22, y ahora consume `--mat-sys-scrim` mezclado con `color-mix`. Un MENOR preexistente en `main` que no toca este cambio: `test/invariantes.e2e-spec.ts` tiene una variable sin usar, y el script `lint` del API corre solo sobre `src/**`, así que la carpeta `test/` no la cubre |
+| 2026-08-31 | en-implementacion | Los dos arrastres de `main`, arreglados acá por decisión del dueño en vez de en un `fix/` aparte. **La causa de los dos era la misma**: `pay_rate_cents_snapshot` pasó a `select: false` en `6573a6d` y dos aserciones de `invariantes.e2e-spec.ts` seguían leyéndolo de la respuesta, así que comparaban contra `undefined`; ahora comprueban el invariante en la base, que es donde vive, y de paso verifican que la tarifa **no** viaje al cliente. El script `lint` del API corría `eslint "src/**/*.ts"`, así que `test/` no lo cubría nadie y por ahí pasó la variable sin usar: pasa a `eslint .`, igual que `apps/web`, y la config ya ignora `dist`. La suite e2e completa queda en 53 verdes, estable en tres corridas |
+| 2026-08-31 | en-implementacion | **Los cinco criterios que pedían navegador, verificados a mano por @jaca** contra el API y el panel corriendo: recargar y reabrir sin volver a pedir credenciales, el idioma que sobrevive a la recarga, el scroll de cada eje, el almacenamiento sin nada de sesión, y el recorrido completo en `http://localhost:4200`. Todos los criterios en `[x]`; queda el PR |

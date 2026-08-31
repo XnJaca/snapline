@@ -1,0 +1,49 @@
+<sl-page
+  *transloco="let t"
+  icon="projects"
+  [heading]="t('nav.projects')"
+  [meta]="t('projects.count', { n: data.value().length })"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('projects.empty')"
+  (retry)="data.reload()"
+>
+  <ul class="cards">
+    @for (project of data.value(); track project.id) {
+      <li class="card">
+        <div class="card__top">
+          <h2 class="card__name">{{ project.name }}</h2>
+          <sl-chip [tone]="tone(project.status)">{{ t('projectStatus.' + project.status) }}</sl-chip>
+        </div>
+
+        <p class="card__customer">{{ project.customer?.displayName }}</p>
+
+        @if (project.description) {
+          <p class="card__description">{{ project.description }}</p>
+        }
+
+        <dl class="card__facts">
+          @if (city(project)) {
+            <div class="fact">
+              <dt>{{ t('projects.city') }}</dt>
+              <dd>{{ city(project) }}</dd>
+            </div>
+          }
+          @if (project.startDate) {
+            <div class="fact">
+              <dt>{{ t('projects.start') }}</dt>
+              <dd>{{ project.startDate | slDate }}</dd>
+            </div>
+          }
+          @if (project.targetEndDate) {
+            <div class="fact">
+              <dt>{{ t('projects.target') }}</dt>
+              <dd>{{ project.targetEndDate | slDate }}</dd>
+            </div>
+          }
+        </dl>
+      </li>
+    }
+  </ul>
+</sl-page>

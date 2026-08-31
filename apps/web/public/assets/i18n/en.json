@@ -6,11 +6,6 @@
     "light": "Light",
     "dark": "Dark"
   },
-  "language": {
-    "label": "Language",
-    "en": "English",
-    "es": "Spanish"
-  },
   "devTokens": {
     "title": "Theme tokens",
     "subtitle": "The same values as the phone app, generated from design-tokens.json",
@@ -26,5 +21,167 @@
     "successExample": "Shift closed",
     "dangerExample": "Could not sync",
     "brandNote": "The brand family is for the wordmark only: no interface text uses it."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "es": "Spanish",
+    "failed": "Could not save the language. Try again."
+  },
+  "nav": {
+    "label": "Sections",
+    "toggle": "Show sections",
+    "projects": "Projects",
+    "customers": "Customers",
+    "crews": "Crews",
+    "hours": "Hours",
+    "catalog": "Catalog",
+    "billing": "Billing",
+    "reports": "Reports",
+    "publish": "Publish",
+    "close": "Close sections"
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "FOREMAN": "Foreman",
+    "WORKER": "Worker",
+    "ACCOUNTANT": "Accountant"
+  },
+  "login": {
+    "lead": "Admin panel",
+    "identifier": "Phone or email",
+    "password": "Password",
+    "submit": "Sign in",
+    "retry": "Try again",
+    "error": {
+      "credentials": "Incorrect phone, email or password",
+      "connection": "No connection. Check your connection and try again.",
+      "server": "The server is not responding. Try again later.",
+      "unknown": "Could not sign in. Try again."
+    }
+  },
+  "session": {
+    "menu": "Account",
+    "logout": "Sign out",
+    "logoutFailed": "You are out on this tab, but the server did not confirm it. Sign out again when the connection is back."
+  },
+  "connection": {
+    "title": "No connection",
+    "lead": "The server is not responding, so we cannot confirm your session.",
+    "retry": "Try again"
+  },
+  "state": {
+    "loading": "Loading",
+    "retry": "Try again",
+    "failedTitle": "Could not load",
+    "failedText": "The server did not respond. Try again."
+  },
+  "projects": {
+    "count": "{{n}} projects",
+    "empty": "No projects yet.",
+    "city": "City",
+    "start": "Started",
+    "target": "Target"
+  },
+  "projectStatus": {
+    "LEAD": "Lead",
+    "ESTIMATED": "Estimated",
+    "SCHEDULED": "Scheduled",
+    "IN_PROGRESS": "In progress",
+    "COMPLETED": "Completed",
+    "ON_HOLD": "On hold",
+    "CANCELLED": "Cancelled"
+  },
+  "customers": {
+    "count": "{{n}} customers",
+    "empty": "No customers yet. Add the first one to start a project.",
+    "name": "Customer",
+    "phone": "Phone",
+    "email": "Email",
+    "source": "Source",
+    "since": "Added"
+  },
+  "source": {
+    "REFERRAL": "Referral",
+    "WEB": "Web",
+    "SOCIAL": "Social",
+    "REPEAT": "Repeat",
+    "OTHER": "Other"
+  },
+  "crews": {
+    "count": "{{n}} crews",
+    "empty": "No crews yet.",
+    "name": "Crew"
+  },
+  "hours": {
+    "count": "{{n}} entries",
+    "empty": "No hours recorded yet.",
+    "project": "Project",
+    "day": "Day",
+    "worked": "Worked",
+    "status": "Status",
+    "flags": "Flags",
+    "open": "Open",
+    "flagged": "{{n}} flagged",
+    "method": "Marked by"
+  },
+  "timeStatus": {
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "catalog": {
+    "count": "{{n}} items",
+    "empty": "No items in the catalog yet. Items with their cost are what show margin.",
+    "item": "Item",
+    "unit": "Unit",
+    "price": "Price",
+    "cost": "Cost",
+    "margin": "Margin"
+  },
+  "unit": {
+    "HOUR": "Hour",
+    "SQFT": "Sq ft",
+    "LINEAR_FT": "Linear ft",
+    "EACH": "Each",
+    "JOB": "Job"
+  },
+  "billing": {
+    "outstanding": "{{amount}} outstanding",
+    "empty": "No invoices yet.",
+    "number": "Number",
+    "customer": "Customer",
+    "status": "Status",
+    "due": "Due",
+    "total": "Total",
+    "balance": "Balance"
+  },
+  "invoiceStatus": {
+    "DRAFT": "Draft",
+    "SENT": "Sent",
+    "PARTIAL": "Partly paid",
+    "PAID": "Paid",
+    "OVERDUE": "Overdue",
+    "VOID": "Void"
+  },
+  "reports": {
+    "jobCost": "Job cost",
+    "jobCostMeta": "Labor and invoicing per project",
+    "empty": "No projects to report on yet.",
+    "project": "Project",
+    "hours": "Hours",
+    "labor": "Labor",
+    "estimated": "Estimated",
+    "invoiced": "Invoiced"
+  },
+  "publish": {
+    "count": "{{n}} published",
+    "empty": "Nothing published yet. A finished project with clean photos is what ends up on the website."
+  },
+  "timeMethod": {
+    "SELF": "Themselves",
+    "FOREMAN": "Foreman",
+    "ADMIN": "Office"
   }
 }

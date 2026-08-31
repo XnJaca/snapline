@@ -8,6 +8,7 @@ import { AppUser, Locale } from './entities/app-user.entity';
 import { Membership } from './entities/membership.entity';
 import { AccessTokenPayload } from './guards/auth.guard';
 import { AuthResultDto, AuthMembershipDto, AuthUserDto } from './dto/auth-result.dto';
+import { TenantService } from '../tenant/tenant.service';
 import { normalizeIdentifier } from './phone';
 import { permissionsForRole } from './permissions';
 
@@ -18,6 +19,7 @@ interface SessionMembership {
   companyId: string;
   companyName: string;
   role: Membership['role'];
+  tokenVersion: number;
 }
 
 
@@ -29,6 +31,7 @@ export class AuthService {
     @InjectRepository(Membership) private readonly memberships: Repository<Membership>,
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly jwt: JwtService,
+    private readonly tenants: TenantService,
   ) {}
 
   async login(identifier: string, password: string): Promise<AuthResultDto> {
@@ -66,7 +69,44 @@ export class AuthService {
     const memberships = await this.membershipsForUser(payload.sub);
     const membership = memberships.find((m) => m.id === payload.membershipId);
     if (!user || !membership) throw ApiError.unauthorized('MEMBERSHIP_INACTIVE', 'Membresía inactiva');
+
+    // `?? 0` y no igualdad estricta: los tokens emitidos antes de que el claim
+    // existiera no lo llevan, y rechazarlos tiraría toda sesión viva en el deploy.
+    if ((payload.tv ?? 0) !== membership.tokenVersion) {
+      throw ApiError.unauthorized('TOKEN_INVALID', 'Sesión cerrada');
+    }
     return this.issue(user, membership, memberships);
+  }
+
+  /**
+   * Sube el contador de la membresía que el token nombra: todo refresh emitido
+   * antes deja de servir aunque su firma siga siendo válida.
+   *
+   * No falla nunca. Un token ausente o ilegible es alguien que ya está afuera,
+   * y no hay nada que informarle.
+   */
+  async logout(refreshToken: string | null): Promise<void> {
+    if (!refreshToken) return;
+
+    let payload: AccessTokenPayload & { typ?: string };
+    try {
+      payload = await this.jwt.verifyAsync(refreshToken);
+    } catch {
+      return;
+    }
+    if (payload.typ !== 'refresh') return;
+
+    // La empresa sale del token ya verificado: cerrar sesión no pasa por el guard,
+    // así que sin setear el contexto el UPDATE no atraviesa RLS.
+    await this.tenants.runAs(
+      {
+        companyId: payload.companyId,
+        membershipId: payload.membershipId,
+        userId: payload.sub,
+        role: payload.role,
+      },
+      () => this.memberships.increment({ id: payload.membershipId }, 'tokenVersion', 1),
+    );
   }
 
   // Única lectura de membership fuera del scope de tenant. Ver migración AuthLookup.
@@ -75,7 +115,8 @@ export class AuthService {
     // función que devuelve conjunto sobreviva al SELECT externo. Ordena por id
     // porque UUIDv7 lleva el timestamp adentro, así que equivale a orden de creación.
     return this.dataSource.query<SessionMembership[]>(
-      `SELECT m.id, m.company_id AS "companyId", c.name AS "companyName", m.role
+      `SELECT m.id, m.company_id AS "companyId", c.name AS "companyName", m.role,
+              m.token_version AS "tokenVersion"
        FROM auth_memberships_for_user($1) m
        JOIN company c ON c.id = m.company_id
        ORDER BY m.id ASC`,
@@ -93,6 +134,7 @@ export class AuthService {
       companyId: membership.companyId,
       membershipId: membership.id,
       role: membership.role,
+      tv: membership.tokenVersion,
     };
     const toDto = (m: SessionMembership): AuthMembershipDto => ({
       id: m.id, companyId: m.companyId, companyName: m.companyName, role: m.role,

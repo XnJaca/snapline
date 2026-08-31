@@ -1,0 +1,273 @@
+:host {
+  display: block;
+  // La barra superior y la lateral comparten la superficie: son una sola pieza
+  // de cromo, y lo que se separa del fondo es el contenido.
+  --nav-w: 15rem;
+}
+
+:host(.shell-host--collapsed) {
+  --nav-w: 3.5rem;
+
+  // En el riel el símbolo es el control: la marca no desaparece y el botón no
+  // ocupa un lugar que no hay.
+  .topbar__brand {
+    justify-content: center;
+    padding-inline: 0;
+  }
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: var(--mat-sys-surface);
+}
+
+// ------------------------------------------------------------------ barra
+
+.topbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: 3.5rem;
+}
+
+.topbar__brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-2);
+  width: var(--nav-w);
+  padding-inline: var(--sl-space-4) var(--sl-space-2);
+  overflow: hidden;
+  transition: width 180ms ease-out;
+}
+
+.topbar__bar {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--sl-space-1);
+  min-width: 0;
+  height: 100%;
+  // Arranca donde arranca el contenido: el nombre de la empresa cae en la misma
+  // vertical que el encabezado de la página.
+  padding-inline: var(--sl-space-5) var(--sl-space-4);
+}
+
+.topbar__company {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__spacer {
+  flex: 1 1 auto;
+}
+
+.topbar__account {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-left: var(--sl-space-2);
+  padding: 0;
+  border: none;
+  border-radius: var(--sl-radius-full);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font: inherit;
+  font-size: var(--sl-font-size-caption);
+  font-weight: var(--sl-font-weight-medium);
+  cursor: pointer;
+  transition: box-shadow 160ms ease-out;
+
+  &:hover {
+    box-shadow: 0 0 0 3px var(--mat-sys-surface-container-high);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ------------------------------------------------------ navegación y área
+
+.shell__main {
+  display: flex;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.nav {
+  flex: none;
+  width: var(--nav-w);
+  padding: var(--sl-space-2);
+  overflow: hidden auto;
+  transition: width 180ms ease-out;
+}
+
+.nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  height: 2.5rem;
+  padding-inline: var(--sl-space-3);
+  border-radius: var(--sl-radius-md);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-body);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease-out,
+    color 160ms ease-out;
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+}
+
+.nav__item--active {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font-weight: var(--sl-font-weight-medium);
+
+  &:hover {
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+}
+
+.nav__icon {
+  flex: none;
+}
+
+.nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host(.shell-host--collapsed:not(.shell-host--narrow)) {
+  .nav__item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .nav__label {
+    display: none;
+  }
+}
+
+// El contenido es lo que se despega del cromo: su propio fondo y una esquina
+// que lo separa sin necesidad de una línea que corte la barra en dos.
+.content {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--mat-sys-outline);
+  border-left: 1px solid var(--mat-sys-outline);
+  border-start-start-radius: var(--sl-radius-lg);
+  background: var(--mat-sys-background);
+}
+
+// ---------------------------------------------------------------- el menú
+
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border-bottom: 1px solid var(--mat-sys-outline);
+}
+
+.account__name {
+  color: var(--mat-sys-on-surface);
+  font-weight: var(--sl-font-weight-medium);
+}
+
+.account__role {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+}
+
+// ----------------------------------------------------------------- angosto
+
+.nav__scrim {
+  display: none;
+}
+
+:host(.shell-host--narrow) {
+  --nav-w: 15rem;
+
+  .topbar__brand {
+    width: auto;
+  }
+
+  .topbar__company {
+    display: none;
+  }
+
+  .nav {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-right: 1px solid var(--mat-sys-outline);
+    background: var(--mat-sys-surface);
+    transform: translateX(-100%);
+    transition: transform 180ms ease-out;
+  }
+
+  .content {
+    border-left: none;
+    border-start-start-radius: 0;
+  }
+}
+
+:host(.shell-host--narrow.shell-host--drawer) .nav__scrim {
+  display: block;
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border: none;
+  // El token del scrim es opaco: la opacidad se mezcla, no se hardcodea el color.
+  background: color-mix(in srgb, var(--mat-sys-scrim) 40%, transparent);
+  cursor: pointer;
+}
+
+:host(.shell-host--narrow.shell-host--drawer) .nav {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar__brand,
+  .nav,
+  .nav__item,
+  .topbar__account {
+    transition: none;
+  }
+}
