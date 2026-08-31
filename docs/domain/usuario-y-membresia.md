@@ -40,6 +40,7 @@ para más de un contratista.
 | `pay_rate_cents` | int | no | Tarifa por hora vigente |
 | `employment_type` | enum | no | `W2` o `1099` |
 | `status` | enum | sí | `invitado`, `activo`, `inactivo` |
+| `token_version` | int | sí | Arranca en 0. Sube al cerrar sesión; un refresh con la versión vieja se rechaza. **Nunca lo manda el cliente** |
 
 ## Roles
 
@@ -67,6 +68,21 @@ para más de un contratista.
   tarifa se congela al aprobar. Ver [[registro-de-tiempo]].
 - El `locale` vive en `user`, no en `membership`: la persona habla un idioma, no
   uno por empresa.
+
+- **`token_version` es la única forma de que un refresh token deje de servir antes
+  de vencer.** El refresh es un JWT autofirmado y sin estado: una vez emitido, vale
+  30 días y el servidor no tiene dónde anotarlo. El contador viaja en el claim y se
+  compara al refrescar; si no coincide, el token se rechaza aunque su firma sea
+  válida. Lo escribe el servidor y **nunca se acepta del cliente**.
+
+  **Un claim ausente cuenta como 0**, porque los tokens emitidos antes de que el
+  campo existiera no lo llevan y compararlos con igualdad estricta los invalidaría a
+  todos de golpe.
+
+  **Vive en la membresía, así que la invalidación es por membresía y no por
+  dispositivo.** Subirlo cierra todas las sesiones de esa persona en esa empresa —
+  el panel y el teléfono a la vez. Separarlas exigiría una tabla de sesiones, que no
+  existe. Ver [[../specs/web/0008-sesion-y-shell/README|SPEC-0008]].
 
 ## Comportamiento offline
 

@@ -14,6 +14,7 @@ kanban-plugin: board
 
 - [ ] [[tech-debt/0009-el-panel-no-tiene-iconos|DEBT-0009: El panel no tiene sistema de iconos, solo SVG pegados a mano]] — **severidad media**: `mat-icon` necesita una fuente que ADR-0009 §7 no deja traer de un CDN, y el paquete completo pesa 13 MB para usar tres iconos (trigger: la navegación de SPEC-0008, que ya lleva un icono por eje)
 
+- [ ] [[tech-debt/0008-logout-invalida-por-membresia|DEBT-0008: Cerrar sesión en el panel también expulsa el teléfono]] — **severidad media**: `token_version` vive en la membresía, así que invalida todas las sesiones de esa persona en esa empresa a la vez. Resolverlo pide una tabla de sesiones por dispositivo (trigger: la primera queja real, o que se pida "cerrar sesión en todos los dispositivos")
 
 - [ ] [[tech-debt/0007-el-objeto-borrado-queda-en-el-bucket|DEBT-0007: Borrar una foto no libera el objeto en Backblaze]] — **severidad baja**: el borrado es suave para poder propagarlo, y el binario queda pagándose (trigger: cuando el almacenamiento se note en la factura, o la segunda empresa)
 
