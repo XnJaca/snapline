@@ -68,18 +68,30 @@ commit.** No se mezclan:
 
 | Prefijo | Cuándo | Ejemplo |
 |---|---|---|
-| `feature/SPEC-XXXX-slug` | Implementar un spec. **Lleva su número**, siempre | `feature/SPEC-0005-proyectos-en-el-movil` |
-| `fix/slug` | Arreglar algo que ya está en `main` y no es un spec | `fix/sync-pull-filtra-clientes-por-rol` |
-| `docs/slug` | Specs, ADRs, fichas de dominio, deuda técnica y este archivo | `docs/adr-0012-proveedor-de-mapas` |
+| `feature/<plataforma>-NNNN-slug` | Implementar un spec. **Lleva su plataforma y su número**, siempre | `feature/web-0007-cimientos` |
+| `fix/slug` | Arreglar algo que ya está en `main` y no es un spec | `fix/sync-filtra-por-rol` |
+| `docs/slug` | Specs, ADRs, fichas de dominio, deuda técnica y este archivo | `docs/adr-0012-mapas` |
 
 Reglas que las acompañan:
 
+- **La plataforma va adelante del número porque el número solo no alcanza.** La
+  numeración de specs es independiente por plataforma: `mobile/0007` es *Ubicación de
+  la propiedad en el mapa* y `web/0007` es *Cimientos del panel*. Una rama que diga
+  `SPEC-0007` no distingue de cuál habla.
 - **Una rama por spec. Sin mezclar dos.** Si un spec se parte en dos tandas, cada una
-  lleva su rama con el mismo número —`feature/SPEC-0004-capa-local-y-sincronizacion` y
-  `feature/SPEC-0004-bandeja-de-salida`— y cada una su PR.
+  lleva su rama con el mismo número —`feature/mobile-0004-capa-local` y
+  `feature/mobile-0004-bandeja`— y cada una su PR.
 - **Nunca se commitea ni se pushea directo a `main`.**
-- El slug va en español, en minúsculas y con guiones, y describe **lo que hace**, no
-  el archivo que toca.
+- El slug va en español, en minúsculas, con guiones, y describe **lo que hace**, no
+  el archivo que toca. **Una o dos palabras, tope duro**: el nombre completo de la
+  feature ya está en el spec y en el título del PR; la rama solo tiene que
+  identificarla de un vistazo en `git branch`.
+
+> **Cambió el 2026-08-30.** Antes era `feature/SPEC-XXXX-slug` con el slug largo
+> —`feature/SPEC-0005-proyectos-en-el-movil`—. Se acortó por dos razones: `SPEC-`
+> ocupaba cinco caracteres sin decir nada, y el número sin plataforma es ambiguo
+> desde que `docs/specs/web/` pasó de 0006. Las ramas ya mergeadas conservan su
+> nombre viejo; no se reescribe historia por esto.
 
 ## Mensajes de commit
 
@@ -164,6 +176,41 @@ respecto de `main` y mergearla los va a borrar. Se rebasa o se descarta.
 > `git branch --merged`, porque el commit resultante es otro. Que git la liste como
 > pendiente no significa que su contenido falte: se verifica el contenido, no el
 > commit.
+
+## Los worktrees viven afuera del repo, nunca adentro
+
+Trabajar dos specs en paralelo se hace con `git worktree`, no cambiando de rama en
+el mismo directorio. **El worktree va como hermano del repo**, no dentro de él:
+
+```bash
+git worktree add ../snapline-worktrees/<slug> -b feature/<plataforma>-NNNN-<slug> origin/main
+```
+
+Herramientas que ofrecen crear el worktree adentro —bajo `.claude/worktrees/`, por
+ejemplo— hay que corregirlas a mano. Anidar un checkout dentro del working tree tiene
+un problema concreto en este repo: **`.claude/` está versionado** —`CLAUDE.md`, los
+agentes, los comandos— y `.gitignore` no lo cubre. De ahí salen tres cosas:
+
+- **`git clean -fdx` desde el repo principal borra el worktree entero**, con el
+  trabajo sin commitear de cualquier sesión que estuviera abierta ahí.
+- Un `git add` distraído lo mete al índice como gitlink.
+- Cualquier herramienta que recorra el árbol desde la raíz encuentra un repo adentro
+  del repo.
+
+Hoy no ensucia `git status` solo porque git omite los directorios que tienen un
+`.git` adentro. Eso es un accidente afortunado, no una protección.
+
+Al terminar, el worktree se borra junto con la rama:
+
+```bash
+git worktree remove ../snapline-worktrees/<slug>
+git branch -d feature/<plataforma>-NNNN-<slug>
+```
+
+> **El stash es compartido entre worktrees.** Un `git stash pop` puede levantar lo
+> que dejó otra sesión. Para guardar trabajo a un costado, un commit WIP en la rama
+> propia; si va sí o sí al stash, con `-m` y su etiqueta, y se recupera con `apply`
+> sobre el SHA, no con `pop`.
 
 ## Un `.gitignore` que protege un secreto va a `main` primero
 
