@@ -1,4 +1,7 @@
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { TimeEntryStatus } from '../entities/time-entry.entity';
+
+export const TIME_ENTRY_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
 // El dispositivo manda lat/lng crudas. NO manda distancia ni withinGeofence:
 // eso lo calcula el servidor (ADR-0003).
@@ -28,4 +31,9 @@ export class ClockOutDto {
 
 export class ApproveDto {
   @IsOptional() @IsString() reason?: string;
+
+  // El estado que la jornada tenía cuando se decidió. Lo manda el móvil, que
+  // pudo decidir sin señal sobre un estado que ya cambió; la web es online y lo
+  // omite. Si viene y no coincide con el actual, la decisión no se aplica.
+  @IsOptional() @IsEnum(TIME_ENTRY_STATUSES) expectedStatus?: TimeEntryStatus;
 }

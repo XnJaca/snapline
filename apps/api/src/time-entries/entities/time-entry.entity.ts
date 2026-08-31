@@ -138,6 +138,10 @@ export class TimeEntry extends SoftDeletableTenantEntity {
   @Column({ type: 'timestamptz', name: 'approved_at', nullable: true })
   approvedAt!: Date | null;
 
+  // La última decisión. El rastro completo de todas vive en `time_entry_edit`.
+  @Column({ type: 'text', name: 'decision_reason', nullable: true })
+  decisionReason!: string | null;
+
   // Congelada al aprobar. La base la exige si status=APPROVED.
   //
   // Oculta como Membership.payRateCents y por la misma razón: el foreman recibe

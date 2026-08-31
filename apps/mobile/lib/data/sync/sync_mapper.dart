@@ -41,6 +41,10 @@ abstract final class SyncMapper {
     flags: Value(jsonEncode(dto.flags)),
     clockInPhotoId: Value(dto.clockInPhotoId),
     clockOutPhotoId: Value(dto.clockOutPhotoId),
+    recordedOffline: Value(dto.recordedOffline),
+    decisionReason: Value(dto.decisionReason),
+    // `decidedFrom` y `lastRejection` no se listan a propósito: son locales y un
+    // `Value.absent()` las deja como están en el upsert del pull.
   );
 
   /// Las etiquetas llegan adentro del asset, no como colección aparte:

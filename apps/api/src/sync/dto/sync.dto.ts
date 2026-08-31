@@ -25,6 +25,8 @@ export const SYNC_OPERATIONS = [
   'media.delete',
   'timeEntry.clockIn',
   'timeEntry.clockOut',
+  'timeEntry.approve',
+  'timeEntry.reject',
 ] as const;
 export type SyncOperationType = (typeof SYNC_OPERATIONS)[number];
 
@@ -49,6 +51,10 @@ export const OPERATION_PERMISSION = {
   'media.delete': 'media.delete',
   'timeEntry.clockIn': 'time.clock',
   'timeEntry.clockOut': 'time.clock',
+  // Decidir no es marcar: aprobar dentro del lote pide lo mismo que por la
+  // puerta REST, o un WORKER se aprobaría las horas desde la cola (regla 7).
+  'timeEntry.approve': 'time.approve',
+  'timeEntry.reject': 'time.approve',
 } as const satisfies Record<SyncOperationType, Permission>;
 
 /**

@@ -8777,6 +8777,10 @@
             "type": "string",
             "nullable": true
           },
+          "decisionReason": {
+            "type": "string",
+            "nullable": true
+          },
           "flags": {
             "type": "array",
             "items": {
@@ -8831,6 +8835,7 @@
           "status",
           "approvedByMembershipId",
           "approvedAt",
+          "decisionReason",
           "flags",
           "deletedAt",
           "companyId",
@@ -8928,6 +8933,14 @@
         "type": "object",
         "properties": {
           "reason": {
+            "type": "string"
+          },
+          "expectedStatus": {
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ],
             "type": "string"
           }
         }
@@ -10704,7 +10717,9 @@
               "media.register",
               "media.tag",
               "timeEntry.clockIn",
-              "timeEntry.clockOut"
+              "timeEntry.clockOut",
+              "timeEntry.approve",
+              "timeEntry.reject"
             ]
           },
           "targetId": {
@@ -10843,6 +10858,9 @@
               "TIME_ENTRY_ALREADY_CLOSED",
               "CANNOT_APPROVE_OWN_HOURS",
               "PAY_RATE_MISSING",
+              "TIME_ENTRY_STILL_OPEN",
+              "TIME_ENTRY_DECISION_MATCHES",
+              "TIME_ENTRY_DECISION_CONFLICTS",
               "EXIF_NOT_STRIPPED",
               "VISIBILITY_SKIPS_STEP",
               "ASSET_IN_USE",

@@ -25,7 +25,7 @@ import { CreateProjectDto, UpdateProjectDto } from '../projects/dto/project.dto'
 import { roleHasPermission } from '../auth/permissions';
 import { newId } from '../common/entities/base.entity';
 import { RegisterAssetDto, SetTagsDto } from '../media/dto/media.dto';
-import { ClockInDto, ClockOutDto } from '../time-entries/dto/time-entry.dto';
+import { ApproveDto, ClockInDto, ClockOutDto } from '../time-entries/dto/time-entry.dto';
 import {
   OPERATION_PERMISSION,
   EmptyPayloadDto,
@@ -50,6 +50,8 @@ const PAYLOAD_DTO = {
   'media.delete': EmptyPayloadDto,
   'timeEntry.clockIn': ClockInDto,
   'timeEntry.clockOut': ClockOutDto,
+  'timeEntry.approve': ApproveDto,
+  'timeEntry.reject': ApproveDto,
   // El `satisfies` es el que obliga: una operación agregada a `SYNC_OPERATIONS`
   // sin su DTO de payload no compila, en vez de entrar al lote sin validar.
 } as const satisfies Record<SyncOperationType, Ctor<object>>;
@@ -224,6 +226,16 @@ export class SyncService {
               deviceRecordedAt: op.occurredAt,
             });
             return ok((await this.timeEntries.clockOut(op.targetId, dto, tenant)).id);
+          }
+          // `expectedStatus` viaja en el payload: la decisión pudo tomarse sin
+          // señal sobre un estado que para cuando llega ya cambió.
+          case 'timeEntry.approve': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
+            return ok((await this.timeEntries.approve(op.targetId, dto, tenant)).id);
+          }
+          case 'timeEntry.reject': {
+            const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
+            return ok((await this.timeEntries.reject(op.targetId, dto, tenant)).id);
           }
         }
   }

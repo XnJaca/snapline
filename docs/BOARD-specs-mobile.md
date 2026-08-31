@@ -27,6 +27,8 @@ kanban-plugin: board
 
 ## 🛠️ En implementación
 
+- [ ] [[specs/mobile/0011-horas-de-la-obra/README|SPEC-0011: Horas de la obra]] — listo para PR: 78 tests del API y 347 del móvil, tres pasadas del `code-reviewer`
+
 
 ## 🎉 Implementado
 

@@ -13,6 +13,7 @@ kanban-plugin: board
 ## 📥 Backlog (registrada, sin trigger disparado)
 
 - [ ] [[tech-debt/0009-el-panel-no-tiene-iconos|DEBT-0009: El panel no tiene sistema de iconos, solo SVG pegados a mano]] — **severidad media**: `mat-icon` necesita una fuente que ADR-0009 §7 no deja traer de un CDN, y el paquete completo pesa 13 MB para usar tres iconos (trigger: la navegación de SPEC-0008, que ya lleva un icono por eje)
+- [ ] [[tech-debt/0010-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0010: Una jornada en conflicto no tiene camino de resolución en el móvil]] — **severidad media**: `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume; SPEC-0011 volvió el estado alcanzable en uso normal (trigger: el primer conflicto visto en un teléfono real, o aprobar en lote)
 
 - [ ] [[tech-debt/0008-logout-invalida-por-membresia|DEBT-0008: Cerrar sesión en el panel también expulsa el teléfono]] — **severidad media**: `token_version` vive en la membresía, así que invalida todas las sesiones de esa persona en esa empresa a la vez. Resolverlo pide una tabla de sesiones por dispositivo (trigger: la primera queja real, o que se pida "cerrar sesión en todos los dispositivos")
 
