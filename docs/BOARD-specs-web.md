@@ -27,10 +27,10 @@ kanban-plugin: board
 
 ## 🛠️ En implementación
 
-- [ ] [[0007-cimientos-visuales/README|SPEC-0007 — Cimientos visuales del panel]] · Angular 22 + Material, `packages/tokens` generando SCSS y Dart, los dos temas y los dos idiomas. 10 tests. Los 71 valores del `tokens.dart` generado salieron idénticos a los que estaban a mano. Falta `code-reviewer` y el PR
-
 
 ## 🎉 Implementado
+
+- [x] [[0007-cimientos-visuales/README|SPEC-0007 — Cimientos visuales del panel]] · PR #29 mergeado. Angular 22 + Material con los tokens por `theme-overrides`, `packages/tokens` generando SCSS y Dart, los dos temas y los dos idiomas. 10 tests. Cerró DEBT-0001 con los 71 valores idénticos a los que estaban a mano, y trajo ADR-0013. Tres bugs salieron de probar en el navegador, no de los tests: los catálogos en la carpeta equivocada, `light-dark()` resolviendo por `color-scheme` y no por el atributo, y Material tiñendo de naranja los cinco niveles de superficie. **Queda pendiente el único criterio que pide mirar**: los mismos tokens lado a lado en el teléfono y en el navegador
 
 - [x] [[0001-catalogo-de-servicios/README|SPEC-0001 — Catálogo de Servicios]] · ítems con costo, para ver margen. **Retroactivo**
 - [x] [[0002-cuadrillas-y-asignacion/README|SPEC-0002 — Cuadrillas y Asignación]] · pertenencia con fechas, sin solapes. **Retroactivo**

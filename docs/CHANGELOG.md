@@ -15,6 +15,51 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-08-31 — el panel existe, y los tokens dejan de copiarse a mano
+
+- **`apps/web` arranca** ([[specs/web/0007-cimientos-visuales/README|SPEC-0007]]):
+  Angular 22 con Material y el CDK, los dos temas, los dos idiomas por Transloco. Es
+  la fase 1 del roadmap, que es lo que se le factura a William, y hasta hoy el API
+  tenía 78 operaciones y ningún consumidor web.
+- **Los tokens se generan, no se copian**
+  ([[tech-debt/0001-tokens-a-dart-a-mano|DEBT-0001]] resuelta): `packages/tokens`
+  emite el SCSS de web y el `tokens.dart` de Flutter desde `design-tokens.json`. El
+  Dart generado salió con **los 71 valores idénticos** a los que estaban escritos a
+  mano, que era la condición para reemplazarlo sin cambiarle la app a nadie.
+- **El JSON no era la fuente única que decía ser.** El área de toque de 64dp, las dos
+  familias tipográficas y el peso de marca vivían solo en el Dart — valores de diseño
+  definidos en una superficie, que es lo que la regla 22 prohíbe. Se movieron al JSON
+  con los comentarios que explican por qué valen lo que valen, y esos comentarios
+  ahora salen como docblock del archivo generado.
+- **Angular Material, decidido con el mecanismo y no solo con la preferencia**
+  ([[adr/0013-componentes-angular-material/README|ADR-0013]], que cierra el §4 de
+  ADR-0009): los colores entran por `mat.theme-overrides()` con los hex del JSON y su
+  paleta queda como andamiaje. Es el espejo en web de haber prohibido `fromSeed` en
+  Flutter. PrimeNG se descartó por traer su propio sistema de tokens, que es
+  exactamente la capa extra que ADR-0009 señaló como el problema.
+- **Tres bugs que los tests no vieron y el navegador sí.** Los catálogos de traducción
+  daban 404 por estar en `src/assets` en vez de `public/`; forzar el tema claro dejaba
+  las tarjetas oscuras porque `light-dark()` resuelve por `color-scheme` y no por
+  nuestro atributo; y Material teñía de naranja los cinco niveles de superficie porque
+  no estaban mapeados, contra los neutros de gris puro que ADR-0009 eligió a propósito.
+- **El lint verifica la regla 21, que antes solo prometía verificar.** La regla
+  configurada era `prefer-standalone`, que no tiene nada que ver con template inline.
+  Ahora es `component-max-inline-declarations` en cero, comprobado con un componente
+  de prueba.
+- **Dos cosas que quedaron anotadas y no resueltas**: el panel no tiene sistema de
+  iconos —`mat-icon` necesita una fuente que no se puede traer de un CDN y el paquete
+  pesa 13 MB para usar tres
+  ([[tech-debt/0009-el-panel-no-tiene-iconos|DEBT-0009]])— y las tipografías están
+  duplicadas, porque Angular no lee assets fuera de su raíz y Flutter no los lee fuera
+  de su paquete.
+- **SPEC-0008 queda escrito y aprobado**, con la sesión en cookie `httpOnly`
+  ([[adr/0014-sesion-web-en-cookie/README|ADR-0014]]). Su revisión de dominio encontró
+  que `token_version`, tal como estaba descrito, habría expulsado a **toda sesión viva
+  del móvil** el día del deploy: los tokens ya emitidos no llevan el claim, y comparar
+  con igualdad estricta los rechazaba a todos.
+
+---
+
 ## 2026-08-12 — el photo release sale, el EXIF se queda
 
 - **Publicar una obra ya no pide permiso al cliente**

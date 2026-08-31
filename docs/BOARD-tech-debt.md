@@ -28,10 +28,10 @@ kanban-plugin: board
 
 ## 🛠️ En resolución
 
-- [ ] [[tech-debt/0001-tokens-a-dart-a-mano|DEBT-0001: Los tokens se traducen a Dart a mano]] — su trigger se disparó: `apps/web` es el segundo consumidor. `packages/tokens` genera el SCSS y el Dart desde `design-tokens.json`, y el `tokens.dart` generado salió con **los 71 valores idénticos** a los que estaban a mano. Pasa a Resuelta cuando el PR de SPEC-0007 se mergee
-
 
 ## ✅ Resuelta
+
+- [x] [[tech-debt/0001-tokens-a-dart-a-mano|DEBT-0001: Los tokens se traducen a Dart a mano]] — PR #29 mergeado. `packages/tokens` genera el SCSS de web y el Dart de Flutter desde `design-tokens.json`, y el archivo generado salió con **los 71 valores idénticos** a los que estaban a mano. De paso quedó a la vista que el JSON no era la fuente única que ADR-0009 §1 declara: el área de toque, la familia tipográfica y el peso de marca vivían solo en el Dart
 
 - [x] [[tech-debt/0005-photo-release-se-quita|DEBT-0005: El photo release se quita, y está en cuatro lugares]] — PR #22 mergeado. Eran once lugares, no cuatro. En su lugar quedó `enforce_exif_stripped`, para que `PUBLIC` no se quedara sin invariante en la base. Queda anotado que la escalera `INTERNAL → CLIENT → PUBLIC` sigue sin aplicarse en orden
 
