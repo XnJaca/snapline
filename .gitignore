@@ -30,3 +30,6 @@ apps/mobile/.flutter-plugins*
 apps/mobile/ios/Pods/
 apps/mobile/android/.gradle/
 apps/mobile/*.iml
+
+# Angular
+.angular/
