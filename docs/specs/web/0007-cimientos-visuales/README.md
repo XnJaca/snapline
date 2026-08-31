@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0007: Cimientos visuales del panel"
 type: spec
 platform: web
-status: en-implementacion
+status: implementado
 goal: "El panel se ve en los dos temas y en los dos idiomas con los mismos colores que la app del teléfono, y ningún valor de diseño se copia a mano entre superficies."
 apps:
   - web
@@ -14,10 +14,10 @@ depends_on: []
 domain: []
 frente: plataforma
 created: 2026-08-30
-updated: 2026-08-30
+updated: 2026-08-31
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - web
   - ui
 ---
@@ -132,28 +132,28 @@ existe. Es el instrumento con el que se comprueba el `goal` mirando.
 
 ## Criterios de aceptación
 
-- [ ] `apps/web` está en `pnpm-workspace.yaml`, y `pnpm typecheck`, `pnpm lint` y
+- [x] `apps/web` está en `pnpm-workspace.yaml`, y `pnpm typecheck`, `pnpm lint` y
       `pnpm build` desde la raíz la incluyen y pasan.
-- [ ] Style Dictionary genera las variables CSS y `tokens.dart` desde
+- [x] Style Dictionary genera las variables CSS y `tokens.dart` desde
       `design-tokens.json`. **Cambiar un hex en el JSON y regenerar lo cambia en las
       dos superficies**; ningún archivo generado se edita a mano.
-- [ ] **El `tokens.dart` generado es equivalente al que hoy está escrito a mano.**
+- [x] **El `tokens.dart` generado es equivalente al que hoy está escrito a mano.**
       Se compara antes de reemplazarlo: si difiere, se resuelve la diferencia en vez
       de aceptarla — el móvil está en uso.
-- [ ] Los archivos generados están marcados como generados y no se editan; el
+- [x] Los archivos generados están marcados como generados y no se editan; el
       `pnpm test` del móvil sigue verde después del reemplazo.
-- [ ] DEBT-0001 pasa a Resuelta en `docs/BOARD-tech-debt.md` y en su ficha.
-- [ ] Los colores de Material salen de `mat.theme-overrides()` con los valores del
+- [x] DEBT-0001 pasa a Resuelta en `docs/BOARD-tech-debt.md` y en su ficha.
+- [x] Los colores de Material salen de `mat.theme-overrides()` con los valores del
       JSON. **Ningún color del panel viene de la paleta que Material deriva solo.**
-- [ ] **Ningún hex literal en un `.scss` de componente** (regla 22), y ningún
+- [x] **Ningún hex literal en un `.scss` de componente** (regla 22), y ningún
       componente con `template:` o `styles:` inline (regla 21).
-- [ ] La pantalla de verificación se ve correcta en claro y en oscuro, arranca en la
+- [x] La pantalla de verificación se ve correcta en claro y en oscuro, arranca en la
       preferencia del sistema, y el override manual sobrevive a la recarga.
 - [ ] Los mismos tokens puestos lado a lado en el teléfono y en el navegador dan el
       mismo color. Es la verificación del `goal`, y se hace mirando.
-- [ ] **Cero cadenas quemadas** (regla 24) en lo que se construya, con `en` y `es`
+- [x] **Cero cadenas quemadas** (regla 24) en lo que se construya, con `en` y `es`
       cargando por Transloco.
-- [ ] **Forzar el locale cambia el texto que se ve.** Con `es` y con `en` la
+- [x] **Forzar el locale cambia el texto que se ve.** Con `es` y con `en` la
       pantalla de verificación renderiza distinto, y ninguna clave queda sin traducir
       en uno de los dos catálogos. Es el equivalente para idioma del criterio que el
       tema ya tiene.
@@ -185,3 +185,10 @@ existe. Es el instrumento con el que se comprueba el `goal` mirando.
 | Fecha | Estado | Nota |
 |-------|--------|------|
 | 2026-08-30 | borrador | Creado. Sale de partir el spec original de cimientos en dos, tras la revisión de `spec-reviewer`: su `goal` cubría la sesión y el shell pero no el sistema de diseño, que es media spec en volumen |
+| 2026-08-31 | implementado | PR #29 mergeado. 10 de los 11 criterios verificados, incluidos los 322 tests del móvil con el `tokens.dart` generado |
+
+> **Queda un criterio sin verificar**: poner los mismos tokens lado a lado en el
+> teléfono y en el navegador. La paridad está garantizada por construcción —los dos
+> archivos los genera `packages/tokens` del mismo JSON, y los 71 valores del Dart se
+> compararon uno por uno contra los que estaban a mano—, pero **el criterio pide
+> mirarlo**, y eso necesita la app corriendo en un dispositivo.

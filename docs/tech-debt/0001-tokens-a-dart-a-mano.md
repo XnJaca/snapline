@@ -4,17 +4,17 @@ title: "Los tokens se traducen a Dart a mano, sin generador"
 aliases:
   - "DEBT-0001: Los tokens se traducen a Dart a mano, sin generador"
 type: tech-debt
-status: en-resolucion
+status: resuelta
 severity: media
 origin: "ADR-0009"
 apps:
   - mobile
 trigger: "El scaffold de apps/web, cuando aparezca el segundo consumidor de tokens"
 created: 2026-08-08
-updated: 2026-08-30
+updated: 2026-08-31
 tags:
   - tech-debt
-  - tech-debt/en-resolucion
+  - tech-debt/resuelta
   - ui
 ---
 
