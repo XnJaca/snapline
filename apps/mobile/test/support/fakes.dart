@@ -253,6 +253,7 @@ Widget testApp({
       // El plugin de conectividad no existe en un test: su stream se quedaría
       // abierto y el árbol nunca terminaría de desmontarse.
       connectivityProvider.overrideWith((ref) => Stream.value(true)),
+      connectivityWatcherProvider.overrideWithValue(const FakeConnectivity()),
       themeStoreProvider.overrideWithValue(themeStore ?? FakeThemeStore()),
     ],
     child: const SnaplineApp(),
@@ -282,6 +283,7 @@ Widget testWidget({
       ),
       syncControllerProvider.overrideWith(FakeSyncController.new),
       connectivityProvider.overrideWith((ref) => Stream.value(true)),
+      connectivityWatcherProvider.overrideWithValue(const FakeConnectivity()),
     ],
     child: MaterialApp(
       locale: Locale(locale.name),
@@ -433,4 +435,15 @@ void testWithApp(String description, Future<void> Function(WidgetTester) body) {
       await disposeApp(tester);
     }
   });
+}
+
+/// Siempre con red y sin canal de plataforma. Sin esto el motor se suscribe al
+/// `Connectivity` real, que en un test no existe.
+class FakeConnectivity implements ConnectivityWatcher {
+  const FakeConnectivity({this.hay = const [true]});
+
+  final List<bool> hay;
+
+  @override
+  Stream<bool> hayInterfaz() => Stream.fromIterable(hay);
 }

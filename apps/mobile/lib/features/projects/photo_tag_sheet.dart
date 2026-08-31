@@ -26,21 +26,19 @@ IconData etiquetaEnIcono(MediaTag tag) => switch (tag) {
       MediaTag.receipt => Icons.receipt_long_outlined,
     };
 
-String etiquetasEnTexto(List<MediaTag> tags, AppLocalizations l10n) =>
-    tags.map((t) => etiquetaEnTexto(t, l10n)).join(' · ');
-
-/// Qué muestra la foto, elegido en el mismo gesto que tomarla.
+/// La etapa o categoría de la foto, elegida en el mismo gesto que tomarla.
 ///
 /// **Filas altas y no chips**: esto se toca con guantes arriba de un techo, y
 /// un chip de texto es un blanco de 32dp. Cada fila llega al mínimo táctil y
 /// entera es tocable.
 ///
-/// Etiquetar es opcional. En vez de un "Omitir" suelto al lado del guardar
-/// —dos acciones que compiten y ninguna se lee— la acción primaria dice qué va
-/// a pasar: sin nada elegido, guarda sin etiqueta.
+/// Devuelve `null` cuando no hay nada que guardar. Con [esFotoNueva] eso
+/// significa descartarla, y en la corrección de una foto ya registrada,
+/// dejarla como estaba.
 Future<List<MediaTag>?> mostrarHojaDeEtiquetas(
   BuildContext context, {
   List<MediaTag> iniciales = const [],
+  bool esFotoNueva = false,
 }) {
   return showModalBottomSheet<List<MediaTag>>(
     context: context,
@@ -48,21 +46,38 @@ Future<List<MediaTag>?> mostrarHojaDeEtiquetas(
     // El contenido llega al pie: sin esto la acción queda bajo la barra
     // gestual y el sistema se lleva el toque.
     useSafeArea: true,
-    showDragHandle: true,
-    builder: (context) => _HojaDeEtiquetas(iniciales: iniciales),
+    // Una foto recién tomada sale por una de las dos acciones, nunca por un
+    // deslizado: esquivar la hoja la dejaría sin etiqueta, que es justo lo que
+    // no puede pasar.
+    showDragHandle: !esFotoNueva,
+    isDismissible: !esFotoNueva,
+    enableDrag: !esFotoNueva,
+    builder: (context) => PopScope(
+      canPop: !esFotoNueva,
+      child: _HojaDeEtiquetas(
+        iniciales: iniciales,
+        esFotoNueva: esFotoNueva,
+      ),
+    ),
   );
 }
 
 class _HojaDeEtiquetas extends StatefulWidget {
-  const _HojaDeEtiquetas({required this.iniciales});
+  const _HojaDeEtiquetas({required this.iniciales, required this.esFotoNueva});
 
   final List<MediaTag> iniciales;
+  final bool esFotoNueva;
 
   @override
   State<_HojaDeEtiquetas> createState() => _HojaDeEtiquetasState();
 }
 
 class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
+  /// Conjunto y no una sola, aunque desde el 2026-08-30 solo se pueda elegir
+  /// una: las fotos anteriores pueden traer varias, y arrancar mostrando solo
+  /// la primera hacía que guardar sin tocar nada **borrara el resto sin
+  /// decirlo**. Se muestran todas las que tiene; tocar una las reemplaza, que
+  /// es un cambio que la persona ve.
   late final Set<MediaTag> _elegidas = {...widget.iniciales};
 
   @override
@@ -75,11 +90,18 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.md),
+          // Sin agarradera —el caso de la foto nueva— el título quedaba
+          // pegado al borde de la hoja.
+          padding: EdgeInsets.fromLTRB(
+            spacing.lg,
+            widget.esFotoNueva ? spacing.lg : 0,
+            spacing.lg,
+            spacing.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.photosTagQuestion, style: context.texts.titleLarge),
+              Text(l10n.photosTagTitle, style: context.texts.titleLarge),
               SizedBox(height: spacing.xs),
               Text(
                 l10n.photosTagHelp,
@@ -99,20 +121,40 @@ class _HojaDeEtiquetasState extends State<_HojaDeEtiquetas> {
                   tag: tag,
                   elegida: _elegidas.contains(tag),
                   onTap: () => setState(() {
-                    _elegidas.contains(tag)
-                        ? _elegidas.remove(tag)
-                        : _elegidas.add(tag);
+                    _elegidas
+                      ..clear()
+                      ..add(tag);
                   }),
                 ),
             ],
           ),
         ),
         FormFooter(
-          child: FilledButton(
-            onPressed: () => Navigator.of(context).pop(_elegidas.toList()),
-            child: Text(
-              _elegidas.isEmpty ? l10n.photosTagSaveWithout : l10n.photosTagSave,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  // Sin etiqueta no hay dónde guardarla: el botón apagado dice
+                  // que falta elegir, y el texto de arriba dice por qué.
+                  onPressed: _elegidas.isEmpty
+                      ? null
+                      : () => Navigator.of(context).pop(_elegidas.toList()),
+                  child: Text(l10n.photosTagSave),
+                ),
+              ),
+              if (widget.esFotoNueva) ...[
+                SizedBox(height: spacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.photosTagDiscard),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -168,7 +210,9 @@ class _Opcion extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  elegida ? Icons.check_circle : Icons.circle_outlined,
+                  elegida
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
                   color: elegida ? colors.onPrimaryContainer : colors.outline,
                 ),
               ],

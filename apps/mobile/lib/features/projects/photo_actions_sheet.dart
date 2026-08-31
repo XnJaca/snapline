@@ -28,11 +28,23 @@ Future<void> mostrarAccionesDeFoto(
     context: context,
     useSafeArea: true,
     showDragHandle: true,
-    builder: (context) => _Acciones(
-      foto: foto,
-      puedeEtiquetar: puedeEtiquetar,
-      puedeCambiarNivel: puedeCambiarNivel,
-      puedeBorrar: puedeBorrar,
+    // Abre alto y se puede subir más: mirar bien la foto es el motivo de abrir
+    // esto, y a media altura el techo se ve del tamaño de la miniatura que ya
+    // se tocó. Alto también porque las acciones no pueden quedar abajo del
+    // pliegue — un botón que hay que buscar scrolleando es uno que no existe.
+    isScrollControlled: true,
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => _Acciones(
+        foto: foto,
+        scrollController: scrollController,
+        puedeEtiquetar: puedeEtiquetar,
+        puedeCambiarNivel: puedeCambiarNivel,
+        puedeBorrar: puedeBorrar,
+      ),
     ),
   );
 }
@@ -40,12 +52,14 @@ Future<void> mostrarAccionesDeFoto(
 class _Acciones extends ConsumerStatefulWidget {
   const _Acciones({
     required this.foto,
+    required this.scrollController,
     required this.puedeEtiquetar,
     required this.puedeCambiarNivel,
     required this.puedeBorrar,
   });
 
   final ObraFoto foto;
+  final ScrollController scrollController;
   final bool puedeEtiquetar;
   final bool puedeCambiarNivel;
   final bool puedeBorrar;
@@ -67,6 +81,9 @@ class _AccionesState extends ConsumerState<_Acciones> {
 
     return SafeArea(
       child: SingleChildScrollView(
+        // El de la hoja, no uno propio: es lo que conecta el arrastre del
+        // contenido con la altura, y sin él subirla solo scrollea.
+        controller: widget.scrollController,
         padding: EdgeInsets.fromLTRB(spacing.lg, 0, spacing.lg, spacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -82,22 +99,47 @@ class _AccionesState extends ConsumerState<_Acciones> {
               ),
             ),
             SizedBox(height: spacing.md),
-            StatusLine(
-              tone: switch (foto.visibility) {
-                'PUBLIC' => StatusTone.success,
-                'CLIENT' => StatusTone.info,
-                _ => StatusTone.info,
-              },
-              label: _nivelEnTexto(foto.visibility, l10n),
+            // Dos campos apoyados en la hoja, sin marco: en una hoja cuyo
+            // motivo es la foto, un bloque con borde compite con ella.
+            //
+            // En columnas y no apilados —al revés que `LabeledValue`, que las
+            // descartó— porque acá los dos valores son cortos y el ancho se
+            // reparte con `Expanded`. Lo que allá se rompía era el ancho fijo
+            // del label, no la columna.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (foto.tags.isNotEmpty)
+                  Expanded(
+                    child: _Campo(
+                      nombre: l10n.photosTagLabel,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final tag in foto.tags)
+                            _IconoYTexto(
+                              icono: etiquetaEnIcono(tag),
+                              texto: etiquetaEnTexto(tag, l10n),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: _Campo(
+                    nombre: l10n.photosWhoSees,
+                    child: StatusLine(
+                      tone: switch (foto.visibility) {
+                        'PUBLIC' => StatusTone.success,
+                        'CLIENT' => StatusTone.info,
+                        _ => StatusTone.info,
+                      },
+                      label: _nivelEnTexto(foto.visibility, l10n),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            if (foto.tags.isNotEmpty) ...[
-              SizedBox(height: spacing.xs),
-              Text(
-                etiquetasEnTexto(foto.tags, l10n),
-                style: context.texts.bodySmall
-                    ?.copyWith(color: context.colors.onSurfaceVariant),
-              ),
-            ],
             if (_error != null) ...[
               SizedBox(height: spacing.md),
               StatusChip(tone: StatusTone.danger, label: _error!, expand: true),
@@ -123,20 +165,14 @@ class _AccionesState extends ConsumerState<_Acciones> {
                       ? l10n.photosRaiseToPublic
                       : l10n.photosRaiseToClient,
                   destacada: true,
-                  onTap: _enCurso ? null : () => _mover(siguiente),
+                  onTap: _enCurso ? null : () => _confirmarYMover(siguiente),
                 ),
               if (foto.visibility != 'INTERNAL')
                 _Accion(
                   icon: Icons.visibility_off_outlined,
                   label: l10n.photosLowerVisibility,
-                  onTap: _enCurso ? null : () => _mover('INTERNAL'),
+                  onTap: _enCurso ? null : () => _confirmarYMover('INTERNAL'),
                 ),
-              SizedBox(height: spacing.sm),
-              Text(
-                l10n.photosLadderNote,
-                style: context.texts.bodySmall
-                    ?.copyWith(color: context.colors.onSurfaceVariant),
-              ),
             ],
 
             if (widget.puedeBorrar) ...[
@@ -159,7 +195,9 @@ class _AccionesState extends ConsumerState<_Acciones> {
       context,
       iniciales: widget.foto.tags,
     );
-    if (elegidas == null || !mounted) return;
+    // Vacío no llega: el guardar está apagado sin elegir nada. Una foto ya
+    // registrada no se queda sin etiqueta por corregirla.
+    if (elegidas == null || elegidas.isEmpty || !mounted) return;
 
     // Va por la bandeja: corregir qué muestra una foto no exige señal.
     await ref.read(mediaRepositoryProvider).setTags(widget.foto.id, elegidas);
@@ -181,6 +219,45 @@ class _AccionesState extends ConsumerState<_Acciones> {
 
     await ref.read(mediaRepositoryProvider).borrar(widget.foto.id);
     if (mounted) Navigator.of(context).pop();
+  }
+
+  /// Preguntar antes de cada escalón. Mostrarle una foto al cliente o
+  /// publicarla no se des-hace: se puede bajar el nivel después, no borrar de
+  /// la cabeza de quien ya la vio. Bajar también pregunta — desde público,
+  /// quita de la página web algo que ya estaba ahí.
+  Future<void> _confirmarYMover(String visibility) async {
+    final l10n = AppLocalizations.of(context);
+    final (titulo, cuerpo, aceptar, icono) = switch (visibility) {
+      'PUBLIC' => (
+          l10n.photosConfirmPublicTitle,
+          l10n.photosConfirmPublicBody,
+          l10n.photosConfirmPublicAccept,
+          Icons.public,
+        ),
+      'CLIENT' => (
+          l10n.photosConfirmClientTitle,
+          l10n.photosConfirmClientBody,
+          l10n.photosConfirmClientAccept,
+          Icons.visibility_outlined,
+        ),
+      _ => (
+          l10n.photosConfirmInternalTitle,
+          l10n.photosConfirmInternalBody,
+          l10n.photosConfirmInternalAccept,
+          Icons.visibility_off_outlined,
+        ),
+    };
+
+    final confirmado = await confirmarAccion(
+      context,
+      titulo: titulo,
+      cuerpo: cuerpo,
+      confirmar: aceptar,
+      cancelar: l10n.actionCancel,
+      icono: icono,
+    );
+    if (!confirmado || !mounted) return;
+    await _mover(visibility);
   }
 
   Future<void> _mover(String visibility) async {
@@ -286,7 +363,7 @@ extension on _Accion {
 /// Un rechazo conocido se dice con sus palabras; lo que no reconocemos cae en
 /// el genérico en vez de inventar una causa.
 String _mensajeDe(String? code, AppLocalizations l10n) => switch (code) {
-      'VISIBILITY_SKIPS_STEP' => l10n.photosLadderNote,
+      'VISIBILITY_SKIPS_STEP' => l10n.photosLadderBlocked,
       'UPLOAD_NOT_READY' => l10n.photosNotUploadedYet,
       'EXIF_NOT_STRIPPED' => l10n.photosExifPending,
       'PERMISSION_DENIED' => l10n.photosNotAllowed,
@@ -306,3 +383,57 @@ String _nivelEnTexto(String visibility, AppLocalizations l10n) =>
       'CLIENT' => l10n.photosVisibilityClient,
       _ => l10n.photosVisibilityInternal,
     };
+
+/// Un campo cuyo valor no es texto plano y por eso no entra en un
+/// [LabeledValue]. Mismo nombre arriba y mismo espaciado que él, para que los
+/// dos se lean como el mismo tipo de dato.
+class _Campo extends StatelessWidget {
+  const _Campo({required this.nombre, required this.child});
+
+  final String nombre;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          nombre,
+          style: context.texts.bodySmall
+              ?.copyWith(color: context.colors.onSurfaceVariant),
+        ),
+        SizedBox(height: context.spacing.xs),
+        child,
+      ],
+    );
+  }
+}
+
+/// La etiqueta con su icono, con la misma forma que una [StatusLine]: las dos
+/// columnas son el mismo tipo de dato y tienen que verse igual.
+class _IconoYTexto extends StatelessWidget {
+  const _IconoYTexto({required this.icono, required this.texto});
+
+  final IconData icono;
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icono, size: context.spacing.lg,
+            color: context.colors.onSurfaceVariant),
+        SizedBox(width: context.spacing.xs),
+        Flexible(
+          child: Text(
+            texto,
+            style: context.texts.bodyMedium
+                ?.copyWith(color: context.colors.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}

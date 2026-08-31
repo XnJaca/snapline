@@ -19,7 +19,7 @@ domain:
   - proyecto
 frente: campo
 created: 2026-08-12
-updated: 2026-08-12
+updated: 2026-08-30
 tags:
   - spec
   - spec/en-implementacion
@@ -109,7 +109,7 @@ no se pueden ver ni recuperar, y no había forma de sacarlas de en medio.
 Entra con **permiso propio `media.delete`, acotado a `OWNER` y `ADMIN`**. La foto
 es la evidencia de la obra y el "antes" no se puede volver a sacar cuando el
 trabajo ya empezó: quien borra puede estar borrando la prueba de algo. Un
-trabajador que saca una foto mala la deja sin etiqueta y no molesta a nadie.
+trabajador que saca una foto mala la descarta en el momento, sin registrarla.
 
 Es **suave en la base y duro en el disco**: la fila queda con `deleted_at` para
 que la baja se propague (regla 20) y el archivo local se borra de verdad, porque
@@ -227,13 +227,39 @@ al trabajador, pero todos tienen que **decir qué pasó**:
 | **El servidor la rechaza** por tipo o tamaño | El invariante se valida en el servidor, no solo acá ([[contenido]]). El rechazo se muestra con su `code` del envelope (ADR-0011), no con prosa traducida, y la foto queda marcada para que no se reintente para siempre |
 | **El trigger rechaza `PUBLIC`** por EXIF sin limpiar | No debería pasar —el servicio limpia solo—, pero si pasa llega como `EXIF_NOT_STRIPPED` y se muestra como tal |
 
+**Etiquetar deja de ser opcional — 2026-08-30.** El spec lo dejaba saltable para
+no poner nada entre la cámara y guardar. Se revierte por decisión de producto: el
+sistema existe para curar el desorden, y una foto sin etiqueta es exactamente el
+desorden que viene a arreglar.
+
+La hoja de una foto recién tomada **no se puede esquivar** —ni deslizando ni con
+el botón atrás— y tiene dos salidas: guardar, que exige al menos una etiqueta, o
+**descartar la foto**, que borra el archivo antes de que exista fila. Así no hay
+camino que produzca una foto sin etiqueta, y tampoco hay que quedarse con una que
+salió mal.
+
+Corregir la etiqueta de una foto ya registrada tampoco puede dejarla en cero. El
+grupo **Sin etiqueta** de la galería se conserva para las fotos anteriores a este
+cambio: no se les puede inventar una, y verlas agrupadas ahí es lo que hace que
+alguien las etiquete.
+
+**Y es una sola etiqueta, no varias — 2026-08-30.** La hoja permitía marcar las
+seis. La galería agrupa por etiqueta, así que una foto con dos aparecía dos veces:
+duplicarla en la vista es el desorden que esto viene a ordenar, y "antes" y
+"después" a la vez no significa nada.
+
+El contrato no cambia —`tags` sigue siendo un arreglo, sin migración— y
+`agruparPorEtiqueta` sigue tratando las de antes, que sí pueden traer varias. Lo
+que cambia es que la app ya no las produce, y la fila lo dice con un radio en vez
+de un check.
+
 ## Flujo de usuario
 
 1. El trabajador abre su obra y toca el tab **Fotos**.
 2. Toca la acción primaria —`FieldActionButton`, 64dp, se pulsa con guantes— y se
    abre la cámara.
 3. Vuelve de la cámara y elige la etiqueta **en la misma pantalla**, sin paso
-   extra. Se puede saltar: una foto sin etiqueta entra igual.
+   extra. **No se puede saltar**: guarda con su etiqueta o descarta la foto.
 4. La foto aparece en la grilla al instante, con su marca de "guardado en el
    teléfono" hasta que sube.
 5. William, desde la misma grilla, abre una foto y la sube **un** escalón.
@@ -359,6 +385,14 @@ tabs cuando cambian los permisos.
 - [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`
       (`api_isolation_test.dart`).
 - [ ] La pantalla se ve completa en claro y en oscuro, y en los dos idiomas.
+- [ ] Una foto recién tomada no se puede guardar sin etiqueta, y la hoja no se
+      esquiva: ni deslizando ni con el atrás del sistema. Se guarda o se descarta.
+- [ ] Descartar borra el binario del teléfono y no deja fila que sincronizar.
+- [ ] Corregir la etiqueta de una foto anterior al 2026-08-30 que tenía varias no
+      pierde ninguna sin que la persona lo vea: se muestran todas puestas, y
+      tocar una es lo que las reemplaza.
+- [ ] Cada cambio de nivel se confirma antes, incluida la bajada: lo que sale de
+      la empresa no se des-ve.
 - [ ] `openapi.json` regenerado y el cliente Dart al día.
 
 ## Riesgos / consideraciones
@@ -398,3 +432,4 @@ tabs cuando cambian los permisos.
 | 2026-08-12 | borrador | Creado. Desbloqueado por DEBT-0005: publicar dejó de exigir un permiso que no se podía otorgar |
 | 2026-08-13 | en-implementacion | El alcance creció probando en el teléfono: entra borrar una foto —con permiso propio `media.delete`— y la carga remota por URL firmada, que el spec daba por resuelta sin estarlo |
 | 2026-08-12 | review | Tres bloqueantes del `spec-reviewer`. `media_tag` no puede sincronizar como colección propia —le faltan `updated_at` y `deleted_at`—, así que las etiquetas pasan a viajar dentro del asset. La escalera de visibilidad se endurece acá en vez de quedar como riesgo. Y el comportamiento sin señal suma los tres casos de falla que no eran de red |
+| 2026-08-30 | en-implementacion | Segunda tanda, salida de probar en el teléfono: etiquetar pasa a ser obligatorio y de a una sola, se puede descartar una foto recién tomada, cada cambio de nivel se confirma, y el copy deja de explicar el sistema. Se arregla además que volver la red no sincronizaba con la obra abierta — Riverpod 3 pausa los listeners de los widgets tapados |

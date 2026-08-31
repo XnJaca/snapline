@@ -6,12 +6,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/media/media_paths.dart';
+import 'package:snapline/core/media/photo_capture.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/repositories/media_repository.dart';
 import 'package:snapline/features/projects/photo_tag_sheet.dart';
 import 'package:snapline/features/projects/photos_tab.dart';
 
 import 'support/fakes.dart';
+
+class _CamaraNegada implements PhotoCapture {
+  const _CamaraNegada();
+
+  @override
+  Future<String?> takePhoto() async => null;
+
+  @override
+  Future<PhotoResult> capture(PhotoQuality calidad) async =>
+      const PhotoResult.failed(PhotoFailure.permissionDenied);
+}
+
+class _CamaraFija implements PhotoCapture {
+  const _CamaraFija(this.ruta);
+  final String ruta;
+
+  @override
+  Future<String?> takePhoto() async => ruta;
+
+  @override
+  Future<PhotoResult> capture(PhotoQuality calidad) async =>
+      PhotoResult.taken(ruta);
+}
 
 /// La galería de la obra, en pantalla.
 ///
@@ -53,11 +77,13 @@ void main() {
     AuthUserDtoLocale locale = AuthUserDtoLocale.es,
     List<String>? permisos,
     ThemeMode theme = ThemeMode.light,
+    PhotoCapture? camara,
   }) {
     return testWidget(
       db: db,
       locale: locale,
       themeMode: theme,
+      photoCapture: camara,
       session: buildSession(locale: locale, permissions: permisos),
       child: const PhotosTab(projectId: 'p1'),
     );
@@ -218,6 +244,58 @@ void main() {
     await disposeApp(tester);
   });
 
+  testWidgets('subir de nivel pregunta antes, y cancelar no la mueve',
+      timeout: limite, (tester) async {
+    await sembrarFoto('a1', tags: ['BEFORE']);
+
+    await tester.pumpWidget(pantalla());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+    // La hoja scrollea: tocar a ciegas una acción que quedó abajo del pliegue
+    // no falla, no hace nada — que es peor.
+    await tester.ensureVisible(find.text('Mostrar al cliente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mostrar al cliente'));
+    await tester.pumpAndSettle();
+
+    // Lo que sale de la empresa se pregunta: el cliente que ya la vio no la
+    // des-ve porque después se baje el nivel.
+    expect(find.text('¿Mostrarle esta foto al cliente?'), findsOne);
+
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+
+    final fila = await (db.select(db.mediaAssets)
+          ..where((f) => f.id.equals('a1')))
+        .getSingle();
+    expect(fila.visibility, 'INTERNAL');
+
+    await disposeApp(tester);
+  });
+
+  testWidgets('cada dato de la foto va con su nombre',
+      timeout: limite, (tester) async {
+    await sembrarFoto('a1', tags: ['BEFORE']);
+
+    await tester.pumpWidget(pantalla());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solo el equipo'), findsOne);
+    // El nombre del campo, no el dato suelto: sin él las dos columnas se leen
+    // como dos textos sin relación.
+    expect(find.text('Quién la ve'), findsOne);
+    expect(find.text('Etiqueta'), findsOne);
+
+    await disposeApp(tester);
+  });
+
   testWidgets('nada quemado: en inglés sale en inglés', timeout: limite, (tester) async {
     await tester.pumpWidget(pantalla(locale: AuthUserDtoLocale.en));
     await tester.pump();
@@ -241,13 +319,14 @@ void main() {
   });
 
   group('la hoja de etiquetas', () {
-    Future<void> abrir(WidgetTester tester) async {
+    Future<void> abrir(WidgetTester tester, {bool esFotoNueva = false}) async {
       await tester.pumpWidget(testWidget(
         db: db,
         child: Builder(
           builder: (context) => Center(
             child: TextButton(
-              onPressed: () => mostrarHojaDeEtiquetas(context),
+              onPressed: () =>
+                  mostrarHojaDeEtiquetas(context, esFotoNueva: esFotoNueva),
               child: const Text('abrir'),
             ),
           ),
@@ -258,30 +337,139 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('la acción de guardar se ve sin elegir nada, y dice qué hará',
-        timeout: limite, (tester) async {
+    testWidgets('sin elegir nada no se puede guardar', timeout: limite,
+        (tester) async {
       await abrir(tester);
+
+      final boton = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(boton.onPressed, isNull,
+          reason: 'una foto sin etiqueta es el desorden que el sistema cura');
 
       // El bug que se vio en el teléfono: el botón existía y quedaba debajo de
       // la barra gestual. Que esté en el árbol no alcanza — tiene que estar
       // dentro de la pantalla.
-      expect(find.text('Guardar sin etiqueta'), findsOne);
-      final boton = tester.getRect(find.text('Guardar sin etiqueta'));
+      final rect = tester.getRect(find.text('Guardar'));
       final pantalla = tester.getRect(find.byType(MaterialApp));
-      expect(boton.bottom, lessThanOrEqualTo(pantalla.bottom));
+      expect(rect.bottom, lessThanOrEqualTo(pantalla.bottom));
 
       await disposeApp(tester);
     });
 
-    testWidgets('al elegir una, la acción cambia y guarda esa etiqueta',
+    testWidgets('al elegir una, guardar se enciende y devuelve esa etiqueta',
         timeout: limite, (tester) async {
       await abrir(tester);
 
       await tester.tap(find.text('Antes'));
       await tester.pumpAndSettle();
 
+      final boton = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(boton.onPressed, isNotNull);
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('la ayuda dice para qué sirven, sin explicar el negocio',
+        timeout: limite, (tester) async {
+      await abrir(tester);
+
+      expect(find.text('Ordenan las fotos del proyecto. Toda foto lleva la suya.'),
+          findsOne);
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('una foto recién tomada se puede descartar; una ya guardada no',
+        timeout: limite, (tester) async {
+      await abrir(tester, esFotoNueva: true);
+      expect(find.text('Descartar la foto'), findsOne,
+          reason: 'es la única salida que no deja una foto sin etiqueta');
+      await disposeApp(tester);
+
+      await abrir(tester);
+      expect(find.text('Descartar la foto'), findsNothing,
+          reason: 'corregir la etiqueta no borra la foto');
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('una foto vieja con dos etiquetas no pierde la segunda',
+        timeout: limite, (tester) async {
+      List<MediaTag>? devuelto;
+      await tester.pumpWidget(testWidget(
+        db: db,
+        child: Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () async => devuelto = await mostrarHojaDeEtiquetas(
+                context,
+                iniciales: const [MediaTag.before, MediaTag.detail],
+              ),
+              child: const Text('abrir'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      // Las dos se ven puestas: mostrar solo la primera haría que guardar sin
+      // tocar nada borrara la otra en silencio.
+      expect(find.byIcon(Icons.radio_button_checked), findsNWidgets(2));
+
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(devuelto, hasLength(2));
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('y tocar una de ellas la deja sola, que es un cambio visible',
+        timeout: limite, (tester) async {
+      List<MediaTag>? devuelto;
+      await tester.pumpWidget(testWidget(
+        db: db,
+        child: Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () async => devuelto = await mostrarHojaDeEtiquetas(
+                context,
+                iniciales: const [MediaTag.before, MediaTag.detail],
+              ),
+              child: const Text('abrir'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Después'));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.radio_button_checked), findsOne);
+
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(devuelto, [MediaTag.after]);
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('el atrás del sistema no esquiva la hoja de una foto nueva',
+        timeout: limite, (tester) async {
+      await abrir(tester, esFotoNueva: true);
       expect(find.text('Guardar'), findsOne);
-      expect(find.text('Guardar sin etiqueta'), findsNothing);
+
+      // Lo que dispara el gesto y el botón atrás de Android. Los dos botones
+      // de la hoja usan `pop` directo y por eso sí salen.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Guardar'), findsOne,
+          reason: 'esquivarla dejaría la foto sin etiqueta');
 
       await disposeApp(tester);
     });
@@ -297,6 +485,77 @@ void main() {
 
       await disposeApp(tester);
     });
+  });
+
+  group('tomar una foto exige etiquetarla', () {
+    /// Deja una foto "tomada" en el disco y devuelve su ruta.
+    Future<String> camaraCon(String nombre) async {
+      MediaPaths.usarCarpeta(Directory.systemTemp.path);
+      addTearDown(() => MediaPaths.usarCarpeta(''));
+      final archivo = File('${Directory.systemTemp.path}/$nombre')
+        ..writeAsBytesSync(_jpegDeUnPixel);
+      addTearDown(() {
+        if (archivo.existsSync()) archivo.deleteSync();
+      });
+      return archivo.path;
+    }
+
+    testWidgets('descartarla borra el archivo y no registra nada',
+        timeout: limite, (tester) async {
+      final ruta = await camaraCon('snapline-descartada.jpg');
+      await tester.pumpWidget(pantalla(camara: _CamaraFija(ruta)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tomar foto'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Descartar la foto'));
+      await tester.pumpAndSettle();
+
+      expect(File(ruta).existsSync(), isFalse,
+          reason: 'el binario se va con ella: no hay fila que dar de baja');
+      expect(await db.select(db.mediaAssets).get(), isEmpty);
+
+      await disposeApp(tester);
+    });
+
+    testWidgets('guardarla con su etiqueta sí la registra', timeout: limite,
+        (tester) async {
+      final ruta = await camaraCon('snapline-guardada.jpg');
+      await tester.pumpWidget(pantalla(camara: _CamaraFija(ruta)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tomar foto'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Antes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      final filas = await db.select(db.mediaAssets).get();
+      expect(filas, hasLength(1));
+      expect(filas.single.tags, contains('BEFORE'));
+      expect(File(ruta).existsSync(), isTrue);
+
+      await disposeApp(tester);
+    });
+  });
+
+  testWidgets('sin permiso de cámara, las dos salidas se ven como botones',
+      timeout: limite, (tester) async {
+    await tester.pumpWidget(pantalla(camara: const _CamaraNegada()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tomar foto'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('El permiso de cámara está apagado'), findsOne);
+    // Lo mismo que el borrado: un `TextButton` de diálogo abajo a la derecha no
+    // se lee como botón, y esto se toca con guantes.
+    expect(find.widgetWithText(FilledButton, 'Abrir ajustes'), findsOne);
+    expect(find.widgetWithText(OutlinedButton, 'Cancelar'), findsOne);
+
+    await disposeApp(tester);
   });
 
   group('de dónde sale la imagen', () {
