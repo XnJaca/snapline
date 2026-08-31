@@ -4,17 +4,17 @@ title: "Arquitectura de la app Flutter: Riverpod, Drift y cliente generado"
 aliases:
   - "ADR-0008: Arquitectura de la app Flutter: Riverpod, Drift y cliente generado"
 type: adr
-status: propuesto
+status: aceptado
 supersedes: null
 superseded_by: null
 related_specs: []
 created: 2026-08-08
-updated: 2026-08-14
+updated: 2026-08-30
 deciders:
   - jaca
 tags:
   - adr
-  - adr/propuesto
+  - adr/aceptado
   - mobile
 ---
 

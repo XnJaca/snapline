@@ -132,10 +132,15 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
 - [ ] **`apps/web` y `apps/site`** sin scaffold. Al crearlas, agregarlas a
       `pnpm-workspace.yaml` — hoy solo lista `apps/api` y `packages/*`.
 
-- [ ] **CORS en el bucket de Backblaze — solo cuando arranque `apps/web`.**
+- [ ] **CORS en el bucket de Backblaze — cuando el panel suba su primera foto.**
       Subir desde el navegador a una URL firmada dispara un preflight; sin reglas
       de CORS el browser corta la subida antes de que salga del cliente, y el
       error no dice CORS de forma obvia.
+
+      > **El trigger se corrigió el 2026-08-30.** Decía *"solo cuando arranque
+      > `apps/web`"*, y arrancar la app no es el momento: SPEC-0007 y SPEC-0008 no
+      > suben nada. Lo que lo dispara es la primera pantalla que mande un archivo
+      > al bucket desde el navegador, que todavía no tiene spec.
 
       **Desde Flutter nativo no aplica** — no hay CORS fuera del navegador, por eso
       el prototipo no lo necesita.
