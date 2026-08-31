@@ -1,0 +1,123 @@
+// GENERADO por packages/tokens desde design-tokens.json en la raíz.
+// No editar a mano: los cambios se pierden al regenerar con `pnpm tokens:generate`.
+// Ver ADR-0009 y ADR-0013.
+
+// El mapa alimenta mat.theme-overrides(): Material recibe estos valores en vez de
+// derivar su propia paleta. Es el espejo en web de prohibir fromSeed en Flutter,
+// y por eso los nombres son los de M3 y no los nuestros.
+$sl-light: (
+  primary: #C2410C,
+  on-primary: #FFFFFF,
+  primary-container: #FFEDD5,
+  on-primary-container: #7C2D12,
+  surface: #FFFFFF,
+  on-surface: #171717,
+  surface-variant: #F5F5F5,
+  background: #FAFAFA,
+  on-background: #171717,
+  on-surface-variant: #525252,
+  outline: #E5E5E5,
+  error: #DC2626,
+  on-error: #FFFFFF,
+  error-container: #FEE2E2,
+  on-error-container: #7F1D1D,
+
+  // Derivados, para que Material no los tiña
+  surface-container-lowest: #FFFFFF,
+  surface-container-low: #FAFAFA,
+  surface-container: #FAFAFA,
+  surface-container-high: #F5F5F5,
+  surface-container-highest: #F5F5F5,
+  outline-variant: #E5E5E5,
+  surface-tint: #C2410C,
+);
+
+$sl-dark: (
+  primary: #FB923C,
+  on-primary: #0A0A0A,
+  primary-container: #7C2D12,
+  on-primary-container: #FFEDD5,
+  surface: #171717,
+  on-surface: #FAFAFA,
+  surface-variant: #262626,
+  background: #0A0A0A,
+  on-background: #FAFAFA,
+  on-surface-variant: #A3A3A3,
+  outline: #404040,
+  error: #F87171,
+  on-error: #0A0A0A,
+  error-container: #7F1D1D,
+  on-error-container: #FEE2E2,
+
+  // Derivados, para que Material no los tiña
+  surface-container-lowest: #0A0A0A,
+  surface-container-low: #0A0A0A,
+  surface-container: #171717,
+  surface-container-high: #262626,
+  surface-container-highest: #262626,
+  outline-variant: #404040,
+  surface-tint: #FB923C,
+);
+
+// Lo que el vocabulario de M3 no cubre. Se consume como var(--sl-warning-container),
+// nunca como literal.
+:root {
+  --sl-space-1: 4px;
+  --sl-space-2: 8px;
+  --sl-space-3: 12px;
+  --sl-space-4: 16px;
+  --sl-space-5: 24px;
+  --sl-space-6: 32px;
+  --sl-touch-target-field: 64px;
+  --sl-touch-target-primary: 52px;
+  --sl-touch-target-min: 48px;
+  --sl-radius-sm: 4px;
+  --sl-radius-md: 8px;
+  --sl-radius-lg: 16px;
+  --sl-radius-full: 999px;
+  --sl-font-family-ui: Inter;
+  --sl-font-family-brand: BricolageGrotesque;
+  --sl-font-size-caption: 13px;
+  --sl-font-size-body: 16px;
+  --sl-font-size-title: 20px;
+  --sl-font-size-display: 32px;
+  --sl-font-weight-regular: 400;
+  --sl-font-weight-medium: 500;
+  --sl-font-weight-bold: 700;
+  --sl-font-weight-brand: 800;
+  --sl-text: #171717;
+  --sl-warning: #A16207;
+  --sl-on-warning: #FFFFFF;
+  --sl-warning-container: #FEF9C3;
+  --sl-on-warning-container: #713F12;
+  --sl-success: #15803D;
+  --sl-on-success: #FFFFFF;
+  --sl-success-container: #DCFCE7;
+  --sl-on-success-container: #14532D;
+}
+
+:root[data-theme='dark'] {
+  --sl-text: #FAFAFA;
+  --sl-warning: #FACC15;
+  --sl-on-warning: #0A0A0A;
+  --sl-warning-container: #713F12;
+  --sl-on-warning-container: #FEF9C3;
+  --sl-success: #4ADE80;
+  --sl-on-success: #0A0A0A;
+  --sl-success-container: #14532D;
+  --sl-on-success-container: #DCFCE7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --sl-text: #FAFAFA;
+    --sl-warning: #FACC15;
+    --sl-on-warning: #0A0A0A;
+    --sl-warning-container: #713F12;
+    --sl-on-warning-container: #FEF9C3;
+    --sl-success: #4ADE80;
+    --sl-on-success: #0A0A0A;
+    --sl-success-container: #14532D;
+    --sl-on-success-container: #DCFCE7;
+  }
+}

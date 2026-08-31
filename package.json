@@ -14,7 +14,8 @@
     "api:db:up": "pnpm --filter @snapline/api db:up",
     "api:migrate": "pnpm --filter @snapline/api migration:run",
     "api:seed": "pnpm --filter @snapline/api seed",
-    "contracts:generate": "pnpm --filter @snapline/api openapi:generate && pnpm --filter @snapline/contracts generate"
+    "contracts:generate": "pnpm --filter @snapline/api openapi:generate && pnpm --filter @snapline/contracts generate",
+    "tokens:generate": "pnpm --filter @snapline/tokens generate"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

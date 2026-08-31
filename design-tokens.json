@@ -1,5 +1,5 @@
 {
-  "$comment": "Fuente única de tokens de diseño. Ver ADR-0009. Las superficies consumen tokens semánticos, nunca primitivas ni valores literales. Traducido a Dart a mano por ahora: ver DEBT-0001.",
+  "$comment": "Fuente única de tokens de diseño. Ver ADR-0009. Las superficies consumen tokens semánticos, nunca primitivas ni valores literales. Se edita acá y solo acá: packages/tokens genera desde este archivo el SCSS de apps/web y el tokens.dart de apps/mobile, y los dos son archivos generados. El $comment de un grupo sale como docblock en el Dart, así que el porqué de un valor va acá y no en el archivo generado.",
 
   "primitive": {
     "$comment": "Neutros de gris puro (neutral), sin tinte en ninguna dirección. No se usa slate porque su tinte azul hace ver azuladas las fotos de obra, ni stone porque su tinte cálido convierte los fondos oscuros en café.",
@@ -51,6 +51,13 @@
     "$comment": "En dp para Flutter y px para CSS. La escala es la misma."
   },
 
+  "touch-target": {
+    "$comment": "Material pide 48 como mínimo táctil; la acción de campo va a 64 porque se pulsa con guantes de trabajo y marcar asistencia no puede fallar (regla 9). No es la altura de todo botón sólido: un \"Guardar\" al pie de un formulario administrativo se pulsa sentado y con el teléfono en la mano, y a 64 se come el espacio de los campos.",
+    "field": 64,
+    "primary": 52,
+    "min": 48
+  },
+
   "radius": {
     "sm": 4,
     "md": 8,
@@ -59,6 +66,11 @@
   },
 
   "font": {
+    "family": {
+      "$comment": "Las dos se embeben como asset, nunca se descargan en runtime: la app tiene que verse igual sin señal, y por eso no se usa el paquete google_fonts. Ver ADR-0009 §7.",
+      "ui": "Inter",
+      "brand": "BricolageGrotesque"
+    },
     "size": {
       "caption": 13,
       "body": 16,
@@ -68,9 +80,10 @@
     "weight": {
       "regular": 400,
       "medium": 500,
-      "bold": 700
+      "bold": 700,
+      "brand": 800
     },
-    "$comment": "display es para el cronómetro de jornada y montos, que se leen a distancia y con guantes."
+    "$comment": "display es para el cronómetro de jornada y montos, que se leen a distancia y con guantes. La familia `brand` y el peso `brand` son SOLO del wordmark: ningún texto de interfaz los usa, porque una display a tamaño de lectura cansa y compite con el contenido."
   },
 
   "color": {

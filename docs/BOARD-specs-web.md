@@ -22,7 +22,10 @@ kanban-plugin: board
 ## ✅ Aprobado (listo para implementar)
 
 
+
 ## 🛠️ En implementación
+
+- [ ] [[0007-cimientos-visuales/README|SPEC-0007 — Cimientos visuales del panel]] · Angular 22 + Material, `packages/tokens` generando SCSS y Dart, los dos temas y los dos idiomas. 10 tests. Los 71 valores del `tokens.dart` generado salieron idénticos a los que estaban a mano. Falta `code-reviewer` y el PR
 
 
 ## 🎉 Implementado

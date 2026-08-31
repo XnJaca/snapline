@@ -1,6 +1,9 @@
 packages:
   - 'apps/api'
+  - 'apps/web'
   - 'packages/*'
 
-# apps/web (Angular), apps/site (Astro) y apps/mobile (Flutter) se agregan al
-# scaffoldearlas. apps/mobile NUNCA entra acá: pub y pnpm no se mezclan.
+# apps/site (Astro) se agrega al scaffoldearla.
+# apps/mobile NUNCA entra acá: pub y pnpm no se mezclan. Igual recibe sus tokens
+# generados por packages/tokens, que escribe dentro de esa carpeta sin que Flutter
+# participe del workspace.
