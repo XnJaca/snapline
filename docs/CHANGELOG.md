@@ -15,7 +15,7 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
-## 2026-08-31 — el panel existe, y los tokens dejan de copiarse a mano
+## 2026-08-31 — el panel existe, ya se entra, y los tokens dejan de copiarse a mano
 
 - **`apps/web` arranca** ([[specs/web/0007-cimientos-visuales/README|SPEC-0007]]):
   Angular 22 con Material y el CDK, los dos temas, los dos idiomas por Transloco. Es
@@ -57,6 +57,40 @@ Se agrega con `/changelog <descripción>`.
   que `token_version`, tal como estaba descrito, habría expulsado a **toda sesión viva
   del móvil** el día del deploy: los tokens ya emitidos no llevan el claim, y comparar
   con igualdad estricta los rechazaba a todos.
+
+- **Y SPEC-0008 queda implementado el mismo día** (PR #33). Se entra al panel, se
+  navega, y **cerrar sesión invalida de verdad**: el refresh es un JWT autofirmado y
+  sin estado, así que hasta hoy "salir" solo significaba que el navegador borró su
+  copia y un token capturado antes seguía valiendo 30 días. El access token vive en
+  memoria y el refresh nunca aparece en el cuerpo de una respuesta; si viajara ahí, un
+  XSS lo leería y la cookie no habría protegido nada.
+- **Dos correcciones al spec, las dos por la misma causa.** El `Path` de la cookie
+  omitía el prefijo global `/api`, y con `/auth/web` la cookie no viaja a ninguna de
+  las tres rutas nuevas. Es el tipo de error que no rompe ningún test y deja la sesión
+  sin funcionar en el navegador.
+- **Tres bugs que los tests no vieron y el navegador sí, otra vez.** La cadena de alto
+  y ancho se cortaba en el `:host` de cada componente ruteado —`flex: 1` estaba en el
+  elemento de adentro—, así que la pantalla medía 383px de ancho dentro de un
+  contenedor de 1665 y el scroll se lo quedaba Material. El shell no tenía jerarquía ni
+  forma de plegarse. Y el panel ignoraba el lockup de marca que `brand/` y el móvil ya
+  definían. **Dos specs seguidos donde lo que falla es lo que solo se ve mirando**; vale
+  la pena tratarlo como parte del trabajo y no como el final.
+- **El copy del panel se escribió dos veces.** La primera versión inventó una voz
+  paralela a la que el producto ya tenía; la segunda reusa las cadenas del móvil, que
+  habla de usted y ya tenía resuelto el login entero. Escribir de cero lo que ya existe
+  traducido es la forma más barata de que dos superficies suenen a productos distintos.
+- **El alcance del contenido creció a conciencia.** El spec decía que el contenido real
+  de cada pantalla no entraba; entró, porque las listas sintéticas no dejaban juzgar el
+  shell. Los ocho ejes leen los endpoints que ya existían. Escribir sigue afuera y cada
+  eje conserva su spec.
+- **Los reportes no tenían contrato** ([[adr/0007-openapi-como-contrato/README|ADR-0007]]):
+  sus filas vivían en interfaces sueltas del `.service.ts`, así que salían a
+  `openapi.json` como `{"type":"object"}` sin propiedades y el cliente las tipaba como
+  `dynamic`. Es exactamente el caso que la regla 8 describe, encontrado por consumirlo.
+- **DEBT-0009 cerrada** con `MatIconRegistry` y SVG propios, y
+  **[[tech-debt/0010-listados-sin-la-persona|DEBT-0010]] abierta**: `/time-entries`
+  devuelve solo ids y `/crews` embebe la membresía del capataz sin su usuario, así que
+  el panel no puede decir quién marcó ni quién es el capataz.
 
 ---
 
