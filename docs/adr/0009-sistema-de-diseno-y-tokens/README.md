@@ -4,17 +4,17 @@ title: "Sistema de diseño: tokens canónicos, identidad cálida y Material 3 na
 aliases:
   - "ADR-0009: Sistema de diseño: tokens canónicos, identidad cálida y Material 3 nativo"
 type: adr
-status: propuesto
+status: aceptado
 supersedes: null
 superseded_by: null
 related_specs: []
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-30
 deciders:
   - jaca
 tags:
   - adr
-  - adr/propuesto
+  - adr/aceptado
   - ui
 ---
 
@@ -92,6 +92,10 @@ el pendiente original señalaba como problema.
 `apps/web`, en su propio ADR: las tablas densas de facturación tienen necesidades
 que no se pueden evaluar sin haber escrito una pantalla. Lo que sí queda fijo es
 que cualquier librería que se adopte **consume los tokens del JSON**, no los suyos.
+
+> **Cerrada el 2026-08-30** por [[../0013-componentes-angular-material/README|ADR-0013]]:
+> Angular Material con el CDK, y los valores del JSON entrando por
+> `mat.theme-overrides()` — el espejo en web de lo que la decisión 2 hizo en Flutter.
 
 ### 5. La identidad es Snapline, presente y discreta
 

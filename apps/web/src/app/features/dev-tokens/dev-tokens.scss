@@ -1,0 +1,174 @@
+// Ni un valor literal: todo sale de los tokens generados o del tema de Material.
+// Un hex acá es error de revisión (regla 22).
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--sl-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-5);
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sl-space-4);
+  }
+
+  &__title {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+
+  &__subtitle,
+  &__note {
+    margin: var(--sl-space-1) 0 0;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: var(--sl-font-size-caption);
+  }
+
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sl-space-3);
+  }
+}
+
+.section {
+  padding: var(--sl-space-4);
+
+  &__title {
+    margin: 0 0 var(--sl-space-3);
+    font-size: var(--sl-font-size-title);
+    font-weight: var(--sl-font-weight-medium);
+  }
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.swatch {
+  flex: 1 1 auto;
+  min-width: 160px;
+  padding: var(--sl-space-4) var(--sl-space-3);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  font-size: var(--sl-font-size-caption);
+}
+
+// Fondo tenue con su `on*` y su icono. Nunca relleno sólido: eso es de la acción.
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0 0 var(--sl-space-2);
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-md);
+  font-size: var(--sl-font-size-body);
+
+  &__icon {
+    flex: none;
+    width: var(--sl-space-5);
+    height: var(--sl-space-5);
+    fill: currentColor;
+  }
+
+  &--warning {
+    background: var(--sl-warning-container);
+    color: var(--sl-on-warning-container);
+  }
+
+  &--success {
+    background: var(--sl-success-container);
+    color: var(--sl-on-success-container);
+  }
+
+  &--danger {
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+}
+
+.action {
+  // La acción de campo se pulsa con guantes; en el panel alcanza el target normal.
+  min-height: var(--sl-touch-target-primary);
+}
+
+.type {
+  margin: 0 0 var(--sl-space-2);
+
+  &--display {
+    font-size: var(--sl-font-size-display);
+  }
+  &--title {
+    font-size: var(--sl-font-size-title);
+  }
+  &--body {
+    font-size: var(--sl-font-size-body);
+  }
+  &--caption {
+    font-size: var(--sl-font-size-caption);
+    color: var(--mat-sys-on-surface-variant);
+  }
+  &--brand {
+    font-family: var(--sl-font-family-brand), var(--sl-font-family-ui), sans-serif;
+    font-size: var(--sl-font-size-display);
+    font-weight: var(--sl-font-weight-brand);
+  }
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-2);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+
+  &__fill {
+    height: var(--sl-space-4);
+    background: var(--mat-sys-primary);
+    border-radius: var(--sl-radius-sm);
+  }
+
+  &__label {
+    font-size: var(--sl-font-size-caption);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.radius {
+  display: grid;
+  place-items: center;
+  min-width: 96px;
+  padding: var(--sl-space-4);
+  background: var(--mat-sys-surface-variant);
+  color: var(--mat-sys-on-surface);
+  font-size: var(--sl-font-size-caption);
+}
+
+.targets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sl-space-3);
+}
+
+.target {
+  display: grid;
+  place-items: center;
+  min-width: 140px;
+  padding: 0 var(--sl-space-3);
+  border: 1px dashed var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+}

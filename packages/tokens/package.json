@@ -1,0 +1,14 @@
+{
+  "name": "@snapline/tokens",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node build.mjs",
+    "typecheck": "node --check build.mjs",
+    "lint": "node --check build.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.5.2"
+  }
+}

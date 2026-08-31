@@ -68,6 +68,12 @@ cd ios && rm -rf Pods .symlinks && pod install
 | Cliente y DTOs del API | `dart run swagger_parser` | `lib/api/` |
 | `.g.dart` de json_serializable, Retrofit y Drift | `dart run build_runner build` | junto a su fuente |
 | `AppLocalizations` | `flutter pub get` o `flutter gen-l10n` | `lib/l10n/` |
+| Tokens de diseño | `pnpm tokens:generate` (desde la raíz) | `lib/core/theme/tokens.dart` |
+
+**`tokens.dart` es la excepción que sí se versiona.** Los demás generados quedan
+fuera de git porque son cientos de archivos; este es uno solo, lo consume todo el
+tema, y su comando vive del lado de pnpm — pedirle a alguien que corra el generador
+de Node antes de abrir el proyecto en Flutter sería una trampa.
 
 `lib/api/` **no se edita a mano.** Sale de `openapi.json` en la raíz del monorepo,
 que emite el API desde sus DTOs. Si falta un campo, el arreglo va en `apps/api`, no
@@ -282,9 +288,16 @@ completo**, porque un dedo con guante de trabajo no acierta un botón de 48.
 Ningún control se dimensiona al texto en inglés: "Clock in" son 8 caracteres y
 "Marcar entrada" son 14. Si el label no entra en español, el diseño está mal.
 
-Los valores salen de `design-tokens.json` en la raíz, traducidos a
-`core/theme/tokens.dart` **a mano** hasta que exista el generador (DEBT-0001).
-Si cambia uno, se cambian los dos archivos en el mismo commit.
+Los valores salen de `design-tokens.json` en la raíz. **`core/theme/tokens.dart` es
+un archivo generado y no se edita**: lo produce `packages/tokens` con
+`pnpm tokens:generate` desde la raíz del monorepo, en el mismo acto que el SCSS de
+`apps/web`. Un color se cambia en el JSON, se regenera, y cambia en las dos
+superficies.
+
+Las explicaciones de un token —por qué el target de campo son 64dp, por qué las
+tipografías van embebidas— viven en el `$comment` de su grupo en el JSON, que sale
+como docblock en el archivo generado. Escribirlas en el `.dart` se pierde al
+regenerar.
 
 **`ColorScheme.fromSeed` no se usa nunca.** Derivaría colores distintos a los que
 usa Angular desde el mismo JSON. Ver ADR-0009.

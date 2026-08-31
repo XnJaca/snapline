@@ -1,0 +1,30 @@
+{
+  "appTitle": "Snapline",
+  "themeMode": {
+    "label": "Theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "es": "Spanish"
+  },
+  "devTokens": {
+    "title": "Theme tokens",
+    "subtitle": "The same values as the phone app, generated from design-tokens.json",
+    "colors": "Colors",
+    "status": "Status",
+    "primaryAction": "Primary action",
+    "typography": "Typography",
+    "spacing": "Spacing",
+    "radius": "Radii",
+    "touchTargets": "Touch targets",
+    "actionExample": "Clock in",
+    "warningExample": "Outside the geofence",
+    "successExample": "Shift closed",
+    "dangerExample": "Could not sync",
+    "brandNote": "The brand family is for the wordmark only: no interface text uses it."
+  }
+}
