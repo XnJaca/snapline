@@ -25,10 +25,10 @@ kanban-plugin: board
 
 ## 🛠️ En implementación
 
-- [ ] [[0008-sesion-y-shell/README|SPEC-0008 — Sesión y shell del panel]] · entrar, cerrar sesión de verdad, y a dónde navegar. Cookie httpOnly con su camino propio en el API, y la navegación desde los permisos que ya viajan en el login. Depende de SPEC-0007. Trae `membership.token_version`, revisado por `domain-guardian` — su hallazgo del claim ausente evitó que el deploy expulsara a todas las sesiones vivas. **El alcance del contenido creció a conciencia el 2026-08-31**: los ocho ejes leen los endpoints que ya existen en vez de mostrar listas sintéticas. Escribir sigue afuera; cada eje necesita su spec para eso
-
 
 ## 🎉 Implementado
+
+- [x] [[0008-sesion-y-shell/README|SPEC-0008 — Sesión y shell del panel]] · PR #33 mergeado. Cookie `httpOnly` con su camino propio en el API y `membership.token_version`, que es lo que hace que cerrar sesión invalide algo: el refresh es un JWT sin estado y antes «salir» solo significaba que el navegador borró su copia. El claim ausente cuenta como 0, o el deploy expulsaba a toda sesión viva del móvil. La navegación sale de `membership.permissions[]`, sin replicar la tabla de roles. **El alcance del contenido creció a conciencia**: los ocho ejes leen los endpoints que ya existían, con carga, error y vacío; escribir sigue afuera. Cerró DEBT-0009 con `MatIconRegistry` y abrió DEBT-0010. 53 e2e contra Postgres, 80 unitarios del API y 33 del panel. **Dos correcciones al spec y tres bugs que solo se vieron en el navegador**
 
 - [x] [[0007-cimientos-visuales/README|SPEC-0007 — Cimientos visuales del panel]] · PR #29 mergeado. Angular 22 + Material con los tokens por `theme-overrides`, `packages/tokens` generando SCSS y Dart, los dos temas y los dos idiomas. 10 tests. Cerró DEBT-0001 con los 71 valores idénticos a los que estaban a mano, y trajo ADR-0013. Tres bugs salieron de probar en el navegador, no de los tests: los catálogos en la carpeta equivocada, `light-dark()` resolviendo por `color-scheme` y no por el atributo, y Material tiñendo de naranja los cinco niveles de superficie. **Queda pendiente el único criterio que pide mirar**: los mismos tokens lado a lado en el teléfono y en el navegador
 

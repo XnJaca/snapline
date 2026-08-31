@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0008: Sesión y shell del panel"
 type: spec
 platform: web
-status: en-implementacion
+status: implementado
 goal: "William entra al panel desde el navegador, ve solo los ejes que su rol habilita, al recargar sigue adentro sin que el refresh token haya estado nunca al alcance de JavaScript, y cuando cierra sesión ese token deja de servir."
 apps:
   - api
@@ -20,7 +20,7 @@ created: 2026-08-30
 updated: 2026-08-31
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - web
 ---
 
@@ -426,3 +426,4 @@ decide qué se dibuja.
 | 2026-08-31 | en-implementacion | `code-reviewer` pasado: **listo para PR, sin hallazgos GRAVE**. Un MEDIO propio, corregido: el scrim del cajón angosto tenía `rgb(0 0 0 / 40%)` literal, contra la regla 22, y ahora consume `--mat-sys-scrim` mezclado con `color-mix`. Un MENOR preexistente en `main` que no toca este cambio: `test/invariantes.e2e-spec.ts` tiene una variable sin usar, y el script `lint` del API corre solo sobre `src/**`, así que la carpeta `test/` no la cubre |
 | 2026-08-31 | en-implementacion | Los dos arrastres de `main`, arreglados acá por decisión del dueño en vez de en un `fix/` aparte. **La causa de los dos era la misma**: `pay_rate_cents_snapshot` pasó a `select: false` en `6573a6d` y dos aserciones de `invariantes.e2e-spec.ts` seguían leyéndolo de la respuesta, así que comparaban contra `undefined`; ahora comprueban el invariante en la base, que es donde vive, y de paso verifican que la tarifa **no** viaje al cliente. El script `lint` del API corría `eslint "src/**/*.ts"`, así que `test/` no lo cubría nadie y por ahí pasó la variable sin usar: pasa a `eslint .`, igual que `apps/web`, y la config ya ignora `dist`. La suite e2e completa queda en 53 verdes, estable en tres corridas |
 | 2026-08-31 | en-implementacion | **Los cinco criterios que pedían navegador, verificados a mano por @jaca** contra el API y el panel corriendo: recargar y reabrir sin volver a pedir credenciales, el idioma que sobrevive a la recarga, el scroll de cada eje, el almacenamiento sin nada de sesión, y el recorrido completo en `http://localhost:4200`. Todos los criterios en `[x]`; queda el PR |
+| 2026-08-31 | implementado | PR #33 mergeado. Los 22 criterios verificados. Dos correcciones al spec salieron de implementarlo, las dos por la misma causa: el `Path` de la cookie y el del contrato omitían el prefijo global `/api`, y con `/auth/web` la cookie no viaja a ninguna de las tres rutas. Tres bugs salieron de probar en el navegador y no de los tests, igual que en SPEC-0007: la cadena de alto y ancho cortada en el `:host` de cada componente ruteado, el shell sin jerarquía ni forma de plegarse, y el panel ignorando el lockup de marca que ya existía en `brand/` y en el móvil. El copy se reescribió contra la voz que el móvil ya tenía, de usted, reusando sus cadenas en vez de inventar unas paralelas |
