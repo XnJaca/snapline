@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0010: Fotos de la obra"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "Una foto tomada en la obra sin señal aparece en la galería de esa obra con la etiqueta que se le haya puesto, sube sola cuando vuelve la red, y solo OWNER o ADMIN pueden subirla de nivel, de a un escalón."
 apps:
   - mobile
@@ -22,7 +22,7 @@ created: 2026-08-12
 updated: 2026-08-30
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -353,47 +353,61 @@ tabs cuando cambian los permisos.
 
 ## Criterios de aceptación
 
-- [ ] Una foto tomada con el modo avión puesto queda visible en la galería de esa
-      obra, con su etiqueta, sin ningún reintento manual.
-- [ ] Al volver la red sube sola y la fila local pasa a `SYNCED`, sin que el
-      trabajador toque nada.
-- [ ] La foto del marcaje **no** aparece en la galería de la obra, y la de la obra
-      **no** aparece en el registro de asistencia.
-- [ ] Un `WORKER` no ve la acción de subir de nivel en ninguna parte de la
-      pantalla, y el `OWNER` sí.
-- [ ] La misma foto registrada dos veces por un reintento no duplica la fila: el
-      checksum la desduplica.
-- [ ] `captured_at` es la hora de la foto, no la de la subida, y la grilla ordena
-      por ella.
-- [ ] Etiquetar sin señal y volver a etiquetar la misma foto deja un solo conjunto
-      de etiquetas, no dos.
-- [ ] Una etiqueta puesta en un teléfono aparece en otro después de sincronizar:
+Cada uno con cómo se comprobó: **teléfono** es verificación a mano sobre el
+aparato, el resto nombra el test que lo cubre.
+
+- [x] Una foto tomada con el modo avión puesto queda visible en la galería de esa
+      obra, con su etiqueta, sin ningún reintento manual. — **teléfono**
+- [x] Al volver la red sube sola y la fila local pasa a `SYNCED`, sin que el
+      trabajador toque nada. — `sync_trigger_test.dart`. Falló en el teléfono la
+      primera vez y de ahí salió el arreglo del disparo pausado
+- [x] La foto del marcaje **no** aparece en la galería de la obra, y la de la obra
+      **no** aparece en el registro de asistencia. — `media_repository_test.dart`
+- [x] Un `WORKER` no ve la acción de subir de nivel en ninguna parte de la
+      pantalla, y el `OWNER` sí. — `photos_tab_test.dart`
+- [x] La misma foto registrada dos veces por un reintento no duplica la fila: el
+      checksum la desduplica. — **teléfono**
+- [x] `captured_at` es la hora de la foto, no la de la subida, y la grilla ordena
+      por ella. — `photos_tab_test.dart`
+- [x] Etiquetar sin señal y volver a etiquetar la misma foto deja un solo conjunto
+      de etiquetas, no dos. — `media_sync_test.dart`. Desde el 2026-08-30 el
+      conjunto es de una sola etiqueta, así que el caso se volvió más simple
+- [x] Una etiqueta puesta en un teléfono aparece en otro después de sincronizar:
       cambiar las etiquetas toca `media_asset.updated_at` y por eso entra en el
-      pull incremental.
-- [ ] `INTERNAL → PUBLIC` en una sola llamada se rechaza con
-      `VISIBILITY_SKIPS_STEP`, y bajar de nivel sigue sin restricción.
-- [ ] Con el permiso de cámara denegado la pantalla explica qué falta y ofrece los
-      ajustes, en vez de un botón que no hace nada.
-- [ ] Una foto que no sube se ve como no subida, y nunca se descarta sola.
-- [ ] La respuesta de `POST /media/:id/tags` sale en `openapi.json` con sus
-      propiedades, no como `{"type":"object"}`.
-- [ ] Un `WORKER` no puede borrar una foto, y el `OWNER` sí.
-- [ ] Borrar la deja fuera de la galería en las dos puntas, y la baja llega a
-      otro teléfono por el pull.
-- [ ] Una foto que ya no está en el teléfono se ve igual con señal, y sin señal
-      lo dice en vez de mostrar un cuadro roto.
-- [ ] Ninguna pantalla de este frente importa un cliente de `lib/api/`
+      pull incremental. — `media_sync_test.dart` y el e2e del API. **No se probó
+      con dos teléfonos**: la decisión fue confiar en la cobertura del mecanismo
+- [x] `INTERNAL → PUBLIC` en una sola llamada se rechaza con
+      `VISIBILITY_SKIPS_STEP`, y bajar de nivel sigue sin restricción. — e2e del API
+- [x] Con el permiso de cámara denegado la pantalla explica qué falta y ofrece los
+      ajustes, en vez de un botón que no hace nada. — **teléfono** y
+      `photos_tab_test.dart`
+- [x] Una foto que no sube se ve como no subida, y nunca se descarta sola. —
+      `photos_tab_test.dart`
+- [x] La respuesta de `POST /media/:id/tags` sale en `openapi.json` con sus
+      propiedades, no como `{"type":"object"}`. — verificado contra el archivo:
+      `MediaAssetDto` con sus 24 propiedades
+- [x] Un `WORKER` no puede borrar una foto, y el `OWNER` sí. — e2e del API y
+      `photos_tab_test.dart`
+- [x] Borrar la deja fuera de la galería en las dos puntas, y la baja llega a
+      otro teléfono por el pull. — `media_repository_test.dart` y `media_sync_test.dart`
+- [x] Una foto que ya no está en el teléfono se ve igual con señal, y sin señal
+      lo dice en vez de mostrar un cuadro roto. — `photos_tab_test.dart`
+- [x] Ninguna pantalla de este frente importa un cliente de `lib/api/`
       (`api_isolation_test.dart`).
-- [ ] La pantalla se ve completa en claro y en oscuro, y en los dos idiomas.
-- [ ] Una foto recién tomada no se puede guardar sin etiqueta, y la hoja no se
+- [x] La pantalla se ve completa en claro y en oscuro, y en los dos idiomas. —
+      `photos_tab_test.dart`
+- [x] Una foto recién tomada no se puede guardar sin etiqueta, y la hoja no se
       esquiva: ni deslizando ni con el atrás del sistema. Se guarda o se descarta.
-- [ ] Descartar borra el binario del teléfono y no deja fila que sincronizar.
-- [ ] Corregir la etiqueta de una foto anterior al 2026-08-30 que tenía varias no
+      — `photos_tab_test.dart`, incluido `handlePopRoute`
+- [x] Descartar borra el binario del teléfono y no deja fila que sincronizar. —
+      `photos_tab_test.dart`
+- [x] Corregir la etiqueta de una foto anterior al 2026-08-30 que tenía varias no
       pierde ninguna sin que la persona lo vea: se muestran todas puestas, y
-      tocar una es lo que las reemplaza.
-- [ ] Cada cambio de nivel se confirma antes, incluida la bajada: lo que sale de
-      la empresa no se des-ve.
-- [ ] `openapi.json` regenerado y el cliente Dart al día.
+      tocar una es lo que las reemplaza. — `photos_tab_test.dart`
+- [x] Cada cambio de nivel se confirma antes, incluida la bajada: lo que sale de
+      la empresa no se des-ve. — `photos_tab_test.dart`
+- [x] `openapi.json` regenerado y el cliente Dart al día. — la segunda tanda no
+      tocó el API; el contrato quedó al día en la primera
 
 ## Riesgos / consideraciones
 
