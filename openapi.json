@@ -7682,10 +7682,8 @@
           },
           "state": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 2,
             "example": "MD",
-            "description": "Código de dos letras."
+            "description": "En Estados Unidos y Canadá, el código de dos letras. En el resto, el nombre de la provincia: \"San José\"."
           },
           "postalCode": {
             "type": "string",

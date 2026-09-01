@@ -1061,7 +1061,7 @@ export interface components {
             /** @example Silver Spring */
             city: string;
             /**
-             * @description Código de dos letras.
+             * @description En Estados Unidos y Canadá, el código de dos letras. En el resto, el nombre de la provincia: "San José".
              * @example MD
              */
             state: string;
