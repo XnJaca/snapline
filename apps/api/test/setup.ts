@@ -152,12 +152,28 @@ async function deleteFixtures(ds: DataSource, fixtures: Fixture[]): Promise<void
   }
 }
 
-/** Barre restos de corridas anteriores que se hayan cortado a mitad. */
+/**
+ * Barre restos de corridas anteriores que se hayan cortado a mitad.
+ *
+ * Va por el mismo camino que `cleanup`, y no por un DELETE propio: borrar solo
+ * las membresías dejaba en pie la empresa y todas sus filas hijas —proyectos,
+ * fotos, horas—, y el `catch` vacío tapaba que las claves foráneas lo impedían.
+ * Lo que quedaba se acumulaba corrida tras corrida.
+ *
+ * Los usuarios salen de sus membresías y no de un LIKE sobre el email: la mitad
+ * de los del fixture se identifican por teléfono y no tienen email que filtrar.
+ */
 export async function cleanupOrphans(ds: DataSource): Promise<void> {
-  const rows = await ds.query<{ id: string }[]>(
+  const empresas = await ds.query<{ id: string }[]>(
     `SELECT id FROM company WHERE name LIKE 'Test %'`);
-  for (const { id } of rows) {
-    await ds.query(`DELETE FROM membership WHERE company_id = $1`, [id]).catch(() => undefined);
+  if (!empresas.length) return;
+
+  const restos: Fixture[] = [];
+  for (const { id } of empresas) {
+    const usuarios = await ds.query<{ user_id: string }[]>(
+      `SELECT DISTINCT user_id FROM membership WHERE company_id = $1`, [id]);
+    restos.push({ companyId: id, userIds: usuarios.map((u) => u.user_id) } as Fixture);
   }
-  await ds.query(`DELETE FROM app_user WHERE email LIKE '%@test.local'`).catch(() => undefined);
+
+  await cleanup(ds, restos);
 }

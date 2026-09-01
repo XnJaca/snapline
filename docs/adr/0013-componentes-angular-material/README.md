@@ -4,18 +4,18 @@ title: "Angular Material y CDK para el panel, con los tokens del JSON por theme-
 aliases:
   - "ADR-0013: Angular Material y CDK para el panel, con los tokens del JSON por theme-overrides"
 type: adr
-status: propuesto
+status: aceptado
 supersedes: null
 superseded_by: null
 related_specs:
   - SPEC-0007
 created: 2026-08-30
-updated: 2026-08-30
+updated: 2026-09-01
 deciders:
   - jaca
 tags:
   - adr
-  - adr/propuesto
+  - adr/aceptado
   - ui
 ---
 
