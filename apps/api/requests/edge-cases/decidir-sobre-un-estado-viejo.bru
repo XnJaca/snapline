@@ -1,0 +1,32 @@
+meta { name: Decidir sobre un estado que ya cambió
+  type: http
+  seq: 21
+}
+post { url: {{base_url}}/time-entries/{{time_entry_id}}/approve
+  body: json
+  auth: none
+}
+body:json {
+  {
+    "expectedStatus": "PENDING",
+    "reason": "aprobada desde un teléfono que no vio el rechazo"
+  }
+}
+docs {
+  El teléfono decidió sin señal creyendo la jornada PENDING, y mientras tanto
+  alguien la resolvió desde la web. Dos personas decidieron distinto sobre las
+  mismas horas: no se resuelve solo (regla 12).
+
+  Con la jornada ya en APPROVED o REJECTED esto responde 409. El código
+  distingue los dos casos, y de eso depende qué hace el móvil:
+
+  - TIME_ENTRY_DECISION_MATCHES  → benigno, ya está en el estado pedido
+  - TIME_ENTRY_DECISION_CONFLICTS → divergencia, la fila queda en conflicto
+
+  Preparación: aprobar la jornada primero (o rechazarla) y después correr esto
+  con `expectedStatus: PENDING`. Si empieza a devolver 200, se rompió el
+  invariante y una decisión vieja está pisando una nueva.
+}
+assert { res.status: eq 409
+  res.body.code: eq TIME_ENTRY_DECISION_CONFLICTS
+}

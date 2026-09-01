@@ -91,6 +91,9 @@ class TimeEntrySummary {
     required this.status,
     required this.flags,
     required this.syncStatus,
+    this.decisionReason,
+    this.recordedOffline = false,
+    this.lastRejection,
   });
 
   final String id;
@@ -105,9 +108,22 @@ class TimeEntrySummary {
   final List<String> flags;
   final SyncStatus syncStatus;
 
+  /// Por qué se aprobó o se rechazó.
+  final String? decisionReason;
+
+  final bool recordedOffline;
+
+  /// El código del último rechazo del servidor sobre una decisión de esta
+  /// jornada. La pantalla lo traduce; acá viaja crudo (regla 24).
+  final String? lastRejection;
+
   bool get abierta => clockOutAt == null;
   bool get enConflicto => syncStatus == SyncStatus.conflict;
   bool get pendiente => syncStatus != SyncStatus.synced;
+
+  bool get aprobada => status == 'APPROVED';
+  bool get rechazada => status == 'REJECTED';
+  bool get sinAprobar => status == 'PENDING';
 }
 
 /// Lo que el marcaje logró capturar. Todo opcional menos la hora: la escalera
@@ -277,6 +293,54 @@ class TimeEntryRepository {
           )
           .toList(growable: false),
     );
+  }
+
+  /// Todas las jornadas de una obra, de cualquier persona: el tab Horas.
+  ///
+  /// **Sin ventana de tiempo, a diferencia de las vistas de campo.** Acá la
+  /// pregunta es cuántas horas lleva la obra, y ese número es su vida entera
+  /// (SPEC-0011).
+  ///
+  /// El nombre sale de `people`, que baja con el pull. Un `LEFT JOIN` porque la
+  /// jornada tiene que aparecer igual si la persona todavía no bajó: esconder
+  /// horas por un nombre faltante sería peor que mostrarlas sin él.
+  Stream<List<({String name, String recordedByName, TimeEntrySummary entry})>>
+      watchProjectEntries(String projectId) {
+    // Dos alias de la misma tabla: de quién son las horas, y quién las marcó.
+    final duena = _db.alias(_db.people, 'pe');
+    final marcador = _db.alias(_db.people, 'rec');
+
+    final query = _db.select(_db.timeEntries)
+      ..where((t) => t.projectId.equals(projectId) & t.deletedAt.isNull())
+      ..orderBy([(t) => OrderingTerm.desc(t.clockInAt)]);
+
+    // `leftOuterJoin` y no `innerJoin`: la jornada tiene que aparecer aunque la
+    // persona todavía no haya bajado. Esconder horas por un nombre faltante
+    // sería peor que mostrarlas sin él.
+    return query
+        .join([
+          leftOuterJoin(
+            duena,
+            duena.membershipId.equalsExp(_db.timeEntries.membershipId),
+          ),
+          leftOuterJoin(
+            marcador,
+            marcador.membershipId
+                .equalsExp(_db.timeEntries.recordedByMembershipId),
+          ),
+        ])
+        .watch()
+        .map(
+          (filas) => filas
+              .map(
+                (f) => (
+                  name: f.readTableOrNull(duena)?.name ?? '',
+                  recordedByName: f.readTableOrNull(marcador)?.name ?? '',
+                  entry: _resumen(f.readTable(_db.timeEntries)),
+                ),
+              )
+              .toList(growable: false),
+        );
   }
 
   /// Las jornadas en conflicto. Se muestran y las resuelve un humano; ninguna
@@ -604,6 +668,77 @@ class TimeEntryRepository {
     });
   }
 
+  /// Aprueba o rechaza una jornada. Escribe en local y encola, como todo lo
+  /// demás: sin señal la pantalla responde igual (SPEC-0011).
+  ///
+  /// `decidedFrom` guarda el estado que la jornada tenía al decidir. Viaja como
+  /// `expectedStatus` —el servidor lo compara antes de aplicar— y es de dónde se
+  /// restituye `status` si la decisión termina rechazada. Sin él, aprobar sobre
+  /// algo que otro ya rechazó se aplicaría en silencio (regla 12).
+  Future<void> decide(
+    String entryId, {
+    required bool approve,
+    String? reason,
+    DateTime? occurredAt,
+  }) async {
+    final cuando = occurredAt ?? DateTime.now();
+
+    // **Toda la decisión toma el turno de la bandeja**, incluida la escritura
+    // local. Es la excepción a que la pantalla nunca espera: `decidedFrom` sale
+    // de `status`, y `status` solo dice lo que el servidor tiene hasta que un
+    // push en vuelo lo confirma. Leerlo en el medio de ese push deja la decisión
+    // pidiendo un estado viejo, y el servidor la rechaza por chocar con la
+    // anterior — quedando aplicada la que la persona descartó.
+    //
+    // Lo que se espera es un push, no una red: sin señal falla enseguida y el
+    // turno se libera. Y esto es aprobar, que es de oficina — el marcaje que la
+    // regla 9 protege no pasa por acá.
+    await _outbox.exclusivo(() => _db.transaction(() async {
+      final fila = await (_db.select(_db.timeEntries)
+            ..where((t) => t.id.equals(entryId)))
+          .getSingleOrNull();
+      if (fila == null) return;
+
+      // **Una sola decisión pendiente por jornada.** Cambiar de opinión antes de
+      // que la primera salga sustituye la intención, no agrega otra: encoladas
+      // las dos, el servidor aplicaría la primera y rechazaría la segunda por no
+      // coincidir con el estado que ya cambió — y la jornada quedaría con la
+      // decisión que la persona descartó.
+      await _outbox.replacePending(entryId, _decisiones);
+
+      // Lo que la jornada era antes de la **primera** decisión sin sincronizar.
+      // Es lo que el servidor todavía tiene, así que es contra lo que compara; y
+      // es a donde se vuelve si la rechaza.
+      final desde = fila.decidedFrom ?? fila.status;
+
+      await (_db.update(_db.timeEntries)..where((t) => t.id.equals(entryId)))
+          .write(
+        TimeEntriesCompanion(
+          updatedAt: Value(cuando),
+          syncStatus: const Value(SyncStatus.pending),
+          status: Value(approve ? 'APPROVED' : 'REJECTED'),
+          decisionReason: Value(reason),
+          decidedFrom: Value(desde),
+          lastRejection: const Value(null),
+        ),
+      );
+      await _outbox.enqueue(
+        type: approve ? SyncOp.timeEntryApprove : SyncOp.timeEntryReject,
+        targetId: entryId,
+        payload: {
+          'expectedStatus': desde,
+          if (reason != null && reason.isNotEmpty) 'reason': reason,
+        },
+        occurredAt: cuando,
+      );
+    }));
+  }
+
+  static const _decisiones = {
+    SyncOp.timeEntryApprove,
+    SyncOp.timeEntryReject,
+  };
+
   // ─── Mapeo ─────────────────────────────────────────────────────────────────
 
   /// Solo lo que hay. `withinGeofence` y `distanceM` no existen acá: los deriva
@@ -629,6 +764,9 @@ class TimeEntryRepository {
     status: fila.status,
     flags: (jsonDecode(fila.flags) as List<dynamic>).cast<String>(),
     syncStatus: fila.syncStatus,
+    decisionReason: fila.decisionReason,
+    recordedOffline: fila.recordedOffline,
+    lastRejection: fila.lastRejection,
   );
 }
 

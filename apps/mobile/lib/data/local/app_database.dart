@@ -33,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -74,6 +74,17 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from >= 4) {
           await m.addColumn(pendingUploads, pendingUploads.bytes);
+        }
+      }
+      if (from < 7) {
+        // Aprobar y rechazar desde la obra (SPEC-0011). Mismo cuidado que en la
+        // v6: si el salto viene de antes de la v3, `time_entries` se creó recién
+        // con el esquema de hoy y ya las tiene.
+        if (from >= 3) {
+          await m.addColumn(timeEntries, timeEntries.decisionReason);
+          await m.addColumn(timeEntries, timeEntries.recordedOffline);
+          await m.addColumn(timeEntries, timeEntries.decidedFrom);
+          await m.addColumn(timeEntries, timeEntries.lastRejection);
         }
       }
     },

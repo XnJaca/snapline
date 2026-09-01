@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -17,6 +18,8 @@ abstract final class SyncOp {
   static const projectUpdate = 'project.update';
   static const timeEntryClockIn = 'timeEntry.clockIn';
   static const timeEntryClockOut = 'timeEntry.clockOut';
+  static const timeEntryApprove = 'timeEntry.approve';
+  static const timeEntryReject = 'timeEntry.reject';
   static const mediaRegister = 'media.register';
   static const mediaTag = 'media.tag';
   static const mediaDelete = 'media.delete';
@@ -28,7 +31,7 @@ abstract final class SyncOp {
 /// escribe en local, se encola, y el sincronizador se ocupa. Así la pantalla no
 /// tiene que saber si hay señal.
 class Outbox {
-  const Outbox(this._db, this._uuid);
+  Outbox(this._db, this._uuid);
 
   final AppDatabase _db;
   final Uuid _uuid;
@@ -135,6 +138,41 @@ class Outbox {
   Future<void> remove(String clientId) {
     return (_db.delete(_db.outboxOperations)
           ..where((o) => o.clientId.equals(clientId)))
+        .go();
+  }
+
+  /// Corre [accion] sin que se solape con otra que también tome el turno.
+  ///
+  /// **Lo que protege es el intervalo entre leer la cola y aplicar su
+  /// respuesta.** `push()` arma el lote en memoria y después espera a la red;
+  /// una decisión encolada en ese hueco no puede sustituir a la que ya viajó, y
+  /// terminaría pidiéndole al servidor un estado que él acaba de cambiar. Con el
+  /// turno, o la decisión entra antes de que el lote se arme, o entra después de
+  /// saber en qué quedó.
+  ///
+  /// La escritura local **no** pasa por acá: la pantalla responde al instante,
+  /// como siempre. Lo que espera es el encolado.
+  Future<T> exclusivo<T>(Future<T> Function() accion) {
+    final anterior = _turno;
+    final propio = Completer<void>();
+    _turno = propio.future;
+    return anterior.then((_) => accion()).whenComplete(propio.complete);
+  }
+
+  Future<void> _turno = Future.value();
+
+  /// Saca de la cola las operaciones de estos tipos que todavía apuntan a esa
+  /// fila, y dice cuántas eran.
+  ///
+  /// **Es para sustituir una intención, no para descartar trabajo.** Se usa
+  /// cuando una operación nueva deja sin sentido a la anterior sobre el mismo
+  /// registro: decidir dos veces sobre la misma jornada antes de que la primera
+  /// salga. Mandar las dos haría que el servidor aplicara la primera y rechazara
+  /// la segunda —que es la que la persona quiso— y la jornada terminaría con la
+  /// decisión descartada.
+  Future<int> replacePending(String targetId, Set<String> types) {
+    return (_db.delete(_db.outboxOperations)
+          ..where((o) => o.targetId.equals(targetId) & o.type.isIn(types)))
         .go();
   }
 

@@ -10,6 +10,7 @@ import '../../api/models/sync_operation_dto_type.dart';
 import '../../api/models/sync_pull_response_dto.dart';
 import '../../api/models/sync_push_dto.dart';
 import '../../api/models/sync_push_response_dto.dart';
+import '../../api/models/sync_result_dto.dart';
 import '../../api/models/sync_result_dto_status.dart';
 import '../../api/clients/sync_client.dart';
 import '../../core/network/api_client.dart';
@@ -44,6 +45,38 @@ class Synchronizer {
   static const conflictCodes = {
     'TIME_ENTRY_ALREADY_OPEN',
     'TIME_ENTRY_ALREADY_CLOSED',
+    // Dos personas decidieron distinto sobre las mismas horas.
+    'TIME_ENTRY_DECISION_CONFLICTS',
+  };
+
+  /// Los códigos que **descartan**: sacan la operación de la cola y devuelven la
+  /// fila al estado que tenía antes de decidir.
+  ///
+  /// La causa está del lado del servidor y reenviar lo mismo falla igual, para
+  /// siempre — la cola se llenaría de operaciones condenadas. Volver a decidir
+  /// es un acto de la persona, con el estado nuevo a la vista.
+  ///
+  /// **La lista es cerrada a propósito**, como `conflictCodes`: hasta SPEC-0011
+  /// ninguna operación salía de la cola sin haberse aplicado, y descartar
+  /// trabajo real de alguien en silencio es peor que reintentar de más. Un
+  /// código desconocido nunca descarta.
+  static const discardCodes = {
+    // El estado ya es el que se pidió: alguien decidió lo mismo desde otro lado.
+    'TIME_ENTRY_DECISION_MATCHES',
+    // La tarifa no baja al teléfono, así que esto no se puede prevenir acá.
+    'PAY_RATE_MISSING',
+    'TIME_ENTRY_STILL_OPEN',
+    'CANNOT_APPROVE_OWN_HOURS',
+  };
+
+  /// De los que descartan, los que la pantalla tiene que explicar.
+  ///
+  /// `TIME_ENTRY_DECISION_MATCHES` no entra: el estado local ya coincide con el
+  /// del servidor y no hay nada que contar. `CANNOT_APPROVE_OWN_HOURS` tampoco
+  /// —es un bug de la app, no un problema de quien la usa— y queda en el log.
+  static const reportedDiscardCodes = {
+    'PAY_RATE_MISSING',
+    'TIME_ENTRY_STILL_OPEN',
   };
 
   /// Manda lo pendiente y después trae lo nuevo.
@@ -61,7 +94,12 @@ class Synchronizer {
   /// Devuelve `false` si no se pudo hablar con el servidor. Que una operación
   /// del lote falle **no** es un fallo de la sincronización: las demás entraron
   /// y esa queda encolada con su motivo.
-  Future<bool> push() async {
+  Future<bool> push() => _outbox.exclusivo(_push);
+
+  /// El push de verdad. Corre con el turno de la bandeja tomado: armar el lote,
+  /// esperar la red y aplicar la respuesta son **un solo acto**, o una decisión
+  /// encolada en el medio viajaría pidiendo un estado que el servidor ya cambió.
+  Future<bool> _push() async {
     try {
       // Lo que quedó en conflicto no se reenvía: el servidor va a responder lo
       // mismo, y la regla 12 dice que lo resuelve un humano, no un reintento.
@@ -108,6 +146,11 @@ class Synchronizer {
       if (aplicada) {
         await _outbox.remove(resultado.clientId);
         await _marcarSincronizada(resultado.resourceId);
+        continue;
+      }
+
+      if (discardCodes.contains(resultado.code)) {
+        await _descartar(resultado);
         continue;
       }
 
@@ -164,6 +207,47 @@ class Synchronizer {
         updates: {tabla},
       );
     }
+
+    // La decisión llegó: se limpia su rastro local. Si quedara `decided_from`,
+    // el próximo descarte revertiría a un estado ya viejo.
+    await _db.customUpdate(
+      'UPDATE time_entries SET decided_from = NULL, last_rejection = NULL '
+      'WHERE id = ?',
+      variables: [Variable<String>(resourceId)],
+      updates: {_db.timeEntries},
+    );
+  }
+
+  /// El servidor rechazó la decisión por algo que no se arregla reintentando:
+  /// sale de la cola y la jornada vuelve al estado que tenía antes.
+  ///
+  /// **El estado anterior sale de `decided_from`, no del servidor.** El rechazo
+  /// ocurre antes de cualquier escritura, así que `updated_at` no se movió y el
+  /// pull incremental no vuelve a traer esta fila: esperarla dejaría la jornada
+  /// mostrando "Aprobada" para siempre.
+  ///
+  /// `last_rejection` guarda el **código**; el texto lo arma la pantalla
+  /// (regla 24).
+  Future<void> _descartar(SyncResultDto resultado) async {
+    final operacion = await _outbox.byClientId(resultado.clientId);
+    await _outbox.remove(resultado.clientId);
+    if (operacion == null) return;
+
+    final reportable = reportedDiscardCodes.contains(resultado.code);
+    await _db.customUpdate(
+      'UPDATE time_entries SET status = coalesce(decided_from, status), '
+      'decided_from = NULL, last_rejection = ?, sync_status = ? WHERE id = ?',
+      variables: [
+        Variable<String>(reportable ? resultado.code : null),
+        Variable<int>(SyncStatus.synced.index),
+        Variable<String>(operacion.targetId),
+      ],
+      updates: {_db.timeEntries},
+    );
+    developer.log(
+      'decisión descartada en ${resultado.clientId}: ${resultado.code}',
+      name: 'sync',
+    );
   }
 
   /// Trae lo que cambió desde el último pull y lo escribe en local.

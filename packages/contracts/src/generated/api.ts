@@ -1433,6 +1433,7 @@ export interface components {
             approvedByMembershipId: string | null;
             /** Format: date-time */
             approvedAt: string | null;
+            decisionReason: string | null;
             flags: string[];
             /** Format: date-time */
             deletedAt: string | null;
@@ -1472,6 +1473,8 @@ export interface components {
         };
         ApproveDto: {
             reason?: string;
+            /** @enum {string} */
+            expectedStatus?: "PENDING" | "APPROVED" | "REJECTED";
         };
         ServiceItem: {
             code: string | null;
@@ -1980,7 +1983,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "media.delete" | "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut";
+            type: "media.delete" | "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut" | "timeEntry.approve" | "timeEntry.reject";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.
@@ -2023,7 +2026,7 @@ export interface components {
              * @description Código estable. No se traduce: es contra lo que ramifica el cliente.
              * @enum {string}
              */
-            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
+            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
             /** @description Texto para mostrar. Esto sí se traduce. */
             message: string;
             /** @description Vacío cuando no aplica; nunca ausente. */

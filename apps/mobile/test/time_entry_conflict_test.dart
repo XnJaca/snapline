@@ -250,6 +250,7 @@ class _SyncClientQueRechaza implements SyncClient {
     recordedByMembershipId: 'otro',
     clockInAt: DateTime.utc(2026, 8, 11, 7),
     clockOutAt: null,
+    decisionReason: null,
     breakMinutes: 0,
     clockInLat: null,
     clockInLng: null,

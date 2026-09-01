@@ -116,6 +116,28 @@ class TimeEntries extends Table with SyncedTable {
   /// de la obra: son evidencia de asistencia, no material para publicar.
   TextColumn get clockInPhotoId => text().nullable()();
   TextColumn get clockOutPhotoId => text().nullable()();
+
+  /// Por qué se aprobó o se rechazó. La escribe el servidor.
+  TextColumn get decisionReason => text().nullable()();
+
+  /// Si el marcaje se registró sin señal. Viene del servidor.
+  BoolColumn get recordedOffline =>
+      boolean().withDefault(const Constant(false))();
+
+  /// El estado que la jornada tenía cuando alguien decidió sobre ella, mientras
+  /// la decisión espera en la cola.
+  ///
+  /// Hace dos cosas y por eso es una sola columna: viaja como `expectedStatus`
+  /// de la operación, y es de dónde se restituye `status` si el servidor la
+  /// rechaza. **No se puede volver a pedir al servidor**: el rechazo ocurre
+  /// antes de escribir, así que `updated_at` no se mueve y el pull incremental
+  /// no vuelve a traer la fila.
+  TextColumn get decidedFrom => text().nullable()();
+
+  /// El **código** del último rechazo del servidor sobre una decisión de esta
+  /// jornada. Se traduce en la capa de presentación, como las banderas
+  /// (regla 24). Local puro: no viaja a ningún lado.
+  TextColumn get lastRejection => text().nullable()();
 }
 
 /// Las cuadrillas que la persona lidera o integra. Se cachean para que el

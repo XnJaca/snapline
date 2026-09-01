@@ -32,6 +32,12 @@ export const ERROR_CODES = [
   'TIME_ENTRY_ALREADY_CLOSED',
   'CANNOT_APPROVE_OWN_HOURS',
   'PAY_RATE_MISSING',
+  'TIME_ENTRY_STILL_OPEN',
+  // Los dos 409 de una decisión. Son distintos porque el cliente hace cosas
+  // opuestas con cada uno: MATCHES es benigno —alguien decidió lo mismo— y
+  // CONFLICTS es divergencia real, que no se resuelve sola (regla 12).
+  'TIME_ENTRY_DECISION_MATCHES',
+  'TIME_ENTRY_DECISION_CONFLICTS',
 
   // contenido y publicación
   'EXIF_NOT_STRIPPED',

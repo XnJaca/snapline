@@ -1,5 +1,5 @@
 import { ApiError } from '../common/errors/api-error';
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
@@ -142,13 +142,10 @@ export class TimeEntriesService {
   @Transactional()
   async approve(id: string, dto: ApproveDto, tenant: TenantContext): Promise<TimeEntry> {
     const entry = await this.get(id);
-
-    // Nadie aprueba sus propias horas, ni siquiera un OWNER.
-    if (entry.membershipId === tenant.membershipId) {
-      throw ApiError.forbidden('CANNOT_APPROVE_OWN_HOURS', 'No se pueden aprobar las horas propias');
+    this.assertDecidable(entry, 'APPROVED', dto, tenant);
+    if (!entry.clockOutAt) {
+      throw ApiError.badRequest('TIME_ENTRY_STILL_OPEN', 'El registro sigue abierto');
     }
-    if (!entry.clockOutAt) throw new BadRequestException('El registro sigue abierto');
-    if (entry.status === 'APPROVED') throw new ConflictException('Ya está aprobado');
 
     // La tarifa va con `select: false` en la entity: acá se pide explícito,
     // porque aprobar es el momento que la congela (regla 13).
@@ -160,29 +157,69 @@ export class TimeEntriesService {
       throw ApiError.badRequest('PAY_RATE_MISSING', 'La persona no tiene tarifa definida');
     }
 
-    await this.entries.update({ id }, {
-      status: 'APPROVED',
-      approvedBy: { id: tenant.membershipId } as TimeEntry['approvedBy'],
-      approvedAt: new Date(),
-      payRateCentsSnapshot: membership.payRateCents,
-    });
-    await this.recordEdit(entry, 'status', entry.status, 'APPROVED', dto.reason, tenant);
+    await this.applyDecision(entry, 'APPROVED', dto, tenant, membership.payRateCents);
     return this.get(id);
   }
 
   @Transactional()
   async reject(id: string, dto: ApproveDto, tenant: TenantContext): Promise<TimeEntry> {
     const entry = await this.get(id);
-    if (entry.membershipId === tenant.membershipId) {
-      throw ApiError.forbidden('CANNOT_APPROVE_OWN_HOURS', 'No se pueden rechazar las horas propias');
-    }
-    await this.entries.update({ id }, {
-      status: 'REJECTED',
-      approvedBy: { id: tenant.membershipId } as TimeEntry['approvedBy'],
-      approvedAt: new Date(),
-    });
-    await this.recordEdit(entry, 'status', entry.status, 'REJECTED', dto.reason, tenant);
+    this.assertDecidable(entry, 'REJECTED', dto, tenant);
+    await this.applyDecision(entry, 'REJECTED', dto, tenant, null);
     return this.get(id);
+  }
+
+  /// Lo que se puede saber antes de escribir: de quién son las horas, y si la
+  /// decisión llega sobre el estado que quien decidió tenía a la vista.
+  private assertDecidable(
+    entry: TimeEntry, destino: TimeEntry['status'], dto: ApproveDto, tenant: TenantContext,
+  ): void {
+    // Nadie decide sobre sus propias horas, ni siquiera un OWNER.
+    if (entry.membershipId === tenant.membershipId) {
+      throw ApiError.forbidden('CANNOT_APPROVE_OWN_HOURS', 'No se puede decidir sobre las horas propias');
+    }
+    // Alguien ya decidió lo mismo desde otro lado. Benigno: el resultado que se
+    // pedía ya es el que hay.
+    if (entry.status === destino) {
+      throw ApiError.conflict('TIME_ENTRY_DECISION_MATCHES', 'La jornada ya está en ese estado');
+    }
+    // La decisión se tomó sobre un estado que ya cambió: dos personas decidieron
+    // distinto sobre las mismas horas y eso no se resuelve solo (regla 12).
+    if (dto.expectedStatus && dto.expectedStatus !== entry.status) {
+      throw ApiError.conflict('TIME_ENTRY_DECISION_CONFLICTS', 'La jornada la decidió alguien más');
+    }
+  }
+
+  /// La escritura de la decisión, condicionada por el estado leído.
+  ///
+  /// **El `WHERE status` es lo que vuelve verdad a `expectedStatus`.** Sin él la
+  /// comprobación de arriba y esta escritura no son un solo acto: en
+  /// `READ COMMITTED` dos decisiones simultáneas leen las dos el mismo estado
+  /// viejo, pasan las dos, y la segunda pisa a la primera.
+  ///
+  /// Y el rastro se escribe **después** de saber que la fila cambió: con cero
+  /// filas afectadas, un `recordEdit` dejaría auditado un cambio que no ocurrió.
+  private async applyDecision(
+    entry: TimeEntry, destino: TimeEntry['status'], dto: ApproveDto,
+    tenant: TenantContext, payRateCents: number | null,
+  ): Promise<void> {
+    const resultado = await this.entries
+      .createQueryBuilder()
+      .update(TimeEntry)
+      .set({
+        status: destino,
+        approvedBy: { id: tenant.membershipId } as TimeEntry['approvedBy'],
+        approvedAt: new Date(),
+        decisionReason: dto.reason ?? null,
+        ...(payRateCents === null ? {} : { payRateCentsSnapshot: payRateCents }),
+      })
+      .where('id = :id AND status = :esperado', { id: entry.id, esperado: entry.status })
+      .execute();
+
+    if (!resultado.affected) {
+      throw ApiError.conflict('TIME_ENTRY_DECISION_CONFLICTS', 'La jornada la decidió alguien más');
+    }
+    await this.recordEdit(entry, 'status', entry.status, destino, dto.reason, tenant);
   }
 
   async get(id: string, tenant?: TenantContext): Promise<TimeEntry> {

@@ -13,6 +13,7 @@ kanban-plugin: board
 ## 📥 Backlog (registrada, sin trigger disparado)
 
 - [ ] [[tech-debt/0010-listados-sin-la-persona|DEBT-0010: El panel no puede mostrar quién marcó las horas ni quién es el capataz]] — **severidad media**: `/time-entries` devuelve solo ids y `/crews` embebe la membresía del capataz sin su usuario. No se tocaron porque el contrato del móvil está en vuelo en otra rama (trigger: el spec de Horas, o el de Cuadrillas)
+- [ ] [[tech-debt/0011-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0011: Una jornada en conflicto no tiene camino de resolución en el móvil]] — **severidad media**: `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume; SPEC-0011 volvió el estado alcanzable en uso normal (trigger: el primer conflicto visto en un teléfono real, o aprobar en lote)
 
 - [ ] [[tech-debt/0008-logout-invalida-por-membresia|DEBT-0008: Cerrar sesión en el panel también expulsa el teléfono]] — **severidad media**: `token_version` vive en la membresía, así que invalida todas las sesiones de esa persona en esa empresa a la vez. Resolverlo pide una tabla de sesiones por dispositivo (trigger: la primera queja real, o que se pida "cerrar sesión en todos los dispositivos")
 

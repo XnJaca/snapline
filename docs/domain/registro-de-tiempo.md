@@ -43,6 +43,7 @@ estuvo ahí.
 | `server_received_at` | timestamptz | sí | Cuándo llegó de verdad |
 | `status` | enum | sí | `PENDING` → `APPROVED` · `REJECTED` |
 | `approved_by` / `approved_at` | | no | |
+| `decision_reason` | text | no | Por qué se aprobó o se rechazó — la última decisión. Igual que `approved_by`/`approved_at`, es una proyección de lectura: el rastro completo de las dos decisiones vive en `time_entry_edit` |
 | `pay_rate_cents_snapshot` | int | no | Congelado al aprobar |
 | `flags` | text[] | no | |
 
