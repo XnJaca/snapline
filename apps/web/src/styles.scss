@@ -89,12 +89,19 @@ body {
   padding-top: var(--sl-space-3);
 }
 
-// Con dos pasos, Material manda las cabeceras a los extremos de todo el ancho y
-// quedan a medio metro una de la otra. Se agrupan a la izquierda.
-//
-// Va acá y no en el `.scss` del wizard porque el DOM interno del stepper no lleva
-// el atributo de encapsulación del componente: una regla desde ahí no matchea
-// nunca.
-.mat-stepper-horizontal .mat-horizontal-stepper-header-container {
-  max-width: 30rem;
+// Después de avanzar, Material deja su indicador de foco pegado sobre la cabecera
+// del paso y se ve como un bloque gris flotando al lado del contenido. Ese
+// indicador es para navegación por teclado: con el mouse no aporta nada y ensucia.
+.mat-stepper-horizontal {
+  .mat-step-header:focus:not(:focus-visible)::before,
+  .mat-step-header:focus:not(:focus-visible) .mat-step-header-ripple::before {
+    display: none;
+  }
+
+  // Y con teclado se ve como anillo, que es lo que se lee como "estoy acá".
+  .mat-step-header:focus-visible {
+    border-radius: var(--sl-radius-md);
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
 }
