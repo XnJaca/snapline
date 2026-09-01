@@ -74,3 +74,17 @@ body {
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
 }
+
+// El contenedor de un paso del stepper lleva `overflow: hidden` —lo necesita para
+// la animación de deslizado— y `padding-top: 0`. El label flotado del primer
+// campo sobresale unos 4px por arriba del contenedor y queda cortado por la
+// mitad: se ven los trazos altos de "Nombre (obligatorio)" cercenados.
+//
+// No es el `overflow` del label ni su tamaño: el recorte es posicional y ocurre
+// con cualquier tipografía. Se le da al paso el aire que el label necesita.
+//
+// La clase del stepper va en el selector para ganarle en especificidad a la regla
+// de Material, cuyos estilos de componente se inyectan después de esta hoja.
+.mat-stepper-horizontal .mat-horizontal-content-container {
+  padding-top: var(--sl-space-3);
+}
