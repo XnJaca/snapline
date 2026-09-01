@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="Snapline">
+  <title>Snapline</title>
+  <!-- El cordel antes de tensarse. Secundario a propósito: es el gesto, no la marca. -->
+  <path d="M7 9 Q 16 27 25 23"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+  <!-- La línea que queda marcada al soltar. -->
+  <path d="M7 9 L25 23"
+        stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Los dos anclajes. -->
+  <circle cx="7" cy="9" r="3.25" fill="currentColor"/>
+  <circle cx="25" cy="23" r="3.25" fill="currentColor"/>
+</svg>

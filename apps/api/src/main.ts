@@ -5,12 +5,14 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 import { AppModule } from './app.module';
 import { mountSwagger } from './openapi';
 import { HttpExceptionFilter } from './common/errors/http-exception.filter';
+import { corsOptions } from './config/cors.config';
 
 async function bootstrap(): Promise<void> {
   // Antes de crear la app: sin esto el GUC de tenant no llega a las queries.
   initializeTransactionalContext();
 
   const app = await NestFactory.create(AppModule);
+  app.enableCors(corsOptions());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('api');

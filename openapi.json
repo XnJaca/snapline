@@ -356,6 +356,252 @@
         ]
       }
     },
+    "/auth/web/login": {
+      "post": {
+        "operationId": "WebAuth_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAuthResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "WebAuth"
+        ]
+      }
+    },
+    "/auth/web/refresh": {
+      "post": {
+        "operationId": "WebAuth_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAuthResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "WebAuth"
+        ]
+      }
+    },
+    "/auth/web/logout": {
+      "post": {
+        "operationId": "WebAuth_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "WebAuth"
+        ]
+      }
+    },
     "/customers": {
       "get": {
         "operationId": "Customers_list",
@@ -5463,7 +5709,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "$ref": "#/components/schemas/TimesheetRowDto"
                   }
                 }
               }
@@ -5547,7 +5793,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "$ref": "#/components/schemas/JobCostRowDto"
                   }
                 }
               }
@@ -7379,6 +7625,43 @@
         },
         "required": [
           "locale"
+        ]
+      },
+      "WebAuthResultDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresInSeconds": {
+            "type": "number",
+            "description": "Segundos de vida del accessToken"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "membership": {
+            "description": "La membresía a la que quedó scopeado el token.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthMembershipDto"
+              }
+            ]
+          },
+          "memberships": {
+            "description": "Todas las membresías activas. Una persona puede trabajar para más de un contratista; el token apunta a una sola y el cliente ofrece cambiar.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthMembershipDto"
+            }
+          }
+        },
+        "required": [
+          "accessToken",
+          "expiresInSeconds",
+          "user",
+          "membership",
+          "memberships"
         ]
       },
       "AddressDto": {
@@ -9883,6 +10166,88 @@
         },
         "required": [
           "reason"
+        ]
+      },
+      "TimesheetRowDto": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workerName": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "number",
+            "description": "Cuántos registros de tiempo se sumaron"
+          },
+          "hours": {
+            "type": "number"
+          },
+          "payRateCents": {
+            "type": "number",
+            "nullable": true,
+            "description": "La tarifa congelada al aprobar, no la vigente"
+          },
+          "grossCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "flagged": {
+            "type": "number",
+            "description": "Registros con bandera: fuera de geocerca, GPS falso, sin señal"
+          }
+        },
+        "required": [
+          "membershipId",
+          "workerName",
+          "projectId",
+          "projectName",
+          "entries",
+          "hours",
+          "payRateCents",
+          "grossCents",
+          "flagged"
+        ]
+      },
+      "JobCostRowDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "laborCents": {
+            "type": "number"
+          },
+          "hours": {
+            "type": "number"
+          },
+          "invoicedCents": {
+            "type": "number"
+          },
+          "estimatedCents": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "projectId",
+          "projectName",
+          "laborCents",
+          "hours",
+          "invoicedCents",
+          "estimatedCents"
         ]
       },
       "PublishProjectDto": {

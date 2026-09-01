@@ -4,18 +4,18 @@ title: "La sesión del panel vive en cookie httpOnly, con su propio camino en el
 aliases:
   - "ADR-0014: La sesión del panel vive en cookie httpOnly, con su propio camino en el API"
 type: adr
-status: propuesto
+status: aceptado
 supersedes: null
 superseded_by: null
 related_specs:
   - SPEC-0008
 created: 2026-08-30
-updated: 2026-08-30
+updated: 2026-08-31
 deciders:
   - jaca
 tags:
   - adr
-  - adr/propuesto
+  - adr/aceptado
   - seguridad
 ---
 
@@ -54,7 +54,7 @@ que va a existir. Es el mismo razonamiento de la regla 6 con `company_id` —
 ```
 login  ──▶  accessToken   ──▶  variable en memoria, muere con la pestaña
        └─▶  refreshToken  ──▶  Set-Cookie: HttpOnly; Secure; SameSite=Strict
-                                            Path=/auth/web; Max-Age=2592000
+                                            Path=/api/auth/web; Max-Age=2592000
 ```
 
 Al recargar, la memoria está vacía y el panel pide un refresh; la cookie viaja sola
@@ -116,7 +116,8 @@ real.
 ### 5. CSRF: `SameSite=Strict` primero, double-submit si hace falta
 
 La cookie se manda sola, y eso es exactamente lo que habilita el CSRF. `SameSite=Strict`
-con `Path` acotado a `/auth/web` cubre el caso común. Si aparece un flujo cross-site
+con `Path` acotado a `/api/auth/web` —el prefijo global va adentro, o la cookie
+no viaja a ninguna de las tres rutas— cubre el caso común. Si aparece un flujo cross-site
 legítimo que obligue a relajarlo, entra un token double-submit — y esa relajación
 se decide explícitamente, no como efecto colateral de otra cosa.
 

@@ -1,0 +1,36 @@
+<sl-page
+  *transloco="let t"
+  icon="reports"
+  [heading]="t('reports.jobCost')"
+  [meta]="t('reports.jobCostMeta')"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('reports.empty')"
+  (retry)="data.reload()"
+>
+  <div class="frame">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="grow">{{ t('reports.project') }}</th>
+          <th class="num">{{ t('reports.hours') }}</th>
+          <th class="num">{{ t('reports.labor') }}</th>
+          <th class="num">{{ t('reports.estimated') }}</th>
+          <th class="num">{{ t('reports.invoiced') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of data.value(); track row.projectId) {
+          <tr>
+            <td class="grow">{{ row.projectName }}</td>
+            <td class="num">{{ row.hours | slHours }}</td>
+            <td class="num">{{ row.laborCents | slMoney }}</td>
+            <td class="num muted">{{ row.estimatedCents | slMoney }}</td>
+            <td class="num">{{ row.invoicedCents | slMoney }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</sl-page>

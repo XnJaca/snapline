@@ -1,8 +1,8 @@
 ---
-id: DEBT-0010
+id: DEBT-0011
 title: "Una jornada en conflicto no tiene camino de resolución en el móvil"
 aliases:
-  - "DEBT-0010: Una jornada en conflicto no tiene camino de resolución en el móvil"
+  - "DEBT-0011: Una jornada en conflicto no tiene camino de resolución en el móvil"
 type: tech-debt
 status: abierta
 severity: media
@@ -17,7 +17,7 @@ tags:
   - campo
 ---
 
-# DEBT-0010: Una jornada en conflicto no tiene camino de resolución en el móvil
+# DEBT-0011: Una jornada en conflicto no tiene camino de resolución en el móvil
 
 ## Contexto
 

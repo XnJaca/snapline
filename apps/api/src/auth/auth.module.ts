@@ -5,6 +5,7 @@ import { AppUser } from './entities/app-user.entity';
 import { Membership } from './entities/membership.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { WebAuthController } from './web-auth.controller';
 
 @Global()
 @Module({
@@ -17,7 +18,7 @@ import { AuthController } from './auth.controller';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, WebAuthController],
   providers: [AuthService],
   exports: [AuthService, JwtModule],
 })

@@ -12,8 +12,8 @@ kanban-plugin: board
 
 ## 📥 Backlog (registrada, sin trigger disparado)
 
-- [ ] [[tech-debt/0009-el-panel-no-tiene-iconos|DEBT-0009: El panel no tiene sistema de iconos, solo SVG pegados a mano]] — **severidad media**: `mat-icon` necesita una fuente que ADR-0009 §7 no deja traer de un CDN, y el paquete completo pesa 13 MB para usar tres iconos (trigger: la navegación de SPEC-0008, que ya lleva un icono por eje)
-- [ ] [[tech-debt/0010-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0010: Una jornada en conflicto no tiene camino de resolución en el móvil]] — **severidad media**: `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume; SPEC-0011 volvió el estado alcanzable en uso normal (trigger: el primer conflicto visto en un teléfono real, o aprobar en lote)
+- [ ] [[tech-debt/0010-listados-sin-la-persona|DEBT-0010: El panel no puede mostrar quién marcó las horas ni quién es el capataz]] — **severidad media**: `/time-entries` devuelve solo ids y `/crews` embebe la membresía del capataz sin su usuario. No se tocaron porque el contrato del móvil está en vuelo en otra rama (trigger: el spec de Horas, o el de Cuadrillas)
+- [ ] [[tech-debt/0011-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0011: Una jornada en conflicto no tiene camino de resolución en el móvil]] — **severidad media**: `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume; SPEC-0011 volvió el estado alcanzable en uso normal (trigger: el primer conflicto visto en un teléfono real, o aprobar en lote)
 
 - [ ] [[tech-debt/0008-logout-invalida-por-membresia|DEBT-0008: Cerrar sesión en el panel también expulsa el teléfono]] — **severidad media**: `token_version` vive en la membresía, así que invalida todas las sesiones de esa persona en esa empresa a la vez. Resolverlo pide una tabla de sesiones por dispositivo (trigger: la primera queja real, o que se pida "cerrar sesión en todos los dispositivos")
 
@@ -31,6 +31,8 @@ kanban-plugin: board
 
 
 ## ✅ Resuelta
+
+- [x] [[tech-debt/0009-el-panel-no-tiene-iconos|DEBT-0009: El panel no tiene sistema de iconos]] — SPEC-0008. `MatIconRegistry` con doce SVG propios en `public/icons/`, registrados una vez y usados con `svgIcon`. Sin fuente de 13 MB, sin CDN y sin paso de build: el subset se descartó porque un icono que nadie agrega a la lista desaparece en producción y compila igual
 
 - [x] [[tech-debt/0001-tokens-a-dart-a-mano|DEBT-0001: Los tokens se traducen a Dart a mano]] — PR #29 mergeado. `packages/tokens` genera el SCSS de web y el Dart de Flutter desde `design-tokens.json`, y el archivo generado salió con **los 71 valores idénticos** a los que estaban a mano. De paso quedó a la vista que el JSON no era la fuente única que ADR-0009 §1 declara: el área de toque, la familia tipográfica y el peso de marca vivían solo en el Dart
 

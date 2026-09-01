@@ -1,0 +1,17 @@
+<main class="offline" *transloco="let t">
+  <div class="offline__card">
+    <sl-logo class="offline__brand" />
+    <h1 class="offline__title">{{ t('connection.title') }}</h1>
+    <p class="offline__lead">{{ t('connection.lead') }}</p>
+
+    <div class="offline__progress" aria-hidden="true">
+      @if (retrying()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </div>
+
+    <button class="offline__retry" matButton="filled" type="button" [disabled]="retrying()" (click)="retry()">
+      {{ t('connection.retry') }}
+    </button>
+  </div>
+</main>

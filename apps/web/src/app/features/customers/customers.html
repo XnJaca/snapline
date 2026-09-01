@@ -1,0 +1,36 @@
+<sl-page
+  *transloco="let t"
+  icon="customers"
+  [heading]="t('nav.customers')"
+  [meta]="t('customers.count', { n: data.value().length })"
+  [loading]="data.isLoading()"
+  [failed]="!!data.error()"
+  [empty]="data.value().length === 0"
+  [emptyText]="t('customers.empty')"
+  (retry)="data.reload()"
+>
+  <div class="frame">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="grow">{{ t('customers.name') }}</th>
+          <th>{{ t('customers.phone') }}</th>
+          <th>{{ t('customers.email') }}</th>
+          <th>{{ t('customers.source') }}</th>
+          <th>{{ t('customers.since') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (customer of data.value(); track customer.id) {
+          <tr>
+            <td class="grow">{{ customer.displayName }}</td>
+            <td>{{ customer.phone || '—' }}</td>
+            <td class="muted">{{ customer.email || '—' }}</td>
+            <td class="muted">{{ customer.source ? t('source.' + customer.source) : '—' }}</td>
+            <td class="muted">{{ customer.createdAt | slDate }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</sl-page>
