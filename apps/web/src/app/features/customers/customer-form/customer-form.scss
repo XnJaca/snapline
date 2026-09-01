@@ -30,7 +30,7 @@
 .fields {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0 var(--sl-space-4);
+  gap: var(--sl-space-3) var(--sl-space-4);
 }
 
 @media (max-width: 62rem) {

@@ -4,7 +4,7 @@
 .address {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0 var(--sl-space-3);
+  gap: var(--sl-space-3) var(--sl-space-3);
 }
 
 // Calle y complemento ocupan la fila entera: son los que más se cortan.
