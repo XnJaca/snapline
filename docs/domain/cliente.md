@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0004"]
 created: 2026-08-08
-updated: 2026-08-12
+updated: 2026-09-01
 tags: [domain, domain/borrador]
 ---
 
@@ -29,7 +29,7 @@ trabaja.
 | `company_name` | string | no | Si es empresa |
 | `email` / `phone` | string | no | Al menos uno para el portal |
 | `billing_address` | jsonb | no | |
-| `source` | enum | no | `referido`, `web`, `redes`, `otro` |
+| `source` | enum | no | `REFERRAL`, `WEB`, `SOCIAL`, `REPEAT`, `OTHER` |
 | `notes` | text | no | |
 
 ### `site` — la propiedad
@@ -69,6 +69,18 @@ regla 8.
 - La geocerca pertenece al **sitio**, no al proyecto: el mismo cliente puede tener
   tres trabajos en la misma casa y la ubicación es una sola.
 - Para invitar al portal hace falta `email` o `phone`.
+- **Un cliente con historia no se borra.** Retiene una obra no borrada en
+  cualquier estado —terminada y cancelada incluidas, porque cancelado no es lo
+  mismo que borrado— y todo estimado o factura **enviados**. Un `DRAFT` no
+  retiene: es editable y borrable, así que no es historia todavía. La
+  comprobación vive en la base, no en el servicio, porque el borrado es suave y
+  la clave foránea no lo atrapa.
+
+- **Las propiedades se van con el cliente.** El agregado es el cliente *junto con
+  las propiedades donde se trabaja*, así que borrarlo cascadea el borrado suave de
+  sus `site`. Es seguro por construcción: lo único que apunta a `site` es
+  `project.site_id`, y un cliente con cualquier obra viva no llega a borrarse.
+
 - **El cliente no autoriza la publicación.** Quién decide qué sale al portafolio es
   la empresa, no él. Ver [[contenido]] y la entrada del 2026-08-12 en
   [[../DECISIONES]].

@@ -18,6 +18,8 @@ kanban-plugin: board
 
 ## 🔍 Review (listo para revisar)
 
+- [ ] [[0009-clientes-y-propiedades/README|SPEC-0009 — Clientes y propiedades en el panel]] · el primer módulo que deja **escribir** desde el panel, y el primer eslabón de la cadena: sin cliente y propiedad no hay obra que crear, y sin obra no hay foto que publicar. El API está entero, así que es pantalla contra endpoints probados. Trae un invariante: **un cliente con obras, estimados o facturas no se borra**, con la comprobación en la base y no en el panel, porque hoy `remove()` no mira nada y la clave foránea no lo atrapa — el borrado es suave y la fila sigue existiendo. Revisado por `domain-guardian` y `spec-reviewer`: el guardián encontró que las **propiedades** quedaban vivas y alcanzables al borrar al cliente, y se resolvió con cascada; el revisor, que el `goal` no cubría el borrado y que el criterio prometía un conteo que la 409 no puede dar
+
 
 ## ✅ Aprobado (listo para implementar)
 
