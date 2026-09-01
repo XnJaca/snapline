@@ -115,6 +115,9 @@
     </form>
   } @else {
     <mat-stepper class="wizard" [linear]="true" #stepper>
+      <ng-template matStepperIcon="edit"><mat-icon svgIcon="edit" /></ng-template>
+      <ng-template matStepperIcon="done"><mat-icon svgIcon="check" /></ng-template>
+
       <mat-step [stepControl]="form" [label]="t('customers.stepCustomer')">
         <ng-container [ngTemplateOutlet]="datosCliente" />
         <div class="footer">

@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
@@ -25,7 +26,7 @@ const SOURCES = ['REFERRAL', 'WEB', 'SOCIAL', 'REPEAT', 'OTHER'] as const;
   selector: 'sl-customer-form',
   imports: [
     ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatFormFieldModule,
-    MatInputModule, MatProgressBarModule, MatSelectModule, MatStepperModule, TranslocoModule,
+    MatIconModule, MatInputModule, MatProgressBarModule, MatSelectModule, MatStepperModule, TranslocoModule,
     NgTemplateOutlet, Page, AddressField, PhoneField,
   ],
   providers: [{ provide: MatStepperIntl, useClass: StepperIntl }, ...REQUIRED_IN_WORDS],

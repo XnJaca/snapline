@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -24,4 +24,17 @@ import { CountryPipe } from '../../core/format/country.pipe';
 export class AddressField {
   readonly group = input.required<FormGroup>();
   protected readonly countries = COUNTRIES;
+
+  constructor() {
+    // El código de estado se guarda en mayúsculas: `md` y `MD` son el mismo
+    // estado, y dejarlos entrar distintos ensucia el dato sin que nadie lo note.
+    effect((onCleanup) => {
+      const state = this.group().get('state');
+      const sub = state?.valueChanges.subscribe((valor: string) => {
+        const mayúsculas = (valor ?? '').toUpperCase();
+        if (mayúsculas !== valor) state.setValue(mayúsculas, { emitEvent: false });
+      });
+      onCleanup(() => sub?.unsubscribe());
+    });
+  }
 }

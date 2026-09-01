@@ -88,3 +88,13 @@ body {
 .mat-stepper-horizontal .mat-horizontal-content-container {
   padding-top: var(--sl-space-3);
 }
+
+// Con dos pasos, Material manda las cabeceras a los extremos de todo el ancho y
+// quedan a medio metro una de la otra. Se agrupan a la izquierda.
+//
+// Va acá y no en el `.scss` del wizard porque el DOM interno del stepper no lleva
+// el atributo de encapsulación del componente: una regla desde ahí no matchea
+// nunca.
+.mat-stepper-horizontal .mat-horizontal-stepper-header-container {
+  max-width: 30rem;
+}
