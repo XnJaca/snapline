@@ -47,6 +47,12 @@ const LATIN_AMERICA: Country[] = [
 
 export const COUNTRIES: readonly Country[] = [...FAVORITES, ...LATIN_AMERICA];
 
+/**
+ * Los que usan código de subdivisión de dos letras (ISO 3166-2). En el resto la
+ * provincia se escribe con su nombre: "San José", "Alajuela".
+ */
+export const USES_TWO_LETTER_STATE: readonly string[] = ['US', 'CA'];
+
 /** Con el que arranca un alta: Maryland es `+1`. */
 export const DEFAULT_COUNTRY = 'US';
 

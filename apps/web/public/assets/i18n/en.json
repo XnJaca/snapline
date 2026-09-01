@@ -243,8 +243,9 @@
     "country": "Country",
     "line1Required": "Enter the street address",
     "cityRequired": "Enter the city",
-    "stateRequired": "Two-letter code, like MD",
-    "postalCodeRequired": "Enter the ZIP code"
+    "stateRequired": "Enter the state or province",
+    "postalCodeRequired": "Enter the ZIP code",
+    "stateCodeHint": "Two-letter code, like MD"
   },
   "sites": {
     "title": "Properties",

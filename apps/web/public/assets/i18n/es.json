@@ -243,8 +243,9 @@
     "country": "País",
     "line1Required": "Escriba la calle y el número",
     "cityRequired": "Escriba la ciudad",
-    "stateRequired": "Código de dos letras, como MD",
-    "postalCodeRequired": "Escriba el código postal"
+    "stateRequired": "Escriba el estado o la provincia",
+    "postalCodeRequired": "Escriba el código postal",
+    "stateCodeHint": "Código de dos letras, como MD"
   },
   "sites": {
     "title": "Propiedades",

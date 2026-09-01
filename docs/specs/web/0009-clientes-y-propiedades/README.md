@@ -314,3 +314,4 @@ criterio que SPEC-0006 móvil fijó y que ahí funcionó.
 > pantalla y no los verifiqué. Corregir un cliente aplicando el cambio encima, y
 > corregir uno que otra persona acaba de borrar. El código de los dos está, y el
 > segundo tiene su estado `gone` resuelto.
+| 2026-09-01 | en-implementacion | **Corrección de dominio salida de probar la pantalla.** La ficha decía que `state` es "código de dos letras: MD", escrito asumiendo Estados Unidos, y el formulario lo exigía en todos los países. Con Costa Rica seleccionada eso hace imposible cargar la dirección, porque la provincia es "San José". El código de dos letras es de Estados Unidos y Canadá (ISO 3166-2); en el resto se escribe el nombre. La ficha queda corregida y la regla vive en `stateValidatorsFor()`, con sus tests. Las mayúsculas automáticas también se acotan: pasar "San José" a mayúsculas sería romper el dato, no normalizarlo |

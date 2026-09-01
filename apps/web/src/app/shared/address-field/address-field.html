@@ -18,9 +18,18 @@
 
   <mat-form-field appearance="outline">
     <mat-label>{{ t('field.required', { label: t('address.state') }) }}</mat-label>
-    <input matInput formControlName="state" maxlength="2" autocomplete="address-level1" />
-    <mat-hint>{{ t('address.stateRequired') }}</mat-hint>
-    <mat-error>{{ t('address.stateRequired') }}</mat-error>
+    <input
+      matInput
+      formControlName="state"
+      autocomplete="address-level1"
+      [attr.maxlength]="twoLetterState() ? 2 : null"
+    />
+    @if (twoLetterState()) {
+      <mat-hint>{{ t('address.stateCodeHint') }}</mat-hint>
+    }
+    <mat-error>
+      {{ twoLetterState() ? t('address.stateCodeHint') : t('address.stateRequired') }}
+    </mat-error>
   </mat-form-field>
 
   <mat-form-field appearance="outline">
