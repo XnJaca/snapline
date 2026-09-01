@@ -27,11 +27,10 @@ kanban-plugin: board
 
 ## 🛠️ En implementación
 
-- [ ] [[specs/mobile/0011-horas-de-la-obra/README|SPEC-0011: Horas de la obra]] — listo para PR: 78 tests del API y 347 del móvil, tres pasadas del `code-reviewer`
-
 
 ## 🎉 Implementado
 
+- [x] [[specs/mobile/0011-horas-de-la-obra/README|SPEC-0011: Horas de la obra]] — 92 tests en el API y 347 en el móvil, PR #32 mergeado; llenó la primera de las dos tabs placeholder de la obra. Trajo `decision_reason` al dominio, las dos operaciones de decisión al lote y **el turno de la bandeja**, que sale de un GRAVE: corregirse a uno mismo sin señal dejaba en el servidor la decisión descartada
 - [x] [[specs/mobile/0010-fotos-de-la-obra/README|SPEC-0010: Fotos de la obra]] — 322 tests, PRs #25 y #26; trajo `POST /media/:id/tags` y la escalera de visibilidad aplicada al API. Dos tandas: la segunda salió entera de probar en el teléfono —etiquetar pasó a obligatorio y de a una, y apareció que volver la red no sincronizaba con la obra abierta— y dejó la regla de copy en `code-guidelines/i18n.md`
 - [x] [[specs/mobile/0009-la-obra-como-lugar/README|SPEC-0009: La obra como lugar, no como botón]] — 269 tests, PR #20 mergeado; siete tandas de diseño probando en el teléfono, y de ahí salieron `SectionCard`, `StatusLine` y la regla de que el copy no fiscaliza
 - [x] [[specs/mobile/0004-capa-local-y-sincronizacion/README|SPEC-0004: Capa local y sincronización]] — cerró con la tanda 2 de SPEC-0008: los dos criterios de `CONFLICT` verificados observando streams
