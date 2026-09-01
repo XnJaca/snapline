@@ -15,6 +15,40 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-09-01 — las horas de una obra se miran y se aprueban, y decidir sin señal deja de ser peligroso
+
+- **La tab Horas deja de ser placeholder**
+  ([[specs/mobile/0011-horas-de-la-obra/README|SPEC-0011]]): el acumulado de la obra
+  entera —no los siete días de las vistas de campo— y cada jornada con quién la hizo.
+  Aprobar y rechazar existían en el API desde SPEC-0008 y **ninguna pantalla los
+  llamaba**, así que hasta hoy ninguna hora del sistema tenía tarifa congelada.
+- **Decidir sin señal ya no puede aplicar una decisión vieja.** La operación viaja con
+  `expectedStatus` —el estado que la jornada tenía en el teléfono cuando se decidió— y
+  el servidor compara antes de aplicar. Eso separa dos cosas que llegan idénticas: ver
+  "Rechazada" y aprobar a propósito, que es corregir y se aplica; y aprobar creyéndola
+  pendiente cuando otro ya la rechazó, que es divergencia y queda en conflicto.
+- **Nace el turno de la bandeja, y vale para toda la app.** Encolar dispara el push al
+  instante, así que cuando alguien se corrige a sí mismo la primera decisión ya viajó:
+  el servidor aplicaba esa y rechazaba la segunda, y la jornada terminaba con la
+  decisión **que la persona descartó**. Ahora armar el lote, esperar la red y aplicar
+  la respuesta son un solo acto. Es la única escritura de la app que espera, y se
+  acepta porque espera un push y no una red — aprobar es de oficina, y el marcaje que
+  protege la regla 9 no pasa por ahí.
+- **`time_entry.decision_reason`**: `approved_by` y `approved_at` ya se escribían en
+  las dos decisiones, así que la jornada guardaba quién decidió y cuándo pero no por
+  qué. La razón vivía solo en `time_entry_edit`, que el pull no baja y no tiene
+  controller — ningún cliente podía leerla nunca.
+- **Un rechazo del servidor tiene ahora tres desenlaces y no uno**: descarte silencioso
+  cuando alguien decidió lo mismo, descarte con reversión y motivo cuando falta la
+  tarifa, y conflicto solo cuando hay dos verdades. Hasta hoy ninguna operación salía
+  de la cola sin haberse aplicado, así que la lista de códigos que descartan es
+  cerrada: uno desconocido nunca descarta.
+- **Queda anotado** ([[tech-debt/0011-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0011]]):
+  `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume, así que una
+  jornada en conflicto se ve pero no se resuelve desde el teléfono.
+
+---
+
 ## 2026-08-31 — el panel existe, ya se entra, y los tokens dejan de copiarse a mano
 
 - **`apps/web` arranca** ([[specs/web/0007-cimientos-visuales/README|SPEC-0007]]):
