@@ -24,6 +24,9 @@ export const ERROR_CODES = [
   'PERMISSION_NOT_DECLARED',
   'PERMISSION_DENIED',
 
+  // cliente
+  'CUSTOMER_HAS_HISTORY',
+
   // proyecto
   'PROJECT_INVALID_TRANSITION',
 

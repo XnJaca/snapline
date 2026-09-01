@@ -1,0 +1,138 @@
+<sl-page
+  *transloco="let t"
+  icon="customers"
+  [heading]="editing() ? t('customers.editTitle') : t('customers.newTitle')"
+  [loading]="loading()"
+>
+  <!-- Los campos se declaran una vez y se colocan en el wizard o en la ficha de
+       corrección, según el caso. Duplicarlos era garantizar que divergieran. -->
+  <ng-template #datosCliente>
+    <div [formGroup]="form">
+    <div class="fields">
+      <mat-form-field appearance="outline" class="fields--wide">
+        <mat-label>{{ t('field.required', { label: t('customers.displayName') }) }}</mat-label>
+        <input matInput formControlName="displayName" />
+        <mat-hint>{{ t('customers.displayNameHint') }}</mat-hint>
+        <mat-error>{{ t('customers.displayNameRequired') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('customers.firstName') }}</mat-label>
+        <input matInput formControlName="firstName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('customers.lastName') }}</mat-label>
+        <input matInput formControlName="lastName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('customers.companyName') }}</mat-label>
+        <input matInput formControlName="companyName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('customers.source') }}</mat-label>
+        <mat-select formControlName="source">
+          @for (source of sources; track source) {
+            <mat-option [value]="source">{{ t('source.' + source) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="fields">
+      <div class="fields--wide"><sl-phone-field [group]="phone" /></div>
+
+      <mat-form-field appearance="outline" class="fields--wide">
+        <mat-label>{{ t('customers.email') }}</mat-label>
+        <input matInput type="email" formControlName="email" />
+        <mat-hint>{{ t('customers.contactHint') }}</mat-hint>
+        <mat-error>{{ t('customers.emailInvalid') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="fields--wide">
+        <mat-label>{{ t('customers.notes') }}</mat-label>
+        <textarea matInput formControlName="notes" rows="2"></textarea>
+      </mat-form-field>
+    </div>
+    </div>
+
+    <div class="optional">
+      <div class="optional__head">
+        <h3 class="optional__title">{{ t('customers.billingAddress') }}</h3>
+        <mat-checkbox [checked]="withBilling()" (change)="toggleBilling($event.checked)">
+          {{ t('customers.billingInclude') }}
+        </mat-checkbox>
+      </div>
+      @if (withBilling()) {
+        <sl-address-field [group]="billing" />
+      }
+    </div>
+  </ng-template>
+
+  <ng-template #datosPropiedad>
+    <div class="optional">
+      <div class="optional__head">
+        <h3 class="optional__title">{{ t('sites.first') }}</h3>
+        <mat-checkbox [checked]="withSite()" (change)="toggleSite($event.checked)">
+          {{ t('sites.include') }}
+        </mat-checkbox>
+      </div>
+      <p class="muted">{{ t('sites.firstHint') }}</p>
+      @if (withSite()) {
+        <sl-address-field [group]="site" />
+      }
+    </div>
+  </ng-template>
+
+  <ng-template #avisos>
+    @if (error(); as failure) {
+      <p class="error" role="alert">{{ t('form.error.' + failure) }}</p>
+    }
+    <div class="progress" aria-hidden="true">
+      @if (busy()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </div>
+  </ng-template>
+
+  @if (editing()) {
+    <form class="single" (ngSubmit)="submit()">
+      <section class="card">
+        <h2 class="card__title">{{ t('customers.contact') }}</h2>
+        <ng-container [ngTemplateOutlet]="datosCliente" />
+      </section>
+
+      <ng-container [ngTemplateOutlet]="avisos" />
+
+      <div class="footer">
+        <button matButton type="button" (click)="cancel()">{{ t('action.cancel') }}</button>
+        <button matButton="filled" type="submit" [disabled]="busy()">
+          {{ error() === 'connection' ? t('action.retry') : t('action.save') }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    <mat-stepper class="wizard" [linear]="true" #stepper>
+      <mat-step [stepControl]="form" [label]="t('customers.stepCustomer')">
+        <ng-container [ngTemplateOutlet]="datosCliente" />
+        <div class="footer">
+          <button matButton type="button" (click)="cancel()">{{ t('action.cancel') }}</button>
+          <button matButton="filled" type="button" matStepperNext>{{ t('action.next') }}</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="site" [label]="t('customers.stepSite')" [optional]="true">
+        <ng-container [ngTemplateOutlet]="datosPropiedad" />
+        <ng-container [ngTemplateOutlet]="avisos" />
+        <div class="footer">
+          <button matButton type="button" matStepperPrevious>{{ t('action.back') }}</button>
+          <button matButton="filled" type="button" [disabled]="busy()" (click)="submit()">
+            {{ error() === 'connection' ? t('action.retry') : t('action.save') }}
+          </button>
+        </div>
+      </mat-step>
+    </mat-stepper>
+  }
+</sl-page>

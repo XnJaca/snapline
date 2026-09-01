@@ -11218,6 +11218,7 @@
               "MEMBERSHIP_INACTIVE",
               "PERMISSION_NOT_DECLARED",
               "PERMISSION_DENIED",
+              "CUSTOMER_HAS_HISTORY",
               "PROJECT_INVALID_TRANSITION",
               "TIME_ENTRY_ALREADY_OPEN",
               "TIME_ENTRY_ALREADY_CLOSED",

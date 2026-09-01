@@ -1,0 +1,22 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  min-width: min(32rem, 80vw);
+}
+
+.radius {
+  max-width: 14rem;
+}
+
+.error {
+  margin: 0;
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font-size: var(--sl-font-size-caption);
+}
+
+.progress {
+  height: 4px;
+}

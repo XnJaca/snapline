@@ -1,0 +1,25 @@
+// Columnas explícitas y no `auto-fit`: un item con `grid-column: 1 / -1` ocupa
+// todas las pistas, así que ninguna queda vacía y `auto-fit` no colapsa nada.
+// El resultado eran siete columnas de 160px con los labels cortados.
+.address {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 var(--sl-space-3);
+}
+
+// Calle y complemento ocupan la fila entera: son los que más se cortan.
+.address--wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 62rem) {
+  .address {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 34rem) {
+  .address {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
