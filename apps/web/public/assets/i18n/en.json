@@ -130,7 +130,8 @@
     "stepSite": "Property",
     "deleteHint": "Deleting only removes them from the panel. Jobs and documents stay.",
     "displayNameRequired": "Enter a name",
-    "emailInvalid": "Enter a valid email"
+    "emailInvalid": "Enter a valid email",
+    "projectsTab": "Projects ({{n}})"
   },
   "source": {
     "REFERRAL": "Referral",
@@ -259,6 +260,7 @@
     "located": "Located · {{m}} m",
     "noPoint": "No point yet",
     "new": "New property",
-    "firstHint": "Where the work is. You can add more properties later."
+    "firstHint": "Where the work is. You can add more properties later.",
+    "tab": "Properties ({{n}})"
   }
 }

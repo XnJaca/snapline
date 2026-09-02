@@ -130,7 +130,8 @@
     "stepSite": "Propiedad",
     "deleteHint": "Borrar solo lo saca del panel. Las obras y los documentos quedan.",
     "displayNameRequired": "Escriba un nombre",
-    "emailInvalid": "Escriba un correo válido"
+    "emailInvalid": "Escriba un correo válido",
+    "projectsTab": "Obras ({{n}})"
   },
   "source": {
     "REFERRAL": "Referido",
@@ -259,6 +260,7 @@
     "located": "Ubicada · {{m}} m",
     "noPoint": "Sin punto todavía",
     "new": "Nueva propiedad",
-    "firstHint": "Dónde se trabaja. Después puede agregar más propiedades."
+    "firstHint": "Dónde se trabaja. Después puede agregar más propiedades.",
+    "tab": "Propiedades ({{n}})"
   }
 }

@@ -8,8 +8,11 @@
   (retry)="customer.reload()"
 >
   @if (canWrite()) {
-    <div slPageActions>
+    <div slPageActions class="head-actions">
       <button matButton="outlined" routerLink="edit">{{ t('action.edit') }}</button>
+      <button class="danger" matButton="outlined" type="button" (click)="remove()">
+        {{ t('action.delete') }}
+      </button>
     </div>
   }
 
@@ -20,101 +23,102 @@
     <p class="blocked" role="alert">{{ t('customers.gone') }}</p>
   }
 
-  <div class="grid">
-    <section class="card">
-      <h2 class="card__title">{{ t('customers.contact') }}</h2>
-      <dl class="facts">
-        <div class="fact">
-          <dt>{{ t('customers.phone') }}</dt>
-          <dd>{{ (customer.value()?.phone | slPhone) || '—' }}</dd>
-        </div>
-        <div class="fact">
-          <dt>{{ t('customers.email') }}</dt>
-          <dd>{{ customer.value()?.email || '—' }}</dd>
-        </div>
-        <div class="fact">
-          <dt>{{ t('customers.since') }}</dt>
-          <dd>{{ customer.value()?.createdAt | slDate }}</dd>
-        </div>
-      </dl>
+  <mat-tab-group class="tabs" animationDuration="160ms">
+    <mat-tab [label]="t('customers.contact')">
+      <section class="panel">
+        <dl class="facts">
+          <div class="fact">
+            <dt>{{ t('customers.phone') }}</dt>
+            <dd>{{ (customer.value()?.phone | slPhone) || '—' }}</dd>
+          </div>
+          <div class="fact">
+            <dt>{{ t('customers.email') }}</dt>
+            <dd>{{ customer.value()?.email || '—' }}</dd>
+          </div>
+          <div class="fact">
+            <dt>{{ t('customers.source') }}</dt>
+            <dd>{{ customer.value()?.source ? t('source.' + customer.value()!.source) : '—' }}</dd>
+          </div>
+          <div class="fact">
+            <dt>{{ t('customers.since') }}</dt>
+            <dd>{{ customer.value()?.createdAt | slDate }}</dd>
+          </div>
+        </dl>
 
-      @if (address(customer.value()?.billingAddress); as dir) {
-        <h3 class="card__sub">{{ t('customers.billingAddress') }}</h3>
-        <p class="address">
-          {{ dir.line1 }}@if (dir.line2) {, {{ dir.line2 }}}<br />
-          {{ dir.city }}, {{ dir.state }} {{ dir.postalCode }} · {{ dir.country | slCountry }}
-        </p>
-      }
-
-      @if (customer.value()?.notes) {
-        <h3 class="card__sub">{{ t('customers.notes') }}</h3>
-        <p class="notes">{{ customer.value()?.notes }}</p>
-      }
-    </section>
-
-    <section class="card">
-      <div class="card__head">
-        <h2 class="card__title">{{ t('sites.title') }}</h2>
-        @if (canWrite()) {
-          <button matButton type="button" (click)="addSite()">{{ t('sites.add') }}</button>
+        @if (address(customer.value()?.billingAddress); as dir) {
+          <div class="block">
+            <h3 class="block__title">{{ t('customers.billingAddress') }}</h3>
+            <p class="block__text">
+              {{ dir.line1 }}@if (dir.line2) {, {{ dir.line2 }}}<br />
+              {{ dir.city }}, {{ dir.state }} {{ dir.postalCode }} · {{ dir.country | slCountry }}
+            </p>
+          </div>
         }
-      </div>
 
-      @if (sites.value().length === 0) {
-        <p class="muted">{{ t('sites.empty') }}</p>
-      } @else {
-        <ul class="rows">
-          @for (site of sites.value(); track site.id) {
-            <li class="row">
-              <div class="row__main">
-                @if (address(site.address); as dir) {
-                  <span>{{ dir.line1 }}</span>
-                  <span class="muted">{{ dir.city }}, {{ dir.state }} {{ dir.postalCode }}</span>
+        @if (customer.value()?.notes) {
+          <div class="block">
+            <h3 class="block__title">{{ t('customers.notes') }}</h3>
+            <p class="block__text">{{ customer.value()?.notes }}</p>
+          </div>
+        }
+      </section>
+    </mat-tab>
+
+    <mat-tab [label]="t('sites.tab', { n: sites.value().length })">
+      <section class="panel">
+        @if (canWrite()) {
+          <div class="panel__actions">
+            <button matButton="filled" type="button" (click)="addSite()">{{ t('sites.add') }}</button>
+          </div>
+        }
+
+        @if (sites.value().length === 0) {
+          <p class="empty">{{ t('sites.empty') }}</p>
+        } @else {
+          <ul class="rows">
+            @for (site of sites.value(); track site.id) {
+              <li class="row">
+                <div class="row__main">
+                  @if (address(site.address); as dir) {
+                    <span>{{ dir.line1 }}</span>
+                    <span class="muted">
+                      {{ dir.city }}, {{ dir.state }} {{ dir.postalCode }} · {{ dir.country | slCountry }}
+                    </span>
+                  }
+                </div>
+                @if (site.lat) {
+                  <sl-chip tone="success">{{ t('sites.located', { m: site.geofenceRadiusM }) }}</sl-chip>
+                } @else {
+                  <sl-chip>{{ t('sites.noPoint') }}</sl-chip>
                 }
-              </div>
-              @if (site.lat) {
-                <sl-chip tone="success">{{ t('sites.located', { m: site.geofenceRadiusM }) }}</sl-chip>
-              } @else {
-                <sl-chip>{{ t('sites.noPoint') }}</sl-chip>
-              }
-              @if (canWrite()) {
-                <button matButton type="button" (click)="addSite(site)">{{ t('action.edit') }}</button>
-              }
-            </li>
-          }
-        </ul>
-      }
-    </section>
+                @if (canWrite()) {
+                  <button matButton type="button" (click)="addSite(site)">{{ t('action.edit') }}</button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </mat-tab>
 
-    <section class="card card--wide">
-      <h2 class="card__title">{{ t('customers.projects') }}</h2>
-      @if (projects().length === 0) {
-        <p class="muted">{{ t('customers.noProjects') }}</p>
-      } @else {
-        <ul class="rows">
-          @for (project of projects(); track project.id) {
-            <li class="row">
-              <div class="row__main">
-                <span>{{ project.name }}</span>
-                <span class="muted">{{ project.startDate | slDate }}</span>
-              </div>
-              <sl-chip>{{ t('projectStatus.' + project.status) }}</sl-chip>
-            </li>
-          }
-        </ul>
-      }
-    </section>
-  </div>
-
-  @if (canWrite()) {
-    <footer class="danger-zone">
-      <div class="danger-zone__text">
-        <p class="danger-zone__title">{{ t('customers.deleteTitle') }}</p>
-        <p class="danger-zone__hint">{{ t('customers.deleteHint') }}</p>
-      </div>
-      <button class="danger" matButton="outlined" type="button" (click)="remove()">
-        {{ t('action.delete') }}
-      </button>
-    </footer>
-  }
+    <mat-tab [label]="t('customers.projectsTab', { n: projects().length })">
+      <section class="panel">
+        @if (projects().length === 0) {
+          <p class="empty">{{ t('customers.noProjects') }}</p>
+        } @else {
+          <ul class="rows">
+            @for (project of projects(); track project.id) {
+              <li class="row">
+                <div class="row__main">
+                  <span>{{ project.name }}</span>
+                  <span class="muted">{{ project.startDate | slDate }}</span>
+                </div>
+                <sl-chip>{{ t('projectStatus.' + project.status) }}</sl-chip>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </mat-tab>
+  </mat-tab-group>
 </sl-page>

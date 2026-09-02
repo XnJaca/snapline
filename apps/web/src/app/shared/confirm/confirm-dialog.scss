@@ -1,4 +1,27 @@
+.confirm {
+  display: flex;
+  gap: var(--sl-space-4);
+  align-items: flex-start;
+  max-width: 30rem;
+  padding-top: var(--sl-space-2);
+}
+
+// Un borrado no se anuncia igual que un guardar: el icono lo dice antes que el
+// texto.
+.confirm__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--sl-radius-full);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
 .confirm__title {
+  margin: 0 0 var(--sl-space-2);
+  padding: 0;
   font-size: var(--sl-font-size-title);
   font-weight: var(--sl-font-weight-bold);
 }
@@ -6,7 +29,12 @@
 .confirm__body {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
+  line-height: 1.5;
   text-wrap: pretty;
+}
+
+.confirm mat-dialog-content {
+  padding: 0;
 }
 
 .confirm__danger {

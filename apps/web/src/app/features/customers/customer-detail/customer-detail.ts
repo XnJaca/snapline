@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import type { components } from '@snapline/contracts';
 import { API_BASE_URL } from '../../../core/api/api.config';
@@ -26,7 +27,7 @@ type Address = { line1?: string; line2?: string; city?: string; state?: string; 
 @Component({
   selector: 'sl-customer-detail',
   imports: [
-    RouterLink, MatButtonModule, MatIconModule, TranslocoModule,
+    RouterLink, MatButtonModule, MatIconModule, MatTabsModule, TranslocoModule,
     Page, Chip, DatePipe, CountryPipe, PhonePipe,
   ],
   templateUrl: './customer-detail.html',
