@@ -32,11 +32,12 @@
             <th>{{ t('customers.email') }}</th>
             <th>{{ t('customers.source') }}</th>
             <th>{{ t('customers.since') }}</th>
+            <th class="chevron"></th>
           </tr>
         </thead>
         <tbody>
           @for (customer of filtered(); track customer.id) {
-            <tr>
+            <tr class="row" (click)="open(customer.id)">
               <td class="grow">
                 <a class="link" [routerLink]="[customer.id]">{{ customer.displayName }}</a>
               </td>
@@ -44,6 +45,7 @@
               <td class="muted">{{ customer.email || '—' }}</td>
               <td class="muted">{{ customer.source ? t('source.' + customer.source) : '—' }}</td>
               <td class="muted">{{ customer.createdAt | slDate }}</td>
+              <td class="chevron" aria-hidden="true">›</td>
             </tr>
           }
         </tbody>

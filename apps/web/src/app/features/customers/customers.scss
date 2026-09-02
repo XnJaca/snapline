@@ -25,8 +25,14 @@
   width: 22rem;
 }
 
+.row {
+  cursor: pointer;
+}
+
+// El nombre se ve como enlace: antes era texto del mismo color que el resto y
+// no había forma de descubrir que desde ahí se entraba a la ficha.
 .link {
-  color: var(--mat-sys-on-surface);
+  color: var(--mat-sys-primary);
   font-weight: var(--sl-font-weight-medium);
   text-decoration: none;
 
@@ -48,4 +54,11 @@
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
+}
+
+.chevron {
+  width: 1.5rem;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-title);
+  text-align: right;
 }

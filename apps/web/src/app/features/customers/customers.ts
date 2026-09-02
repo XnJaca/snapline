@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -32,6 +32,7 @@ type Customer = components['schemas']['Customer'];
 })
 export class Customers {
   private readonly session = inject(SessionService);
+  private readonly router = inject(Router);
 
   protected readonly data = collection<Customer>(() => '/customers');
   protected readonly query = signal('');
@@ -40,6 +41,14 @@ export class Customers {
   protected readonly canWrite = computed(() => this.session.can('customers.write'));
 
   protected readonly filtered = computed(() => filterCustomers(this.data.value(), this.query()));
+
+  /**
+   * La fila entera entra a la ficha. El enlace del nombre se queda igual: es el
+   * que hace que funcione con teclado y con lector de pantalla.
+   */
+  protected open(id: string): void {
+    void this.router.navigate(['/customers', id]);
+  }
 
   /** Vacío por filtro y vacío de verdad no son lo mismo y no se dicen igual. */
   protected readonly emptyByFilter = computed(
