@@ -205,26 +205,24 @@ reintenta. Esto no arma su propia detección.
 │ Whitaker Home           +1 555 447 8890   Recurrente 2 obras   │
 └────────────────────────────────────────────────────────────────┘
 
-┌─ Martinez Residence ─────────────────────────── [Corregir] ────┐
-│  Contacto        martinez@example.com · +1 555 987 6543        │
-│  Origen          Referido                                      │
+┌─ Martinez Residence ──────────────────── [Editar] [Borrar] ────┐
+├──────────┬───────────────────┬─────────────────────────────────┤
+│  Datos   │  Propiedades (2)  │  Obras (2)                      │
+├──────────┴───────────────────┴─────────────────────────────────┤
+│  Teléfono           Correo              Origen      Alta       │
+│  +1 555 987-6543    martinez@…          Referido    12 ago     │
 │                                                                │
-│  Propiedades                              [+ Agregar]          │
-│   100 Main St, Baltimore MD 21201          · geocerca 150 m    │
-│   9800 Georgia Ave, Silver Spring MD 20902 · sin punto         │
-│                                                                │
-│  Obras                                                         │
-│   Techo Martinez     En progreso                               │
-│   Baño Martinez      En progreso                               │
-│                                                                │
-│                                          [Borrar cliente]      │
+│  Dirección de facturación                                      │
+│   100 Main St, Baltimore MD 21201                              │
 └────────────────────────────────────────────────────────────────┘
 ```
 
-**Borrar vive en la ficha y no en la lista**, al pie y separado del resto: es la
-única acción destructiva de la pantalla y no se pone al lado de las que no lo son.
-Pide confirmación **nombrando al cliente**, y cuando el API lo rechaza el mensaje
-dice qué lo retiene, no un texto genérico.
+**La ficha va en pestañas**, cada una con su conteo, y las dos acciones viven
+arriba juntas. Borrar abre un **diálogo de alerta** que nombra al cliente antes
+de hacer nada, y cuando el API lo rechaza el mensaje dice **qué lo retiene**
+—obras o documentos—, no un texto genérico.
+
+**Se entra a la ficha desde toda la fila del listado**, no solo desde el nombre.
 
 **Lo obligatorio se dice con palabras en el label, no con un asterisco.** Es el
 criterio que SPEC-0006 móvil fijó y que ahí funcionó.
@@ -315,3 +313,4 @@ criterio que SPEC-0006 móvil fijó y que ahí funcionó.
 > corregir uno que otra persona acaba de borrar. El código de los dos está, y el
 > segundo tiene su estado `gone` resuelto.
 | 2026-09-01 | en-implementacion | **Corrección de dominio salida de probar la pantalla.** La ficha decía que `state` es "código de dos letras: MD", escrito asumiendo Estados Unidos, y el formulario lo exigía en todos los países. Con Costa Rica seleccionada eso hace imposible cargar la dirección, porque la provincia es "San José". El código de dos letras es de Estados Unidos y Canadá (ISO 3166-2); en el resto se escribe el nombre. La ficha queda corregida y la regla vive en `stateValidatorsFor()`, con sus tests. Las mayúsculas automáticas también se acotan: pasar "San José" a mayúsculas sería romper el dato, no normalizarlo |
+| 2026-09-01 | en-implementacion | Pasada de interfaz sobre lo implementado, pedida al probarlo. La ficha pasa a **pestañas** —Datos, Propiedades y Obras, con su conteo—, las dos acciones suben juntas al encabezado, y el diálogo de borrado se lee como alerta con su icono. **Esto revierte una decisión que estaba escrita en este mismo spec**: que borrar viviera al pie y separado del resto. La maqueta y esa nota quedan corregidas, porque un spec que dice lo contrario de lo que hace la pantalla es peor que no tenerlo. Se arregló también entrar a la ficha desde el listado: el nombre era un enlace del mismo color que el resto del texto y no había forma de descubrirlo |
