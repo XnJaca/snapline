@@ -1,7 +1,5 @@
 @use '../../../styles/data-table' as table;
 
-// El host es un hijo flex del área de contenido: sin esto encoge al tamaño de
-// su contenido y la pantalla queda en una columna angosta.
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -15,4 +13,52 @@
 
 .table {
   @include table.base;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.actions__search {
+  width: 22rem;
+}
+
+.row {
+  cursor: pointer;
+}
+
+// El nombre se ve como enlace: antes era texto del mismo color que el resto y
+// no había forma de descubrir que desde ahí se entraba a la ficha.
+.link {
+  color: var(--mat-sys-primary);
+  font-weight: var(--sl-font-weight-medium);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.nomatch {
+  margin: 0;
+  padding: var(--sl-space-6);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.chevron {
+  width: 1.5rem;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-title);
+  text-align: right;
 }

@@ -82,7 +82,9 @@
     "empty": "No projects yet.",
     "city": "City",
     "start": "Started",
-    "target": "Target"
+    "target": "Target",
+    "name": "Project",
+    "status": "Status"
   },
   "projectStatus": {
     "LEAD": "Lead",
@@ -99,14 +101,47 @@
     "name": "Customer",
     "phone": "Phone",
     "email": "Email",
-    "source": "Source",
-    "since": "Added"
+    "source": "How they found you",
+    "since": "Added",
+    "search": "Search by name, company or phone",
+    "new": "New customer",
+    "newTitle": "New customer",
+    "editTitle": "Edit customer",
+    "noMatch": "No customers match that search",
+    "displayName": "Name",
+    "displayNameHint": "A name you can identify this customer by.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "companyName": "Company",
+    "contact": "Details",
+    "contactHint": "Without an email or a phone this customer cannot be invited to the client portal.",
+    "billingAddress": "Billing address",
+    "billingInclude": "Add one",
+    "notes": "Notes",
+    "projects": "Projects",
+    "noProjects": "No projects for this customer yet",
+    "deleteTitle": "Delete this customer?",
+    "deleteBody": "{{name}} will stop appearing in the panel, along with their properties. Jobs and documents are not deleted.",
+    "deleteConfirm": "Delete customer",
+    "blocked": {
+      "projects": "This customer has jobs, so they cannot be deleted. Close or delete the jobs first.",
+      "documents": "This customer has sent estimates or invoices, so they cannot be deleted."
+    },
+    "gone": "This customer no longer exists. Someone deleted it.",
+    "stepCustomer": "Customer",
+    "stepSite": "Property",
+    "deleteHint": "Deleting only removes them from the panel. Jobs and documents stay.",
+    "displayNameRequired": "Enter a name",
+    "emailInvalid": "Enter a valid email",
+    "projectsTab": "Projects ({{n}})",
+    "sinceLong": "Customer since {{date}}",
+    "notSet": "Not set"
   },
   "source": {
     "REFERRAL": "Referral",
-    "WEB": "Web",
-    "SOCIAL": "Social",
-    "REPEAT": "Repeat",
+    "WEB": "Website",
+    "SOCIAL": "Social media",
+    "REPEAT": "Repeat customer",
     "OTHER": "Other"
   },
   "crews": {
@@ -183,5 +218,55 @@
     "SELF": "Themselves",
     "FOREMAN": "Foreman",
     "ADMIN": "Office"
+  },
+  "field": {
+    "required": "{{label}} (required)"
+  },
+  "action": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "retry": "Try again",
+    "next": "Next",
+    "back": "Back",
+    "optional": "Optional"
+  },
+  "form": {
+    "error": {
+      "connection": "No connection. Nothing was lost: check your connection and try again.",
+      "gone": "This record no longer exists. Someone deleted it.",
+      "unknown": "Could not save. Try again."
+    }
+  },
+  "address": {
+    "line1": "Street address",
+    "line2": "Apt, suite, unit",
+    "city": "City",
+    "state": "State",
+    "postalCode": "ZIP code",
+    "country": "Country",
+    "line1Required": "Enter the street address",
+    "cityRequired": "Enter the city",
+    "stateRequired": "Enter the state or province",
+    "postalCodeRequired": "Enter the ZIP code",
+    "stateCodeHint": "Two-letter code, like MD"
+  },
+  "sites": {
+    "title": "Properties",
+    "add": "Add property",
+    "edit": "Edit property",
+    "empty": "No properties yet. Add one to be able to create a project here.",
+    "first": "Property",
+    "include": "Add it now",
+    "radius": "Geofence radius",
+    "radiusHint": "In meters. Empty uses the company default.",
+    "located": "Located · {{m}} m",
+    "noPoint": "No point yet",
+    "new": "New property",
+    "firstHint": "Where the work is. You can add more properties later.",
+    "tab": "Properties ({{n}})",
+    "address": "Address",
+    "location": "Location"
   }
 }

@@ -1,0 +1,49 @@
+<div class="address" [formGroup]="group()" *transloco="let t">
+  <mat-form-field appearance="outline" class="address--wide">
+    <mat-label>{{ t('field.required', { label: t('address.line1') }) }}</mat-label>
+    <input matInput formControlName="line1" autocomplete="address-line1" />
+    <mat-error>{{ t('address.line1Required') }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="address--wide">
+    <mat-label>{{ t('address.line2') }}</mat-label>
+    <input matInput formControlName="line2" autocomplete="address-line2" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ t('field.required', { label: t('address.city') }) }}</mat-label>
+    <input matInput formControlName="city" autocomplete="address-level2" />
+    <mat-error>{{ t('address.cityRequired') }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ t('field.required', { label: t('address.state') }) }}</mat-label>
+    <input
+      matInput
+      formControlName="state"
+      autocomplete="address-level1"
+      [attr.maxlength]="twoLetterState() ? 2 : null"
+    />
+    @if (twoLetterState()) {
+      <mat-hint>{{ t('address.stateCodeHint') }}</mat-hint>
+    }
+    <mat-error>
+      {{ twoLetterState() ? t('address.stateCodeHint') : t('address.stateRequired') }}
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ t('field.required', { label: t('address.postalCode') }) }}</mat-label>
+    <input matInput formControlName="postalCode" autocomplete="postal-code" />
+    <mat-error>{{ t('address.postalCodeRequired') }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ t('field.required', { label: t('address.country') }) }}</mat-label>
+    <mat-select formControlName="country">
+      @for (country of countries; track country.iso) {
+        <mat-option [value]="country.iso">{{ country.iso | slCountry }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>

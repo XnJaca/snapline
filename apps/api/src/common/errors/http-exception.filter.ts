@@ -23,6 +23,8 @@ const DB_ERROR_SIGNATURES: { match: string; code: ErrorCode; status: number; mes
     message: 'Esa persona ya pertenece a una cuadrilla en ese rango de fechas' },
   { match: 'time_entry_rate_frozen_on_approval', code: 'PAY_RATE_MISSING', status: 400,
     message: 'No se puede aprobar sin tarifa definida' },
+  { match: 'el cliente tiene historia y no se borra', code: 'CUSTOMER_HAS_HISTORY', status: 409,
+    message: 'Este cliente tiene obras o documentos y no se puede borrar' },
   { match: 'uq_media_checksum', code: 'CONFLICT', status: 409,
     message: 'Esa foto ya está registrada en el proyecto' },
   { match: 'published_project_company_id_slug_key', code: 'ALREADY_PUBLISHED', status: 409,

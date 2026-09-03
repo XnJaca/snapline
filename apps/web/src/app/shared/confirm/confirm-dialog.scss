@@ -1,0 +1,61 @@
+// Icono grande arriba y todo centrado: una confirmación se lee de un vistazo,
+// no como un formulario. El padding de Material se anula en título y contenido
+// y lo pone el envoltorio, para que icono y texto compartan el mismo margen.
+.confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sl-space-6) var(--sl-space-5) 0;
+  text-align: center;
+}
+
+// Un borrado no se anuncia igual que un guardar: el icono lo dice antes que el
+// texto.
+.confirm__icon {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: var(--sl-space-4);
+  border-radius: var(--sl-radius-full);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-error);
+
+  mat-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 2.25rem;
+  }
+}
+
+.confirm__title {
+  margin: 0 0 var(--sl-space-2);
+  padding: 0;
+  font-size: var(--sl-font-size-title);
+  font-weight: var(--sl-font-weight-bold);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.confirm__body {
+  max-width: 38ch;
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.confirm mat-dialog-content {
+  max-height: none;
+  padding: 0;
+}
+
+mat-dialog-actions {
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-5) var(--sl-space-5) var(--sl-space-6);
+}
+
+.confirm__danger {
+  --mat-button-filled-container-color: var(--mat-sys-error);
+  --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+}

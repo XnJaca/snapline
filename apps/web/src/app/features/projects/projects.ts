@@ -5,18 +5,9 @@ import { collection } from '../../core/api/collection';
 import { Page } from '../../shared/page/page';
 import { Chip, ChipTone } from '../../shared/chip/chip';
 import { DatePipe } from '../../core/format/date.pipe';
+import { projectStatusTone } from './project-status';
 
 type Project = components['schemas']['Project'];
-
-const TONO: Record<string, ChipTone> = {
-  LEAD: 'neutral',
-  ESTIMATED: 'neutral',
-  SCHEDULED: 'info',
-  IN_PROGRESS: 'info',
-  COMPLETED: 'success',
-  ON_HOLD: 'warning',
-  CANCELLED: 'danger',
-};
 
 @Component({
   selector: 'sl-projects',
@@ -29,7 +20,7 @@ export class Projects {
   protected readonly data = collection<Project>(() => '/projects');
 
   protected tone(status: string): ChipTone {
-    return TONO[status] ?? 'neutral';
+    return projectStatusTone(status);
   }
 
   protected city(project: Project): string {

@@ -66,6 +66,6 @@
 @mixin frame {
   overflow: auto;
   border: 1px solid var(--mat-sys-outline);
-  border-radius: var(--sl-radius-lg);
+  border-radius: var(--sl-radius-md);
   background: var(--mat-sys-surface);
 }

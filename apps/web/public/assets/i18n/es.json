@@ -82,7 +82,9 @@
     "empty": "Todavía no hay proyectos.",
     "city": "Ciudad",
     "start": "Inicio",
-    "target": "Entrega"
+    "target": "Entrega",
+    "name": "Obra",
+    "status": "Estado"
   },
   "projectStatus": {
     "LEAD": "Prospecto",
@@ -99,14 +101,47 @@
     "name": "Cliente",
     "phone": "Teléfono",
     "email": "Correo",
-    "source": "Origen",
-    "since": "Alta"
+    "source": "Cómo llegó a usted",
+    "since": "Alta",
+    "search": "Buscar por nombre, empresa o teléfono",
+    "new": "Nuevo cliente",
+    "newTitle": "Nuevo cliente",
+    "editTitle": "Editar cliente",
+    "noMatch": "Ningún cliente coincide con esa búsqueda",
+    "displayName": "Nombre",
+    "displayNameHint": "Un nombre mediante el cual pueda identificar a este cliente.",
+    "firstName": "Nombre de pila",
+    "lastName": "Apellido",
+    "companyName": "Empresa",
+    "contact": "Datos",
+    "contactHint": "Sin correo ni teléfono no se puede invitar a este cliente al portal.",
+    "billingAddress": "Dirección de facturación",
+    "billingInclude": "Agregar una",
+    "notes": "Notas",
+    "projects": "Obras",
+    "noProjects": "Este cliente todavía no tiene obras",
+    "deleteTitle": "¿Borrar este cliente?",
+    "deleteBody": "{{name}} deja de aparecer en el panel, junto con sus propiedades. Las obras y los documentos no se borran.",
+    "deleteConfirm": "Borrar cliente",
+    "blocked": {
+      "projects": "Este cliente tiene obras, así que no se puede borrar. Cierre o borre las obras primero.",
+      "documents": "Este cliente tiene estimados o facturas enviados, así que no se puede borrar."
+    },
+    "gone": "Este cliente ya no existe. Alguien lo borró.",
+    "stepCustomer": "Cliente",
+    "stepSite": "Propiedad",
+    "deleteHint": "Borrar solo lo saca del panel. Las obras y los documentos quedan.",
+    "displayNameRequired": "Escriba un nombre",
+    "emailInvalid": "Escriba un correo válido",
+    "projectsTab": "Obras ({{n}})",
+    "sinceLong": "Cliente desde el {{date}}",
+    "notSet": "Sin definir"
   },
   "source": {
     "REFERRAL": "Referido",
-    "WEB": "Web",
-    "SOCIAL": "Redes",
-    "REPEAT": "Recurrente",
+    "WEB": "Sitio web",
+    "SOCIAL": "Redes sociales",
+    "REPEAT": "Cliente que repite",
     "OTHER": "Otro"
   },
   "crews": {
@@ -183,5 +218,55 @@
     "SELF": "La persona",
     "FOREMAN": "Capataz",
     "ADMIN": "Oficina"
+  },
+  "field": {
+    "required": "{{label}} (obligatorio)"
+  },
+  "action": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Borrar",
+    "retry": "Reintentar",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "optional": "Opcional"
+  },
+  "form": {
+    "error": {
+      "connection": "Sin conexión. No se perdió nada: revise su conexión e intente de nuevo.",
+      "gone": "Este registro ya no existe. Alguien lo borró.",
+      "unknown": "No se pudo guardar. Intente de nuevo."
+    }
+  },
+  "address": {
+    "line1": "Calle y número",
+    "line2": "Apto., suite, unidad",
+    "city": "Ciudad",
+    "state": "Estado",
+    "postalCode": "Código postal",
+    "country": "País",
+    "line1Required": "Escriba la calle y el número",
+    "cityRequired": "Escriba la ciudad",
+    "stateRequired": "Escriba el estado o la provincia",
+    "postalCodeRequired": "Escriba el código postal",
+    "stateCodeHint": "Código de dos letras, como MD"
+  },
+  "sites": {
+    "title": "Propiedades",
+    "add": "Agregar propiedad",
+    "edit": "Editar propiedad",
+    "empty": "Todavía no tiene propiedades. Agregue una para poder crear una obra acá.",
+    "first": "Propiedad",
+    "include": "Agregarla ahora",
+    "radius": "Radio de la geocerca",
+    "radiusHint": "En metros. Vacío usa el default de la empresa.",
+    "located": "Ubicada · {{m}} m",
+    "noPoint": "Sin punto todavía",
+    "new": "Nueva propiedad",
+    "firstHint": "Dónde se trabaja. Después puede agregar más propiedades.",
+    "tab": "Propiedades ({{n}})",
+    "address": "Dirección",
+    "location": "Ubicación"
   }
 }
