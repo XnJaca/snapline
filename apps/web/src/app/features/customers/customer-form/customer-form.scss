@@ -6,14 +6,17 @@
 }
 
 // Ancho completo como el resto de las pantallas: nada centrado a la fuerza.
+// `border-box`, o el padding y el borde se suman al 100% y la ficha sobresale
+// 50px del contenedor, con barra horizontal en toda la página.
 .wizard,
 .single {
   display: flex;
   flex-direction: column;
   gap: var(--sl-space-4);
+  box-sizing: border-box;
   width: 100%;
   border: 1px solid var(--mat-sys-outline);
-  border-radius: var(--sl-radius-lg);
+  border-radius: var(--sl-radius-md);
   background: var(--mat-sys-surface);
 }
 

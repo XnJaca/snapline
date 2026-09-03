@@ -42,6 +42,39 @@ html {
   // Acá entra design-tokens.json. Es el espejo de prohibir fromSeed en Flutter:
   // los valores se declaran, no se derivan.
   @include mat.theme-overrides(tokens.$sl-light);
+
+  // Un solo radio. Material trae uno distinto por componente —4px en los campos,
+  // píldora en los botones, 28px en los diálogos— y en la misma fila se ven como
+  // tres familias. Se pisa en los tokens de forma del sistema, una vez, y no
+  // componente por componente. `corner-full` queda: es lo que hace círculo a un
+  // botón de icono. Ver la guía de estilos.
+  @include mat.theme-overrides(
+    (
+      corner-extra-large: var(--sl-radius-md),
+      corner-extra-large-top: var(--sl-radius-md) var(--sl-radius-md) 0 0,
+      corner-extra-small: var(--sl-radius-md),
+      corner-extra-small-top: var(--sl-radius-md) var(--sl-radius-md) 0 0,
+      corner-large: var(--sl-radius-md),
+      corner-large-end: 0 var(--sl-radius-md) var(--sl-radius-md) 0,
+      corner-large-start: var(--sl-radius-md) 0 0 var(--sl-radius-md),
+      corner-large-top: var(--sl-radius-md) var(--sl-radius-md) 0 0,
+      corner-medium: var(--sl-radius-md),
+      corner-small: var(--sl-radius-md),
+    )
+  );
+
+  // Los botones con texto no salen de los tokens de arriba: Material los ata a
+  // `corner-full`, el mismo que hace círculo a los botones de icono. Se pisan
+  // acá, y los de icono siguen redondos.
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--sl-radius-md),
+      outlined-container-shape: var(--sl-radius-md),
+      text-container-shape: var(--sl-radius-md),
+      tonal-container-shape: var(--sl-radius-md),
+      protected-container-shape: var(--sl-radius-md),
+    )
+  );
 }
 
 // `color-scheme` va junto al override, no solo el color. Los tokens que no
@@ -104,4 +137,17 @@ body {
     outline: 2px solid var(--mat-sys-primary);
     outline-offset: -2px;
   }
+}
+
+// En la barra de una página, un campo mide lo que un botón. Material trae los
+// campos a 56px y los botones a 40px; puestos en la misma fila se ven de dos
+// tamaños, y el encabezado de esa página queda más alto que el de las demás.
+// Son los valores de su densidad -4.
+.page__header .mat-mdc-form-field {
+  @include mat.form-field-overrides(
+    (
+      container-height: 40px,
+      container-vertical-padding: 8px,
+    )
+  );
 }

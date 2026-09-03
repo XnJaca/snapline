@@ -12,13 +12,14 @@ import { collection } from '../../../core/api/collection';
 import { toApiFailure } from '../../../core/api/api-failure';
 import { SessionService } from '../../../core/session/session.service';
 import { Page } from '../../../shared/page/page';
-import { Chip } from '../../../shared/chip/chip';
+import { Chip, ChipTone } from '../../../shared/chip/chip';
 import { DatePipe } from '../../../core/format/date.pipe';
 import { PhonePipe } from '../../../core/format/phone.pipe';
 import { CountryPipe } from '../../../core/format/country.pipe';
-import { ConfirmDialog } from '../../../shared/confirm/confirm-dialog';
+import { CONFIRM_DIALOG_CONFIG, ConfirmDialog } from '../../../shared/confirm/confirm-dialog';
 import { CustomersApi, Site } from '../customers.api';
 import { SiteDialog } from '../site-dialog/site-dialog';
+import { projectStatusTone } from '../../projects/project-status';
 
 type Customer = components['schemas']['Customer'];
 type Project = components['schemas']['Project'];
@@ -57,19 +58,29 @@ export class CustomerDetail {
   protected readonly loading = computed(() => this.customer.isLoading() || this.sites.isLoading());
   protected readonly blocked = signal<'projects' | 'documents' | null>(null);
   protected readonly gone = signal(false);
+  protected readonly tab = signal(0);
 
   protected address(value: unknown): Address | null {
     return (value as Address | null) ?? null;
   }
 
+  protected tone(status: string): ChipTone {
+    return projectStatusTone(status);
+  }
+
   protected async addSite(site?: Site): Promise<void> {
-    const ref = this.dialog.open(SiteDialog, { data: { customerId: this.id, site } });
+    const ref = this.dialog.open(SiteDialog, {
+      data: { customerId: this.id, site },
+      width: '40rem',
+      maxWidth: 'calc(100vw - 2rem)',
+    });
     if (await ref.afterClosed().toPromise()) this.sites.reload();
   }
 
   protected async remove(): Promise<void> {
     const t = (key: string, params?: Record<string, unknown>) => this.transloco.translate(key, params);
     const ref = this.dialog.open(ConfirmDialog, {
+      ...CONFIRM_DIALOG_CONFIG,
       data: {
         title: t('customers.deleteTitle'),
         body: t('customers.deleteBody', { name: this.customer.value()?.displayName ?? '' }),

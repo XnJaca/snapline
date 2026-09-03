@@ -1,3 +1,5 @@
+@use '../../../../styles/data-table' as table;
+
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -15,44 +17,77 @@
   --mat-button-outlined-outline-color: var(--mat-sys-error);
 }
 
-.blocked {
+// Un estado nunca se dice solo con color: el icono va siempre.
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sl-space-3);
   margin: 0 0 var(--sl-space-4);
   padding: var(--sl-space-3) var(--sl-space-4);
   border-radius: var(--sl-radius-md);
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
   font-size: var(--sl-font-size-body);
+  line-height: 1.45;
+
+  mat-icon {
+    flex: none;
+  }
 }
 
-.tabs {
+.notice--danger {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.notice--warning {
+  margin: var(--sl-space-5) 0 0;
+  background: var(--sl-warning-container);
+  color: var(--sl-on-warning-container);
+}
+
+// ------------------------------------------------------------------ la ficha
+
+// Todo lo que va adentro se alinea a los 24px del encabezado de página: el
+// texto de la primera pestaña, la primera columna de las tablas, el botón.
+.card {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--mat-sys-outline);
-  border-radius: var(--sl-radius-lg);
+  border-radius: var(--sl-radius-md);
   background: var(--mat-sys-surface);
 }
 
+// Material no reserva lugar en la fila de las pestañas, así que el botón se
+// posiciona sobre la cabecera, que mide 48px.
+.card__action {
+  position: absolute;
+  z-index: 1;
+  top: var(--sl-space-1);
+  right: var(--sl-space-5);
+}
+
+.tabs {
+  --mat-tab-container-height: 3rem;
+  --mat-tab-divider-color: var(--mat-sys-outline);
+}
+
+// -------------------------------------------------------------------- datos
+
 .panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-4);
   padding: var(--sl-space-5);
 }
 
-.panel__actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-4) var(--sl-space-6);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-5) var(--sl-space-6);
   margin: 0;
 }
 
 .fact {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sl-space-1);
+  min-width: 0;
 
   dt {
     color: var(--mat-sys-on-surface-variant);
@@ -61,59 +96,100 @@
 
   dd {
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--mat-sys-on-surface);
+    font-size: var(--sl-font-size-body);
+    line-height: 1.45;
   }
 }
 
-.block__title {
-  margin: 0 0 var(--sl-space-2);
-  color: var(--mat-sys-on-surface-variant);
-  font-size: var(--sl-font-size-caption);
-  font-weight: var(--sl-font-weight-medium);
+.fact--wide {
+  grid-column: span 2;
 }
 
-.block__text {
-  margin: 0;
-  color: var(--mat-sys-on-surface);
-  line-height: 1.5;
+.unset {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.prose {
+  white-space: pre-line;
   text-wrap: pretty;
 }
 
-.rows {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+.link {
+  color: var(--mat-sys-primary);
+  text-decoration: none;
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-3) 0;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  &:hover {
+    text-decoration: underline;
+  }
 
-  &:last-child {
-    border-bottom: none;
+  &:focus-visible {
+    border-radius: var(--sl-radius-md);
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
   }
 }
 
-.row__main {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-width: 0;
+// ------------------------------------------------------------------- tablas
+
+.table {
+  @include table.base;
+
+  th:first-child,
+  td:first-child {
+    padding-left: var(--sl-space-5);
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: var(--sl-space-5);
+  }
+
+  // El lápiz mide 40px con el trazo centrado: para que el trazo caiga en los
+  // 24px, el botón termina 8px antes.
+  td.action {
+    width: 2.5rem;
+    padding-block: var(--sl-space-1);
+    padding-right: var(--sl-space-4);
+    text-align: right;
+  }
 }
 
-.muted {
+.clickable {
+  cursor: pointer;
+}
+
+.cell__main,
+.cell__sub {
+  display: block;
+}
+
+.cell__sub {
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-caption);
 }
 
 .empty {
   margin: 0;
-  padding: var(--sl-space-5) 0;
+  padding: var(--sl-space-6) var(--sl-space-5);
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
+  text-wrap: balance;
+}
+
+@media (max-width: 64rem) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fact--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 40rem) {
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

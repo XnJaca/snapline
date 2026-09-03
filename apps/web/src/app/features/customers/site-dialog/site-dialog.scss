@@ -1,11 +1,28 @@
-mat-dialog-content {
+// El contenido del diálogo arranca sin padding arriba y recorta lo que se sale:
+// el label flotante del primer campo sobresale 6px por encima de su borde y
+// quedaba cercenado. El aire lo pone este envoltorio, no una pelea con Material.
+.fields {
   display: flex;
   flex-direction: column;
-  min-width: min(32rem, 80vw);
+  gap: var(--sl-space-3);
+  padding-top: var(--sl-space-2);
+  padding-bottom: var(--sl-space-2);
+  container-type: inline-size;
 }
 
-.radius {
-  max-width: 14rem;
+// El radio va en la misma grilla de dos columnas que la dirección, en la
+// primera. `subscriptSizing="dynamic"` porque su ayuda ocupa dos líneas y en
+// modo fijo el subíndice es absoluto y se pisa con lo que sigue.
+.extra {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+}
+
+@container (max-width: 24rem) {
+  .extra {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .error {

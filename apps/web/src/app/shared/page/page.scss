@@ -25,7 +25,7 @@
   padding: var(--sl-space-4) var(--sl-space-5);
   overflow: hidden;
   border: 1px solid var(--mat-sys-outline);
-  border-radius: var(--sl-radius-lg);
+  border-radius: var(--sl-radius-md);
   background: var(--mat-sys-surface);
 }
 
@@ -90,7 +90,7 @@
   gap: var(--sl-space-3);
   padding: var(--sl-space-6) var(--sl-space-5);
   border: 1px solid var(--mat-sys-outline);
-  border-radius: var(--sl-radius-lg);
+  border-radius: var(--sl-radius-md);
   background: var(--mat-sys-surface);
   text-align: center;
 }

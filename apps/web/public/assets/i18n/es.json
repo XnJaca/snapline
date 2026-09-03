@@ -82,7 +82,9 @@
     "empty": "Todavía no hay proyectos.",
     "city": "Ciudad",
     "start": "Inicio",
-    "target": "Entrega"
+    "target": "Entrega",
+    "name": "Obra",
+    "status": "Estado"
   },
   "projectStatus": {
     "LEAD": "Prospecto",
@@ -131,7 +133,9 @@
     "deleteHint": "Borrar solo lo saca del panel. Las obras y los documentos quedan.",
     "displayNameRequired": "Escriba un nombre",
     "emailInvalid": "Escriba un correo válido",
-    "projectsTab": "Obras ({{n}})"
+    "projectsTab": "Obras ({{n}})",
+    "sinceLong": "Cliente desde el {{date}}",
+    "notSet": "Sin definir"
   },
   "source": {
     "REFERRAL": "Referido",
@@ -261,6 +265,8 @@
     "noPoint": "Sin punto todavía",
     "new": "Nueva propiedad",
     "firstHint": "Dónde se trabaja. Después puede agregar más propiedades.",
-    "tab": "Propiedades ({{n}})"
+    "tab": "Propiedades ({{n}})",
+    "address": "Dirección",
+    "location": "Ubicación"
   }
 }

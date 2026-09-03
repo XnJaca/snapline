@@ -1,6 +1,13 @@
+// El ancho que manda es el del contenedor, no el de la ventana: el mismo campo
+// vive en el asistente a pantalla completa y en un diálogo de 40rem, y una
+// media query de viewport dejaba cuatro columnas de 115px adentro del diálogo.
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
 // Columnas explícitas y no `auto-fit`: un item con `grid-column: 1 / -1` ocupa
 // todas las pistas, así que ninguna queda vacía y `auto-fit` no colapsa nada.
-// El resultado eran siete columnas de 160px con los labels cortados.
 .address {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -12,13 +19,13 @@
   grid-column: 1 / -1;
 }
 
-@media (max-width: 62rem) {
+@container (max-width: 48rem) {
   .address {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 34rem) {
+@container (max-width: 24rem) {
   .address {
     grid-template-columns: minmax(0, 1fr);
   }
