@@ -142,6 +142,32 @@ distinguirlos**. La separación la da la forma.
   oscuro, icono— nunca en relleno sólido.
 - **Ningún estado se comunica solo con color.** El icono es obligatorio.
 
+### Un solo radio
+
+Todo lo que tiene esquinas usa **`--sl-radius-md`** (8px): botones, campos,
+tarjetas, tablas, diálogos, chips, avisos y el menú. Lo único que no lo usa es lo
+que es un **círculo** por naturaleza —avatar, botones de icono, el punto de color
+de una cuadrilla, el icono del diálogo—, y eso lleva `--sl-radius-full`.
+
+`--sl-radius-sm` y `--sl-radius-lg` existen en el JSON porque el móvil los
+consume; **en el panel no se usan**. En Angular, Material trae un radio distinto
+por componente —4px en los campos, píldora en los botones, 28px en los
+diálogos— y eso se pisa una sola vez en `styles.scss`, con los tokens de forma
+del sistema (`corner-*`), no componente por componente. La única excepción son
+los botones con texto: Material los ata a `corner-full`, el mismo token que hace
+círculo a los botones de icono, así que van con `mat.button-overrides` en el mismo
+lugar. Se decidió el 2026-09-02 al ver un campo de 4px al lado de un botón en
+píldora en la misma fila.
+
+### Los controles de la barra miden lo que un botón
+
+En el encabezado de una página —buscador, filtros, la acción principal— todo mide
+**40px**. Material trae los campos a 56px y los botones a 40px; en la misma fila
+se ven de dos tamaños, y el encabezado de esa página queda más alto que el de las
+demás. El campo se compacta una sola vez en `styles.scss`, para todo lo que esté
+dentro de `.page__header`, con los valores de la densidad -4 de Material. Los
+formularios siguen a 56px: ahí la altura es lo que hace cómodo escribir.
+
 **Componente** — solo consume.
 
 ```scss

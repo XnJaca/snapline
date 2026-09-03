@@ -205,22 +205,39 @@ reintenta. Esto no arma su propia detección.
 │ Whitaker Home           +1 555 447 8890   Recurrente 2 obras   │
 └────────────────────────────────────────────────────────────────┘
 
-┌─ Martinez Residence ──────────────────── [Editar] [Borrar] ────┐
-├──────────┬───────────────────┬─────────────────────────────────┤
-│  Datos   │  Propiedades (2)  │  Obras (2)                      │
-├──────────┴───────────────────┴─────────────────────────────────┤
-│  Teléfono           Correo              Origen      Alta       │
-│  +1 555 987-6543    martinez@…          Referido    12 ago     │
-│                                                                │
-│  Dirección de facturación                                      │
-│   100 Main St, Baltimore MD 21201                              │
-└────────────────────────────────────────────────────────────────┘
+┌─ Martinez Residence ─────────────────────────── [Editar] [Borrar] ─┐
+│  Cliente desde el 12 ago 2026                                       │
+└─────────────────────────────────────────────────────────────────────┘
+┌─ Datos │ Propiedades (2) │ Obras (2) ─────────────────────────────┐
+│  Teléfono             Correo               Empresa                  │
+│  +1 (555) 987-6543    martinez@…           Sin definir              │
+│                                                                     │
+│  Nombre de pila       Apellido             Cómo llegó a usted       │
+│  Sin definir          Sin definir          Referido                 │
+│                                                                     │
+│  Dirección de facturación   Notas                                   │
+│  100 Main St                Sin definir                             │
+│  Baltimore, MD 21201                                                │
+└─────────────────────────────────────────────────────────────────────┘
+┌─ Datos │ Propiedades (2) │ Obras (2) ──────────── [Agregar propiedad] ┐
+│  Dirección                                  Ubicación               │
+│  100 Main St                                Ubicada · 150 m       ✎ │
+│  Baltimore, MD 21201 · Estados Unidos                               │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-**La ficha va en pestañas**, cada una con su conteo, y las dos acciones viven
-arriba juntas. Borrar abre un **diálogo de alerta** que nombra al cliente antes
-de hacer nada, y cuando el API lo rechaza el mensaje dice **qué lo retiene**
-—obras o documentos—, no un texto genérico.
+**La ficha va en pestañas** —Datos, Propiedades y Obras, las dos últimas con su
+conteo—, **compactas y alineadas a la izquierda**, no estiradas a lo ancho. Datos
+muestra **los mismos ocho campos que la ficha del móvil**, en una grilla de tres
+columnas, y donde no hay valor dice "Sin definir": lo que falta se tiene que ver,
+porque corregirlo es la mitad del trabajo de esta pantalla. Si no hay ni teléfono
+ni correo, ahí mismo se avisa que no se lo puede invitar al portal. Propiedades y
+Obras usan la tabla del panel, y "Agregar propiedad" vive en la fila de las
+pestañas. Todo lo de adentro se alinea a los 24px del encabezado.
+
+Las dos acciones del cliente viven arriba juntas. Borrar abre un **diálogo de
+alerta** que nombra al cliente antes de hacer nada, y cuando el API lo rechaza el
+mensaje dice **qué lo retiene** —obras o documentos—, no un texto genérico.
 
 **Se entra a la ficha desde toda la fila del listado**, no solo desde el nombre.
 
@@ -236,7 +253,7 @@ criterio que SPEC-0006 móvil fijó y que ahí funcionó.
       donde se intente, no en el alta.
 - [x] La dirección se captura completa —calle, ciudad, estado, código postal y
       país— y el país sale de una lista, no se teclea.
-- [ ] Corregir un cliente aplica el cambio encima y no crea una segunda fila.
+- [x] Corregir un cliente aplica el cambio encima y no crea una segunda fila.
 - [x] Un `ACCOUNTANT` ve la lista y la ficha, y **no encuentra ningún control de
       escritura**: ni "Nuevo cliente", ni "Corregir", ni "Agregar propiedad".
 - [x] Un formulario que falla por red conserva lo escrito y ofrece reintentar, y
@@ -314,3 +331,10 @@ criterio que SPEC-0006 móvil fijó y que ahí funcionó.
 > segundo tiene su estado `gone` resuelto.
 | 2026-09-01 | en-implementacion | **Corrección de dominio salida de probar la pantalla.** La ficha decía que `state` es "código de dos letras: MD", escrito asumiendo Estados Unidos, y el formulario lo exigía en todos los países. Con Costa Rica seleccionada eso hace imposible cargar la dirección, porque la provincia es "San José". El código de dos letras es de Estados Unidos y Canadá (ISO 3166-2); en el resto se escribe el nombre. La ficha queda corregida y la regla vive en `stateValidatorsFor()`, con sus tests. Las mayúsculas automáticas también se acotan: pasar "San José" a mayúsculas sería romper el dato, no normalizarlo |
 | 2026-09-01 | en-implementacion | Pasada de interfaz sobre lo implementado, pedida al probarlo. La ficha pasa a **pestañas** —Datos, Propiedades y Obras, con su conteo—, las dos acciones suben juntas al encabezado, y el diálogo de borrado se lee como alerta con su icono. **Esto revierte una decisión que estaba escrita en este mismo spec**: que borrar viviera al pie y separado del resto. La maqueta y esa nota quedan corregidas, porque un spec que dice lo contrario de lo que hace la pantalla es peor que no tenerlo. Se arregló también entrar a la ficha desde el listado: el nombre era un enlace del mismo color que el resto del texto y no había forma de descubrirlo |
+| 2026-09-02 | en-implementacion | **Segunda pasada de interfaz sobre la ficha**, pedida al verla con datos. Las tres pestañas estiradas a lo ancho dejaban la página vacía en cuatro quintos y Datos mostraba solo lo que tenía valor, así que un cliente sin empresa ni apellido parecía tener tres campos. Las pestañas quedan —es lo que se pidió— pero compactas y alineadas a la izquierda; Datos muestra los ocho campos del móvil en una grilla de tres columnas con "Sin definir" donde falta; propiedades y obras pasan a la tabla del panel; "Agregar propiedad" sube a la fila de las pestañas; y todo se alinea a los 24px del encabezado, que el botón y las tablas no respetaban (12 y 16). **En el camino probé sacar Datos a una columna fija al lado de las pestañas y fue rechazado**: el pedido eran pestañas, y cambiarlo por cuenta propia no era mío |
+| 2026-09-02 | en-implementacion | **El diálogo de propiedad, medido y corregido.** Tres fallas en una captura: la grilla de la dirección seguía en cuatro columnas de 115px adentro de un diálogo de 525px —los breakpoints miraban la ventana, no el contenedor—, el label flotante del primer campo se cortaba 6px por arriba porque el contenido del diálogo arranca con `padding-top: 0` y recorta, y los dos hints en posición absoluta se pisaban con la fila siguiente y desbordaban. La dirección pasa a **container queries**, que es lo que hace que el mismo campo sirva a pantalla completa y en un diálogo; el diálogo se abre a 40rem y el hint del radio ocupa su lugar en el flujo. Verificado con el DOM: dos columnas de 290px, ningún label recortado, sin scroll |
+| 2026-09-02 | en-implementacion | **Editar cliente sobresalía del contenedor** y toda la página tenía barra horizontal: la ficha del formulario declaraba `width: 100%` y encima 48px de padding y 2px de borde, que en content-box se suman. Medido: 1650px adentro de 1600. Pasa a `border-box`. Es el mismo bicho que el diálogo de propiedad enseñó una hora antes —medir el DOM antes de tocar—, y quedó revisado que ningún otro `.scss` del panel repita el patrón |
+| 2026-09-02 | en-implementacion | **El diálogo de confirmación, dos veces.** Medido: el icono estaba a 0px del borde porque el envoltorio solo tenía 8px arriba y el padding de Material se había anulado en título y contenido; y "Cancelar" salía pintado porque el foco automático cae en el primer botón. La primera corrección alineó todo a 24px con el icono al costado; se rechazó igual, y se propuso **SweetAlert2**. Se decide **no agregarla**: trae su CSS con colores fuera de los tokens, sin modo oscuro, se salta el foco y la accesibilidad del overlay de Material, y deja dos sistemas de diálogo en la misma app. El mismo look se logra con el diálogo que ya hay: icono de 72px arriba, título y cuerpo centrados, botones centrados, 32rem de ancho, esquinas de 16px como las tarjetas (para todos los diálogos, no solo este), y el foco en el diálogo (`autoFocus: 'dialog'`). La configuración vive con el componente (`CONFIRM_DIALOG_CONFIG`) para que el próximo borrado la reuse |
+| 2026-09-02 | en-implementacion | **Un solo radio en el panel.** En la lista de clientes convivían el campo de búsqueda a 4px (default de Material para text fields), el botón en píldora (su default para botones), las tarjetas a 16px y el menú a 8px. Se fija **`--sl-radius-md` (8px) para todo lo que tiene esquinas**, y `--sl-radius-full` solo para lo que es un círculo. Material se pisa una vez, en los tokens de forma del sistema (`corner-*`) en `styles.scss`, en vez de un override por componente. Los usos de `lg` y `sm` en el panel pasan a `md`; la regla queda en la guía de estilos, que es donde se va a buscar la próxima vez |
+| 2026-09-02 | en-implementacion | **El buscador y "Nuevo cliente" medían distinto**: 56px el campo, 40px el botón, y el encabezado de la lista quedaba a 90px cuando el de las demás páginas mide 76. Los campos dentro de `.page__header` pasan a 40px (densidad -4 de Material), una vez en `styles.scss`, para esta barra y las que vengan. Regla en la guía de estilos |
+| 2026-09-02 | en-implementacion | Marcado el criterio de corregir: en la base, el cliente "Jonathan" tiene `updated_at` posterior a `created_at` y no hay dos filas vivas con el mismo nombre; la corrección cayó encima de la misma fila. Queda uno solo sin marcar, el de corregir un cliente que otra persona acaba de borrar, que pide dos pestañas |
