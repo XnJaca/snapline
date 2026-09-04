@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0012: Avance de la obra"
 type: spec
 platform: mobile
-status: en-implementacion
+status: implementado
 goal: "La tab Avance responde de un vistazo cómo va la obra —en qué estado está y desde cuándo, la foto del antes contra la última, cuánto se trabajó y la última nota—, con el hilo completo de lo que pasó detrás de un toque, y William escribe ahí una nota con fotos eligiendo si queda interna o si el cliente la ve, también sin señal."
 apps:
   - mobile
@@ -25,7 +25,7 @@ created: 2026-09-01
 updated: 2026-09-01
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - mobile
 ---
 
@@ -537,65 +537,65 @@ dos modos (reglas 21 a 24). Se reusan `SectionCard`, `StatusLine`, `StatusChip`,
 
 ## Criterios de aceptación
 
-- [ ] La tab Avance de `ProjectScreen` ya no renderiza `PlaceholderList`, y
+- [x] La tab Avance de `ProjectScreen` ya no renderiza `PlaceholderList`, y
       `PlaceholderList` deja de importarse en `project_screen.dart`
-- [ ] La tab abre mostrando el estado con su fecha, la escalera del ciclo, el par
+- [x] La tab abre mostrando el estado con su fecha, la escalera del ciclo, el par
       de fotos, las cifras y la última nota **sin desplazarse**
-- [ ] La escalera marca hasta el estado actual; `ON_HOLD` cae en la posición de
+- [x] La escalera marca hasta el estado actual; `ON_HOLD` cae en la posición de
       `IN_PROGRESS` y `CANCELLED` no muestra escalera
-- [ ] La pantalla no muestra ningún porcentaje de avance
-- [ ] El par de fotos es la más vieja etiquetada `BEFORE` y la más reciente de la
+- [x] La pantalla no muestra ningún porcentaje de avance
+- [x] El par de fotos es la más vieja etiquetada `BEFORE` y la más reciente de la
       obra; sin la del antes, ese lado explica cuándo hay que sacarla
-- [ ] Las horas aparecen como cifra agregada, nunca como filas por día
-- [ ] «Ver todo lo que pasó» abre el hilo con su conteo, y el hilo mezcla las tres
+- [x] Las horas aparecen como cifra agregada, nunca como filas por día
+- [x] «Ver todo lo que pasó» abre el hilo con su conteo, y el hilo mezcla las tres
       clases de entrada en un solo orden descendente por fecha
-- [ ] Las jornadas **no** aparecen como entradas del hilo
-- [ ] Cambiar el estado de una obra escribe una fila en `project_status_change`
+- [x] Las jornadas **no** aparecen como entradas del hilo
+- [x] Cambiar el estado de una obra escribe una fila en `project_status_change`
       con `from_status`, `to_status`, autor y las dos marcas de tiempo
-- [ ] Una transición que la bandeja manda y el servidor descarta **no** escribe
+- [x] Una transición que la bandeja manda y el servidor descarta **no** escribe
       fila de historial
-- [ ] Una obra anterior al historial ancla su hilo en `created_at` y **no afirma
+- [x] Una obra anterior al historial ancla su hilo en `created_at` y **no afirma
       ningún estado** en esa fecha
-- [ ] Las fotos de un mismo día se parten por etiqueta, y una foto con varias
+- [x] Las fotos de un mismo día se parten por etiqueta, y una foto con varias
       cuenta una sola vez
-- [ ] Crear una obra escribe su hito de origen con `from_status` nulo y el
+- [x] Crear una obra escribe su hito de origen con `from_status` nulo y el
       creador como autor, y **ninguna obra queda sin hito**
-- [ ] Un `update` que manda el estado que la obra ya tiene no escribe hito
-- [ ] `project_status_change` nace con RLS forzado y su policy en la misma
+- [x] Un `update` que manda el estado que la obra ya tiene no escribe hito
+- [x] `project_status_change` nace con RLS forzado y su policy en la misma
       migración que la crea
-- [ ] `project_update.visibility` rechaza `PUBLIC` **en la base**, no solo en el DTO
-- [ ] `device_recorded_at` de un hito que llegó por la bandeja es el `occurredAt`
+- [x] `project_update.visibility` rechaza `PUBLIC` **en la base**, no solo en el DTO
+- [x] `device_recorded_at` de un hito que llegó por la bandeja es el `occurredAt`
       de la operación, distinto de `server_received_at`
-- [ ] Las tres fichas de dominio quedan actualizadas en el mismo commit que la
+- [x] Las tres fichas de dominio quedan actualizadas en el mismo commit que la
       migración, con `project_update` mudada a `proyecto.md`. **El mapa no se
       toca**: solo lleva agregados, y `project_status_change` cuelga de Proyecto
       igual que `project_assignment`, que tampoco tiene caja
-- [ ] `GET /sync` devuelve `projectUpdates` y `projectStatusChanges` con
+- [x] `GET /sync` devuelve `projectUpdates` y `projectStatusChanges` con
       sus bajas, acotadas por asignación para `WORKER` y `FOREMAN`
-- [ ] Una nota escrita en modo avión aparece en el hilo al instante, marcada como
+- [x] Una nota escrita en modo avión aparece en el hilo al instante, marcada como
       pendiente, y llega al servidor con su id de dispositivo al volver la red
-- [ ] Reintentar la misma nota responde `duplicate` y no crea una segunda fila
-- [ ] Una nota `INTERNAL` queda con `approved_by` y `published_at` en nulo; una
+- [x] Reintentar la misma nota responde `duplicate` y no crea una segunda fila
+- [x] Una nota `INTERNAL` queda con `approved_by` y `published_at` en nulo; una
       `CLIENT`, con los dos escritos
-- [ ] El portal del cliente sigue sin ver las notas `INTERNAL`, y tampoco ve las
+- [x] El portal del cliente sigue sin ver las notas `INTERNAL`, y tampoco ve las
       `CLIENT` de una obra en modo `STAGES`
-- [ ] Elegir "el cliente la ve" en una obra en modo `STAGES` muestra el aviso
-- [ ] Una foto que no terminó de sincronizar no se puede adjuntar
-- [ ] Guardar una nota `CLIENT` deja en `CLIENT` sus fotos adjuntas que estaban
+- [x] Elegir "el cliente la ve" en una obra en modo `STAGES` muestra el aviso
+- [x] Una foto que no terminó de sincronizar no se puede adjuntar
+- [x] Guardar una nota `CLIENT` deja en `CLIENT` sus fotos adjuntas que estaban
       en `INTERNAL`, no toca las que ya eran `PUBLIC`, y el portal devuelve esa
       nota **con sus fotos** y no con la lista vacía
-- [ ] La tab Detalle permite cambiar `client_visibility_mode` con
+- [x] La tab Detalle permite cambiar `client_visibility_mode` con
       `projects.write`, y el cambio viaja por `project.update`
-- [ ] El hilo carga de a 50 entradas y trae más al llegar al final, sin leer las
+- [x] El hilo carga de a 50 entradas y trae más al llegar al final, sin leer las
       cuatro tablas enteras en cada carga
-- [ ] Dos cambios de estado encolados sin señal se ven como dos hitos
+- [x] Dos cambios de estado encolados sin señal se ven como dos hitos
       encadenados, cada uno con el estado de partida correcto
-- [ ] `/client-access/updates/{projectId}` ya no está entre las rutas de
+- [x] `/client-access/updates/{projectId}` ya no está entre las rutas de
       `openapi.json` —hoy sí está— y `/projects/{projectId}/updates` sí
-- [ ] `openapi.json` regenerado y los clientes de TS y Dart al día
-- [ ] Ni una cadena visible fuera de `l10n`, ni un valor de estilo literal, en
+- [x] `openapi.json` regenerado y los clientes de TS y Dart al día
+- [x] Ni una cadena visible fuera de `l10n`, ni un valor de estilo literal, en
       los dos temas y los dos idiomas
-- [ ] `domain-guardian` antes de la migración; `contract-watcher` al cerrar el
+- [x] `domain-guardian` antes de la migración; `contract-watcher` al cerrar el
       API; `code-reviewer` antes del PR
 
 ## Riesgos / consideraciones
@@ -654,6 +654,7 @@ dos modos (reglas 21 a 24). Se reusan `SectionCard`, `StatusLine`, `StatusChip`,
 | 2026-09-03 | en-implementacion | Revisores. `contract-watcher`: contrato sincronizado, sin bloqueantes; su hallazgo —`crews.service.ts` carga `foreman` sin `foreman.user`, o sea que `Membership.user` ya tiene quien lo dispare— se sumó a DEBT-0012. `code-reviewer`: 33 criterios en `[x]` y **dos desvíos corregidos**. El conteo de «Ver todo lo que pasó» no miraba la bandeja, así que la tab prometía menos filas de las que el hilo abría con un cambio de estado sin señal; ahora lo cuenta y hay tres tests que atan conteo y largo del hilo. Y el aviso de Etapas **cambiaba el modo desde la hoja de nota**, donde el spec dice que no vaya: ahora lleva a Detalle, y el copy dice lo que hace. Dos menores: el `@Transactional()` de `view()` había quedado bajo un comentario huérfano, y los índices del esquema local van a DEBT-0013. 417 tests |
 | 2026-09-03 | en-implementacion | Tres hallazgos de la prueba que entran acá por decisión suya, fuera del alcance del spec. **El estado de una dirección exigía dos letras y la app ofrece dieciséis países**: `@Length(2, 2)` fuera, texto libre hasta 100, label «Estado o provincia» y cinco tests de validación —«Alajuela» y «Sacatepéquez» entran, «MD» sigue entrando—. «Tomar foto» pasa a botón flotante, extendido y de 64dp: el FAB de Material mide 56 y esto se pulsa con guantes. Y la ficha del cliente ofrece crear una obra con él ya puesto, en el `action` del `SectionHeader` —otro widget que existía para esto—. La nota forzada queda fuera: es feature y va a spec propio. 418 tests del móvil, 97 unitarios |
 | 2026-09-03 | en-implementacion | Segunda pasada de los revisores. `contract-watcher` volvió a dar sincronizado y cazó que el cambio del estado había quedado a medias: `toDto()` seguía con `.toUpperCase()`, así que «Alajuela» viajaba como «ALAJUELA». `code-reviewer` verificó los cuatro fixes sin regresiones y encontró dos más: el `SafeArea()` del botón flotante sumaba el inset del teléfono **por fuera** del margen, y la grilla reservaba un número fijo — en cualquier teléfono con barra gestual el botón tapaba la última fila; ahora la reserva incluye `MediaQuery.paddingOf(context).bottom` y hay un test que simula los 34 de un iPhone con Face ID, algo que la suite nunca hacía. Y las tres entradas de `PENDIENTES.md` que este mismo diff resolvía quedaron marcadas. 419 tests del móvil, 97 unitarios, 68 e2e |
+| 2026-09-04 | implementado | PR #39 mergeado. El merge de `main` trajo SPEC-0009 con **el mismo arreglo del estado de una dirección**, hecho mejor: `StateForCountry` valida dos letras solo donde el país las usa, en vez de relajar la regla para todos. Se tomó esa y el móvil se alineó — la regla la declaraban el API y el panel, y el móvil no, así que elegir Estados Unidos y escribir «Maryland» pasaba el formulario y lo rechazaba el servidor al sincronizar. Y quedó comprobado lo que la entrada de `PENDIENTES.md` suponía: con el API de desarrollo levantado los e2e dan rojos intermitentes; bajándolo, 78/78 tres veces seguidas. 423 tests del móvil, 97 unitarios y 78 e2e |
 | 2026-09-01 | aprobado | Aprobado. Queda una decisión abierta a propósito: adjuntar una foto interna a una nota `CLIENT` la eleva, en vez de que el selector ofrezca solo las que ya son visibles |
 | 2026-09-01 | review | Corregido con `domain-guardian`: **una obra creada después del despliegue no tenía hito de origen**, y la lógica sin señal se apoyaba en que siempre hubiera uno — `create` lo escribe ahora. La señal que distingue un hito sembrado de uno real pasó de advertencia de UI a invariante de la tabla. El guard compara contra `actual.status`, porque `canTransition` acepta `from === to`. `occurredAt` no llegaba a `update()`. RLS en la migración que crea la tabla, `CHECK` para que `project_update` no admita `PUBLIC`, la elevación reusa `setVisibility`, y `project_update` se muda a `proyecto.md` |
 | 2026-09-01 | review | Corregido con `spec-reviewer`: la ruta real del endpoint que se retira (`/client-access`, no `/client-portal`) y `GET /sync`; qué pasa con la visibilidad de las fotos adjuntas a una nota `CLIENT`, que el portal escondía en silencio; cambiar `client_visibility_mode`, sin lo cual la mitad de la feature era inerte; la paginación pasó de riesgo a alcance; y de dónde sale el estado de partida de un hito todavía pendiente |

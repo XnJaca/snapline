@@ -12,12 +12,18 @@ Design partner: William Ferman, Professional Construction LLC, Maryland.
 
 ## Estado
 
-Monorepo pnpm + Turborepo. `apps/mobile` con scaffold: tema en los dos modos, i18n
-`en`/`es` y cliente generado desde el contrato. `apps/web` y `apps/site` sin scaffold.
-Alcance reestructurado el 2026-08-08.
+Monorepo pnpm + Turborepo. Alcance reestructurado el 2026-08-08.
 
-`apps/api` — esquema completo (34 tablas, 34 entities, RLS en 28), **76 endpoints**
-y 56 tests:
+`apps/mobile` — **423 tests**. La obra completa: sus cuatro tabs —Avance, Fotos,
+Horas y Detalle—, el marcaje de asistencia, clientes y propiedades con su mapa, y
+la capa local con su bandeja de salida. Ninguna tab de obra usa ya `Placeholder`;
+lo que queda de andamiaje son los ejes que todavía no tienen spec.
+
+`apps/web` — el panel, con clientes y propiedades (SPEC-0009 de web).
+`apps/site` sin scaffold.
+
+`apps/api` — esquema completo (35 tablas, 35 entities, RLS en 30), **81 endpoints**,
+97 tests unitarios y 78 e2e:
 
 | Módulo | Estado |
 |---|---|
