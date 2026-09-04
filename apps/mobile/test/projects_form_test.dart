@@ -173,9 +173,10 @@ void main() {
       );
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Estado o provincia (obligatorio)'),
-        // Una provincia entera, no un código de dos letras: la app ofrece
-        // dieciséis países y fuera de Estados Unidos esto tiene nombre.
-        'Alajuela',
+        // La propiedad es de Maryland y el país por defecto es Estados Unidos:
+        // ahí el estado sí es un código de dos letras. Que fuera de ahí sea el
+        // nombre entero lo cubre `address_state_test.dart`.
+        'MD',
       );
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Código postal (obligatorio)'),
@@ -186,10 +187,7 @@ void main() {
 
       expect(find.byType(ProjectFormScreen), findsOne);
       expect(find.textContaining('9800 Georgia Ave'), findsWidgets);
-      // Tal cual se escribió: el `toUpperCase()` del estado era de cuando esto
-      // eran dos letras, y una provincia es un nombre propio.
-      expect(find.textContaining('Alajuela'), findsWidgets);
-      expect(find.textContaining('ALAJUELA'), findsNothing);
+      expect(find.textContaining('MD'), findsWidgets);
     });
 
     testWithApp('el trío completo deja la obra guardada y pendiente', (

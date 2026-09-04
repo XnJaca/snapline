@@ -1,0 +1,22 @@
+<div class="confirm" [class.confirm--danger]="data.danger">
+  @if (data.danger) {
+    <span class="confirm__icon"><mat-icon svgIcon="alert" /></span>
+  }
+
+  <h2 class="confirm__title" mat-dialog-title>{{ data.title }}</h2>
+  <mat-dialog-content>
+    <p class="confirm__body">{{ data.body }}</p>
+  </mat-dialog-content>
+</div>
+
+<mat-dialog-actions align="center" *transloco="let t">
+  <button matButton="outlined" type="button" (click)="close(false)">{{ t('action.cancel') }}</button>
+  <button
+    [class.confirm__danger]="data.danger"
+    matButton="filled"
+    type="button"
+    (click)="close(true)"
+  >
+    {{ data.confirmLabel }}
+  </button>
+</mat-dialog-actions>

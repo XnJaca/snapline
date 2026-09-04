@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
+import { ApiError } from '../common/errors/api-error';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { Transactional } from 'typeorm-transactional';
 import { newId } from '../common/entities/base.entity';
@@ -14,6 +15,7 @@ export class CustomersService {
   constructor(
     @InjectRepository(Customer) private readonly customers: Repository<Customer>,
     @InjectRepository(Site) private readonly sites: Repository<Site>,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   list(): Promise<Customer[]> {
@@ -49,13 +51,49 @@ export class CustomersService {
     return this.get(id);
   }
 
+  /**
+   * Las propiedades se van con el cliente: lo hace el trigger
+   * `customer_sites_cascade_delete`, no este método.
+   *
+   * La comprobación de historia está duplicada a propósito. La que manda es la
+   * de la base (`enforce_customer_no_history`, migración `CustomerDeleteGuards`),
+   * que ningún camino se puede saltar; esta atrapa el caso común sin depender de
+   * matchear el texto de una excepción de Postgres.
+   */
+  @Transactional()
   async remove(id: string): Promise<void> {
     await this.get(id);
+
+    const [historia] = await this.dataSource.query<Array<{ obras: string; documentos: string }>>(
+      `SELECT
+         (SELECT count(*) FROM project
+          WHERE customer_id = $1 AND deleted_at IS NULL) AS obras,
+         (SELECT count(*) FROM estimate
+          WHERE customer_id = $1 AND deleted_at IS NULL AND status <> 'DRAFT')
+       + (SELECT count(*) FROM invoice
+          WHERE customer_id = $1 AND deleted_at IS NULL AND status <> 'DRAFT') AS documentos`,
+      [id],
+    );
+
+    if (Number(historia.obras) > 0 || Number(historia.documentos) > 0) {
+      throw ApiError.conflict(
+        'CUSTOMER_HAS_HISTORY',
+        'Este cliente tiene obras o documentos y no se puede borrar',
+      );
+    }
+
     await this.customers.update({ id }, { deletedAt: new Date() });
   }
 
+  /**
+   * Exige que el cliente siga vivo. Sin eso, borrar un cliente dejaba su
+   * dirección alcanzable por acá indefinidamente mientras el propio cliente ya
+   * respondía 404.
+   */
   listSites(customerId: string): Promise<Site[]> {
-    return this.sites.find({ where: { customer: { id: customerId }, deletedAt: IsNull() } });
+    return this.sites.find({
+      where: { customer: { id: customerId, deletedAt: IsNull() }, deletedAt: IsNull() },
+    });
   }
 
   /**
@@ -65,7 +103,10 @@ export class CustomersService {
    */
   async getSite(id: string, customerId?: string): Promise<Site> {
     const found = await this.sites.findOne({
-      where: { id, deletedAt: IsNull(), ...(customerId ? { customer: { id: customerId } } : {}) },
+      where: {
+        id, deletedAt: IsNull(),
+        ...(customerId ? { customer: { id: customerId, deletedAt: IsNull() } } : {}),
+      },
     });
     if (!found) throw new NotFoundException('Propiedad no encontrada');
     return found;

@@ -352,6 +352,7 @@
   "addressCountry": "País",
   "addressLine1Required": "Escriba la calle y el número",
   "addressCityRequired": "Escriba la ciudad",
+  "addressStateTwoLetters": "Código de dos letras, como MD",
   "addressStateRequired": "Escriba el estado o la provincia",
   "addressPostalCodeRequired": "Escriba el código postal",
 

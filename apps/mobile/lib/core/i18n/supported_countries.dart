@@ -11,6 +11,19 @@ import 'package:phone_form_field/phone_form_field.dart';
 /// cargado de otro país sigue mostrándose y validándose; lo que cambia es qué se
 /// ofrece al elegir. Ampliarla es agregar una línea acá.
 abstract final class SupportedCountries {
+  /// Dónde el estado de una dirección es un código de dos letras. En el resto
+  /// es el nombre entero: en Costa Rica la provincia es «San José», y exigir
+  /// dos letras ahí hace imposible cargar la dirección.
+  ///
+  /// Está también en `apps/api/src/common/dto/address.dto.ts` y en
+  /// `apps/web/src/app/core/i18n/supported-countries.ts`: son dos códigos y no
+  /// hay endpoint que los transporte, así que cada lado lo declara citando la
+  /// misma ficha.
+  static const usesTwoLetterState = [IsoCode.US, IsoCode.CA];
+
+  static bool esCodigoDeDosLetras(IsoCode iso) =>
+      usesTwoLetterState.contains(iso);
+
   /// Arriba del resto en el selector: es donde opera el design partner.
   static const favorites = [IsoCode.US, IsoCode.CA];
 

@@ -571,7 +571,12 @@ describe('invariantes del dominio (e2e)', () => {
      */
     it('etiquetar toca el asset, así que entra en el pull incremental', async () => {
       const otro = await registrar();
-      const antes = new Date().toISOString();
+      // Un segundo atrás y no `now()`: el pull filtra con `updated_at > desde`
+      // estricto, y el reloj de Node tiene precisión de milisegundo. Con el
+      // cursor pegado a la escritura, la fila cae justo en el borde y el test
+      // falla una de cada tres veces. La aserción busca por id, así que una
+      // ventana más ancha no afloja lo que comprueba.
+      const antes = new Date(Date.now() - 1000).toISOString();
 
       await http.post(`/api/media/${otro}/tags`)
         .set('Authorization', `Bearer ${ownerA}`)
@@ -620,7 +625,12 @@ describe('invariantes del dominio (e2e)', () => {
 
     it('borrar es suave y la baja viaja en el pull', async () => {
       const victima = await registrar();
-      const antes = new Date().toISOString();
+      // Un segundo atrás y no `now()`: el pull filtra con `updated_at > desde`
+      // estricto, y el reloj de Node tiene precisión de milisegundo. Con el
+      // cursor pegado a la escritura, la fila cae justo en el borde y el test
+      // falla una de cada tres veces. La aserción busca por id, así que una
+      // ventana más ancha no afloja lo que comprueba.
+      const antes = new Date(Date.now() - 1000).toISOString();
 
       await http.delete(`/api/media/${victima}`)
         .set('Authorization', `Bearer ${ownerA}`).expect(204);

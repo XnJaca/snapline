@@ -1061,7 +1061,7 @@ export interface components {
             /** @example Silver Spring */
             city: string;
             /**
-             * @description Estado, provincia o departamento.
+             * @description En Estados Unidos y Canadá, el código de dos letras. En el resto, el nombre de la provincia: "San José".
              * @example MD
              */
             state: string;
@@ -2076,7 +2076,7 @@ export interface components {
              * @description Código estable. No se traduce: es contra lo que ramifica el cliente.
              * @enum {string}
              */
-            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ASSET_NOT_IN_PROJECT" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
+            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "CUSTOMER_HAS_HISTORY" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ASSET_NOT_IN_PROJECT" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
             /** @description Texto para mostrar. Esto sí se traduce. */
             message: string;
             /** @description Vacío cuando no aplica; nunca ausente. */

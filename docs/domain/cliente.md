@@ -51,7 +51,7 @@ solo formulario, un solo modelo en los tres consumidores.
 | `line1` | string | sí | Calle y número |
 | `line2` | string | no | Apartamento, unidad, suite |
 | `city` | string | sí | |
-| `state` | string | sí | Código de dos letras: `MD` |
+| `state` | string | sí | **En Estados Unidos y Canadá**, el código de dos letras: `MD`. En el resto, el nombre de la provincia: `San José` |
 | `postal_code` | string | sí | |
 | `country` | string | sí | ISO de dos letras, default `US` |
 

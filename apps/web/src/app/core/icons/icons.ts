@@ -10,7 +10,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 export const ICONS = [
   'projects', 'customers', 'crews', 'hours',
   'catalog', 'billing', 'reports', 'publish',
-  'logout', 'language', 'theme', 'menu', 'brand-mark',
+  'logout', 'language', 'theme', 'menu', 'brand-mark', 'check', 'edit', 'alert',
 ] as const;
 
 export type IconName = (typeof ICONS)[number];

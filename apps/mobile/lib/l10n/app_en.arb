@@ -394,6 +394,7 @@
   "addressCountry": "Country",
   "addressLine1Required": "Enter the street address",
   "addressCityRequired": "Enter the city",
+  "addressStateTwoLetters": "Two-letter code, like MD",
   "addressStateRequired": "Enter the state or province",
   "addressPostalCodeRequired": "Enter the ZIP code",
 

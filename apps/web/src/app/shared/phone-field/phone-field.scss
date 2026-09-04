@@ -1,0 +1,24 @@
+.phone {
+  display: flex;
+  gap: var(--sl-space-3);
+}
+
+.phone__country {
+  flex: 0 0 13rem;
+}
+
+.phone__number {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 30rem) {
+  .phone {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .phone__country {
+    flex: none;
+  }
+}

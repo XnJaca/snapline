@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0009: Clientes y propiedades en el panel"
 type: spec
 platform: web
-status: review
+status: en-implementacion
 goal: "Desde el panel se da de alta un cliente con su primera propiedad en un solo paso y se corrige lo que llegó mal; un cliente sin historia se borra y arrastra sus propiedades, uno con obras o documentos enviados no se borra ni por el endpoint ni por la base, y quien solo tiene `customers.read` no encuentra ningún control que escriba."
 apps:
   - api
@@ -19,7 +19,7 @@ created: 2026-09-01
 updated: 2026-09-01
 tags:
   - spec
-  - spec/review
+  - spec/en-implementacion
   - web
 ---
 
@@ -205,75 +205,92 @@ reintenta. Esto no arma su propia detección.
 │ Whitaker Home           +1 555 447 8890   Recurrente 2 obras   │
 └────────────────────────────────────────────────────────────────┘
 
-┌─ Martinez Residence ─────────────────────────── [Corregir] ────┐
-│  Contacto        martinez@example.com · +1 555 987 6543        │
-│  Origen          Referido                                      │
-│                                                                │
-│  Propiedades                              [+ Agregar]          │
-│   100 Main St, Baltimore MD 21201          · geocerca 150 m    │
-│   9800 Georgia Ave, Silver Spring MD 20902 · sin punto         │
-│                                                                │
-│  Obras                                                         │
-│   Techo Martinez     En progreso                               │
-│   Baño Martinez      En progreso                               │
-│                                                                │
-│                                          [Borrar cliente]      │
-└────────────────────────────────────────────────────────────────┘
+┌─ Martinez Residence ─────────────────────────── [Editar] [Borrar] ─┐
+│  Cliente desde el 12 ago 2026                                       │
+└─────────────────────────────────────────────────────────────────────┘
+┌─ Datos │ Propiedades (2) │ Obras (2) ─────────────────────────────┐
+│  Teléfono             Correo               Empresa                  │
+│  +1 (555) 987-6543    martinez@…           Sin definir              │
+│                                                                     │
+│  Nombre de pila       Apellido             Cómo llegó a usted       │
+│  Sin definir          Sin definir          Referido                 │
+│                                                                     │
+│  Dirección de facturación   Notas                                   │
+│  100 Main St                Sin definir                             │
+│  Baltimore, MD 21201                                                │
+└─────────────────────────────────────────────────────────────────────┘
+┌─ Datos │ Propiedades (2) │ Obras (2) ──────────── [Agregar propiedad] ┐
+│  Dirección                                  Ubicación               │
+│  100 Main St                                Ubicada · 150 m       ✎ │
+│  Baltimore, MD 21201 · Estados Unidos                               │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Borrar vive en la ficha y no en la lista**, al pie y separado del resto: es la
-única acción destructiva de la pantalla y no se pone al lado de las que no lo son.
-Pide confirmación **nombrando al cliente**, y cuando el API lo rechaza el mensaje
-dice qué lo retiene, no un texto genérico.
+**La ficha va en pestañas** —Datos, Propiedades y Obras, las dos últimas con su
+conteo—, **compactas y alineadas a la izquierda**, no estiradas a lo ancho. Datos
+muestra **los mismos ocho campos que la ficha del móvil**, en una grilla de tres
+columnas, y donde no hay valor dice "Sin definir": lo que falta se tiene que ver,
+porque corregirlo es la mitad del trabajo de esta pantalla. Si no hay ni teléfono
+ni correo, ahí mismo se avisa que no se lo puede invitar al portal. Propiedades y
+Obras usan la tabla del panel, y "Agregar propiedad" vive en la fila de las
+pestañas. Todo lo de adentro se alinea a los 24px del encabezado.
+
+Las dos acciones del cliente viven arriba juntas. Borrar abre un **diálogo de
+alerta** que nombra al cliente antes de hacer nada, y cuando el API lo rechaza el
+mensaje dice **qué lo retiene** —obras o documentos—, no un texto genérico.
+
+**Se entra a la ficha desde toda la fila del listado**, no solo desde el nombre.
 
 **Lo obligatorio se dice con palabras en el label, no con un asterisco.** Es el
 criterio que SPEC-0006 móvil fijó y que ahí funcionó.
 
 ## Criterios de aceptación
 
-- [ ] Crear un cliente con su primera propiedad en un solo envío deja las dos
+- [x] Crear un cliente con su primera propiedad en un solo envío deja las dos
       cosas creadas, y la propiedad queda colgada de ese cliente.
-- [ ] Un cliente sin correo y sin teléfono se puede crear: los dos son opcionales
+- [x] Un cliente sin correo y sin teléfono se puede crear: los dos son opcionales
       en el dominio. Lo que no se puede es invitarlo al portal, y eso se dice
       donde se intente, no en el alta.
-- [ ] La dirección se captura completa —calle, ciudad, estado, código postal y
+- [x] La dirección se captura completa —calle, ciudad, estado, código postal y
       país— y el país sale de una lista, no se teclea.
-- [ ] Corregir un cliente aplica el cambio encima y no crea una segunda fila.
-- [ ] Un `ACCOUNTANT` ve la lista y la ficha, y **no encuentra ningún control de
+- [x] Corregir un cliente aplica el cambio encima y no crea una segunda fila.
+- [x] Un `ACCOUNTANT` ve la lista y la ficha, y **no encuentra ningún control de
       escritura**: ni "Nuevo cliente", ni "Corregir", ni "Agregar propiedad".
-- [ ] Un formulario que falla por red conserva lo escrito y ofrece reintentar, y
+- [x] Un formulario que falla por red conserva lo escrito y ofrece reintentar, y
       no se confunde con un error de validación.
-- [ ] La búsqueda filtra por nombre, correo y teléfono, y su estado vacío se
+- [x] La búsqueda filtra por nombre, correo y teléfono, y su estado vacío se
       distingue del estado vacío de "todavía no hay clientes".
-- [ ] **Cero cadenas quemadas** (regla 24), en `en` y en `es`, con la misma voz de
+- [x] **Cero cadenas quemadas** (regla 24), en `en` y en `es`, con la misma voz de
       usted que el resto del producto.
-- [ ] El teléfono se guarda normalizado a E.164 con el mismo mecanismo que el móvil:
+- [x] El teléfono se guarda normalizado a E.164 con el mismo mecanismo que el móvil:
       el país se elige y el número se normaliza **en el cliente**, porque
       `CreateCustomerDto` no valida formato. Es la mitad de
       [[../../../tech-debt/0003-telefono-sin-normalizar|DEBT-0003]] que sigue
       abierta, y este spec no la cierra.
-- [ ] Tests del panel para el alta con propiedad embebida, para el filtrado por
+- [x] Tests del panel para el alta con propiedad embebida, para el filtrado por
       permiso y para el fallo de red que conserva el formulario.
-- [ ] Borrar un cliente sin obras ni documentos responde 204, lo saca de la lista y
+- [x] Borrar un cliente sin obras ni documentos responde 204, lo saca de la lista y
       **sus propiedades quedan borradas con él**.
-- [ ] Borrar un cliente con una obra **terminada** responde 409
+- [x] Borrar un cliente con una obra **terminada** responde 409
       `CUSTOMER_HAS_HISTORY`, igual que con una en curso.
-- [ ] **Un estimado en `DRAFT` no retiene**: el cliente que solo tiene eso se borra.
+- [x] **Un estimado en `DRAFT` no retiene**: el cliente que solo tiene eso se borra.
       Uno en `SENT` sí retiene, y una factura `VOID` también.
-- [ ] El panel distingue si lo retienen **obras** o **documentos**, y no muestra un
+- [x] El panel distingue si lo retienen **obras** o **documentos**, y no muestra un
       conteo que no tenga de dónde salir.
-- [ ] Borrar pide confirmación nombrando al cliente.
-- [ ] **El trigger lo impide aunque la comprobación del servicio no esté.** Se
+- [x] Borrar pide confirmación nombrando al cliente.
+- [x] **El trigger lo impide aunque la comprobación del servicio no esté.** Se
       verifica con un `UPDATE` directo contra la base, no por el endpoint.
-- [ ] **La cascada también vive en la base**: un `UPDATE` directo que borre al
+- [x] **La cascada también vive en la base**: un `UPDATE` directo que borre al
       cliente deja sus propiedades borradas, sin pasar por el servicio.
-- [ ] `GET /customers/{id}/sites` deja de devolver propiedades de un cliente
+- [x] `GET /customers/{id}/sites` deja de devolver propiedades de un cliente
       borrado.
-- [ ] Una obra ya publicada sigue en el portafolio después de borrar a su cliente:
-      `published_project` copió la ciudad y el tipo de servicio.
+- [x] Una obra ya publicada sigue en el portafolio después de borrar a su cliente.
+      **Resultó imposible de ejercitar, y por la razón correcta**: publicar exige
+      una obra, y una obra retiene al cliente, así que un cliente con algo
+      publicado no se puede borrar nunca. El criterio se cumple por construcción.
 - [ ] Corregir un cliente que otra persona acaba de borrar dice que ya no existe y
       vuelve a la lista, en vez de un 404 crudo.
-- [ ] `openapi.json` regenerado con el código de error nuevo (regla 8).
+- [x] `openapi.json` regenerado con el código de error nuevo (regla 8).
 
 ## Riesgos / consideraciones
 
@@ -303,3 +320,21 @@ criterio que SPEC-0006 móvil fijó y que ahí funcionó.
 | 2026-09-01 | borrador | Revisado por `domain-guardian` y `spec-reviewer`. El guardián encontró lo que faltaba: el invariante hablaba de obras y documentos y no decía nada de las **propiedades**, que quedaban vivas y alcanzables por `GET /customers/{id}/sites` después de borrar al cliente. Se resuelve con cascada, que es como la ficha ya modela el agregado. El revisor de specs encontró cuatro huecos: el `goal` no cubría el borrado —lo único que abre trabajo de API—, la maqueta no tenía control de borrar, el criterio prometía un conteo que la 409 no puede dar, y el spec afirmaba el invariante y a la vez lo dejaba abierto. Se decide además que **solo retiene lo enviado**: un `DRAFT` es editable y borrable, así que no es historia |
 | 2026-09-01 | borrador | Se decide que el borrado lleve su comprobación **en la base** y no en el panel: es la única de las tres opciones que sostiene el invariante para cualquier consumidor. Eso mete `api` en el alcance |
 | 2026-09-01 | borrador | Creado. Primer módulo de la secuencia del panel —clientes, proyectos, fotos, publicar— que sale de que el panel muestre ocho ejes de solo lectura y no deje crear nada |
+| 2026-09-01 | aprobado | Aprobado por @jaca con los cuatro bloqueantes del `spec-reviewer` cerrados y el invariante de `site` resuelto |
+| 2026-09-01 | en-implementacion | Arranca en `feature/web-0009-clientes`. Empieza por el API —los dos triggers, el código de error y el arreglo de `listSites()`— porque la pantalla no puede probar el borrado hasta que exista el invariante |
+| 2026-09-01 | en-implementacion | API y panel completos. Los dos triggers, el código estable y el arreglo de `listSites()`; la lista con búsqueda, la ficha, el alta y la corrección. 92 unitarios del API, 63 e2e y 53 del panel. **Tres correcciones que salieron de mirar la pantalla, no de los tests**: el formulario estaba centrado a 48rem mientras el resto del panel ocupa el ancho completo, y apilado en una columna obligaba a scrollear —pasa a wizard de dos pasos con los campos repartidos en cuatro columnas—; `auto-fit` no colapsaba las pistas vacías porque un item con `grid-column: 1 / -1` las ocupa todas, así que los campos quedaban en siete columnas de 160px con los labels cortados; y declarar el stepper en `app.config` subía el bundle inicial de 355 a 546 kB para todos, incluida la pantalla de entrada. **El copy se reescribió por tercera vez en el ciclo**: el móvil ya tenía este formulario resuelto en los dos idiomas y yo había inventado una versión paralela |
+| 2026-09-01 | en-implementacion | Arreglado un test inestable de `invariantes` que no es de este spec: el pull filtra con `updated_at > desde` estricto y el cursor salía del reloj de Node con precisión de milisegundo, así que la fila caía en el borde y fallaba una de cada tres corridas. Con el cursor un segundo atrás, cuatro corridas seguidas en verde |
+
+> **Quedan dos criterios sin marcar**, los dos por lo mismo: piden mirar la
+> pantalla y no los verifiqué. Corregir un cliente aplicando el cambio encima, y
+> corregir uno que otra persona acaba de borrar. El código de los dos está, y el
+> segundo tiene su estado `gone` resuelto.
+| 2026-09-01 | en-implementacion | **Corrección de dominio salida de probar la pantalla.** La ficha decía que `state` es "código de dos letras: MD", escrito asumiendo Estados Unidos, y el formulario lo exigía en todos los países. Con Costa Rica seleccionada eso hace imposible cargar la dirección, porque la provincia es "San José". El código de dos letras es de Estados Unidos y Canadá (ISO 3166-2); en el resto se escribe el nombre. La ficha queda corregida y la regla vive en `stateValidatorsFor()`, con sus tests. Las mayúsculas automáticas también se acotan: pasar "San José" a mayúsculas sería romper el dato, no normalizarlo |
+| 2026-09-01 | en-implementacion | Pasada de interfaz sobre lo implementado, pedida al probarlo. La ficha pasa a **pestañas** —Datos, Propiedades y Obras, con su conteo—, las dos acciones suben juntas al encabezado, y el diálogo de borrado se lee como alerta con su icono. **Esto revierte una decisión que estaba escrita en este mismo spec**: que borrar viviera al pie y separado del resto. La maqueta y esa nota quedan corregidas, porque un spec que dice lo contrario de lo que hace la pantalla es peor que no tenerlo. Se arregló también entrar a la ficha desde el listado: el nombre era un enlace del mismo color que el resto del texto y no había forma de descubrirlo |
+| 2026-09-02 | en-implementacion | **Segunda pasada de interfaz sobre la ficha**, pedida al verla con datos. Las tres pestañas estiradas a lo ancho dejaban la página vacía en cuatro quintos y Datos mostraba solo lo que tenía valor, así que un cliente sin empresa ni apellido parecía tener tres campos. Las pestañas quedan —es lo que se pidió— pero compactas y alineadas a la izquierda; Datos muestra los ocho campos del móvil en una grilla de tres columnas con "Sin definir" donde falta; propiedades y obras pasan a la tabla del panel; "Agregar propiedad" sube a la fila de las pestañas; y todo se alinea a los 24px del encabezado, que el botón y las tablas no respetaban (12 y 16). **En el camino probé sacar Datos a una columna fija al lado de las pestañas y fue rechazado**: el pedido eran pestañas, y cambiarlo por cuenta propia no era mío |
+| 2026-09-02 | en-implementacion | **El diálogo de propiedad, medido y corregido.** Tres fallas en una captura: la grilla de la dirección seguía en cuatro columnas de 115px adentro de un diálogo de 525px —los breakpoints miraban la ventana, no el contenedor—, el label flotante del primer campo se cortaba 6px por arriba porque el contenido del diálogo arranca con `padding-top: 0` y recorta, y los dos hints en posición absoluta se pisaban con la fila siguiente y desbordaban. La dirección pasa a **container queries**, que es lo que hace que el mismo campo sirva a pantalla completa y en un diálogo; el diálogo se abre a 40rem y el hint del radio ocupa su lugar en el flujo. Verificado con el DOM: dos columnas de 290px, ningún label recortado, sin scroll |
+| 2026-09-02 | en-implementacion | **Editar cliente sobresalía del contenedor** y toda la página tenía barra horizontal: la ficha del formulario declaraba `width: 100%` y encima 48px de padding y 2px de borde, que en content-box se suman. Medido: 1650px adentro de 1600. Pasa a `border-box`. Es el mismo bicho que el diálogo de propiedad enseñó una hora antes —medir el DOM antes de tocar—, y quedó revisado que ningún otro `.scss` del panel repita el patrón |
+| 2026-09-02 | en-implementacion | **El diálogo de confirmación, dos veces.** Medido: el icono estaba a 0px del borde porque el envoltorio solo tenía 8px arriba y el padding de Material se había anulado en título y contenido; y "Cancelar" salía pintado porque el foco automático cae en el primer botón. La primera corrección alineó todo a 24px con el icono al costado; se rechazó igual, y se propuso **SweetAlert2**. Se decide **no agregarla**: trae su CSS con colores fuera de los tokens, sin modo oscuro, se salta el foco y la accesibilidad del overlay de Material, y deja dos sistemas de diálogo en la misma app. El mismo look se logra con el diálogo que ya hay: icono de 72px arriba, título y cuerpo centrados, botones centrados, 32rem de ancho, esquinas de 16px como las tarjetas (para todos los diálogos, no solo este), y el foco en el diálogo (`autoFocus: 'dialog'`). La configuración vive con el componente (`CONFIRM_DIALOG_CONFIG`) para que el próximo borrado la reuse |
+| 2026-09-02 | en-implementacion | **Un solo radio en el panel.** En la lista de clientes convivían el campo de búsqueda a 4px (default de Material para text fields), el botón en píldora (su default para botones), las tarjetas a 16px y el menú a 8px. Se fija **`--sl-radius-md` (8px) para todo lo que tiene esquinas**, y `--sl-radius-full` solo para lo que es un círculo. Material se pisa una vez, en los tokens de forma del sistema (`corner-*`) en `styles.scss`, en vez de un override por componente. Los usos de `lg` y `sm` en el panel pasan a `md`; la regla queda en la guía de estilos, que es donde se va a buscar la próxima vez |
+| 2026-09-02 | en-implementacion | **El buscador y "Nuevo cliente" medían distinto**: 56px el campo, 40px el botón, y el encabezado de la lista quedaba a 90px cuando el de las demás páginas mide 76. Los campos dentro de `.page__header` pasan a 40px (densidad -4 de Material), una vez en `styles.scss`, para esta barra y las que vengan. Regla en la guía de estilos |
+| 2026-09-02 | en-implementacion | Marcado el criterio de corregir: en la base, el cliente "Jonathan" tiene `updated_at` posterior a `created_at` y no hay dos filas vivas con el mismo nombre; la corrección cayó encima de la misma fila. Queda uno solo sin marcar, el de corregir un cliente que otra persona acaba de borrar, que pide dos pestañas |

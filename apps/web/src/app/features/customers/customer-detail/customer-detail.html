@@ -1,0 +1,198 @@
+<sl-page
+  *transloco="let t"
+  icon="customers"
+  [heading]="customer.value()?.displayName ?? t('nav.customers')"
+  [meta]="customer.value() ? t('customers.sinceLong', { date: customer.value()!.createdAt | slDate }) : ''"
+  [loading]="loading()"
+  [failed]="!!customer.error()"
+  (retry)="customer.reload()"
+>
+  @if (canWrite()) {
+    <div slPageActions class="head-actions">
+      <button matButton="outlined" routerLink="edit">{{ t('action.edit') }}</button>
+      <button class="danger" matButton="outlined" type="button" (click)="remove()">
+        {{ t('action.delete') }}
+      </button>
+    </div>
+  }
+
+  @if (blocked(); as motivo) {
+    <p class="notice notice--danger" role="alert">
+      <mat-icon svgIcon="alert" />
+      <span>{{ t('customers.blocked.' + motivo) }}</span>
+    </p>
+  }
+  @if (gone()) {
+    <p class="notice notice--danger" role="alert">
+      <mat-icon svgIcon="alert" />
+      <span>{{ t('customers.gone') }}</span>
+    </p>
+  }
+
+  @if (customer.value(); as c) {
+    <section class="card">
+      <mat-tab-group
+        class="tabs"
+        [mat-stretch-tabs]="false"
+        mat-align-tabs="start"
+        animationDuration="160ms"
+        [(selectedIndex)]="tab"
+      >
+        <mat-tab [label]="t('customers.contact')">
+          <div class="panel">
+            <dl class="facts">
+              <div class="fact">
+                <dt>{{ t('customers.phone') }}</dt>
+                @if (c.phone) {
+                  <dd><a class="link" [href]="'tel:' + c.phone">{{ c.phone | slPhone }}</a></dd>
+                } @else {
+                  <dd class="unset">{{ t('customers.notSet') }}</dd>
+                }
+              </div>
+              <div class="fact">
+                <dt>{{ t('customers.email') }}</dt>
+                @if (c.email) {
+                  <dd><a class="link" [href]="'mailto:' + c.email">{{ c.email }}</a></dd>
+                } @else {
+                  <dd class="unset">{{ t('customers.notSet') }}</dd>
+                }
+              </div>
+              <div class="fact">
+                <dt>{{ t('customers.companyName') }}</dt>
+                <dd [class.unset]="!c.companyName">{{ c.companyName || t('customers.notSet') }}</dd>
+              </div>
+
+              <div class="fact">
+                <dt>{{ t('customers.firstName') }}</dt>
+                <dd [class.unset]="!c.firstName">{{ c.firstName || t('customers.notSet') }}</dd>
+              </div>
+              <div class="fact">
+                <dt>{{ t('customers.lastName') }}</dt>
+                <dd [class.unset]="!c.lastName">{{ c.lastName || t('customers.notSet') }}</dd>
+              </div>
+              <div class="fact">
+                <dt>{{ t('customers.source') }}</dt>
+                <dd [class.unset]="!c.source">{{ c.source ? t('source.' + c.source) : t('customers.notSet') }}</dd>
+              </div>
+
+              <div class="fact">
+                <dt>{{ t('customers.billingAddress') }}</dt>
+                @if (address(c.billingAddress); as dir) {
+                  <dd>
+                    {{ dir.line1 }}@if (dir.line2) {, {{ dir.line2 }}}<br />
+                    {{ dir.city }}, {{ dir.state }} {{ dir.postalCode }}<br />
+                    {{ dir.country | slCountry }}
+                  </dd>
+                } @else {
+                  <dd class="unset">{{ t('customers.notSet') }}</dd>
+                }
+              </div>
+              <div class="fact fact--wide">
+                <dt>{{ t('customers.notes') }}</dt>
+                <dd class="prose" [class.unset]="!c.notes">{{ c.notes || t('customers.notSet') }}</dd>
+              </div>
+            </dl>
+
+            @if (!c.phone && !c.email) {
+              <p class="notice notice--warning">
+                <mat-icon svgIcon="alert" />
+                <span>{{ t('customers.contactHint') }}</span>
+              </p>
+            }
+          </div>
+        </mat-tab>
+
+        <mat-tab [label]="t('sites.tab', { n: sites.value().length })">
+          @if (sites.value().length === 0) {
+            <p class="empty">{{ t('sites.empty') }}</p>
+          } @else {
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="grow">{{ t('sites.address') }}</th>
+                  <th>{{ t('sites.location') }}</th>
+                  @if (canWrite()) {
+                    <th class="action"></th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (site of sites.value(); track site.id) {
+                  <tr [class.clickable]="canWrite()" (click)="canWrite() && addSite(site)">
+                    <td class="grow">
+                      @if (address(site.address); as dir) {
+                        <span class="cell__main">
+                          {{ dir.line1 }}@if (dir.line2) {, {{ dir.line2 }}}
+                        </span>
+                        <span class="cell__sub">
+                          {{ dir.city }}, {{ dir.state }} {{ dir.postalCode }} · {{ dir.country | slCountry }}
+                        </span>
+                      }
+                    </td>
+                    <td>
+                      @if (site.lat !== null) {
+                        <sl-chip tone="success">{{ t('sites.located', { m: site.geofenceRadiusM }) }}</sl-chip>
+                      } @else {
+                        <sl-chip>{{ t('sites.noPoint') }}</sl-chip>
+                      }
+                    </td>
+                    @if (canWrite()) {
+                      <td class="action">
+                        <button
+                          matIconButton
+                          type="button"
+                          [attr.aria-label]="t('sites.edit')"
+                          (click)="$event.stopPropagation(); addSite(site)"
+                        >
+                          <mat-icon svgIcon="edit" />
+                        </button>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </mat-tab>
+
+        <mat-tab [label]="t('customers.projectsTab', { n: projects().length })">
+          @if (projects().length === 0) {
+            <p class="empty">{{ t('customers.noProjects') }}</p>
+          } @else {
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="grow">{{ t('projects.name') }}</th>
+                  <th>{{ t('projects.status') }}</th>
+                  <th>{{ t('projects.start') }}</th>
+                  <th>{{ t('projects.target') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (project of projects(); track project.id) {
+                  <tr>
+                    <td class="grow">
+                      <span class="cell__main">{{ project.name }}</span>
+                      @if (project.serviceType) {
+                        <span class="cell__sub">{{ project.serviceType }}</span>
+                      }
+                    </td>
+                    <td><sl-chip [tone]="tone(project.status)">{{ t('projectStatus.' + project.status) }}</sl-chip></td>
+                    <td class="muted">{{ (project.startDate | slDate) || '—' }}</td>
+                    <td class="muted">{{ (project.targetEndDate | slDate) || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </mat-tab>
+      </mat-tab-group>
+
+      @if (canWrite() && tab() === 1) {
+        <div class="card__action">
+          <button matButton="filled" type="button" (click)="addSite()">{{ t('sites.add') }}</button>
+        </div>
+      }
+    </section>
+  }
+</sl-page>

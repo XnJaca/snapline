@@ -45,9 +45,11 @@ class AddressFormControllers {
       line1: line1.text.trim(),
       line2: line2.text.trim().isEmpty ? null : line2.text.trim(),
       city: city.text.trim(),
-      // Sin `toUpperCase()`: era del tiempo en que esto eran dos letras. Una
-      // provincia es un nombre propio y «SAN JOSÉ» no es cómo se escribe.
-      state: state.text.trim(),
+      // Mayúsculas solo donde el estado es un código: `md` y `MD` son el mismo
+      // estado. Pasar «San José» a mayúsculas rompe el dato, no lo normaliza.
+      state: SupportedCountries.esCodigoDeDosLetras(country.value)
+          ? state.text.trim().toUpperCase()
+          : state.text.trim(),
       postalCode: postalCode.text.trim(),
       country: country.value.name,
     );
@@ -132,23 +134,34 @@ class AddressFields extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: TextFormField(
-                controller: controllers.state,
-                // Texto libre y no dos letras: la app ofrece dieciséis países y
-                // fuera de Estados Unidos esto es una provincia o un
-                // departamento con nombre entero — «Alajuela», «Sacatepéquez».
-                // El código corto se sigue pudiendo escribir.
-                textCapitalization: TextCapitalization.words,
-                maxLength: 100,
-                buildCounter: _sinContador,
-                decoration: InputDecoration(
-                  labelText: etiqueta(l10n.addressState),
-                ),
-                validator: (v) {
-                  if (optional && controllers.isEmpty) return null;
-                  return (v == null || v.trim().isEmpty)
-                      ? l10n.addressStateRequired
-                      : null;
+              // La regla del estado depende del país, así que el campo lo
+              // escucha: en Estados Unidos y Canadá es un código de dos letras;
+              // en el resto, el nombre entero de la provincia. El servidor
+              // valida lo mismo, y sin esto el rechazo llegaría al sincronizar.
+              child: ValueListenableBuilder<IsoCode>(
+                valueListenable: controllers.country,
+                builder: (context, iso, _) {
+                  final dosLetras =
+                      SupportedCountries.esCodigoDeDosLetras(iso);
+                  return TextFormField(
+                    controller: controllers.state,
+                    textCapitalization: dosLetras
+                        ? TextCapitalization.characters
+                        : TextCapitalization.words,
+                    maxLength: dosLetras ? 2 : 100,
+                    buildCounter: _sinContador,
+                    decoration: InputDecoration(
+                      labelText: etiqueta(l10n.addressState),
+                    ),
+                    validator: (v) {
+                      if (optional && controllers.isEmpty) return null;
+                      final valor = v?.trim() ?? '';
+                      if (valor.isEmpty) return l10n.addressStateRequired;
+                      return dosLetras && valor.length != 2
+                          ? l10n.addressStateTwoLetters
+                          : null;
+                    },
+                  );
                 },
               ),
             ),
