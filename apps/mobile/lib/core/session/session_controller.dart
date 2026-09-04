@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/login_dto.dart';
 import '../../data/local/app_database.dart';
+import '../../data/repositories/media_repository.dart';
 import '../network/api_client.dart';
 import '../network/api_failure.dart';
 import 'session.dart';
@@ -50,6 +51,7 @@ class SessionController extends AsyncNotifier<Session?> {
   Future<void> signOut() async {
     await ref.read(sessionStorageProvider).clear();
     await ref.read(appDatabaseProvider).wipe();
+    MediaRepository.olvidarFirmas();
     state = const AsyncData(null);
   }
 }

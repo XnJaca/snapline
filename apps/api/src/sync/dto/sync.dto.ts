@@ -6,6 +6,9 @@ import { SiteInputDto } from '../../customers/dto/customer.dto';
 import { Customer } from '../../customers/entities/customer.entity';
 import { Site } from '../../customers/entities/site.entity';
 import { Project } from '../../projects/entities/project.entity';
+import { CreateProjectUpdateDto } from '../../projects/dto/project.dto';
+import { ProjectUpdate } from '../../projects/entities/project-update.entity';
+import { ProjectStatusChange } from '../../projects/entities/project-status-change.entity';
 import { ProjectAssignment } from '../../projects/entities/project-assignment.entity';
 import { MediaAssetDto } from '../../media/dto/media.dto';
 import { TimeEntry } from '../../time-entries/entities/time-entry.entity';
@@ -27,6 +30,9 @@ export const SYNC_OPERATIONS = [
   'timeEntry.clockOut',
   'timeEntry.approve',
   'timeEntry.reject',
+  // Una nota de la bitácora. No confundir con `project.update`, que edita la
+  // obra: acá el `targetId` es el id de la nota, no el de la obra.
+  'projectUpdate.create',
 ] as const;
 export type SyncOperationType = (typeof SYNC_OPERATIONS)[number];
 
@@ -55,6 +61,7 @@ export const OPERATION_PERMISSION = {
   // puerta REST, o un WORKER se aprobaría las horas desde la cola (regla 7).
   'timeEntry.approve': 'time.approve',
   'timeEntry.reject': 'time.approve',
+  'projectUpdate.create': 'projects.write',
 } as const satisfies Record<SyncOperationType, Permission>;
 
 /**
@@ -70,6 +77,15 @@ export class EmptyPayloadDto {}
  */
 export class SyncSiteCreateDto extends SiteInputDto {
   @IsUUID() customerId!: string;
+}
+
+/**
+ * Payload de `projectUpdate.create`. Una nota no existe suelta, así que de qué
+ * obra cuelga viaja acá — `targetId` es el id de la nota misma, igual que en
+ * `site.create`.
+ */
+export class SyncProjectUpdateCreateDto extends CreateProjectUpdateDto {
+  @IsUUID() projectId!: string;
 }
 
 export class SyncOperationDto {
@@ -130,6 +146,16 @@ export class SyncPersonDto {
   role!: MembershipRole;
 }
 
+/**
+ * Una nota con sus fotos adentro. `project_update_asset` no puede ser colección
+ * propia del pull —no tiene `updated_at` ni `deleted_at`—, el mismo caso que
+ * `media_tag` dentro del asset.
+ */
+export class ProjectUpdateDto extends ProjectUpdate {
+  @ApiProperty({ type: [String], format: 'uuid' })
+  assetIds!: string[];
+}
+
 export class SyncPullResponseDto {
   @ApiProperty({
     format: 'date-time',
@@ -151,6 +177,8 @@ export class SyncPullResponseDto {
   @ApiProperty({ type: [Crew] }) crews!: Crew[];
   @ApiProperty({ type: [CrewMember] }) crewMembers!: CrewMember[];
   @ApiProperty({ type: [SyncPersonDto] }) people!: SyncPersonDto[];
+  @ApiProperty({ type: [ProjectUpdateDto] }) projectUpdates!: ProjectUpdateDto[];
+  @ApiProperty({ type: [ProjectStatusChange] }) projectStatusChanges!: ProjectStatusChange[];
 
   @ApiProperty({
     description: 'Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20).',

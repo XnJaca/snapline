@@ -2,7 +2,7 @@
 id: PENDIENTES
 title: "Pendientes — qué falta hacer"
 type: pendientes
-updated: 2026-08-08
+updated: 2026-09-01
 tags:
   - pendientes
 ---
@@ -90,6 +90,30 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
       El cursor lo da el servidor, no el reloj del dispositivo. Un WORKER solo
       sincroniza sus proyectos asignados.
 
+- [ ] **El porqué de una foto — sobre todo cuando la etiqueta es `PROBLEM`.**
+      Hoy tomar una foto guarda la etiqueta y nada más: `media_asset` **no tiene
+      un solo campo de texto** —ni caption, ni nota, ni descripción— y la hoja de
+      `photo_tag_sheet.dart` solo elige entre las seis etiquetas.
+
+      Una foto de un problema sin una línea que lo explique obliga a reconstruir
+      de memoria qué se estaba mirando. Es el caso que lo pide: `BEFORE` y `AFTER`
+      se explican solas, un incidente no.
+
+      **Necesita spec, y ficha de dominio antes** (reglas 1 y 2): es un campo
+      nuevo en [[domain/contenido|Contenido]], no un ajuste de pantalla. Frente
+      `campo`, no `administrativo` — lo escribe quien está parado en la obra, no
+      William en la oficina, así que toca `ObraScreen`, que
+      [[specs/mobile/0012-avance-de-la-obra/README|SPEC-0012]] deja explícitamente
+      sin tocar.
+
+      **No lo cubre la nota de avance de SPEC-0012**, y conviene no confundirlos:
+      esa nota es de la obra y la escribe la oficina; esta razón es de la foto y
+      la escribe quien la toma. Una foto `PROBLEM` con su porqué es después una
+      entrada del hilo de Avance que se lee sola.
+
+      **Trigger:** la próxima tanda de trabajo sobre captura de fotos, o el primer
+      problema real que William tenga que explicarle a alguien por teléfono.
+
 - [ ] **Confirmar el tratamiento de sales tax en Maryland** con el contador de
       William. Hoy la tasa es configurable y está en cero. Ver ADR-0001.
 
@@ -118,6 +142,63 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
       El seed usa el rol migrador aparte: sembrar con el rol de runtime falla por
       RLS, que es exactamente lo que debe pasar. Y limpiar exige desactivar a
       propósito el trigger que bloquea el borrado de horas.
+
+- [x] ~~**El estado de una dirección exige dos letras, y la app ofrece 16 países.**~~
+      Resuelto el 2026-09-03 en la rama de SPEC-0012: `@Length(2, 2)` fuera,
+      `@IsNotEmpty()` + `@MaxLength(100)`, label «Estado o provincia» y cinco
+      tests en `address.spec.ts`. **Falta el panel**, que tiene el mismo
+      `Validators.maxLength(2)` en `address-group.ts` pero vive en la rama
+      `feature/web-0009-clientes`. El diagnóstico original:
+      `AddressDto.state` lleva `@Length(2, 2)` y el móvil fuerza `maxLength: 2`
+      con solo letras (`address_fields.dart:139`), pero
+      `supported_countries.dart` ofrece Estados Unidos, Canadá y toda América
+      Latina. En Costa Rica la provincia es «Alajuela»; en México, «Jalisco».
+      No entran. La app deja elegir el país y después no deja escribir su
+      división administrativa.
+      *Encontrado el 2026-09-03 probando con una dirección de Costa Rica.*
+      **Toca tres superficies** —`AddressDto`, el móvil y el panel— y es
+      decisión de dominio antes que de validación: qué es `state` cuando el país
+      no es Estados Unidos. La ficha de dominio de la propiedad no lo dice.
+
+- [x] ~~**Un cliente muestra su sección «Obras» y no ofrece crear una.**~~
+      Resuelto el 2026-09-03: la acción vive en el `action` del `SectionHeader`
+      y abre el alta con el cliente ya puesto.
+      Se ve la lista y no hay acción para agregar. Hoy hay que ir a Obras y
+      elegir el cliente de vuelta, que es el camino largo del dato que ya estaba
+      en pantalla. *Encontrado el 2026-09-03.*
+
+- [x] ~~**«Tomar foto» debería ser un botón flotante en la tab Fotos.**~~
+      Resuelto el 2026-09-03: `FloatingActionButton.extended` de 64dp, no los 56
+      de Material, porque se pulsa con guantes (ADR-0009).
+      Hoy es una acción al pie. *Pedido el 2026-09-03.* Revisar contra la regla
+      de las dos alturas de acción primaria: el objetivo de campo son 64dp y un
+      FAB de Material mide 56.
+
+- [ ] **No hay forma de dar de alta a un trabajador, y sin eso la cuadrilla no
+      existe.** El API tiene `crews` completo —crear cuadrilla, editarla, sumar
+      y sacar miembros, designar capataz— y `POST /projects/:id/assignments`
+      para asignarla a una obra en una fecha. Lo que **no existe en ningún
+      lado** es crear la membresía: no hay `POST /memberships`, ni invitación,
+      ni registro. Los tres usuarios de desarrollo existen porque el seed los
+      insertó por SQL. Y el móvil no tiene ninguna pantalla de cuadrilla: el
+      `CrewsClient` generado no lo llama nadie.
+      *Encontrado el 2026-09-03: se entró como Carlos y la app dijo que no tiene
+      obra asignada, sin ningún camino para arreglarlo desde la app.*
+      **Es el próximo spec, y es el que desbloquea el uso real** — sin esto la
+      app solo la puede usar quien ya está en la base. Arrastra además la deuda
+      declarada de `crews`, que se construyó sin spec.
+
+- [ ] **Una nota para el cliente no tiene forma de salir en una obra en modo
+      etapas.** Hoy el aviso ofrece cambiar el modo de la obra entera, que es
+      todo o nada. Lo pedido es poder **forzar una nota concreta** —o una foto—
+      sin abrirle al cliente el avance completo.
+      *Pedido el 2026-09-03.* **Necesita decisión de dominio antes que código:**
+      el modo `etapas` existe para que el cliente no vea el detalle, así que una
+      excepción por nota lo convierte en un default y no en una regla. Hay que
+      decidir si `client_visibility_mode` pasa a ser el valor por defecto de cada
+      nota, o si aparece una marca aparte en `project_update`. Ver
+      `docs/domain/acceso-del-cliente.md`.
+
 
 ## ⚪ Higiene
 
@@ -159,6 +240,16 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
       registrar bundle ID o dominio. Ver [[NOMBRE]].
 
 ---
+
+- [ ] **Los e2e corren contra la misma base que desarrollo.**
+      `test/setup.ts` usa `DB_NAME ?? 'snapline'`, igual que `datasource.ts`, y
+      no hay `.env.test`. Con el API de desarrollo levantado —o justo después de
+      sembrar— la suite puede fallar por interferencia y no por una regresión.
+      *Pasó el 2026-09-03: tres tests en rojo en una corrida y verdes en las dos
+      siguientes, sin tocar nada en medio.* Un test que falla por el ambiente
+      enseña a ignorar los rojos, que es peor que no tenerlo.
+      Se cierra con una base propia —`snapline_test`— y su `.env.test`.
+
 
 ## Cómo se mantiene
 

@@ -237,6 +237,8 @@ class _SyncClientQueRechaza implements SyncClient {
       ],
       crews: const [],
       crewMembers: const [],
+      projectStatusChanges: const [],
+      projectUpdates: const [],
       people: const [],
       deleted: const {},
     );

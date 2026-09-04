@@ -7,12 +7,12 @@ import '../../core/navigation/app_destination.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/placeholder_list.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'hours_tab.dart';
 import 'photos_tab.dart';
+import 'progress_tab.dart';
 import 'project_details_tab.dart';
 import 'project_status_display.dart';
 
@@ -132,15 +132,19 @@ class ProjectScreen extends ConsumerWidget {
               child: TabBarView(
                 children: [
                   for (final tab in tabs)
-                    if (tab == ProjectTab.details)
-                      ProjectDetailsTab(projectId: projectId)
-                    else if (tab == ProjectTab.photos)
-                      PhotosTab(projectId: projectId)
-                    else if (tab == ProjectTab.hours)
-                      HoursTab(projectId: projectId)
-                    else
-                      // Cada una se reemplaza cuando su spec llegue.
-                      PlaceholderList(storageKey: '$projectId.${tab.name}'),
+                    switch (tab) {
+                      // El aviso de Etapas lleva al interruptor, que vive en
+                      // Detalle: es una propiedad de la obra y no de la nota
+                      // que se está escribiendo.
+                      ProjectTab.progress => ProgressTab(
+                          projectId: projectId,
+                          indiceDeDetalle: tabs.indexOf(ProjectTab.details),
+                        ),
+                      ProjectTab.photos => PhotosTab(projectId: projectId),
+                      ProjectTab.hours => HoursTab(projectId: projectId),
+                      ProjectTab.details =>
+                        ProjectDetailsTab(projectId: projectId),
+                    },
                 ],
               ),
             ),

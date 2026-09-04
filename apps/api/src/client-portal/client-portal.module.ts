@@ -5,8 +5,8 @@ import { MediaAsset } from '../media/entities/media-asset.entity';
 import { ServiceOffer } from '../leads/entities/service-offer.entity';
 import { Lead } from '../leads/entities/lead.entity';
 import { ClientAccess } from './entities/client-access.entity';
-import { ProjectUpdate } from './entities/project-update.entity';
-import { ProjectUpdateAsset } from './entities/project-update-asset.entity';
+import { ProjectUpdate } from '../projects/entities/project-update.entity';
+import { ProjectUpdateAsset } from '../projects/entities/project-update-asset.entity';
 import { ClientPortalService } from './client-portal.service';
 import { ClientAccessController, ClientPortalController } from './client-portal.controller';
 

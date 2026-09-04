@@ -8,9 +8,9 @@ import '../../core/media/media_paths.dart';
 import '../../core/media/photo_capture.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
+import '../../core/theme/tokens.dart';
 import '../../core/widgets/confirm_sheet.dart';
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/field_action_button.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -43,9 +43,9 @@ class PhotosTab extends ConsumerWidget {
     final puedeEtiquetar = permisos.contains('media.capture');
     final puedeBorrar = permisos.contains('media.delete');
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
+        Positioned.fill(
           child: switch (fotos) {
             AsyncData(:final value) when value.isEmpty => EmptyState(
                 icon: Icons.photo_camera_outlined,
@@ -71,12 +71,27 @@ class PhotosTab extends ConsumerWidget {
             _ => const Center(child: CircularProgressIndicator()),
           },
         ),
-        Padding(
-          padding: EdgeInsets.all(spacing.md),
-          child: FieldActionButton(
-            icon: Icons.photo_camera_outlined,
-            label: l10n.photosTakeAction,
-            onPressed: () => _tomarFoto(context, ref),
+        // Flotante y no al pie: la galería se recorre con el pulgar y el botón
+        // tiene que estar donde el pulgar ya está. **Extendido y de 64dp**, no
+        // el FAB de 56 de Material: esto se pulsa con guantes sobre un techo, y
+        // ahí el mínimo táctil de Material no alcanza (ADR-0009).
+        Positioned(
+          right: spacing.md,
+          bottom: spacing.md,
+          child: SafeArea(
+            // Solo abajo, como `FormFooter`: los lados los maneja el `Scaffold`
+            // y volver a aplicarlos agregaría el margen dos veces.
+            top: false,
+            left: false,
+            right: false,
+            child: SizedBox(
+              height: Tokens.touchTargetField,
+              child: FloatingActionButton.extended(
+                onPressed: () => _tomarFoto(context, ref),
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: Text(l10n.photosTakeAction),
+              ),
+            ),
           ),
         ),
       ],
@@ -199,7 +214,20 @@ class _Grupos extends StatelessWidget {
     final spacing = context.spacing;
 
     return ListView.builder(
-      padding: EdgeInsets.all(spacing.md),
+      // El hueco de abajo es el del botón flotante: sin él, la última fila de
+      // fotos queda debajo y no hay forma de verla. **Se le suma el inset del
+      // dispositivo** —la barra gestual mide unos 34 en un iPhone con Face ID—
+      // porque el `SafeArea` del botón lo empuja hacia arriba por esa misma
+      // cantidad: reservar un número fijo lo dejaba tapando la última fila en
+      // todo teléfono con navegación por gestos.
+      padding: EdgeInsets.fromLTRB(
+        spacing.md,
+        spacing.md,
+        spacing.md,
+        Tokens.touchTargetField +
+            spacing.md * 2 +
+            MediaQuery.paddingOf(context).bottom,
+      ),
       itemCount: grupos.length,
       itemBuilder: (context, i) {
         final grupo = grupos[i];

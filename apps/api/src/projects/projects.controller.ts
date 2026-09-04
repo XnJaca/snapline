@@ -3,9 +3,10 @@ import { RequirePermission } from '../auth/decorators/require-permission.decorat
 import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
 import { TenantContext } from '../tenant/tenant-context';
 import { ProjectsService } from './projects.service';
-import { AssignCrewDto, CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { AssignCrewDto, CreateProjectDto, CreateProjectUpdateDto, UpdateProjectDto } from './dto/project.dto';
 import { Project } from './entities/project.entity';
 import { ProjectAssignment } from './entities/project-assignment.entity';
+import { ProjectUpdate } from './entities/project-update.entity';
 
 @Controller('projects')
 export class ProjectsController {
@@ -52,5 +53,15 @@ export class ProjectsController {
   @Get(':id/assignments')
   assignments(@Param('id', ParseUUIDPipe) id: string): Promise<ProjectAssignment[]> {
     return this.service.listAssignments(id);
+  }
+
+  @RequirePermission('projects.write')
+  @Post(':id/updates')
+  createUpdate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateProjectUpdateDto,
+    @CurrentTenant() tenant: TenantContext,
+  ): Promise<ProjectUpdate> {
+    return this.service.createUpdate(id, dto, tenant);
   }
 }

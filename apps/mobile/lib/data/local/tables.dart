@@ -68,6 +68,10 @@ class Projects extends Table with SyncedTable {
   TextColumn get serviceType => text().nullable()();
   TextColumn get status => text()();
   TextColumn get clientVisibilityMode => text()();
+  /// Cuándo nació la obra. Es el ancla del hilo de Avance: lo único que se
+  /// sabe con certeza de una obra anterior al historial de estados.
+  DateTimeColumn get createdAt => dateTime().nullable()();
+
   DateTimeColumn get startDate => dateTime().nullable()();
   DateTimeColumn get targetEndDate => dateTime().nullable()();
   DateTimeColumn get actualEndDate => dateTime().nullable()();
@@ -206,6 +210,55 @@ class MediaAssets extends Table with SyncedTable {
   /// Las etiquetas como JSON, igual que las banderas del marcaje. Viajan
   /// adentro del asset porque `media_tag` no puede sincronizar sola.
   TextColumn get tags => text().withDefault(const Constant('[]'))();
+}
+
+/// Los cambios de estado de la obra, en orden.
+///
+/// `projects.status` guarda el ahora y pisa lo anterior: sin esta tabla el hilo
+/// de Avance no tiene esqueleto. **Nunca se escribe local**: la produce el
+/// servidor y baja por el pull. Un cambio que todavía está en la bandeja se
+/// pinta desde `outbox_operations`, que es la única fuente que sabe que sigue
+/// sin llegar.
+@DataClassName('LocalStatusChange')
+class ProjectStatusChanges extends Table with SyncedTable {
+  TextColumn get projectId => text()();
+
+  /// Nulo en el hito de origen. Si además `changedByMembershipId` es nulo, es
+  /// el que sembró la migración: dice cómo estaba la obra cuando esto empezó a
+  /// registrarse, y **no afirma** que haya nacido así.
+  TextColumn get fromStatus => text().nullable()();
+
+  TextColumn get toStatus => text()();
+
+  TextColumn get changedByMembershipId => text().nullable()();
+
+  /// Cuándo lo hizo la persona. Es por esta marca que se ordena el hilo —
+  /// cuándo pasó, no cuándo llegó (regla 10).
+  DateTimeColumn get deviceRecordedAt => dateTime()();
+
+  DateTimeColumn get serverReceivedAt => dateTime()();
+}
+
+/// La bitácora: lo que alguien escribió sobre la obra.
+///
+/// `INTERNAL` no sale de la empresa; `CLIENT` la ve el dueño de la casa, y solo
+/// si además la obra no está en modo etapas. `PUBLIC` no existe acá.
+@DataClassName('LocalProjectUpdate')
+class ProjectUpdates extends Table with SyncedTable {
+  TextColumn get projectId => text()();
+  TextColumn get authorMembershipId => text()();
+  TextColumn get body => text()();
+
+  /// `INTERNAL` o `CLIENT`, como texto — igual que el resto de los enums que
+  /// bajan del servidor.
+  TextColumn get visibility => text()();
+
+  DateTimeColumn get publishedAt => dateTime().nullable()();
+
+  /// Los ids de las fotos adjuntas, como JSON. Viajan adentro de la nota
+  /// porque `project_update_asset` no puede sincronizar sola, igual que las
+  /// etiquetas dentro del asset.
+  TextColumn get assetIds => text().withDefault(const Constant('[]'))();
 }
 
 /// Las fotos que esperan subir su binario.

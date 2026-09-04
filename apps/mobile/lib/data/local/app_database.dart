@@ -23,6 +23,8 @@ part 'app_database.g.dart';
     CrewMembers,
     People,
     MediaAssets,
+    ProjectStatusChanges,
+    ProjectUpdates,
     PendingUploads,
     OutboxOperations,
     SyncCursors,
@@ -33,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -86,6 +88,17 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(timeEntries, timeEntries.decidedFrom);
           await m.addColumn(timeEntries, timeEntries.lastRejection);
         }
+      }
+      if (from < 8) {
+        // El hilo de Avance (SPEC-0012). Tablas nuevas, nada que migrar: las
+        // dos las produce el servidor y bajan enteras en el próximo pull.
+        await m.createTable(projectStatusChanges);
+        await m.createTable(projectUpdates);
+      }
+      if (from < 9) {
+        // El ancla del hilo. Queda nula hasta el próximo pull, y una obra sin
+        // ancla simplemente no la muestra.
+        await m.addColumn(projects, projects.createdAt);
       }
     },
   );

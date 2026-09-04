@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0004"]
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-09-01
 tags: [domain, domain/borrador]
 ---
 
@@ -32,14 +32,20 @@ Ver [[../adr/0004-portal-cliente-link-cuenta-opcional/README|ADR-0004]].
 | `claimed_user_id` | uuid | no | Si reclamó cuenta |
 | `revoked_at` | timestamptz | no | |
 
-### `project_update`
+### Lo que el cliente ve de la obra
 
-| Atributo | Notas |
+`project_update` **no vive acá**: es la bitácora de la obra y su ficha está en
+[[proyecto]]. Lo que le corresponde a este agregado es la condición de entrada —
+las tres tienen que cumplirse a la vez:
+
+| Condición | Dónde |
 |---|---|
-| `project_id`, `author_membership_id` | |
-| `body`, `assets[]` | |
-| `visibility` | Hereda la escalera de [[contenido]] |
-| `approved_by`, `published_at` | **Nada llega al cliente sin aprobación explícita** |
+| `visibility = CLIENT` | La nota |
+| `published_at` no nulo | La nota |
+| `client_visibility_mode ≠ etapas` | El proyecto |
+
+La tercera es la que sorprende: con la obra en `etapas` no llega **nada**, por
+aprobada y publicada que esté la nota.
 
 ## Invariantes
 
@@ -51,6 +57,15 @@ Ver [[../adr/0004-portal-cliente-link-cuenta-opcional/README|ADR-0004]].
   de ningún otro.
 - Revocar el acceso es inmediato y no depende de la expiración.
 - Ningún `project_update` es visible sin `approved_by` y `published_at`.
+- **Esa aprobación no es un paso separado.** Es la misma acción de `OWNER` o
+  `ADMIN` al marcar la nota para el cliente mientras la escribe: no hay un
+  segundo actor que revise, ni una bandeja de pendientes de aprobación. "Nada
+  llega al cliente sin aprobación explícita" quiere decir que **nada se publica
+  por defecto**, no que intervengan dos personas.
+- **Las fotos de una nota visible al cliente también tienen que ser `CLIENT`.**
+  Lo garantiza el acto de escribirla, que las eleva (ver [[proyecto]] y
+  [[contenido]]); si no, el portal entrega la nota y descarta sus fotos en
+  silencio.
 - Si `client_visibility_mode` del proyecto es `etapas`, el cliente ve solo el estado
   mapeado a tres — ningún update ni foto, aunque estén aprobados.
 

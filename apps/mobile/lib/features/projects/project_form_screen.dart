@@ -7,6 +7,7 @@ import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_footer.dart';
 import '../../core/widgets/help_sheet.dart';
+import '../../core/widgets/status_chip.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -21,9 +22,18 @@ import 'project_status_display.dart';
 /// acá** — se cambia desde el detalle, con solo las transiciones válidas, porque es
 /// lo único que el servidor puede descartar.
 class ProjectFormScreen extends ConsumerStatefulWidget {
-  const ProjectFormScreen({super.key, this.projectId});
+  const ProjectFormScreen({super.key, this.projectId, this.customerIdInicial});
+
+  /// Con qué cliente abre el alta, cuando se llega desde su ficha. Nulo cuando
+  /// se entra por Obras y hay que elegirlo.
+  final String? customerIdInicial;
 
   static const newRoute = '/projects/new';
+
+  /// El alta con el cliente ya puesto, para llegar desde su ficha: ahí el dato
+  /// ya está en pantalla y volver a pedirlo es el camino largo.
+  static String newRouteForCustomer(String customerId) =>
+      '$newRoute?customerId=$customerId';
 
   final String? projectId;
 
@@ -39,7 +49,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
   final _descripcion = TextEditingController();
   final _tipoDeTrabajo = TextEditingController();
 
-  String? _customerId;
+  late String? _customerId = widget.customerIdInicial;
   String? _siteId;
 
   /// Nace en obra y no en prospecto: se da de alta parado en el trabajo. Con
@@ -293,24 +303,17 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                   ),
                   if (_esAlta) ...[
                     SizedBox(height: spacing.md),
-                    // La visibilidad nace en etapas y se cambia aparte. Decir solo
-                    // "el cliente ve etapas" no explicaba nada: qué son las etapas
-                    // y qué no ve el cliente está en la ayuda.
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.projectVisibilityStages,
-                            style: context.texts.bodySmall?.copyWith(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        HelpButton(
-                          title: l10n.projectVisibilityStagesHelpTitle,
-                          body: l10n.projectVisibilityStagesHelpBody,
-                        ),
-                      ],
+                    // La visibilidad nace en etapas y se cambia aparte, en la
+                    // ficha de la obra. Es un aviso y no un campo: suelto entre
+                    // campos se leía como uno al que le faltan las opciones.
+                    StatusChip(
+                      tone: StatusTone.info,
+                      label: l10n.projectVisibilityStages,
+                      expand: true,
+                      action: HelpButton(
+                        title: l10n.projectVisibilityStagesHelpTitle,
+                        body: l10n.projectVisibilityStagesHelpBody,
+                      ),
                     ),
                   ],
                 ],

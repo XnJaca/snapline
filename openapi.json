@@ -1976,6 +1976,106 @@
         ]
       }
     },
+    "/projects/{id}/updates": {
+      "post": {
+        "operationId": "Projects_createUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectUpdate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
     "/media": {
       "get": {
         "operationId": "Media_list",
@@ -6953,106 +7053,6 @@
         ]
       }
     },
-    "/client-access/updates/{projectId}": {
-      "post": {
-        "operationId": "ClientAccess_publishUpdate",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PublishUpdateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProjectUpdate"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "ClientAccess"
-        ]
-      }
-    },
     "/p/{token}": {
       "get": {
         "operationId": "ClientPortal_view",
@@ -8473,6 +8473,113 @@
           "membershipId",
           "workDate",
           "plannedHeadcount",
+          "deletedAt",
+          "companyId",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateProjectUpdateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "INTERNAL",
+              "CLIENT"
+            ]
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "ProjectUpdate": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "author": {
+            "$ref": "#/components/schemas/Membership"
+          },
+          "approvedBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Membership"
+              }
+            ]
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "authorMembershipId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "INTERNAL",
+              "CLIENT",
+              "PUBLIC"
+            ]
+          },
+          "approvedByMembershipId": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "authorMembershipId",
+          "body",
+          "visibility",
+          "approvedByMembershipId",
+          "publishedAt",
           "deletedAt",
           "companyId",
           "id",
@@ -10708,105 +10815,6 @@
           "expiresAt"
         ]
       },
-      "PublishUpdateDto": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "string"
-          },
-          "assetIds": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        },
-        "required": [
-          "body"
-        ]
-      },
-      "ProjectUpdate": {
-        "type": "object",
-        "properties": {
-          "project": {
-            "$ref": "#/components/schemas/Project"
-          },
-          "projectId": {
-            "type": "string"
-          },
-          "author": {
-            "$ref": "#/components/schemas/Membership"
-          },
-          "authorMembershipId": {
-            "type": "string"
-          },
-          "body": {
-            "type": "string"
-          },
-          "visibility": {
-            "type": "string",
-            "enum": [
-              "INTERNAL",
-              "CLIENT",
-              "PUBLIC"
-            ]
-          },
-          "approvedBy": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Membership"
-              }
-            ]
-          },
-          "approvedByMembershipId": {
-            "type": "string",
-            "nullable": true
-          },
-          "publishedAt": {
-            "format": "date-time",
-            "type": "string",
-            "nullable": true
-          },
-          "deletedAt": {
-            "format": "date-time",
-            "type": "string",
-            "nullable": true
-          },
-          "companyId": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "project",
-          "projectId",
-          "author",
-          "authorMembershipId",
-          "body",
-          "visibility",
-          "approvedBy",
-          "approvedByMembershipId",
-          "publishedAt",
-          "deletedAt",
-          "companyId",
-          "id",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
       "ClientPhotoDto": {
         "type": "object",
         "properties": {
@@ -10972,6 +10980,181 @@
           "name"
         ]
       },
+      "ProjectUpdateDto": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "author": {
+            "$ref": "#/components/schemas/Membership"
+          },
+          "approvedBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Membership"
+              }
+            ]
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "authorMembershipId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "INTERNAL",
+              "CLIENT",
+              "PUBLIC"
+            ],
+            "type": "string"
+          },
+          "approvedByMembershipId": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assetIds",
+          "projectId",
+          "authorMembershipId",
+          "body",
+          "visibility",
+          "approvedByMembershipId",
+          "publishedAt",
+          "deletedAt",
+          "companyId",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ProjectStatusChange": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "changedBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Membership"
+              }
+            ]
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "fromStatus": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "COMPLETED",
+              "LEAD",
+              "ESTIMATED",
+              "SCHEDULED",
+              "IN_PROGRESS",
+              "ON_HOLD",
+              "CANCELLED"
+            ]
+          },
+          "toStatus": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "LEAD",
+              "ESTIMATED",
+              "SCHEDULED",
+              "IN_PROGRESS",
+              "ON_HOLD",
+              "CANCELLED"
+            ]
+          },
+          "changedByMembershipId": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceRecordedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "serverReceivedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "fromStatus",
+          "toStatus",
+          "changedByMembershipId",
+          "deviceRecordedAt",
+          "serverReceivedAt",
+          "deletedAt",
+          "companyId",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "SyncPullResponseDto": {
         "type": "object",
         "properties": {
@@ -11034,6 +11217,18 @@
               "$ref": "#/components/schemas/SyncPersonDto"
             }
           },
+          "projectUpdates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectUpdateDto"
+            }
+          },
+          "projectStatusChanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectStatusChange"
+            }
+          },
           "deleted": {
             "type": "object",
             "additionalProperties": {
@@ -11056,6 +11251,8 @@
           "crews",
           "crewMembers",
           "people",
+          "projectUpdates",
+          "projectStatusChanges",
           "deleted"
         ]
       },
@@ -11082,7 +11279,8 @@
               "timeEntry.clockIn",
               "timeEntry.clockOut",
               "timeEntry.approve",
-              "timeEntry.reject"
+              "timeEntry.reject",
+              "projectUpdate.create"
             ]
           },
           "targetId": {
@@ -11232,6 +11430,7 @@
               "MEDIA_ALREADY_UPLOADED",
               "ASSET_NOT_PUBLIC",
               "ALREADY_PUBLISHED",
+              "ASSET_NOT_IN_PROJECT",
               "ESTIMATE_ALREADY_SENT",
               "ESTIMATE_NOT_ACCEPTED",
               "ESTIMATE_ALREADY_INVOICED",

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/customer_source.dart';
 import '../../core/navigation/app_destination.dart';
+import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/labeled_value.dart';
@@ -15,6 +16,7 @@ import '../../data/repositories/project_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../projects/project_card.dart';
 import 'customer_form_screen.dart';
+import '../projects/project_form_screen.dart';
 import 'customer_source_display.dart';
 import 'site_form_sheet.dart';
 
@@ -44,6 +46,12 @@ class CustomerScreen extends ConsumerWidget {
     final obras =
         ref.watch(projectsByCustomerProvider(customerId)).value ??
         const <ProjectSummary>[];
+
+    // La acción no aparece donde el servidor va a decir que no.
+    final puedeCrearObra =
+        (ref.watch(sessionControllerProvider).value?.membership.permissions ??
+                const <String>[])
+            .contains('projects.write');
 
     final barra = AppBar(
       backgroundColor: colors.surface,
@@ -112,7 +120,19 @@ class CustomerScreen extends ConsumerWidget {
               SizedBox(height: spacing.sm),
             ],
           SizedBox(height: spacing.lg),
-          SectionHeader(title: l10n.customerSectionProjects),
+          SectionHeader(
+            title: l10n.customerSectionProjects,
+            // El cliente ya está en pantalla: la obra nace con él puesto y no
+            // hay que volver a elegirlo desde Obras.
+            action: puedeCrearObra
+                ? TextButton(
+                    onPressed: () => context.push(
+                      ProjectFormScreen.newRouteForCustomer(customerId),
+                    ),
+                    child: Text(l10n.customerNewProject),
+                  )
+                : null,
+          ),
           SizedBox(height: spacing.md),
           if (obras.isEmpty)
             _Vacio(message: l10n.customerNoProjects)

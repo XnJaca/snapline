@@ -307,6 +307,7 @@ Future<void> seedProject(
   ProjectStatus status = ProjectStatus.inProgress,
   String line1 = '412 Ellsworth Dr',
   String city = 'Silver Spring',
+  DateTime? createdAt,
   SyncStatus syncStatus = SyncStatus.synced,
 }) async {
   final ahora = DateTime.now();
@@ -351,6 +352,7 @@ Future<void> seedProject(
       name: name,
       status: status.json!,
       clientVisibilityMode: 'STAGES',
+      createdAt: Value(createdAt),
       syncStatus: Value(syncStatus),
     ),
   );

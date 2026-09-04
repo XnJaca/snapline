@@ -164,6 +164,24 @@ void main() {
       expect(find.text('412 Ellsworth Dr, Silver Spring, MD'), findsOne);
     });
 
+    testWithApp('desde la ficha se crea una obra para ese cliente', (
+      tester,
+    ) async {
+      // El cliente ya está en pantalla: mandarlo a Obras a elegirlo de vuelta
+      // es el camino largo del dato que tenía delante.
+      await abrir(tester, 'Ana Martínez');
+
+      final accion = find.widgetWithText(TextButton, 'Nueva obra');
+      expect(accion, findsOne);
+
+      await tester.tap(accion);
+      await tester.pumpAndSettle();
+
+      // Abre el alta con el cliente puesto, no en blanco.
+      expect(find.text('Nueva obra'), findsWidgets);
+      expect(find.text('Ana Martínez'), findsWidgets);
+    });
+
     testWithApp('sin propiedades dice qué falta y para qué', (tester) async {
       await abrir(tester, 'Bob Smith');
 

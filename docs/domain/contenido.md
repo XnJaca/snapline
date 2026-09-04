@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0004"]
 created: 2026-08-08
-updated: 2026-08-12
+updated: 2026-09-01
 tags: [domain, domain/borrador]
 ---
 
@@ -50,6 +50,11 @@ de marketing del producto, no una foto más.
 ## Invariantes
 
 - **La visibilidad es una escalera**: `INTERNAL` → `CLIENT` → `PUBLIC`. No se salta.
+- **Sube por dos caminos, no uno.** El directo, elevando el asset; y como efecto
+  de marcar una nota de obra para el cliente, que eleva a `CLIENT` las fotos que
+  adjuntó y estaban en `INTERNAL` — un escalón, nunca hasta `PUBLIC`. El segundo
+  existe porque el portal descarta en silencio las fotos que no son `CLIENT`: sin
+  elevarlas, la nota le llega al cliente sin ninguna. Ver [[proyecto]].
 - **`PUBLIC` exige `exif_stripped_at` no nulo en las fotos**, y la restricción vive
   en la base de datos. Las fotos llevan coordenadas GPS; publicarlas expone la
   dirección exacta de la vivienda de un cliente. La app captura ubicación a
@@ -80,11 +85,13 @@ El asset existe en el dispositivo desde el momento del disparo, no desde que sub
 
 ## Relaciones con otros agregados
 
-- [[proyecto]] — de dónde cuelga
 - [[cliente]] — de quién es la obra que se ve en la foto
 - [[registro-de-tiempo]] — la foto de marcaje es un asset
 - [[publicacion]] — qué sale al portafolio
 - [[acceso-del-cliente]] — qué ve el cliente
+- [[proyecto]] — de dónde cuelga. Y su bitácora **escribe** sobre la visibilidad
+  de estos assets al publicar una nota: es la única relación de este agregado que
+  no es de solo lectura
 
 ## Qué NO es
 

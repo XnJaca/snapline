@@ -6,6 +6,8 @@ import 'package:snapline/core/navigation/app_destination.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/sync/outbox.dart';
 import 'package:snapline/features/projects/project_details_tab.dart';
+import 'package:snapline/core/widgets/help_sheet.dart';
+import 'package:snapline/core/widgets/status_chip.dart';
 import 'package:snapline/features/projects/project_form_screen.dart';
 import 'package:snapline/features/projects/project_transitions.dart';
 
@@ -170,7 +172,10 @@ void main() {
         'Silver Spring',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Estado (obligatorio)'),
+        find.widgetWithText(TextFormField, 'Estado o provincia (obligatorio)'),
+        // La propiedad es de Maryland y el país por defecto es Estados Unidos:
+        // ahí el estado sí es un código de dos letras. Que fuera de ahí sea el
+        // nombre entero lo cubre `address_state_test.dart`.
         'MD',
       );
       await tester.enterText(
@@ -182,6 +187,7 @@ void main() {
 
       expect(find.byType(ProjectFormScreen), findsOne);
       expect(find.textContaining('9800 Georgia Ave'), findsWidgets);
+      expect(find.textContaining('MD'), findsWidgets);
     });
 
     testWithApp('el trío completo deja la obra guardada y pendiente', (
@@ -250,7 +256,7 @@ void main() {
         'Baltimore',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Estado (obligatorio)'),
+        find.widgetWithText(TextFormField, 'Estado o provincia (obligatorio)'),
         'MD',
       );
       await tester.enterText(
@@ -553,28 +559,37 @@ void main() {
       //
       // El `ListView` no construye lo que está fuera de la vista, así que primero
       // se baja hasta la sección del cliente.
-      await tester.scrollUntilVisible(
-        find.text('Cliente y propiedad'),
-        200,
-        scrollable: find
-            .descendant(
-              of: find.byType(ProjectDetailsTab),
-              matching: find.byType(Scrollable),
-            )
-            .first,
-      );
-      await tester.pumpAndSettle();
+      // Se mide una por una, bajando hasta cada etiqueta justo antes: las tres
+      // ya no entran juntas en el viewport, y el `ListView` no construye lo que
+      // queda afuera. Van en el orden en que aparecen, así que alcanza con
+      // bajar.
+      final scrollable = find
+          .descendant(
+            of: find.byType(ProjectDetailsTab),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+
+      Future<double> alturaDe(String etiqueta) async {
+        await tester.scrollUntilVisible(
+          find.text(etiqueta).first,
+          200,
+          scrollable: scrollable,
+        );
+        await tester.pumpAndSettle();
+        return tester.getSize(find.text(etiqueta).first).height;
+      }
 
       // "Cliente" es una palabra corta que entra siempre: sirve de referencia de
       // cuánto mide una línea, sin depender de la métrica interna del render.
-      final unaLinea = tester.getSize(find.text('Cliente').first).height;
-      for (final etiqueta in ['Nombre de la obra', 'Propiedad']) {
-        expect(
-          tester.getSize(find.text(etiqueta).first).height,
-          unaLinea,
-          reason: '"$etiqueta" tendría que entrar en una línea',
-        );
-      }
+      final nombre = await alturaDe('Nombre de la obra');
+      final unaLinea = await alturaDe('Cliente');
+      final propiedad = await alturaDe('Propiedad');
+
+      expect(nombre, unaLinea,
+          reason: '"Nombre de la obra" tendría que entrar en una línea');
+      expect(propiedad, unaLinea,
+          reason: '"Propiedad" tendría que entrar en una línea');
       expect(tester.takeException(), isNull);
     });
   });
@@ -622,6 +637,37 @@ void main() {
       // Con `LEAD` la obra recién creada no aparecería en la cartera —que muestra
       // solo lo que está en proceso— y se leería como que no se guardó.
       expect(find.text('En proceso'), findsWidgets);
+    });
+
+    testWithApp('lo que ve el cliente se avisa, no se pregunta', (
+      tester,
+    ) async {
+      // Es un aviso y no un campo: la obra nace en etapas y el modo se cambia
+      // después, en la ficha. Suelto entre campos se leía como un selector al
+      // que le faltan las opciones, así que va con su fondo y su ayuda.
+      await abrirAlta(tester);
+      await tester.scrollUntilVisible(
+        find.text('El cliente verá esta obra por etapas'),
+        200,
+        // El formulario anida scrollables: sin `.first` el finder devuelve
+        // varios y `scrollUntilVisible` revienta pidiendo uno solo.
+        scrollable: find
+            .descendant(
+              of: find.byType(ProjectFormScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+
+      final aviso = find.ancestor(
+        of: find.text('El cliente verá esta obra por etapas'),
+        matching: find.byType(StatusChip),
+      );
+      expect(aviso, findsOne);
+      expect(
+        find.descendant(of: aviso, matching: find.byType(HelpButton)),
+        findsOne,
+      );
     });
 
     testWithApp('no se puede crear una obra ya cancelada', (tester) async {

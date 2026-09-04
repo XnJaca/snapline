@@ -15,10 +15,10 @@ import { MediaAsset } from '../media/entities/media-asset.entity';
 import { ServiceOffer } from '../leads/entities/service-offer.entity';
 import { Lead } from '../leads/entities/lead.entity';
 import { ClientAccess } from './entities/client-access.entity';
-import { ProjectUpdate } from './entities/project-update.entity';
-import { ProjectUpdateAsset } from './entities/project-update-asset.entity';
+import { ProjectUpdate } from '../projects/entities/project-update.entity';
+import { ProjectUpdateAsset } from '../projects/entities/project-update-asset.entity';
 import {
-  ClientProjectViewDto, GrantAccessDto, GrantAccessResultDto, PublishUpdateDto, RequestOfferDto,
+  ClientProjectViewDto, GrantAccessDto, GrantAccessResultDto, RequestOfferDto,
 } from './dto/client-portal.dto';
 
 const DEFAULT_EXPIRY_DAYS = 90;
@@ -94,32 +94,6 @@ export class ClientPortalService {
     await this.access.update({ id }, { revokedAt: new Date() });
   }
 
-  /** Nada llega al cliente sin esto: publicar es un acto explícito. */
-  @Transactional()
-  async publishUpdate(projectId: string, dto: PublishUpdateDto, tenant: TenantContext): Promise<ProjectUpdate> {
-    const project = await this.projects.findOne({ where: { id: projectId, deletedAt: IsNull() } });
-    if (!project) throw ApiError.notFound('NOT_FOUND', 'Proyecto no encontrado');
-
-    const id = newId();
-    await this.updates.save(this.updates.create({
-      id,
-      companyId: tenant.companyId,
-      project: { id: projectId } as ProjectUpdate['project'],
-      author: { id: tenant.membershipId } as ProjectUpdate['author'],
-      body: dto.body,
-      visibility: 'CLIENT',
-      approvedBy: { id: tenant.membershipId } as ProjectUpdate['approvedBy'],
-      publishedAt: new Date(),
-      deletedAt: null,
-    }));
-
-    if (dto.assetIds?.length) {
-      await this.updateAssets.save(dto.assetIds.map((assetId, position) =>
-        this.updateAssets.create({ updateId: id, assetId, position })));
-    }
-    return (await this.updates.findOne({ where: { id } }))!;
-  }
-
   // -------------------------------------------------------- lado cliente
 
   /**
@@ -127,6 +101,7 @@ export class ClientPortalService {
    * tenant —el visitante no tiene empresa— y a partir de ahí todo corre dentro
    * del tenant que el token identifica.
    */
+  @Transactional()
   async view(rawToken: string): Promise<ClientProjectViewDto[]> {
     const access = await this.resolveToken(rawToken);
 

@@ -187,6 +187,8 @@ class _SyncClientQueRegistra implements SyncClient {
       timeEntries: const [],
       crews: const [],
       crewMembers: const [],
+      projectStatusChanges: const [],
+      projectUpdates: const [],
       people: const [],
       deleted: const {},
     );

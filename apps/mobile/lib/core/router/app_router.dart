@@ -166,7 +166,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: ProjectFormScreen.newRoute,
         name: 'newProject',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const ProjectFormScreen(),
+        builder: (context, state) => ProjectFormScreen(
+          customerIdInicial: state.uri.queryParameters['customerId'],
+        ),
       ),
       GoRoute(
         path: Routes.projectEdit,

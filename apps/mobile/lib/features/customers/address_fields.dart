@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 
 import '../../api/models/address_dto.dart';
@@ -46,7 +45,11 @@ class AddressFormControllers {
       line1: line1.text.trim(),
       line2: line2.text.trim().isEmpty ? null : line2.text.trim(),
       city: city.text.trim(),
-      state: state.text.trim().toUpperCase(),
+      // Mayúsculas solo donde el estado es un código: `md` y `MD` son el mismo
+      // estado. Pasar «San José» a mayúsculas rompe el dato, no lo normaliza.
+      state: SupportedCountries.esCodigoDeDosLetras(country.value)
+          ? state.text.trim().toUpperCase()
+          : state.text.trim(),
       postalCode: postalCode.text.trim(),
       country: country.value.name,
     );
@@ -131,24 +134,34 @@ class AddressFields extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: TextFormField(
-                controller: controllers.state,
-                textCapitalization: TextCapitalization.characters,
-                // Dos letras: el contrato lo valida con `@Length(2, 2)` y un
-                // rechazo del servidor por esto llegaría recién al sincronizar.
-                maxLength: 2,
-                buildCounter: _sinContador,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
-                ],
-                decoration: InputDecoration(
-                  labelText: etiqueta(l10n.addressState),
-                ),
-                validator: (v) {
-                  if (optional && controllers.isEmpty) return null;
-                  return (v == null || v.trim().length != 2)
-                      ? l10n.addressStateRequired
-                      : null;
+              // La regla del estado depende del país, así que el campo lo
+              // escucha: en Estados Unidos y Canadá es un código de dos letras;
+              // en el resto, el nombre entero de la provincia. El servidor
+              // valida lo mismo, y sin esto el rechazo llegaría al sincronizar.
+              child: ValueListenableBuilder<IsoCode>(
+                valueListenable: controllers.country,
+                builder: (context, iso, _) {
+                  final dosLetras =
+                      SupportedCountries.esCodigoDeDosLetras(iso);
+                  return TextFormField(
+                    controller: controllers.state,
+                    textCapitalization: dosLetras
+                        ? TextCapitalization.characters
+                        : TextCapitalization.words,
+                    maxLength: dosLetras ? 2 : 100,
+                    buildCounter: _sinContador,
+                    decoration: InputDecoration(
+                      labelText: etiqueta(l10n.addressState),
+                    ),
+                    validator: (v) {
+                      if (optional && controllers.isEmpty) return null;
+                      final valor = v?.trim() ?? '';
+                      if (valor.isEmpty) return l10n.addressStateRequired;
+                      return dosLetras && valor.length != 2
+                          ? l10n.addressStateTwoLetters
+                          : null;
+                    },
+                  );
                 },
               ),
             ),
