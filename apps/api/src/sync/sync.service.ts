@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, EntityTarget, ObjectLiteral } from 'typeorm';
+import { DataSource, EntityTarget, In, ObjectLiteral } from 'typeorm';
 import { HttpException } from '@nestjs/common';
 import { runInTransaction } from 'typeorm-transactional';
 import { TenantContext } from '../tenant/tenant-context';
 import { Customer } from '../customers/entities/customer.entity';
 import { Site } from '../customers/entities/site.entity';
 import { Project } from '../projects/entities/project.entity';
+import { ProjectUpdate } from '../projects/entities/project-update.entity';
+import { ProjectUpdateAsset } from '../projects/entities/project-update-asset.entity';
+import { ProjectStatusChange } from '../projects/entities/project-status-change.entity';
 import { ProjectAssignment } from '../projects/entities/project-assignment.entity';
 import { MediaAsset } from '../media/entities/media-asset.entity';
 import { TimeEntry } from '../time-entries/entities/time-entry.entity';
@@ -31,7 +34,7 @@ import {
   EmptyPayloadDto,
   SyncOperationDto, SyncOperationType, SyncPullResponseDto, SyncPushDto, SyncPushResponseDto,
   SyncResultDto, SyncSiteCreateDto,
-  SyncPersonDto,
+  SyncPersonDto, SyncProjectUpdateCreateDto, ProjectUpdateDto,
 } from './dto/sync.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,6 +55,7 @@ const PAYLOAD_DTO = {
   'timeEntry.clockOut': ClockOutDto,
   'timeEntry.approve': ApproveDto,
   'timeEntry.reject': ApproveDto,
+  'projectUpdate.create': SyncProjectUpdateCreateDto,
   // El `satisfies` es el que obliga: una operación agregada a `SYNC_OPERATIONS`
   // sin su DTO de payload no compila, en vez de entrar al lote sin validar.
 } as const satisfies Record<SyncOperationType, Ctor<object>>;
@@ -198,8 +202,19 @@ export class SyncService {
           case 'project.update': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, {});
             return ok(
-              (await this.projects.update(op.targetId, dto, { fromOutbox: true })).id,
+              (await this.projects.update(op.targetId, dto, {
+                fromOutbox: true,
+                // Cuándo lo hizo la persona: es el `device_recorded_at` del
+                // hito, y sin esto sería la hora del servidor (regla 10).
+                occurredAt: op.occurredAt,
+              })).id,
             );
+          }
+          // El `targetId` es la nota; de qué obra es viaja en el payload.
+          case 'projectUpdate.create': {
+            const { projectId, ...nota } = await this.validatePayload(
+              PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
+            return ok((await this.projects.createUpdate(projectId, nota, tenant)).id);
           }
           case 'media.register': {
             const dto = await this.validatePayload(PAYLOAD_DTO[op.type], op.payload, { id: op.targetId });
@@ -385,6 +400,15 @@ export class SyncService {
       vivos(CrewMember, 'crew_member', soloSi(cuadrillaVisible('crew_member.crew_id')), workerParam),
     ]);
 
+    // La bitácora y el historial de estados, acotados por asignación igual que
+    // el resto: hoy ningún rol de campo llega a esa pantalla, pero lo que baja
+    // queda en el disco de un teléfono que se puede perder.
+    const [projectUpdates, projectStatusChanges] = await Promise.all([
+      vivos(ProjectUpdate, 'project_update', soloSi(asignadoA('project_update.project_id')), workerParam),
+      vivos(ProjectStatusChange, 'project_status_change',
+        soloSi(asignadoA('project_status_change.project_id')), workerParam),
+    ]);
+
     const people = await this.gente(desde, acotado ? tenant.membershipId : null);
 
     // Las etiquetas viajan dentro del asset, no como colección: `media_tag` no
@@ -397,6 +421,8 @@ export class SyncService {
       mediaAssets: mediaAssetsConTags,
       timeEntries,
       crews, crewMembers, people,
+      projectUpdates: await this.conAssets(projectUpdates),
+      projectStatusChanges,
       // Las seis colecciones que el pull trae vivas emiten también sus bajas: si
       // una falta, ese borrado nunca llega al dispositivo y la fila queda para
       // siempre en la base local (regla 20).
@@ -411,6 +437,8 @@ export class SyncService {
         crewMembers: await borrados('crew_member'),
         // La persona es una proyección de la membresía: su baja viaja acá.
         people: await borrados('membership'),
+        projectUpdates: await borrados('project_update'),
+        projectStatusChanges: await borrados('project_status_change'),
       },
     };
   }
@@ -454,5 +482,25 @@ export class SyncService {
        ORDER BY u.name ASC`,
       params,
     )) as SyncPersonDto[];
+  }
+
+  /**
+   * Las fotos de cada nota, adentro. `project_update_asset` no tiene
+   * `updated_at` ni `deleted_at`, de los que depende el cursor del pull, así
+   * que no puede ser una colección propia — mismo caso que `media_tag`.
+   */
+  private async conAssets(updates: ProjectUpdate[]): Promise<ProjectUpdateDto[]> {
+    if (!updates.length) return [];
+    const filas = await this.dataSource.getRepository(ProjectUpdateAsset).find({
+      where: { updateId: In(updates.map((u) => u.id)) },
+      order: { position: 'ASC' },
+    });
+    const porNota = new Map<string, string[]>();
+    for (const fila of filas) {
+      porNota.set(fila.updateId, [...(porNota.get(fila.updateId) ?? []), fila.assetId]);
+    }
+    return updates.map((u) => Object.assign(new ProjectUpdateDto(), u, {
+      assetIds: porNota.get(u.id) ?? [],
+    }));
   }
 }

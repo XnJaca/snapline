@@ -357,6 +357,35 @@ class ProjectRepository {
       );
     });
   }
+
+  /// Qué ve el cliente de esta obra: solo las etapas, o las notas y las fotos.
+  ///
+  /// Es lo único que hace que marcar una nota para el cliente signifique algo:
+  /// en `STAGES` el portal devuelve la lista vacía por aprobada que esté.
+  /// Viaja por `project.update`, que ya existe.
+  Future<void> cambiarModoDeCliente(
+    String id,
+    String modo, {
+    DateTime? occurredAt,
+  }) async {
+    final cuando = occurredAt ?? DateTime.now();
+
+    await _db.transaction(() async {
+      await (_db.update(_db.projects)..where((p) => p.id.equals(id))).write(
+        ProjectsCompanion(
+          updatedAt: Value(cuando),
+          syncStatus: const Value(SyncStatus.pending),
+          clientVisibilityMode: Value(modo),
+        ),
+      );
+      await _outbox.enqueue(
+        type: SyncOp.projectUpdate,
+        targetId: id,
+        payload: {'clientVisibilityMode': modo},
+        occurredAt: cuando,
+      );
+    });
+  }
 }
 
 final projectRepositoryProvider = Provider<ProjectRepository>((ref) {

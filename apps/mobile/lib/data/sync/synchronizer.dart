@@ -326,6 +326,25 @@ class Synchronizer {
       for (final dto in respuesta.people) {
         await _db.into(_db.people).insertOnConflictUpdate(SyncMapper.person(dto));
       }
+      for (final dto in respuesta.projectStatusChanges) {
+        // Sin guarda de pendiente: el historial no se escribe local nunca. Lo
+        // que todavía no llegó se pinta desde la bandeja, no desde acá.
+        await _db
+            .into(_db.projectStatusChanges)
+            .insertOnConflictUpdate(SyncMapper.statusChange(dto));
+      }
+      for (final dto in respuesta.projectUpdates) {
+        // Una nota recién escrita y todavía sin empujar no se pisa, igual que
+        // las fotos: el servidor no la tiene y traerla de vuelta la borraría de
+        // la pantalla.
+        final local = await (_db.select(_db.projectUpdates)
+              ..where((u) => u.id.equals(dto.id)))
+            .getSingleOrNull();
+        if (local?.syncStatus == SyncStatus.pending) continue;
+        await _db
+            .into(_db.projectUpdates)
+            .insertOnConflictUpdate(SyncMapper.projectUpdate(dto));
+      }
 
       await _marcarBorrados(respuesta.deleted);
 
@@ -367,6 +386,8 @@ class Synchronizer {
     await marcar('mediaAssets', _db.mediaAssets);
     await marcar('crews', _db.crews);
     await marcar('crewMembers', _db.crewMembers);
+    await marcar('projectStatusChanges', _db.projectStatusChanges);
+    await marcar('projectUpdates', _db.projectUpdates);
 
     // `people` es una proyección: su baja se aplica borrando la fila. No hay
     // otro dispositivo al que propagar este borrado — la fuente es el pull.

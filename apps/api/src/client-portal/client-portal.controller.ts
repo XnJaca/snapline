@@ -7,9 +7,8 @@ import { StrictThrottle } from '../common/throttle/strict-throttle.decorator';
 import { TenantContext } from '../tenant/tenant-context';
 import { ClientPortalService } from './client-portal.service';
 import {
-  ClientProjectViewDto, GrantAccessDto, GrantAccessResultDto, PublishUpdateDto, RequestOfferDto,
+  ClientProjectViewDto, GrantAccessDto, GrantAccessResultDto, RequestOfferDto,
 } from './dto/client-portal.dto';
-import { ProjectUpdate } from './entities/project-update.entity';
 
 @Controller('client-access')
 export class ClientAccessController {
@@ -27,16 +26,6 @@ export class ClientAccessController {
   @HttpCode(204)
   revoke(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.service.revoke(id);
-  }
-
-  @RequirePermission('projects.write')
-  @Post('updates/:projectId')
-  publishUpdate(
-    @Param('projectId', ParseUUIDPipe) projectId: string,
-    @Body() dto: PublishUpdateDto,
-    @CurrentTenant() tenant: TenantContext,
-  ): Promise<ProjectUpdate> {
-    return this.service.publishUpdate(projectId, dto, tenant);
   }
 }
 

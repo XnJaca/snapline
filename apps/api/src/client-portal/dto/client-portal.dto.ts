@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { ClientStage } from '../../projects/entities/project.entity';
 
 export class GrantAccessDto {
@@ -21,11 +21,6 @@ export class GrantAccessResultDto {
 
   @ApiProperty({ format: 'date-time' })
   expiresAt!: string;
-}
-
-export class PublishUpdateDto {
-  @IsString() @IsNotEmpty() body!: string;
-  @IsOptional() @IsArray() @IsUUID('all', { each: true }) assetIds?: string[];
 }
 
 export class ClientPhotoDto {

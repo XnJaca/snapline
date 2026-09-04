@@ -350,6 +350,8 @@ class _SyncClientQueRechaza implements SyncClient {
         timeEntries: const [],
         crews: const [],
         crewMembers: const [],
+        projectStatusChanges: const [],
+        projectUpdates: const [],
         people: const [],
         deleted: const {},
       );
@@ -432,6 +434,8 @@ class _SyncClientConEstado implements SyncClient {
         timeEntries: const [],
         crews: const [],
         crewMembers: const [],
+        projectStatusChanges: const [],
+        projectUpdates: const [],
         people: const [],
         deleted: const {},
       );

@@ -22,10 +22,14 @@ kanban-plugin: board
 ## 🔍 Review (listo para revisar)
 
 
+
 ## ✅ Aprobado (listo para implementar)
 
 
+
 ## 🛠️ En implementación
+
+- [ ] [[specs/mobile/0012-avance-de-la-obra/README|SPEC-0012: Avance de la obra]] — el hilo de la obra: hitos de estado, notas escritas, fotos y jornadas en un solo orden cronológico. Trae `project_status_change`, la tabla que hoy no existe, porque `project.status` guarda el ahora y pisa lo anterior. Revisado por `spec-reviewer`, que encontró dos bloqueantes: la ruta del endpoint que se retira estaba mal en las tres apariciones —es `/client-access`— y, el que importa, que una nota marcada para el cliente con fotos `INTERNAL` adjuntas **llegaba al portal sin sus fotos, en silencio**. De ahí salió que adjuntar eleve la escalera, y que cambiar `client_visibility_mode` entre al alcance: sin eso ninguna nota `CLIENT` sería visible jamás. Después `domain-guardian` encontró el agujero del modelo: **una obra creada después del despliegue no tenía hito de origen**, y el comportamiento sin señal se apoyaba justo en que siempre hubiera uno — lo escribe `create` ahora, y la señal que distingue un hito sembrado de uno real es invariante de la tabla y no una convención de la pantalla
 
 
 ## 🎉 Implementado

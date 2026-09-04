@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snapline/api/clients/media_client.dart';
+import 'package:snapline/api/models/signed_url_dto.dart';
 import 'package:snapline/core/media/media_paths.dart';
 import 'package:snapline/data/local/app_database.dart';
 import 'package:snapline/data/repositories/media_repository.dart';
@@ -359,4 +361,74 @@ void main() {
       expect(foto.enElTelefono, isFalse);
     });
   });
+
+  group('la URL firmada', () {
+    late _MediaContador cliente;
+    late MediaRepository repo;
+
+    setUp(() {
+      cliente = _MediaContador();
+      repo = MediaRepository(db, Outbox(db, const Uuid()), const Uuid(), cliente);
+      MediaRepository.olvidarFirmas();
+    });
+
+    test('se pide una vez y se reusa mientras la firma viva', () async {
+      // Sin caché, cada montaje de un widget con foto —cambiar de tab basta—
+      // pide una firma nueva; y como cada firma es otra URL, el binario se
+      // vuelve a bajar de Backblaze. Una llamada y una descarga por vuelta.
+      final primera = await repo.urlParaVer('a1');
+      final segunda = await repo.urlParaVer('a1');
+
+      expect(cliente.llamadas, 1);
+      expect(segunda, primera);
+    });
+
+    test('vencida se vuelve a pedir', () async {
+      // El margen que se le resta al TTL es de un minuto, así que con 30
+      // segundos la firma nace ya vencida.
+      cliente.ttl = 30;
+      final primera = await repo.urlParaVer('a1');
+      final segunda = await repo.urlParaVer('a1');
+
+      expect(cliente.llamadas, 2);
+      expect(segunda, isNot(primera));
+    });
+
+    test('cada foto tiene la suya', () async {
+      await repo.urlParaVer('a1');
+      await repo.urlParaVer('a2');
+
+      expect(cliente.llamadas, 2);
+    });
+
+    test('cerrar sesión las olvida', () async {
+      // El teléfono es de la empresa y lo usa más de una persona: una firma
+      // viva es acceso a una foto que la próxima sesión puede no tener.
+      await repo.urlParaVer('a1');
+      MediaRepository.olvidarFirmas();
+      await repo.urlParaVer('a1');
+
+      expect(cliente.llamadas, 2);
+    });
+  });
+
+}
+
+/// Un cliente que cuenta cuántas firmas pidió.
+class _MediaContador implements MediaClient {
+  int llamadas = 0;
+  int ttl = 600;
+
+  @override
+  Future<SignedUrlDto> mediaDownloadUrl({required String id}) async {
+    llamadas++;
+    return SignedUrlDto(
+      url: 'https://b2.example/$id?firma=$llamadas',
+      expiresInSeconds: ttl,
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('el test no debería llamar a esto');
 }

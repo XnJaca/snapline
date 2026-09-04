@@ -293,10 +293,40 @@ class MediaRepository {
   /// El bucket no es público (ADR-0010): se sirve con URL firmada y de vida
   /// corta, así que esto exige red. Es el caso de toda foto que tomó otro —
   /// baja del pull sin su binario.
+  ///
+  /// **Se cachea mientras la firma siga viva.** Sin esto, cada vez que un widget
+  /// con foto se monta —cambiar de tab basta— se pide una firma nueva, y como
+  /// cada firma es una URL distinta, la caché de imágenes de Flutter no sirve y
+  /// el binario se vuelve a bajar de Backblaze. Eso es una llamada al API y una
+  /// descarga facturada por foto y por vuelta.
   Future<String> urlParaVer(String assetId) async {
+    final guardada = _urlsFirmadas[assetId];
+    if (guardada != null && guardada.vence.isAfter(DateTime.now())) {
+      return guardada.url;
+    }
+
     final firmada = await _media.mediaDownloadUrl(id: assetId);
+    _urlsFirmadas[assetId] = (
+      url: firmada.url,
+      // Un minuto de margen sobre lo que dura la firma: una URL que vence
+      // mientras la imagen viaja se ve como una foto rota.
+      vence: DateTime.now().add(
+        Duration(seconds: firmada.expiresInSeconds.toInt() - 60),
+      ),
+    );
     return firmada.url;
   }
+
+  /// Las firmas vivas, por asset. `static` porque el repositorio se recrea
+  /// cuando nadie lo escucha, y un caché que muere con él no cachearía nada.
+  /// Se pierde al matar la app, que es lo correcto: una firma no sobrevive a
+  /// la sesión.
+  static final _urlsFirmadas = <String, ({String url, DateTime vence})>{};
+
+  /// Se llama al cerrar sesión, junto con el borrado de la base local: el
+  /// teléfono es de la empresa y lo usa más de una persona. Una firma viva es
+  /// acceso a una foto que la próxima sesión puede no tener derecho a ver.
+  static void olvidarFirmas() => _urlsFirmadas.clear();
 
   /// Libera espacio sin perder nada que no esté a salvo en el servidor.
   ///

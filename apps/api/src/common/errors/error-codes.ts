@@ -47,6 +47,9 @@ export const ERROR_CODES = [
   'MEDIA_ALREADY_UPLOADED',
   'ASSET_NOT_PUBLIC',
   'ALREADY_PUBLISHED',
+  // Adjuntar a una nota es elegir entre las fotos de esa obra, no entre todas
+  // las de la empresa.
+  'ASSET_NOT_IN_PROJECT',
 
   // comercial
   'ESTIMATE_ALREADY_SENT',

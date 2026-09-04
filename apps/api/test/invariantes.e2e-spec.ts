@@ -673,4 +673,248 @@ describe('invariantes del dominio (e2e)', () => {
       await mover('INTERNAL');
     });
   });
+
+  /**
+   * SPEC-0012. El historial de estados y la bitácora de la obra.
+   *
+   * Los dos son invariantes que no se pueden comprobar sin base: el hito lo
+   * escribe el servidor dentro de la transacción del cambio, y la elevación de
+   * las fotos de una nota se ve en lo que el portal devuelve.
+   */
+  describe('avance de la obra', () => {
+    const uuid = (): string => randomUUID();
+    const hitosDe = (projectId: string) => admin.query(
+      `SELECT from_status, to_status, changed_by_membership_id, device_recorded_at,
+              server_received_at
+         FROM project_status_change WHERE project_id = $1
+        ORDER BY device_recorded_at`, [projectId]);
+
+    const crearObra = async (): Promise<string> => {
+      const res = await http.post('/api/projects').set('Authorization', `Bearer ${ownerA}`)
+        .send({ customerId: a.customerId, siteId: a.siteId, name: `Obra ${uuid().slice(0, 8)}` })
+        .expect(201);
+      return res.body.id;
+    };
+
+    it('toda obra nueva nace con su hito de origen, y con autor', async () => {
+      // Sin esto el hilo de una obra creada después del despliegue arranca sin
+      // esqueleto, y un cambio pendiente no tiene de dónde sacar su estado de
+      // partida. El seed de la migración solo cubre las obras que ya existían.
+      const id = await crearObra();
+      const hitos = await hitosDe(id);
+
+      expect(hitos).toHaveLength(1);
+      expect(hitos[0].from_status).toBeNull();
+      expect(hitos[0].to_status).toBe('LEAD');
+      expect(hitos[0].changed_by_membership_id).toBe(a.ownerMembershipId);
+    });
+
+    it('cambiar el estado deja el hito con de dónde y a dónde', async () => {
+      const id = await crearObra();
+      await http.patch(`/api/projects/${id}`).set('Authorization', `Bearer ${ownerA}`)
+        .send({ status: 'ESTIMATED' }).expect(200);
+
+      const hitos = await hitosDe(id);
+      expect(hitos).toHaveLength(2);
+      const cambio = hitos.find(
+        (h: { to_status: string }) => h.to_status === 'ESTIMATED');
+      expect(cambio.from_status).toBe('LEAD');
+    });
+
+    it('guardar la ficha con el estado que ya tiene no escribe hito', async () => {
+      // `canTransition` acepta quedarse donde está, a propósito. Si el hito se
+      // escribiera por "vino status en el payload", editar el nombre desde un
+      // formulario que manda la ficha entera llenaría el historial.
+      const id = await crearObra();
+      await http.patch(`/api/projects/${id}`).set('Authorization', `Bearer ${ownerA}`)
+        .send({ status: 'LEAD', name: 'Otro nombre' }).expect(200);
+
+      expect(await hitosDe(id)).toHaveLength(1);
+    });
+
+    it('una transición que la bandeja manda tarde no deja hito', async () => {
+      // Se descarta sin fallar; escribirlo afirmaría un cambio que no ocurrió.
+      const id = await crearObra();
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'project.update', targetId: id,
+          occurredAt: new Date().toISOString(),
+          payload: { status: 'COMPLETED' },
+        }] })
+        .expect(200);
+
+      expect(await hitosDe(id)).toHaveLength(1);
+    });
+
+    it('por la bandeja, device_recorded_at es el occurredAt y no la hora del servidor', async () => {
+      const id = await crearObra();
+      const cuando = '2026-08-20T14:30:00.000Z';
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'project.update', targetId: id,
+          occurredAt: cuando,
+          payload: { status: 'ESTIMATED' },
+        }] })
+        .expect(200);
+
+      // Por `to_status` y no por índice: el hilo se ordena por la marca del
+      // dispositivo, así que un cambio hecho hace días queda **antes** del hito
+      // de origen de una obra creada hoy. Es correcto —el orden es cuándo pasó,
+      // no cuándo llegó— y por eso el índice no sirve para encontrarlo.
+      const hitos = await hitosDe(id);
+      expect(hitos).toHaveLength(2);
+      const cambio = hitos.find(
+        (h: { to_status: string }) => h.to_status === 'ESTIMATED');
+      expect(new Date(cambio.device_recorded_at).toISOString()).toBe(cuando);
+      expect(new Date(cambio.server_received_at).getTime())
+        .toBeGreaterThan(new Date(cuando).getTime());
+    });
+
+    it('las dos colecciones bajan por el pull', async () => {
+      const id = await crearObra();
+      const antes = new Date().toISOString();
+      await http.patch(`/api/projects/${id}`).set('Authorization', `Bearer ${ownerA}`)
+        .send({ status: 'ESTIMATED' }).expect(200);
+      await http.post(`/api/projects/${id}/updates`).set('Authorization', `Bearer ${ownerA}`)
+        .send({ body: 'Primera nota' }).expect(201);
+
+      const res = await http.get(`/api/sync?since=${encodeURIComponent(antes)}`)
+        .set('Authorization', `Bearer ${ownerA}`).expect(200);
+
+      expect(res.body.projectStatusChanges.some(
+        (c: { projectId: string }) => c.projectId === id)).toBe(true);
+      expect(res.body.projectUpdates.some(
+        (u: { projectId: string }) => u.projectId === id)).toBe(true);
+    });
+
+    it('una nota interna no se aprueba ni se publica', async () => {
+      const res = await http.post(`/api/projects/${a.projectId}/updates`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ body: 'Nota de la oficina' }).expect(201);
+
+      expect(res.body.visibility).toBe('INTERNAL');
+      expect(res.body.publishedAt).toBeNull();
+      expect(res.body.approvedByMembershipId).toBeNull();
+    });
+
+    it('una nota para el cliente se aprueba y se publica en el mismo acto', async () => {
+      // No hay segundo actor que revise: quien escribe es quien aprueba.
+      const res = await http.post(`/api/projects/${a.projectId}/updates`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ body: 'Terminamos el lado sur', visibility: 'CLIENT' }).expect(201);
+
+      expect(res.body.publishedAt).not.toBeNull();
+      expect(res.body.approvedByMembershipId).toBe(a.ownerMembershipId);
+    });
+
+    it('la base rechaza una nota PUBLIC, no solo el DTO', async () => {
+      await admin.query(
+        `INSERT INTO project_update (id, company_id, project_id, author_membership_id,
+           body, visibility, approved_by_membership_id, published_at)
+         VALUES ($1, $2, $3, $4, 'x', 'PUBLIC', $4, now())`,
+        [uuid(), a.companyId, a.projectId, a.ownerMembershipId],
+      ).then(
+        () => { throw new Error('la base aceptó una nota PUBLIC'); },
+        (e: Error) => expect(e.message).toMatch(/update_visibility_not_public/),
+      );
+    });
+
+    it('una nota para el cliente eleva sus fotos internas', async () => {
+      // El portal arma las fotos visibles solo con las CLIENT y descarta el
+      // resto en silencio: sin elevarlas, la nota le llega sin ninguna foto.
+      const assetId = uuid();
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'media.register', targetId: assetId,
+          occurredAt: new Date().toISOString(),
+          payload: { projectId: a.projectId, kind: 'PHOTO', mime: 'image/jpeg', checksum: uuid() },
+        }] })
+        .expect(200);
+
+      await http.post(`/api/projects/${a.projectId}/updates`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ body: 'Con foto', visibility: 'CLIENT', assetIds: [assetId] }).expect(201);
+
+      const [asset] = await admin.query(
+        `SELECT visibility FROM media_asset WHERE id = $1`, [assetId]);
+      expect(asset.visibility).toBe('CLIENT');
+    });
+
+    it('una nota interna no toca la visibilidad de sus fotos', async () => {
+      const assetId = uuid();
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'media.register', targetId: assetId,
+          occurredAt: new Date().toISOString(),
+          payload: { projectId: a.projectId, kind: 'PHOTO', mime: 'image/jpeg', checksum: uuid() },
+        }] })
+        .expect(200);
+
+      await http.post(`/api/projects/${a.projectId}/updates`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ body: 'Interna con foto', assetIds: [assetId] }).expect(201);
+
+      const [asset] = await admin.query(
+        `SELECT visibility FROM media_asset WHERE id = $1`, [assetId]);
+      expect(asset.visibility).toBe('INTERNAL');
+    });
+
+    it('no se puede adjuntar una foto de otra obra', async () => {
+      const otra = await crearObra();
+      const assetId = uuid();
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'media.register', targetId: assetId,
+          occurredAt: new Date().toISOString(),
+          payload: { projectId: otra, kind: 'PHOTO', mime: 'image/jpeg', checksum: uuid() },
+        }] })
+        .expect(200);
+
+      const res = await http.post(`/api/projects/${a.projectId}/updates`)
+        .set('Authorization', `Bearer ${ownerA}`)
+        .send({ body: 'Ajena', assetIds: [assetId] }).expect(400);
+      expect(res.body.code).toBe('ASSET_NOT_IN_PROJECT');
+    });
+
+    it('el WORKER no escribe notas', async () => {
+      await http.post(`/api/projects/${a.projectId}/updates`)
+        .set('Authorization', `Bearer ${workerA}`)
+        .send({ body: 'No debería' }).expect(403);
+    });
+
+    it('tampoco por la bandeja', async () => {
+      // La tabla de permisos del lote es lo único que separa a un WORKER de
+      // hacer por la cola lo que la puerta REST le niega (regla 7).
+      const res = await http.post('/api/sync').set('Authorization', `Bearer ${workerA}`)
+        .send({ operations: [{
+          clientId: uuid(), type: 'projectUpdate.create', targetId: uuid(),
+          occurredAt: new Date().toISOString(),
+          payload: { projectId: a.projectId, body: 'Por la cola' },
+        }] })
+        .expect(200);
+
+      expect(res.body.results[0].status).toBe('failed');
+      expect(res.body.failed).toBe(1);
+    });
+
+    it('una nota escrita por la bandeja conserva el id del dispositivo, y reintentar no duplica', async () => {
+      const id = uuid();
+      const clientId = uuid();
+      const operacion = {
+        clientId, type: 'projectUpdate.create', targetId: id,
+        occurredAt: new Date().toISOString(),
+        payload: { projectId: a.projectId, body: 'Desde el teléfono' },
+      };
+
+      await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [operacion] }).expect(200);
+      const reintento = await http.post('/api/sync').set('Authorization', `Bearer ${ownerA}`)
+        .send({ operations: [operacion] }).expect(200);
+
+      expect(reintento.body.results[0].status).toBe('duplicate');
+      const filas = await admin.query(
+        `SELECT id FROM project_update WHERE id = $1`, [id]);
+      expect(filas).toHaveLength(1);
+    });
+  });
 });

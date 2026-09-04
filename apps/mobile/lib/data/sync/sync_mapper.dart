@@ -8,6 +8,8 @@ import '../../api/models/customer.dart';
 import '../../api/models/media_asset_dto.dart';
 import '../../api/models/project.dart';
 import '../../api/models/project_assignment.dart';
+import '../../api/models/project_status_change.dart';
+import '../../api/models/project_update_dto.dart';
 import '../../api/models/site.dart';
 import '../../api/models/sync_person_dto.dart';
 import '../../api/models/time_entry.dart';
@@ -64,6 +66,39 @@ abstract final class SyncMapper {
     exifStrippedAt: Value(dto.exifStrippedAt),
     tags: Value(jsonEncode(dto.tags.map((t) => t.json).toList())),
   );
+
+  /// El hilo se ordena por `deviceRecordedAt`: cuándo pasó, no cuándo llegó.
+  static ProjectStatusChangesCompanion statusChange(ProjectStatusChange dto) =>
+      ProjectStatusChangesCompanion(
+        id: Value(dto.id),
+        companyId: Value(dto.companyId),
+        updatedAt: Value(dto.updatedAt),
+        deletedAt: Value(dto.deletedAt),
+        syncStatus: const Value(SyncStatus.synced),
+        projectId: Value(dto.projectId),
+        fromStatus: Value(dto.fromStatus?.json),
+        toStatus: Value(dto.toStatus.json ?? 'LEAD'),
+        changedByMembershipId: Value(dto.changedByMembershipId),
+        deviceRecordedAt: Value(dto.deviceRecordedAt),
+        serverReceivedAt: Value(dto.serverReceivedAt),
+      );
+
+  /// Las fotos llegan adentro de la nota, por lo mismo que las etiquetas dentro
+  /// del asset: `project_update_asset` no tiene `updated_at`.
+  static ProjectUpdatesCompanion projectUpdate(ProjectUpdateDto dto) =>
+      ProjectUpdatesCompanion(
+        id: Value(dto.id),
+        companyId: Value(dto.companyId),
+        updatedAt: Value(dto.updatedAt),
+        deletedAt: Value(dto.deletedAt),
+        syncStatus: const Value(SyncStatus.synced),
+        projectId: Value(dto.projectId),
+        authorMembershipId: Value(dto.authorMembershipId),
+        body: Value(dto.body),
+        visibility: Value(dto.visibility.json ?? 'INTERNAL'),
+        publishedAt: Value(dto.publishedAt),
+        assetIds: Value(jsonEncode(dto.assetIds)),
+      );
 
   static CrewsCompanion crew(Crew dto) => CrewsCompanion(
     id: Value(dto.id),
@@ -146,6 +181,7 @@ abstract final class SyncMapper {
     // el servidor llega como texto y no rompe la base local.
     status: Value(dto.status.json ?? ''),
     clientVisibilityMode: Value(dto.clientVisibilityMode.json ?? ''),
+    createdAt: Value(dto.createdAt),
     startDate: Value(_fecha(dto.startDate)),
     targetEndDate: Value(_fecha(dto.targetEndDate)),
     actualEndDate: Value(_fecha(dto.actualEndDate)),

@@ -75,15 +75,17 @@ class _HelpSheet extends StatelessWidget {
               ),
             ),
           ),
-          // Cerrar no es la acción primaria de nada: la hoja no pide una
-          // decisión, así que va en texto y no en naranja sólido.
+          // Tonal y no naranja: la hoja no pide una decisión, así que cerrarla
+          // no es la acción primaria de la app. Pero es la única salida que
+          // ofrece, y en texto plano no se leía como un botón.
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: spacing.lg),
+            padding: EdgeInsets.fromLTRB(
+                spacing.lg, spacing.sm, spacing.lg, spacing.sm),
             child: SafeArea(
               top: false,
               child: SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: FilledButton.tonal(
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(l10n.helpClose),
                 ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 
 import '../../api/models/address_dto.dart';
@@ -46,7 +45,9 @@ class AddressFormControllers {
       line1: line1.text.trim(),
       line2: line2.text.trim().isEmpty ? null : line2.text.trim(),
       city: city.text.trim(),
-      state: state.text.trim().toUpperCase(),
+      // Sin `toUpperCase()`: era del tiempo en que esto eran dos letras. Una
+      // provincia es un nombre propio y «SAN JOSÉ» no es cómo se escribe.
+      state: state.text.trim(),
       postalCode: postalCode.text.trim(),
       country: country.value.name,
     );
@@ -133,20 +134,19 @@ class AddressFields extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: controllers.state,
-                textCapitalization: TextCapitalization.characters,
-                // Dos letras: el contrato lo valida con `@Length(2, 2)` y un
-                // rechazo del servidor por esto llegaría recién al sincronizar.
-                maxLength: 2,
+                // Texto libre y no dos letras: la app ofrece dieciséis países y
+                // fuera de Estados Unidos esto es una provincia o un
+                // departamento con nombre entero — «Alajuela», «Sacatepéquez».
+                // El código corto se sigue pudiendo escribir.
+                textCapitalization: TextCapitalization.words,
+                maxLength: 100,
                 buildCounter: _sinContador,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
-                ],
                 decoration: InputDecoration(
                   labelText: etiqueta(l10n.addressState),
                 ),
                 validator: (v) {
                   if (optional && controllers.isEmpty) return null;
-                  return (v == null || v.trim().length != 2)
+                  return (v == null || v.trim().isEmpty)
                       ? l10n.addressStateRequired
                       : null;
                 },

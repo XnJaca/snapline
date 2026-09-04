@@ -232,6 +232,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{id}/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Projects_createUpdate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/media": {
         parameters: {
             query?: never;
@@ -920,22 +936,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/client-access/updates/{projectId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["ClientAccess_publishUpdate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/p/{token}": {
         parameters: {
             query?: never;
@@ -1061,7 +1061,7 @@ export interface components {
             /** @example Silver Spring */
             city: string;
             /**
-             * @description Código de dos letras.
+             * @description Estado, provincia o departamento.
              * @example MD
              */
             state: string;
@@ -1278,6 +1278,35 @@ export interface components {
             membershipId: string | null;
             workDate: string;
             plannedHeadcount: number | null;
+            /** Format: date-time */
+            deletedAt: string | null;
+            companyId: string;
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateProjectUpdateDto: {
+            /** Format: uuid */
+            id?: string;
+            body: string;
+            /** @enum {string} */
+            visibility?: "INTERNAL" | "CLIENT";
+            assetIds?: string[];
+        };
+        ProjectUpdate: {
+            project?: components["schemas"]["Project"];
+            author?: components["schemas"]["Membership"];
+            approvedBy?: components["schemas"]["Membership"] | null;
+            projectId: string;
+            authorMembershipId: string;
+            body: string;
+            /** @enum {string} */
+            visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
+            approvedByMembershipId: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
             /** Format: date-time */
             deletedAt: string | null;
             companyId: string;
@@ -1886,31 +1915,6 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
-        PublishUpdateDto: {
-            body: string;
-            assetIds?: string[];
-        };
-        ProjectUpdate: {
-            project: components["schemas"]["Project"];
-            projectId: string;
-            author: components["schemas"]["Membership"];
-            authorMembershipId: string;
-            body: string;
-            /** @enum {string} */
-            visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
-            approvedBy: components["schemas"]["Membership"] | null;
-            approvedByMembershipId: string | null;
-            /** Format: date-time */
-            publishedAt: string | null;
-            /** Format: date-time */
-            deletedAt: string | null;
-            companyId: string;
-            id: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
         ClientPhotoDto: {
             /** Format: uuid */
             id: string;
@@ -1956,6 +1960,50 @@ export interface components {
             membershipId: string;
             name: string;
         };
+        ProjectUpdateDto: {
+            project?: components["schemas"]["Project"];
+            author?: components["schemas"]["Membership"];
+            approvedBy?: components["schemas"]["Membership"] | null;
+            assetIds: string[];
+            projectId: string;
+            authorMembershipId: string;
+            body: string;
+            /** @enum {string} */
+            visibility: "INTERNAL" | "CLIENT" | "PUBLIC";
+            approvedByMembershipId: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            deletedAt: string | null;
+            companyId: string;
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProjectStatusChange: {
+            project?: components["schemas"]["Project"];
+            changedBy?: components["schemas"]["Membership"] | null;
+            projectId: string;
+            /** @enum {string|null} */
+            fromStatus: "COMPLETED" | "LEAD" | "ESTIMATED" | "SCHEDULED" | "IN_PROGRESS" | "ON_HOLD" | "CANCELLED" | null;
+            /** @enum {string} */
+            toStatus: "COMPLETED" | "LEAD" | "ESTIMATED" | "SCHEDULED" | "IN_PROGRESS" | "ON_HOLD" | "CANCELLED";
+            changedByMembershipId: string | null;
+            /** Format: date-time */
+            deviceRecordedAt: string;
+            /** Format: date-time */
+            serverReceivedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+            companyId: string;
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         SyncPullResponseDto: {
             /**
              * Format: date-time
@@ -1971,6 +2019,8 @@ export interface components {
             crews: components["schemas"]["Crew"][];
             crewMembers: components["schemas"]["CrewMember"][];
             people: components["schemas"]["SyncPersonDto"][];
+            projectUpdates: components["schemas"]["ProjectUpdateDto"][];
+            projectStatusChanges: components["schemas"]["ProjectStatusChange"][];
             /** @description Ids borrados desde el cursor, por recurso. Una colección que no aparezca acá deja borrados sin propagar (regla 20). */
             deleted: {
                 [key: string]: string[];
@@ -1983,7 +2033,7 @@ export interface components {
              */
             clientId: string;
             /** @enum {string} */
-            type: "media.delete" | "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut" | "timeEntry.approve" | "timeEntry.reject";
+            type: "media.delete" | "customer.create" | "customer.update" | "site.create" | "site.update" | "project.create" | "project.update" | "media.register" | "media.tag" | "timeEntry.clockIn" | "timeEntry.clockOut" | "timeEntry.approve" | "timeEntry.reject" | "projectUpdate.create";
             /**
              * Format: uuid
              * @description Sobre qué registro opera. En los `create` coincide con el id del recurso.
@@ -2026,7 +2076,7 @@ export interface components {
              * @description Código estable. No se traduce: es contra lo que ramifica el cliente.
              * @enum {string}
              */
-            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
+            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ASSET_NOT_IN_PROJECT" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
             /** @description Texto para mostrar. Esto sí se traduce. */
             message: string;
             /** @description Vacío cuando no aplica; nunca ausente. */
@@ -3653,6 +3703,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectAssignment"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Projects_createUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProjectUpdateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectUpdate"];
                 };
             };
             /** @description Error */
@@ -7764,85 +7893,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-            /** @description Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-        };
-    };
-    ClientAccess_publishUpdate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PublishUpdateDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectUpdate"];
-                };
             };
             /** @description Error */
             400: {

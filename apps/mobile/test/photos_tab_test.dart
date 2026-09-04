@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snapline/core/theme/tokens.dart';
 import 'package:snapline/api/models/auth_user_dto_locale.dart';
 import 'package:snapline/core/media/media_paths.dart';
 import 'package:snapline/core/media/photo_capture.dart';
@@ -78,7 +79,23 @@ void main() {
     List<String>? permisos,
     ThemeMode theme = ThemeMode.light,
     PhotoCapture? camara,
+    double insetDeAbajo = 0,
   }) {
+    // La barra gestual del teléfono. Los tests corren con inset cero y por eso
+    // no veían que el botón flotante tapaba la última fila en un teléfono real.
+    if (insetDeAbajo > 0) {
+      return MediaQuery(
+        data: MediaQueryData(padding: EdgeInsets.only(bottom: insetDeAbajo)),
+        child: testWidget(
+          db: db,
+          locale: locale,
+          themeMode: theme,
+          photoCapture: camara,
+          session: buildSession(locale: locale, permissions: permisos),
+          child: const PhotosTab(projectId: 'p1'),
+        ),
+      );
+    }
     return testWidget(
       db: db,
       locale: locale,
@@ -144,8 +161,40 @@ void main() {
 
     expect(find.textContaining('Todavía no hay fotos'), findsOne);
     expect(find.textContaining('terminan en la página'), findsOne);
-    // La acción de tomar la foto está desde el primer momento.
+    // La acción de tomar la foto está desde el primer momento, y flota sobre la
+    // galería: se recorre con el pulgar y el botón tiene que estar donde el
+    // pulgar ya está.
     expect(find.text('Tomar foto'), findsOne);
+    expect(find.byType(FloatingActionButton), findsOne);
+    // 64 y no los 56 del FAB de Material: esto se pulsa con guantes (ADR-0009).
+    expect(
+      tester.getSize(find.byType(FloatingActionButton)).height,
+      Tokens.touchTargetField,
+    );
+    await disposeApp(tester);
+  });
+
+  testWidgets('el botón flotante no tapa la última foto', timeout: limite, (
+    tester,
+  ) async {
+    // 34 es el inset de un iPhone con Face ID. El `SafeArea` del botón lo
+    // empuja hacia arriba por esa cantidad, así que la grilla tiene que
+    // reservar ese espacio además del alto del botón — con un número fijo, la
+    // última fila quedaba debajo en todo teléfono con barra gestual.
+    await sembrarFoto('f1', tags: ['BEFORE']);
+    await tester.pumpWidget(pantalla(insetDeAbajo: 34));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.pumpAndSettle();
+
+    final grilla = tester.widget<ListView>(find.byType(ListView));
+    final reservado = grilla.padding!.resolve(TextDirection.ltr).bottom;
+    final botonAlto = tester.getSize(find.byType(FloatingActionButton)).height;
+
+    // Lo reservado alcanza para el botón, su margen y el inset del teléfono.
+    expect(reservado, greaterThanOrEqualTo(botonAlto + 34));
     await disposeApp(tester);
   });
 

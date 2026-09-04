@@ -23,6 +23,11 @@ abstract final class SyncOp {
   static const mediaRegister = 'media.register';
   static const mediaTag = 'media.tag';
   static const mediaDelete = 'media.delete';
+
+  /// Una nota de la bitácora. **No es `projectUpdate` de la obra**: aquella
+  /// edita el proyecto y se llama `project.update`. Acá el `targetId` es el id
+  /// de la nota.
+  static const projectUpdateCreate = 'projectUpdate.create';
 }
 
 /// La cola de lo que todavía no llegó al servidor.

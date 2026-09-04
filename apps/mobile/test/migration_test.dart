@@ -57,6 +57,28 @@ void main() {
         PRIMARY KEY (client_id)
       )
     ''');
+    // `projects` nace con la app: ningún `onUpgrade` la crea. Estaba fuera de
+    // este esquema simulado y por eso el salto no ejercitaba sus columnas.
+    db.execute('''
+      CREATE TABLE projects (
+        id TEXT NOT NULL,
+        company_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        deleted_at INTEGER,
+        sync_status INTEGER NOT NULL DEFAULT 0,
+        customer_id TEXT NOT NULL,
+        site_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        service_type TEXT,
+        status TEXT NOT NULL,
+        client_visibility_mode TEXT NOT NULL,
+        start_date INTEGER,
+        target_end_date INTEGER,
+        actual_end_date INTEGER,
+        PRIMARY KEY (id)
+      )
+    ''');
     db.execute('PRAGMA user_version = 1');
     db.close();
   }
@@ -326,6 +348,35 @@ void main() {
 
     expect(await db.select(db.mediaAssets).get(), isEmpty);
     expect(await db.select(db.outboxOperations).get(), hasLength(1));
+  });
+
+  /// El salto que hace hoy un teléfono con la app instalada: v8 es la versión
+  /// anterior a este cambio, y es el único camino que ejercita el `addColumn`
+  /// sobre `projects` —desde v1 la tabla ya nace con la columna—.
+  test('subir a v9 agrega el ancla sin tocar lo que ya estaba', () async {
+    crearEsquemaV1();
+    final previa = sqlite3.open(archivo.path);
+    previa.execute(
+      'INSERT INTO projects (id, company_id, updated_at, customer_id, site_id, '
+      'name, status, client_visibility_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      ['p1', 'co1', 1754700000, 'c1', 's1', 'Techo', 'IN_PROGRESS', 'STAGES'],
+    );
+    previa.execute('PRAGMA user_version = 8');
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    // La obra sobrevivió al salto y su ancla queda vacía hasta el próximo pull:
+    // una obra sin fecha de creación simplemente no muestra ancla.
+    final obra = await db.select(db.projects).getSingle();
+    expect(obra.name, 'Techo');
+    expect(obra.createdAt, null);
+
+    await (db.update(db.projects)..where((p) => p.id.equals('p1')))
+        .write(ProjectsCompanion(createdAt: Value(DateTime(2026, 8, 12))));
+    expect((await db.select(db.projects).getSingle()).createdAt,
+        DateTime(2026, 8, 12));
   });
 
   test('una base nueva arranca directamente en el esquema de ahora', () async {

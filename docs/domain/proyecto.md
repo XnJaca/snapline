@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0003", "ADR-0004"]
 created: 2026-08-08
-updated: 2026-08-12
+updated: 2026-09-01
 tags: [domain, domain/borrador]
 ---
 
@@ -89,6 +89,35 @@ Lo que ve el cliente es un mapeo de tres, no estos:
 Esta tabla es la respuesta a *"no sé cuántos mandé a cada proyecto"*: lo planeado
 contra lo que realmente marcó asistencia.
 
+### `project_status_change`
+
+El historial de por qué estados pasó la obra. `status` guarda el ahora y pisa lo
+anterior; esta tabla es la que conserva el camino, y es la que persiste el evento
+`EstadoCambiado` de más abajo.
+
+| Atributo | Tipo | Obligatorio | Notas |
+|---|---|---|---|
+| `project_id` | uuid | sí | |
+| `from_status` | enum | no | Nulo **solo** en el hito de origen |
+| `to_status` | enum | sí | |
+| `changed_by_membership_id` | uuid | no | Siempre presente: toda fila la escribe alguien |
+| `device_recorded_at` | timestamptz | sí | Cuándo lo hizo la persona |
+| `server_received_at` | timestamptz | sí | Cuándo llegó |
+
+### `project_update`
+
+La bitácora de la obra: lo que alguien escribió sobre ella, con las fotos que
+adjuntó. El portal del cliente es **uno de sus destinos**, no su dueño — qué le
+llega está en [[acceso-del-cliente]].
+
+| Atributo | Tipo | Obligatorio | Notas |
+|---|---|---|---|
+| `project_id`, `author_membership_id` | uuid | sí | |
+| `body` | text | sí | |
+| `assets[]` | uuid[] | no | Fotos de **esa** obra, vía `project_update_asset` |
+| `visibility` | enum | sí | `INTERNAL` o `CLIENT`. **`PUBLIC` no**: publicar al portafolio es [[publicacion]] |
+| `approved_by`, `published_at` | | no | Los dos, o ninguno |
+
 ## Invariantes
 
 - El `site_id` tiene que pertenecer al `customer_id`. No se cruzan.
@@ -103,6 +132,42 @@ contra lo que realmente marcó asistencia.
 - Un `WORKER` solo ve proyectos donde tiene asignación vigente. No puede enumerar
   los demás.
 - `CANCELLED` no borra nada: las horas trabajadas siguen siendo horas pagables.
+
+### Del historial de estados
+
+- **Solo se registra lo que alguien atestiguó.** Una obra creada desde que existe
+  la tabla tiene su hito de origen, escrito por `create`; una anterior **no tiene
+  ninguna fila**, y eso es correcto: por qué estados pasó antes es información que
+  nadie guardó.
+  *La migración llegó a sembrar un hito por obra, copiando el `status` de hoy a la
+  fecha de creación. Se retiró el 2026-09-02: afirmaba que una obra estaba «En
+  proceso» el día que se creó, cuando ese es el estado que tiene ahora.*
+- **`from_status IS NULL` es el nacimiento de la obra**, y sí afirma su estado
+  inicial: lo escribió `create` en el momento. De una obra sin esa fila, el estado
+  inicial se lee del `from_status` de su primera transición.
+- **Una obra sin historial se ancla en su `created_at`**, que es lo único que se
+  sabe de ella con certeza. El ancla no afirma ningún estado.
+- **Append-only.** Una transición que ocurrió, ocurrió: no se edita ni se borra.
+- **La fila se escribe solo cuando el estado cambió de verdad**, comparado contra
+  el valor que el proyecto tenía. No alcanza con que `status` venga en el payload:
+  `canTransition` acepta a propósito quedarse en el mismo estado, así que guardar
+  la ficha entera desde un formulario llenaría el historial de transiciones de un
+  estado a sí mismo.
+- **Una transición descartada no deja fila.** La que llega tarde desde un
+  dispositivo se ignora sin fallar; escribir el hito afirmaría un cambio que la
+  obra nunca hizo.
+
+### De la bitácora
+
+- **`visibility` nunca es `PUBLIC`**, y la base lo impide: la columna reusa el
+  enum de [[contenido]], que sí tiene ese nivel.
+- **`approved_by` y `published_at` se escriben juntos o quedan nulos juntos.**
+- **La aprobación no es un paso separado**: es la misma acción de `OWNER` o
+  `ADMIN` al marcar la nota para el cliente mientras la escribe. No existe un
+  segundo actor que revise.
+- **Marcar una nota como `CLIENT` eleva a `CLIENT` sus fotos adjuntas que estén
+  en `INTERNAL`** — un escalón, nunca hasta `PUBLIC`, nunca hacia abajo. Sin eso
+  el portal recibe la nota y descarta sus fotos sin avisar. Ver [[contenido]].
 
 ## Comportamiento offline
 

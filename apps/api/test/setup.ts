@@ -141,7 +141,8 @@ async function deleteFixtures(ds: DataSource, fixtures: Fixture[]): Promise<void
       'client_access', 'lead', 'service_offer', 'testimonial', 'social_post',
       'before_after_pair', 'media_tag', 'media_asset', 'payment', 'invoice_line', 'invoice',
       'estimate_line', 'estimate', 'document_counter', 'service_item', 'tax_rate',
-      'project_assignment', 'project', 'site', 'customer', 'crew_member', 'crew', 'audit_log',
+      'project_assignment', 'project_status_change', 'project', 'site', 'customer',
+      'crew_member', 'crew', 'audit_log',
       'sync_operation']) {
       // Sin catch: si una limpieza falla hay que verlo, no taparlo.
       await ds.query(`DELETE FROM ${t} WHERE company_id = $1`, [id]);

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 
 /**
  * La misma forma para `customer.billing_address` y `site.address`. Ver la ficha
@@ -25,9 +25,13 @@ export class AddressDto {
   @IsNotEmpty()
   city!: string;
 
-  @ApiProperty({ example: 'MD', description: 'Código de dos letras.' })
+  // Dos letras alcanzaban con Estados Unidos y Canadá. La app ofrece dieciséis
+  // países: en Costa Rica la provincia es «Alajuela» y en Guatemala el
+  // departamento es «Sacatepéquez». El código corto se sigue pudiendo escribir.
+  @ApiProperty({ example: 'MD', description: 'Estado, provincia o departamento.' })
   @IsString()
-  @Length(2, 2)
+  @IsNotEmpty()
+  @MaxLength(100)
   state!: string;
 
   @ApiProperty({ example: '20910' })

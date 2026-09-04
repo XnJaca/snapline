@@ -74,6 +74,10 @@ class ProjectDetailsTab extends ConsumerWidget {
           ],
         ),
         SizedBox(height: spacing.lg),
+        SectionHeader(title: l10n.projectFieldClientVisibility),
+        SizedBox(height: spacing.md),
+        _ModoDelCliente(project: obra),
+        SizedBox(height: spacing.lg),
         SectionHeader(title: l10n.projectDetailSectionWhen),
         SizedBox(height: spacing.md),
         _Ficha(
@@ -85,6 +89,56 @@ class ProjectDetailsTab extends ConsumerWidget {
             ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+/// Qué ve el cliente final de esta obra.
+///
+/// Arranca en etapas y pasar a avance es una acción explícita
+/// (`docs/domain/proyecto.md`). Vive acá y no dentro de la hoja de nota: es una
+/// propiedad de la obra, no de lo que se está escribiendo.
+class _ModoDelCliente extends ConsumerWidget {
+  const _ModoDelCliente({required this.project});
+
+  final ProjectDetail project;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final spacing = context.spacing;
+    final colors = context.colors;
+    final enEtapas = project.clientVisibilityMode == 'STAGES';
+
+    return _Ficha(
+      children: [
+        SegmentedButton<String>(
+          segments: [
+            ButtonSegment(
+              value: 'STAGES',
+              label: Text(l10n.projectVisibilityModeStages),
+            ),
+            ButtonSegment(
+              value: 'PROGRESS',
+              label: Text(l10n.projectVisibilityModeProgress),
+            ),
+          ],
+          selected: {project.clientVisibilityMode},
+          showSelectedIcon: false,
+          onSelectionChanged: (s) => ref
+              .read(projectRepositoryProvider)
+              .cambiarModoDeCliente(project.id, s.first),
+        ),
+        if (enEtapas)
+          Padding(
+            padding: EdgeInsets.only(top: spacing.sm),
+            child: Text(
+              l10n.projectVisibilityModeHint,
+              style: context.texts.bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant),
+            ),
+          ),
       ],
     );
   }
