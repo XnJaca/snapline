@@ -9,7 +9,7 @@ export type ProjectStatus =
 
 export type ClientVisibilityMode = 'STAGES' | 'PROGRESS';
 
-export type ClientStage = 'INICIO' | 'EN_PROCESO' | 'FINALIZADO';
+export type ClientStage = 'INICIO' | 'EN_PROCESO' | 'FINALIZADO' | 'CANCELADO';
 
 const CLIENT_STAGE: Record<ProjectStatus, ClientStage> = {
   LEAD: 'INICIO',
@@ -18,7 +18,7 @@ const CLIENT_STAGE: Record<ProjectStatus, ClientStage> = {
   IN_PROGRESS: 'EN_PROCESO',
   ON_HOLD: 'EN_PROCESO',
   COMPLETED: 'FINALIZADO',
-  CANCELLED: 'FINALIZADO',
+  CANCELLED: 'CANCELADO',
 };
 
 @Entity('project')

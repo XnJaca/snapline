@@ -210,6 +210,19 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
       de precios y la nota de no mencionarle a William la fase 1. Pasar el repo a
       privado no deshace la exposición: sirve para adelante, no para atrás.
 
+- [ ] **El copy del móvil dice "tres etapas" y ahora son cuatro.**
+      `projectVisibilityStagesHelpBody`, en `app_es.arb` y `app_en.arb`, describe
+      lo que ve el cliente como *"tres etapas: Inicio, En proceso y Finalizado"*.
+      El fix del 2026-09-02 que separó `CANCELLED` de `FINALIZADO` agregó una
+      cuarta, **Cancelado**, y ese texto quedó desactualizado.
+
+      No se corrigió en la rama del fix a propósito: SPEC-0012 está reescribiendo
+      esa misma cadena, así que tocarla ahí era conflicto garantizado. **Se cierra
+      con SPEC-0012**, que es quien tiene el texto nuevo en la mano.
+
+      Es copy de ayuda para el contratista, no para el cliente final, y no rompe
+      nada en ejecución: es una inexactitud de producto, no un bug.
+
 - [ ] **`apps/web` y `apps/site`** sin scaffold. Al crearlas, agregarlas a
       `pnpm-workspace.yaml` — hoy solo lista `apps/api` y `packages/*`.
 

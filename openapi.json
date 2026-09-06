@@ -10898,7 +10898,8 @@
             "enum": [
               "INICIO",
               "EN_PROCESO",
-              "FINALIZADO"
+              "FINALIZADO",
+              "CANCELADO"
             ],
             "type": "string"
           },
