@@ -7171,7 +7171,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestOfferResultDto"
+                }
+              }
+            }
           },
           "400": {
             "description": "Error",
@@ -10953,6 +10960,19 @@
         },
         "required": [
           "offerId"
+        ]
+      },
+      "RequestOfferResultDto": {
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "El lead que quedó registrado para esta empresa."
+          }
+        },
+        "required": [
+          "leadId"
         ]
       },
       "SyncPersonDto": {

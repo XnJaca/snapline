@@ -15,6 +15,19 @@ Se agrega con `/changelog <descripción>`.
 
 ---
 
+## 2026-09-03 — la solicitud de oferta del portal declara qué devuelve
+
+- **El endpoint que registra un lead desde el portal ya dice que devuelve un
+  `leadId`.** Respondía con un objeto tipado en la firma del handler y no en un DTO,
+  y el plugin de OpenAPI solo introspecciona `.dto.ts` y `.entity.ts`: el `201` salía
+  al spec sin schema, así que el cliente Dart generado tipaba la llamada como `void`
+  y **descartaba el `leadId` en silencio** aunque el servidor lo mandara.
+
+  Es el modo de falla que describe la regla 8 y la razón de que llevara tiempo ahí:
+  no rompe nada visible, el cliente parsea y sigue. Se cierra con un
+  `RequestOfferResultDto` declarado, como ya lo hacía el endpoint de al lado que
+  entrega el link de acceso.
+
 ## 2026-09-01 — las horas de una obra se miran y se aprueban, y decidir sin señal deja de ser peligroso
 
 - **La tab Horas deja de ser placeholder**

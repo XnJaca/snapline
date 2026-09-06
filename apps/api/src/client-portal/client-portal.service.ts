@@ -19,6 +19,7 @@ import { ProjectUpdate } from '../projects/entities/project-update.entity';
 import { ProjectUpdateAsset } from '../projects/entities/project-update-asset.entity';
 import {
   ClientProjectViewDto, GrantAccessDto, GrantAccessResultDto, RequestOfferDto,
+  RequestOfferResultDto,
 } from './dto/client-portal.dto';
 
 const DEFAULT_EXPIRY_DAYS = 90;
@@ -131,7 +132,7 @@ export class ClientPortalService {
   }
 
   @Transactional()
-  async requestOffer(rawToken: string, dto: RequestOfferDto): Promise<{ leadId: string }> {
+  async requestOffer(rawToken: string, dto: RequestOfferDto): Promise<RequestOfferResultDto> {
     const access = await this.resolveToken(rawToken);
 
     const tenant: TenantContext = { companyId: access.companyId, membershipId: '', userId: '', role: 'WORKER' };
