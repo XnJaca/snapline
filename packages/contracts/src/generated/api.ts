@@ -1954,6 +1954,13 @@ export interface components {
             offerId: string;
             notes?: string;
         };
+        RequestOfferResultDto: {
+            /**
+             * Format: uuid
+             * @description El lead que quedó registrado para esta empresa.
+             */
+            leadId: string;
+        };
         SyncPersonDto: {
             /** @enum {string} */
             role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
@@ -8044,7 +8051,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RequestOfferResultDto"];
+                };
             };
             /** @description Error */
             400: {

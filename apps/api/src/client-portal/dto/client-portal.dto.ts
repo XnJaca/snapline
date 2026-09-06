@@ -63,3 +63,8 @@ export class RequestOfferDto {
   @IsUUID() offerId!: string;
   @IsOptional() @IsString() notes?: string;
 }
+
+export class RequestOfferResultDto {
+  @ApiProperty({ format: 'uuid', description: 'El lead que quedó registrado para esta empresa.' })
+  leadId!: string;
+}

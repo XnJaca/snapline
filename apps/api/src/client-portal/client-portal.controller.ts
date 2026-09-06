@@ -8,6 +8,7 @@ import { TenantContext } from '../tenant/tenant-context';
 import { ClientPortalService } from './client-portal.service';
 import {
   ClientProjectViewDto, GrantAccessDto, GrantAccessResultDto, RequestOfferDto,
+  RequestOfferResultDto,
 } from './dto/client-portal.dto';
 
 @Controller('client-access')
@@ -45,7 +46,8 @@ export class ClientPortalController {
   @Public()
   @StrictThrottle()
   @Post(':token/offers')
-  requestOffer(@Param('token') token: string, @Body() dto: RequestOfferDto): Promise<{ leadId: string }> {
+  @ApiCreatedResponse({ type: RequestOfferResultDto })
+  requestOffer(@Param('token') token: string, @Body() dto: RequestOfferDto): Promise<RequestOfferResultDto> {
     return this.service.requestOffer(token, dto);
   }
 }
