@@ -12,6 +12,7 @@ kanban-plugin: board
 
 ## 📥 Backlog (registrada, sin trigger disparado)
 
+- [ ] [[tech-debt/0014-borrar-obra-sin-comprobacion|DEBT-0014: Borrar una obra no comprueba nada, y evade el invariante del cliente]] — **severidad alta**: `remove()` marca `deleted_at` sin comprobar ni cascadear, y como `enforce_customer_no_history` retiene al cliente mirando `project.deleted_at IS NULL`, borrar una obra viva por el API vuelve borrable a un cliente con horas y facturas, cascadeando sus propiedades. Vivible solo porque **ningún cliente llama al endpoint**: SPEC-0010 decidió no exponerlo y usar `CANCELLED` (trigger: que alguna pantalla vaya a exponer borrar obra, o la primera empresa real con obras facturadas)
 - [ ] [[tech-debt/0010-listados-sin-la-persona|DEBT-0010: El panel no puede mostrar quién marcó las horas ni quién es el capataz]] — **severidad media**: `/time-entries` devuelve solo ids y `/crews` embebe la membresía del capataz sin su usuario. No se tocaron porque el contrato del móvil está en vuelo en otra rama (trigger: el spec de Horas, o el de Cuadrillas)
 - [ ] [[tech-debt/0011-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0011: Una jornada en conflicto no tiene camino de resolución en el móvil]] — **severidad media**: `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume; SPEC-0011 volvió el estado alcanzable en uso normal (trigger: el primer conflicto visto en un teléfono real, o aprobar en lote)
 
