@@ -1,0 +1,139 @@
+// El formulario del panel. Vive en un parcial y no en cada componente para que
+// las pantallas que escriben no diverjan (regla 22: el patrón se extrae, no se
+// copia). Ver `docs/code-guidelines/estilos-y-temas.md`.
+
+// El formulario ocupa el ancho de la pantalla, como las listas. Lo que evita que
+// los campos se estiren sin sentido no es acotar la superficie —eso deja una
+// franja muerta a la derecha— sino que **cada fila sume 12**: el ancho lo declara
+// el dato y las columnas que sobran no existen.
+
+// Doce columnas: divisible por 2, 3 y 4, así que un campo puede ocupar medio,
+// un tercio o un cuarto de la fila sin inventar fracciones.
+$columnas: 12;
+
+@mixin surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-5);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--sl-space-5);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-surface);
+}
+
+// Un grupo de campos con su título. La separación entre grupos es mayor que la
+// que hay entre campos del mismo grupo: es lo que hace que se lean como bloques.
+@mixin block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+
+  & + & {
+    padding-top: var(--sl-space-4);
+    border-top: 1px solid var(--mat-sys-outline-variant);
+  }
+}
+
+@mixin block-title {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  font-size: var(--sl-font-size-body);
+  line-height: var(--sl-font-leading-body);
+  font-weight: var(--sl-font-weight-bold);
+}
+
+// La rejilla. El ancho de cada campo lo declara el dato que contiene, no el
+// espacio que sobra: ver las clases `field--*` de abajo.
+@mixin fields {
+  display: grid;
+  grid-template-columns: repeat($columnas, minmax(0, 1fr));
+  gap: var(--sl-space-3) var(--sl-space-4);
+  align-items: start;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+// Anchos por tipo de dato, no por porción de fila.
+@mixin widths {
+  .field--date {
+    grid-column: span 2;
+  }
+
+  .field--short {
+    grid-column: span 3;
+  }
+
+  .field--medium {
+    grid-column: span 4;
+  }
+
+  .field--long {
+    grid-column: span 6;
+  }
+
+  .field--full {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 62rem) {
+    .field--date {
+      grid-column: span 3;
+    }
+
+    .field--short,
+    .field--medium {
+      grid-column: span 6;
+    }
+
+    .field--long {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .field--date,
+    .field--short,
+    .field--medium,
+    .field--long {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// El pie va pegado al último grupo, no al fondo de la pantalla: un formulario
+// corto no tiene por qué dejar 200px de aire antes de sus botones.
+@mixin footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+  padding-top: var(--sl-space-4);
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+@mixin error {
+  margin: 0;
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
+}
+
+// La opción que crea un registro nuevo desde el propio desplegable. Se separa
+// de la lista con una línea y va en el color de la acción: es lo único del menú
+// que no es un dato existente.
+@mixin option-new {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-primary);
+  font-weight: var(--sl-font-weight-medium);
+}
+
+// Todo junto, para el caso normal.
+@mixin all {
+  @include widths;
+}

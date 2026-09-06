@@ -203,7 +203,7 @@ hacerlo: sin estado en algún lado, un JWT autofirmado no se puede revocar.
   campo y el invariante de que lo escribe solo el servidor
 - [[../../specs/web/0008-sesion-y-shell/README|SPEC-0008: Sesión y shell del panel]]
 
-> Por la regla 28, la migración pasa por `domain-guardian` antes de escribirse. El
+> Por la regla 29, la migración pasa por `domain-guardian` antes de escribirse. El
 > punto a mirar es el de la decisión 3b: que la invalidación sea por membresía y no
 > por dispositivo.
 

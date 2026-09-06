@@ -1,0 +1,38 @@
+@use '../../../../styles/form' as form;
+
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.form {
+  @include form.surface;
+}
+
+.block {
+  @include form.block;
+}
+
+.block__title {
+  @include form.block-title;
+}
+
+.fields {
+  @include form.fields;
+}
+
+@include form.widths;
+
+.error {
+  @include form.error;
+}
+
+.progress {
+  height: 4px;
+}
+
+.footer {
+  @include form.footer;
+}

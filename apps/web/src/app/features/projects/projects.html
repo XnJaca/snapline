@@ -9,41 +9,77 @@
   [emptyText]="t('projects.empty')"
   (retry)="data.reload()"
 >
-  <ul class="cards">
-    @for (project of data.value(); track project.id) {
-      <li class="card">
-        <div class="card__top">
-          <h2 class="card__name">{{ project.name }}</h2>
-          <sl-chip [tone]="tone(project.status)">{{ t('projectStatus.' + project.status) }}</sl-chip>
-        </div>
+  <div slPageActions class="actions">
+    <mat-form-field appearance="outline" class="actions__search" subscriptSizing="dynamic">
+      <mat-label>{{ t('projects.search') }}</mat-label>
+      <input matInput [value]="query()" (input)="query.set($any($event.target).value)" />
+    </mat-form-field>
 
-        <p class="card__customer">{{ project.customer?.displayName }}</p>
-
-        @if (project.description) {
-          <p class="card__description">{{ project.description }}</p>
+    <mat-form-field appearance="outline" class="actions__status" subscriptSizing="dynamic">
+      <mat-label>{{ t('projects.status') }}</mat-label>
+      <mat-select [value]="status()" (valueChange)="status.set($event)">
+        <mat-option [value]="all">{{ t('projects.filterAll') }}</mat-option>
+        @for (option of statuses; track option) {
+          <mat-option [value]="option">{{ t('projectStatus.' + option) }}</mat-option>
         }
+      </mat-select>
+    </mat-form-field>
 
-        <dl class="card__facts">
-          @if (city(project)) {
-            <div class="fact">
-              <dt>{{ t('projects.city') }}</dt>
-              <dd>{{ city(project) }}</dd>
-            </div>
-          }
-          @if (project.startDate) {
-            <div class="fact">
-              <dt>{{ t('projects.start') }}</dt>
-              <dd>{{ project.startDate | slDate }}</dd>
-            </div>
-          }
-          @if (project.targetEndDate) {
-            <div class="fact">
-              <dt>{{ t('projects.target') }}</dt>
-              <dd>{{ project.targetEndDate | slDate }}</dd>
-            </div>
-          }
-        </dl>
-      </li>
+    @if (canWrite()) {
+      <button matButton="filled" routerLink="new">{{ t('projects.new') }}</button>
     }
-  </ul>
+  </div>
+
+  @if (emptyBySearch()) {
+    <p class="nomatch">{{ t('projects.noMatch', { query: query() }) }}</p>
+  } @else if (emptyByStatus()) {
+    <p class="nomatch">{{ t('projects.noneWithStatus') }}</p>
+  } @else {
+    <ul class="cards">
+      @for (project of filtered(); track project.id) {
+        <li>
+          <a class="card" [routerLink]="[project.id]">
+            <div class="card__top">
+              <h2 class="card__name">{{ project.name }}</h2>
+              <sl-chip [tone]="tone(project.status)">{{ t('projectStatus.' + project.status) }}</sl-chip>
+            </div>
+
+            <p class="card__customer">
+              <mat-icon class="card__icon" svgIcon="customers" aria-hidden="true" />
+              <span>{{ project.customer?.displayName }}</span>
+            </p>
+
+            <div class="card__body">
+              @if (project.description) {
+                <p class="card__description">{{ project.description }}</p>
+              }
+            </div>
+
+            <ul class="meta">
+              @if (city(project); as ciudad) {
+                <li class="meta__item">
+                  <mat-icon class="card__icon" svgIcon="location" aria-hidden="true" />
+                  <span>{{ ciudad }}</span>
+                </li>
+              }
+
+              @if (project.serviceType) {
+                <li class="meta__item meta__item--type">
+                  <mat-icon class="card__icon" svgIcon="catalog" aria-hidden="true" />
+                  <span>{{ project.serviceType }}</span>
+                </li>
+              }
+              @if (dates(project); as fechas) {
+                <li class="meta__item meta__item--dates">
+                  <mat-icon class="card__icon" svgIcon="calendar" aria-hidden="true" />
+                  <span>{{ t(fechas.key, fechas.params) }}</span>
+                </li>
+              }
+
+            </ul>
+          </a>
+        </li>
+      }
+    </ul>
+  }
 </sl-page>

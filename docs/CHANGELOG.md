@@ -173,7 +173,7 @@ Se agrega con `/changelog <descripción>`.
   release"* no se podía corregir sin abrir el plugin.
 - **El API tiene lint, por primera vez.** El script `eslint "src/**/*.ts"` venía del
   scaffold de Nest y nunca tuvo ni config ni dependencia: fallaba con
-  `command not found`, así que la regla 25 —*typecheck y lint verdes antes del PR*—
+  `command not found`, así que la regla 26 —*typecheck y lint verdes antes del PR*—
   se venía cumpliendo a medias sin que nadie lo notara. Flat config con
   `tseslint.configs.recommended`, 15 hallazgos, todos arreglados.
 - **Dos cosas que el lint destapó y no eran ruido.** El fixture de

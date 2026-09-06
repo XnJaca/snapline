@@ -63,7 +63,7 @@ ciclo y vuelve al cuaderno.
   `projects.service.ts` hace `update({ id }, dto)` sin comparar contra el estado
   anterior, así que acepta cualquier salto. Sin esto, el criterio del descarte
   retrocedente no se puede cumplir — el dispositivo no puede saber si su estado es
-  viejo. Va en el mismo commit que el móvil (regla 26).
+  viejo. Va en el mismo commit que el móvil (regla 27).
 - Buscar por nombre de obra o por cliente.
 - **Crear cliente y propiedad sin salir del alta**, en línea. Ver abajo.
 
@@ -206,7 +206,7 @@ que el servidor la valide es trabajo de `apps/api` y conviene hacerlo con
 | 2026-08-09 | borrador | Creado. El diseño de la cartera y del detalle ya existe como andamiaje de SPEC-0003; este spec lo formaliza y le pone datos reales. |
 | 2026-08-09 | borrador | Dos decisiones de producto cerradas: la principal muestra solo `IN_PROGRESS` —no "todo lo no cerrado"—, y el alta crea cliente y propiedad en línea en vez de mandar a tres pantallas. |
 | 2026-08-10 | review | Verificados los prerequisitos contra el código: SPEC-0006 quedó implementado y dejó los formularios mínimos que el alta en línea reutiliza —`CustomerFields(minimal:)` y `showSiteFormSheet`—, más `site.create` y `site.update` en la bandeja. |
-| 2026-08-10 | aprobado | Aprobada la escalera de estados en `apps/api`: el criterio del descarte retrocedente exige que la valide el servidor, así que `apps` suma `api` y va en commit atómico con el móvil (regla 26). |
+| 2026-08-10 | aprobado | Aprobada la escalera de estados en `apps/api`: el criterio del descarte retrocedente exige que la valide el servidor, así que `apps` suma `api` y va en commit atómico con el móvil (regla 27). |
 | 2026-08-10 | en-implementacion | Arranca la implementación. |
 | 2026-08-10 | implementado | PR #7 mergeado. Revisado con `code-reviewer`, que encontró **dos GRAVES silenciosos** —la app mostraba guardado lo que no se guardaba— y los dos se arreglaron antes del PR: reanudar una obra pausada se descartaba como si fuera un retroceso, y editar el cliente de una obra no tenía ningún efecto. Después, una pasada de interfaz sobre el teléfono: la ficha del detalle cortaba las etiquetas, terminar y cancelar ahora piden confirmación, una obra que no está en marcha abre en Detalle, y tocar afuera cierra el teclado en toda la app. 226 tests. |
 | 2026-08-10 | en-implementacion | Los catorce criterios en `[x]`. **El diagrama del dominio no alcanzaba para derivar la tabla de transiciones**: leído literal, de `ON_HOLD` no salía ninguna flecha —obra trabada para siempre— y solo se podía cancelar desde `IN_PROGRESS`, cuando el caso más común es el más temprano. La tabla completa quedó en la ficha de `proyecto` y en `apps/api`, con un test que verifica que la copia del móvil no divergió. Verificado contra el API que el retroceso que llega tarde se descarta **sin fallar**: si respondiera error, la operación se reintentaría para siempre. |

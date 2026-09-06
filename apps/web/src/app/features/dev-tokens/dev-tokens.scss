@@ -27,6 +27,7 @@
     margin: var(--sl-space-1) 0 0;
     color: var(--mat-sys-on-surface-variant);
     font-size: var(--sl-font-size-caption);
+    line-height: var(--sl-font-leading-caption);
   }
 
   &__controls {
@@ -42,6 +43,7 @@
   &__title {
     margin: 0 0 var(--sl-space-3);
     font-size: var(--sl-font-size-title);
+    line-height: var(--sl-font-leading-title);
     font-weight: var(--sl-font-weight-medium);
   }
 }
@@ -59,6 +61,7 @@
   border: 1px solid var(--mat-sys-outline);
   border-radius: var(--sl-radius-md);
   font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
 }
 
 // Fondo tenue con su `on*` y su icono. Nunca relleno sólido: eso es de la acción.
@@ -70,6 +73,7 @@
   padding: var(--sl-space-3);
   border-radius: var(--sl-radius-md);
   font-size: var(--sl-font-size-body);
+  line-height: var(--sl-font-leading-body);
 
   &__icon {
     flex: none;
@@ -104,20 +108,25 @@
 
   &--display {
     font-size: var(--sl-font-size-display);
+    line-height: var(--sl-font-leading-display);
   }
   &--title {
     font-size: var(--sl-font-size-title);
+    line-height: var(--sl-font-leading-title);
   }
   &--body {
     font-size: var(--sl-font-size-body);
+    line-height: var(--sl-font-leading-body);
   }
   &--caption {
     font-size: var(--sl-font-size-caption);
+    line-height: var(--sl-font-leading-caption);
     color: var(--mat-sys-on-surface-variant);
   }
   &--brand {
     font-family: var(--sl-font-family-brand), var(--sl-font-family-ui), sans-serif;
     font-size: var(--sl-font-size-display);
+    line-height: var(--sl-font-leading-display);
     font-weight: var(--sl-font-weight-brand);
   }
 }
@@ -141,6 +150,7 @@
 
   &__label {
     font-size: var(--sl-font-size-caption);
+    line-height: var(--sl-font-leading-caption);
     color: var(--mat-sys-on-surface-variant);
   }
 }
@@ -153,6 +163,7 @@
   background: var(--mat-sys-surface-variant);
   color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
 }
 
 .targets {
@@ -171,4 +182,5 @@
   border-radius: var(--sl-radius-md);
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
 }

@@ -26,5 +26,6 @@ export class Page {
   readonly empty = input(false);
   readonly emptyText = input('');
 
+
   readonly retry = output<void>();
 }

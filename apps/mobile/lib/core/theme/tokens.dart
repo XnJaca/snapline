@@ -45,6 +45,15 @@ abstract final class Tokens {
   static const fontSizeTitle = 20.0;
   static const fontSizeDisplay = 32.0;
 
+  /// Interlineado por rol. Va acá y no en el componente porque un tamaño sin su
+  /// leading hereda el de Material —20px para todo— y el título de 20px termina
+  /// con ratio 1.0. Cuanto más grande el texto, más chico el ratio: a 32px un
+  /// 1.5 abre huecos que rompen el bloque.
+  static const fontLeadingCaption = 1.45;
+  static const fontLeadingBody = 1.5;
+  static const fontLeadingTitle = 1.25;
+  static const fontLeadingDisplay = 1.15;
+
   static const weightRegular = FontWeight.w400;
   static const weightMedium = FontWeight.w500;
   static const weightBold = FontWeight.w700;
@@ -67,7 +76,7 @@ abstract final class LightTokens {
 
   static const surfaceVariant = Color(0xFFF5F5F5);
 
-  static const background = Color(0xFFFAFAFA);
+  static const background = Color(0xFFF4F4F5);
   static const onBackground = Color(0xFF171717);
 
   static const text = Color(0xFF171717);

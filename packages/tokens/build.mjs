@@ -218,7 +218,7 @@ StyleDictionary.registerFormat({
     const themed = (mode) => dictionary.allTokens.filter((t) => t.path[0] === 'color' && t.path[1] === mode);
     const role = (t) => t.path.slice(2).join('-');
 
-    const unitless = new Set(['weight', 'family']);
+    const unitless = new Set(['weight', 'family', 'leading']);
     const cssValue = (t) => {
       if (typeof t.value === 'string') return t.value;
       if (t.path[0] === 'font' && unitless.has(t.path[1])) return `${t.value}`;
