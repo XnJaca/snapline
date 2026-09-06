@@ -81,13 +81,24 @@ abandonar un trabajo que se había tomado, y eso supone que antes existió.
 una convención que el móvil y el panel repetían sin que ninguna ficha la
 respaldara.
 
-Lo que ve el cliente es un mapeo de tres, no estos:
+Lo que ve el cliente es un mapeo de cuatro, no estos:
 
 | Interno | Cliente ve |
 |---|---|
 | `LEAD`, `ESTIMATED`, `SCHEDULED` | Inicio |
 | `IN_PROGRESS`, `ON_HOLD` | En proceso |
 | `COMPLETED` | Finalizado |
+| `CANCELLED` | Cancelado |
+
+**La cuarta fila faltaba, y el código la había inventado mal.** El mapeo mandaba
+`CANCELLED` a `FINALIZADO`, así que al cliente cuya obra se canceló el portal le
+decía que estaba terminada. Cancelar no es terminar: el cliente ya sabe que su obra
+se cayó porque se lo dijeron, y que el portal afirme lo contrario es peor que no
+decir nada.
+
+*Agregada el 2026-09-02, al encontrar el desvío entre esta tabla y `CLIENT_STAGE`
+en `project.entity.ts`. La tabla no tenía la fila, así que no había contra qué
+comparar: el bug era invisible hasta que alguien puso el código al lado de la ficha.*
 
 ### `project_assignment`
 

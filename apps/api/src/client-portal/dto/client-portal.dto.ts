@@ -46,7 +46,7 @@ export class ClientOfferDto {
 export class ClientProjectViewDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
-  @ApiProperty({ enum: ['INICIO', 'EN_PROCESO', 'FINALIZADO'] }) stage!: ClientStage;
+  @ApiProperty({ enum: ['INICIO', 'EN_PROCESO', 'FINALIZADO', 'CANCELADO'] }) stage!: ClientStage;
 
   @ApiProperty({
     enum: ['STAGES', 'PROGRESS'],
