@@ -69,6 +69,18 @@ Decidido el 2026-08-10, al implementar
 [[../specs/mobile/0005-proyectos-en-el-movil/README|SPEC-0005]]: el selector del
 móvil necesitaba la tabla y el diagrama no alcanzaba para derivarla.
 
+**Una obra no nace cancelada.** El alta ofrece los otros seis estados —`COMPLETED`
+incluido, porque cargar una obra vieja ya terminada es cómo entra el portafolio de
+los años anteriores— pero `CANCELLED` no es un estado de alta: cancelar es
+abandonar un trabajo que se había tomado, y eso supone que antes existió.
+
+**El servidor no lo exige**: `create` acepta cualquiera de los siete sin pasar por
+`canTransition`, así que la regla vive en los formularios. Se escribe acá el
+2026-09-02, al revisar
+[[../specs/web/0010-obras-en-el-panel/README|SPEC-0010]], porque hasta entonces era
+una convención que el móvil y el panel repetían sin que ninguna ficha la
+respaldara.
+
 Lo que ve el cliente es un mapeo de tres, no estos:
 
 | Interno | Cliente ve |
