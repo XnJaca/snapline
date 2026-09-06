@@ -1,0 +1,28 @@
+@use '../../../../styles/form' as form;
+
+// Mismo envoltorio que `site-dialog`: el contenido del diálogo recorta arriba y
+// el label flotante del primer campo queda cercenado sin este aire. El primer
+// campo acá es de texto, así que es el caso exacto.
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+  padding-top: var(--sl-space-2);
+  padding-bottom: var(--sl-space-2);
+  container-type: inline-size;
+}
+
+.note {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
+}
+
+.error {
+  @include form.error;
+}
+
+.progress {
+  height: 4px;
+}

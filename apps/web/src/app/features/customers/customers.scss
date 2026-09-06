@@ -22,7 +22,17 @@
 }
 
 .actions__search {
-  width: 22rem;
+  flex: 0 1 22rem;
+}
+
+@media (max-width: 48rem) {
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .actions__search {
+    flex: 1 1 100%;
+  }
 }
 
 .row {
@@ -60,5 +70,6 @@
   width: 1.5rem;
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-title);
+  line-height: var(--sl-font-leading-title);
   text-align: right;
 }

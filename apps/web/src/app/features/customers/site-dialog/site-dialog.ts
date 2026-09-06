@@ -38,7 +38,7 @@ export interface SiteDialogData {
 export class SiteDialog {
   private readonly api = inject(CustomersApi);
   private readonly fb = inject(FormBuilder);
-  private readonly ref = inject(MatDialogRef<SiteDialog, boolean>);
+  private readonly ref = inject(MatDialogRef<SiteDialog, Site | false>);
 
   protected readonly data = inject<SiteDialogData>(MAT_DIALOG_DATA);
   protected readonly busy = signal(false);
@@ -62,12 +62,12 @@ export class SiteDialog {
     const body = { address: addressValue(this.address), ...this.form.getRawValue() };
 
     try {
-      if (this.data.site) {
-        await this.api.updateSite(this.data.customerId, this.data.site.id, body);
-      } else {
-        await this.api.addSite(this.data.customerId, body);
-      }
-      this.ref.close(true);
+      // Se devuelve la propiedad y no un `true`: el alta de obra la necesita para
+      // dejarla elegida al cerrar. Sigue siendo truthy para quien solo preguntaba.
+      const saved = this.data.site
+        ? await this.api.updateSite(this.data.customerId, this.data.site.id, body)
+        : await this.api.addSite(this.data.customerId, body);
+      this.ref.close(saved);
     } catch (cause) {
       // Lo escrito no se pierde: el diálogo queda abierto con los campos como estaban.
       this.error.set(toApiFailure(cause).kind === 'network' ? 'connection' : 'unknown');

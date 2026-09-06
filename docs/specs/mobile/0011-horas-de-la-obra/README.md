@@ -150,7 +150,7 @@ misma.
   dos.
 - Va también a la ficha `docs/domain/registro-de-tiempo.md`, en la tabla de
   atributos.
-- **Pasa por `domain-guardian` antes de escribir la migración** (regla 28).
+- **Pasa por `domain-guardian` antes de escribir la migración** (regla 29).
 
 Las reglas del dominio que este spec toca de cerca:
 

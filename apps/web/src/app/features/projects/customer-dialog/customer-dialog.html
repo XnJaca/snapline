@@ -1,0 +1,32 @@
+<form [formGroup]="form" (ngSubmit)="submit()" *transloco="let t">
+  <h2 mat-dialog-title>{{ t('projects.newCustomer') }}</h2>
+
+  <mat-dialog-content>
+    <div class="fields">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('field.required', { label: t('customers.displayName') }) }}</mat-label>
+        <input matInput formControlName="displayName" />
+        <mat-hint>{{ t('customers.displayNameHint') }}</mat-hint>
+      </mat-form-field>
+
+      <sl-address-field [group]="address" />
+
+      <p class="note">{{ t('projects.newCustomerNote') }}</p>
+
+      @if (error(); as failure) {
+        <p class="error" role="alert">{{ t('form.error.' + failure) }}</p>
+      }
+    </div>
+  </mat-dialog-content>
+
+  <div class="progress" aria-hidden="true">
+    @if (busy()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+  </div>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" (click)="cancel()">{{ t('action.cancel') }}</button>
+    <button matButton="filled" type="submit" [disabled]="busy()">{{ t('action.save') }}</button>
+  </mat-dialog-actions>
+</form>

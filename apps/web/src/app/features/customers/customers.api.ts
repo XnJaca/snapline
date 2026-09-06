@@ -13,6 +13,10 @@ export class CustomersApi {
   private readonly http = inject(HttpClient);
   private readonly base = inject(API_BASE_URL);
 
+  list(): Promise<Customer[]> {
+    return firstValueFrom(this.http.get<Customer[]>(`${this.base}/customers`));
+  }
+
   get(id: string): Promise<Customer> {
     return firstValueFrom(this.http.get<Customer>(`${this.base}/customers/${id}`));
   }

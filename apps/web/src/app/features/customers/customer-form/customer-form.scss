@@ -1,3 +1,5 @@
+@use '../../../../styles/form' as form;
+
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -5,52 +7,21 @@
   min-height: 0;
 }
 
-// Ancho completo como el resto de las pantallas: nada centrado a la fuerza.
-// `border-box`, o el padding y el borde se suman al 100% y la ficha sobresale
-// 50px del contenedor, con barra horizontal en toda la página.
 .wizard,
 .single {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-4);
-  box-sizing: border-box;
-  width: 100%;
-  border: 1px solid var(--mat-sys-outline);
-  border-radius: var(--sl-radius-md);
-  background: var(--mat-sys-surface);
+  @include form.surface;
 }
 
 .wizard {
   padding: 0;
 }
 
-.single {
-  padding: var(--sl-space-5);
-}
-
-// Los campos se reparten en la fila en vez de apilarse: es lo que evita el
-// scroll largo en una pantalla de oficina.
 .fields {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--sl-space-3) var(--sl-space-4);
+  @include form.fields;
 }
 
-@media (max-width: 62rem) {
-  .fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
+@include form.widths;
 
-@media (max-width: 34rem) {
-  .fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.fields--wide {
-  grid-column: 1 / -1;
-}
 
 .optional__head {
   display: flex;
@@ -63,6 +34,7 @@
   margin: 0;
   color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-body);
+  line-height: var(--sl-font-leading-body);
   font-weight: var(--sl-font-weight-bold);
 }
 
@@ -78,15 +50,12 @@
   margin: 0 0 var(--sl-space-3);
   color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-body);
+  line-height: var(--sl-font-leading-body);
   font-weight: var(--sl-font-weight-bold);
 }
 
 .error {
-  margin: 0;
-  padding: var(--sl-space-3) var(--sl-space-4);
-  border-radius: var(--sl-radius-md);
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
+  @include form.error;
 }
 
 .progress {
@@ -94,20 +63,12 @@
 }
 
 .footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--sl-space-2);
-  margin-top: var(--sl-space-4);
-  padding-top: var(--sl-space-4);
-  border-top: 1px solid var(--mat-sys-outline-variant);
-}
-
-.footer button[matButton='filled'] {
-  min-height: var(--sl-touch-target-primary);
+  @include form.footer;
 }
 
 .muted {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
 }

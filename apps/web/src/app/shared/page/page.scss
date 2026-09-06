@@ -19,9 +19,13 @@
 .page__header {
   display: flex;
   position: relative;
+  // No hay reset global: sin esto el padding de 24px y el borde se suman al
+  // max-width y el encabezado sobresale 50px del formulario.
+  box-sizing: border-box;
   flex: none;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--sl-space-4);
+  gap: var(--sl-space-3) var(--sl-space-4);
   padding: var(--sl-space-4) var(--sl-space-5);
   overflow: hidden;
   border: 1px solid var(--mat-sys-outline);
@@ -42,16 +46,20 @@
 
 .page__titles {
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 1 14rem;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sl-space-1);
   min-width: 0;
 }
 
 .page__heading {
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-title);
+  line-height: var(--sl-font-leading-title);
   font-weight: var(--sl-font-weight-bold);
   letter-spacing: -0.01em;
 }
@@ -60,12 +68,15 @@
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
 }
 
 .page__actions {
   display: flex;
-  flex: none;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--sl-space-2);
 }
 
@@ -99,6 +110,7 @@
   margin: 0;
   color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-body);
+  line-height: var(--sl-font-leading-body);
   font-weight: var(--sl-font-weight-medium);
   text-wrap: balance;
 }
@@ -108,6 +120,7 @@
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
   text-wrap: balance;
 }
 

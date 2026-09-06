@@ -7,6 +7,58 @@
   min-height: 0;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+// `0 1` y no `1 1`: se encogen si hace falta, pero no crecen para llenar la fila
+// y empujar al botón abajo.
+.actions__search {
+  flex: 0 1 20rem;
+}
+
+.actions__status {
+  flex: 0 1 11rem;
+}
+
+// Debajo de esto los dos controles no entran ni siquiera en fila propia: 20rem
+// más 11rem son 496px contra los 375 de un teléfono.
+@media (max-width: 48rem) {
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .actions__search,
+  .actions__status {
+    flex: 1 1 100%;
+  }
+}
+
+// La tarjeta entera es el enlace a la ficha. Envolver en vez de poner un
+// `click` encima la deja alcanzable con teclado y con lector de pantalla sin
+// tener que simular a mano lo que un `<a>` ya hace.
+.card {
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.nomatch {
+  margin: 0;
+  padding: var(--sl-space-6);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
@@ -16,9 +68,17 @@
   list-style: none;
 }
 
-.card {
+// El ítem del grid es el `li` y la tarjeta visible es el `a` de adentro: sin
+// esto el grid iguala el `li` y el enlace se queda en la altura de su contenido,
+// así que dos tarjetas de la misma fila se ven de distinto alto.
+.cards > li {
   display: flex;
-  flex-direction: column;
+}
+
+.card {
+  display: grid;
+  flex: 1;
+  grid-template-rows: auto auto 1fr auto;
   gap: var(--sl-space-2);
   padding: var(--sl-space-4);
   border: 1px solid var(--mat-sys-outline);
@@ -33,7 +93,7 @@
 
 .card__top {
   display: flex;
-  align-items: start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--sl-space-3);
 }
@@ -43,51 +103,91 @@
   color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-body);
   font-weight: var(--sl-font-weight-bold);
+  line-height: var(--sl-font-leading-title);
   text-wrap: balance;
 }
 
 .card__customer {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
   margin: 0;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--mat-sys-on-surface);
   font-size: var(--sl-font-size-caption);
+  font-weight: var(--sl-font-weight-medium);
+  line-height: var(--sl-font-leading-caption);
+}
+
+// La fila elástica de la grilla. Vacía o con dos líneas, la que sigue arranca
+// siempre a la misma altura.
+.card__body {
+  margin-top: var(--sl-space-1);
+  min-width: 0;
 }
 
 .card__description {
   display: -webkit-box;
-  margin: var(--sl-space-1) 0 0;
+  margin: 0;
   overflow: hidden;
   color: var(--mat-sys-on-surface-variant);
   font-size: var(--sl-font-size-caption);
-  line-height: 1.45;
+  line-height: var(--sl-font-leading-caption);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
-.card__facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-2) var(--sl-space-5);
-  margin: var(--sl-space-2) 0 0;
-  padding-top: var(--sl-space-3);
-  border-top: 1px solid var(--mat-sys-outline-variant);
+// El icono acompaña al dato, no compite con él: mismo tamaño que la línea de
+// texto y en el color tenue, para que lo que se lea sea el valor.
+.card__icon {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 1rem;
 }
 
-.fact {
+// Los datos van al pie, cada uno con su icono y sin etiqueta: "Ciudad" delante
+// de una ciudad es ruido, y el pin lo dice sin ocupar una línea.
+// Rejilla fija, no flujo con wrap: dos columnas y dos filas de alto conocido.
+// Con `flex-wrap` el alto dependía de cuán largo fuera cada dato —una obra con
+// rango de fechas envolvía distinto que una con una sola— y la línea divisoria
+// caía 15px más abajo en unas tarjetas que en otras.
+.meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, calc(var(--sl-font-size-caption) * var(--sl-font-leading-caption)));
+  gap: var(--sl-space-2) var(--sl-space-4);
+  margin: 0;
+  padding-top: var(--sl-space-3);
+  padding-inline-start: 0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  list-style: none;
+}
+
+.meta__item {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: var(--sl-space-2);
+  align-content: start;
+  min-width: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+  line-height: var(--sl-font-leading-caption);
 
-  dt {
-    color: var(--mat-sys-on-surface-variant);
-    font-size: var(--sl-font-size-caption);
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+}
 
-  dd {
-    margin: 0;
-    color: var(--mat-sys-on-surface);
-    font-size: var(--sl-font-size-caption);
-    font-weight: var(--sl-font-weight-medium);
-  }
+.meta__item--type span {
+  text-transform: capitalize;
+}
+
+// Un rango de fechas no entra en media columna sin recortarse.
+.meta__item--dates {
+  grid-column: 1 / -1;
 }
 
 @media (prefers-reduced-motion: reduce) {

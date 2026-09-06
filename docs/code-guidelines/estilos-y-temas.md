@@ -159,6 +159,123 @@ círculo a los botones de icono, así que van con `mat.button-overrides` en el m
 lugar. Se decidió el 2026-09-02 al ver un campo de 4px al lado de un botón en
 píldora en la misma fila.
 
+### El tamaño nunca viaja solo: siempre con su interlineado
+
+**Toda regla que fija `font-size` fija su `line-height` hermano.** Los dos salen
+de `design-tokens.json`, por rol:
+
+```scss
+.card__name {
+  font-size: var(--sl-font-size-body);
+  line-height: var(--sl-font-leading-body);
+}
+```
+
+Cuanto más grande el texto, más chico el ratio: `caption` 1.45, `body` 1.5,
+`title` 1.25, `display` 1.15. Un 1.5 a 32px abre huecos que parten el bloque.
+
+Sin la mitad del interlineado, el tamaño **hereda el de Material** — un único 20px
+para los cuatro tamaños de la escala. El título de 20px quedaba con ratio 1.00, y
+nada de la pantalla se apoyaba en una retícula vertical. Se descubrió el
+2026-09-04, midiendo por qué el panel "no tenía ritmo": `design-tokens.json` tenía
+`size` y `weight` y ninguna entrada de interlineado.
+
+**Un literal de `line-height` es el mismo error que un hex literal.** Si el valor
+que hace falta no está en la escala, se agrega al sistema.
+
+### La trampa del atajo de Material
+
+`mat.theme-overrides()` pisa las **piezas** de un rol tipográfico —
+`body-medium-size`, `-line-height`, `-tracking` — pero **Material emite además un
+atajo compuesto**, `--mat-sys-body-medium`, y ese **no se recompone**. Quedan los
+dos vivos y en desacuerdo:
+
+```
+--mat-sys-body-medium-size  →  16px          ← lo que pisamos
+--mat-sys-body-medium       →  400 0.875rem / 1.25rem Inter   ← lo que sigue diciendo
+```
+
+Cualquier regla escrita como `font: var(--mat-sys-body-medium)` se lleva el valor
+viejo. Era el caso del `body`, así que **todo el panel heredaba 14px**, un tamaño
+que no está en la escala, mientras la variable de al lado decía 16.
+
+**Consumir siempre las piezas, nunca el atajo:**
+
+```scss
+body {
+  font-family: var(--mat-sys-body-medium-font);
+  font-size: var(--mat-sys-body-medium-size);
+  font-weight: var(--mat-sys-body-medium-weight);
+  line-height: var(--mat-sys-body-medium-line-height);
+  letter-spacing: var(--mat-sys-body-medium-tracking);
+}
+```
+
+Lo mismo con el tracking: Material trae los valores de Roboto (+0.031em en el
+cuerpo), y a Inter le quedan aguados. Se pisan a `normal` en el mismo bloque de
+overrides, una sola vez.
+
+### Nada flota: todo contenido vive sobre una superficie
+
+**Ningún campo, título de sección ni bloque de contenido se apoya directamente
+sobre el fondo de la página.** Todo va dentro de una superficie con borde, radio
+y fondo:
+
+```scss
+.single {
+  box-sizing: border-box;   // sin esto el padding se suma al 100% y sobresale
+  width: 100%;
+  padding: var(--sl-space-5);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-surface);
+}
+```
+
+Vale para formularios, fichas, listas y cualquier agrupación. El `sl-page` pone
+el encabezado; **el cuerpo lo pone la pantalla**, y si no lo pone, los campos
+quedan a la intemperie.
+
+Dos consecuencias que se ven enseguida cuando falta:
+
+- **Cada fila termina con un ancho distinto**, porque sin un contenedor que las
+  gobierne cada una se mide contra su propio contenido.
+- **Los títulos de sección quedan colgando** sobre el fondo, sin nada que los ate
+  al bloque que encabezan.
+
+**Y el ancho es el completo.** Nada centrado a la fuerza ni acotado con un
+`max-width` propio: el panel es de escritorio y una columna angosta con la mitad
+derecha vacía no se parece al resto de las pantallas.
+
+Los campos adentro van en **grilla de cuatro columnas**, que baja a dos por
+debajo de 62rem y a una por debajo de 34rem. Un campo suelto por fila produce el
+scroll largo que una pantalla de oficina no necesita.
+
+Se escribió el 2026-09-03, después de que el formulario de alta de obra llegara a
+revisión con los campos sueltos sobre el fondo y cuatro anchos distintos en la
+misma pantalla. La regla ya existía en el código —`customer-form` la cumple desde
+SPEC-0009— pero no estaba escrita en ningún lado.
+
+### Una tarjeta no decide su alto
+
+En una grilla de tarjetas, **todas las de una fila miden lo mismo**, sin importar
+cuánto contenido tenga cada una. El ítem de la grilla se estira solo; lo que hay
+que cuidar es que **se estire lo que se ve**.
+
+Si la tarjeta está envuelta —un `li` con un `a` adentro, que es como se hace una
+tarjeta enteramente clickeable— el grid iguala el `li` y el `a` se queda en la
+altura de su contenido:
+
+```scss
+.cards > li { display: flex; }
+.card { flex: 1; }              // la tarjeta llena su ítem
+.card__facts { margin: auto 0 0; }   // y la franja de datos se va al pie
+```
+
+Sin la tercera línea las tarjetas miden igual pero su contenido queda arriba, y
+la franja inferior aparece a distinta altura en cada una — que es el mismo
+defecto visual con otro origen.
+
 ### Los controles de la barra miden lo que un botón
 
 En el encabezado de una página —buscador, filtros, la acción principal— todo mide
@@ -186,7 +303,139 @@ Cero excepciones para colores. Si el token que hace falta no existe, se agrega
 a la capa semántica — no se hardcodea y se sigue, porque eso es exactamente cómo
 se acumula el desorden.
 
-## 3. Los dos temas, desde el primer componente
+## 3. Formularios
+
+El parcial es `apps/web/src/styles/_form.scss`. **Se consume, no se copia**: si
+una pantalla escribe su propio layout de formulario, en tres meses hay cuatro
+formularios distintos.
+
+```scss
+@use '../../../../styles/form' as form;
+
+.form   { @include form.surface; }
+.block  { @include form.block; }
+.fields { @include form.fields; }
+@include form.widths;
+.footer { @include form.footer; }
+```
+
+### El ancho lo declara el dato, no el espacio que sobra
+
+Rejilla de **12 columnas** — divisible por 2, 3 y 4, así que un campo ocupa medio,
+un tercio o un cuarto de fila sin inventar fracciones. Cada campo elige su clase
+por **lo que contiene**:
+
+| Clase | Columnas | Para |
+|---|---|---|
+| `field--date` | 2 | Fecha, código postal, cantidad |
+| `field--short` | 3 | Estado, tipo, unidad, provincia |
+| `field--medium` | 4 | Nombre de pila, apellido, empresa |
+| `field--long` | 6 | Nombre completo, correo, dirección |
+| `field--full` | 12 | Descripción, notas, lo que se escribe largo |
+
+**Las clases de una fila tienen que sumar 12.** Si suman más, el último campo baja
+solo y deja un hueco: `6 + 4 + 4` manda "Estado" a una fila propia; `6 + 3 + 3` no.
+
+Antes de esto los anchos salían del slot: una fecha medía **376px** para
+`dd/mm/aaaa` y la descripción **1550px**. Un campo cuyo ancho no guarda relación
+con su contenido es lo que hace que un formulario se lea como una plantilla.
+
+### El formulario ocupa el ancho de la pantalla
+
+Igual que las listas. **No se acota con un `max-width` propio**: eso deja una
+franja muerta a la derecha —medidos 488px en una pantalla de 1920— y el
+encabezado, que sí va a ancho completo, deja de compartir borde con él.
+
+Lo que impide que los campos se estiren sin sentido no es angostar la superficie,
+es que **cada fila sume 12**. Si una sección no tiene con qué llenar su fila, la
+sección está mal armada: dos fechas solas nunca van a llenar 12 columnas, así que
+las fechas viven en la fila del trabajo y no en un bloque propio.
+
+*Se decidió así el 2026-09-04, después de probar las dos alternativas. Acotar el
+formulario resolvía los anchos por campo y creaba un vacío peor.*
+
+> **Cuidado con el `box-sizing`.** No hay reset global. Toda caja que combine un
+> ancho declarado con `padding` necesita `box-sizing: border-box`, o el padding se
+> suma por fuera: el encabezado llegó a sobresalir exactamente 50px, que son sus
+> 24px de padding por lado más 1px de borde.
+
+### El pie va pegado al último grupo
+
+No al fondo de la pantalla. Un formulario corto no deja 200px de aire antes de
+sus botones. Y **los dos botones miden lo mismo**: `--sl-touch-target-primary` es
+el objetivo táctil del móvil, no la altura de un botón de escritorio, y aplicado
+a uno solo dejaba "Guardar" 12px más alto que "Cancelar" en la misma fila.
+
+### La acción de crear vive dentro del desplegable
+
+Cuando un campo necesita ofrecer "y si no existe, créalo", **no se pone un botón
+al lado**: se agrega una última opción al propio `mat-select`, separada por una
+línea y en el color de la acción.
+
+```html
+<mat-select (valueChange)="onCustomer($event)">
+  @for (c of customers(); track c.id) { <mat-option [value]="c.id">…</mat-option> }
+  <mat-option [value]="CREAR" class="option--new">Nuevo cliente</mat-option>
+</mat-select>
+```
+
+Un botón adosado a un campo nunca se alinea del todo —el campo crece hacia abajo
+con su ayuda y el botón no—, ocupa una columna de la rejilla que el dato no pidió,
+y en estado deshabilitado queda flotando como un fantasma gris. Dentro del menú no
+tiene ninguno de esos problemas y aparece justo donde alguien descubre que le
+falta el dato.
+
+`.option--new` vive en `styles.scss` y no en la pantalla: el overlay de Material
+se renderiza fuera del componente y los estilos encapsulados no lo alcanzan.
+
+### Agrupar es separar
+
+Los campos de un grupo van a `--sl-space-3`; entre grupos, `--sl-space-4` más una
+línea. Sin esa diferencia el formulario es una lista de campos, no una ficha con
+partes.
+
+Cada grupo lleva su título en `--sl-font-size-body` y peso `bold`. **No en
+mayúsculas ni con tracking**: eso es un eyebrow de landing, y esto es una
+herramienta.
+
+## 4. Encabezado de página
+
+Lo pone `sl-page` y ninguna pantalla dibuja el suyo. Tres reglas que ya costaron
+un bug cada una:
+
+- **Todo mide 40px** — buscador, filtros y acción principal. Material trae los
+  campos a 56 y los botones a 40; en la misma fila se ven de dos tamaños.
+- **El encabezado envuelve, y lo dispara el espacio disponible, no una media
+  query.** Forzar el salto por breakpoint baja las acciones aunque quepan. Y sin
+  envolver, el título se comprime hasta **0px** y la acción principal queda
+  cortada por el `overflow: hidden`, sin scroll para alcanzarla. Pasaba a 1024px,
+  el ancho de laptop más común, y no era progresivo: 900 andaba y 1024 no.
+- **Lo que está en el encabezado no se comprime.** `flex: none` en los botones y
+  `white-space: nowrap` en su etiqueta, o "Nueva obra" se parte en dos renglones
+  dentro de una caja de 40px.
+
+> La etiqueta de un botón de Material vive en `.mdc-button__label`, y cuando el
+> botón se proyecta con `ng-content` hacia `sl-page` **ninguno de los dos
+> componentes la alcanza** con sus estilos encapsulados. Esa regla va en el
+> global.
+
+## 5. Diálogos
+
+- **Ancho `40rem`**, con `maxWidth: calc(100vw - 2rem)`. Un diálogo más ancho deja
+  de leerse como una decisión acotada.
+- **El contenido arranca con aire arriba.** `mat-dialog-content` recorta lo que se
+  sale, y el label flotante del primer campo sobresale unos 6px por encima de su
+  borde: sin `padding-top` en el envoltorio de los campos, se ve cercenado. Se
+  resuelve con el envoltorio, no peleándole a Material.
+- **Devuelve lo que creó, no un `true`.** Quien abrió el diálogo casi siempre
+  necesita dejar seleccionado lo que se acaba de crear.
+- **Lo que el diálogo creó ya existe al cerrarse.** No es un borrador que se
+  guarda con el formulario que lo abrió: si ese formulario después falla, lo
+  creado se conserva y no se deshace.
+- Pie a la derecha, la acción secundaria primero, y **barra de progreso de 4px**
+  entre el contenido y el pie mientras se guarda.
+
+## 6. Los dos temas, desde el primer componente
 
 El tema se aplica con `data-theme` en el `<html>`, y el default respeta la
 preferencia del sistema:
@@ -213,7 +462,7 @@ invisible en una pantalla al sol.
 
 Un componente que solo se probó en claro está sin terminar.
 
-## 4. Flutter — la misma regla, otra sintaxis
+## 7. Flutter — la misma regla, otra sintaxis
 
 Los widgets no llevan valores de estilo literales. Consumen el tema.
 
@@ -238,7 +487,7 @@ tokens que Material no cubre (espaciado, radios propios) van en un
 `ThemeExtension`. La app declara `theme`, `darkTheme` y `themeMode` desde el
 primer commit — no se agrega dark mode después.
 
-## 5. Qué revisar antes de aprobar un cambio de UI
+## 8. Qué revisar antes de aprobar un cambio de UI
 
 - [ ] ¿El componente tiene sus tres archivos separados?
 - [ ] ¿Hay algún color, tamaño o espaciado literal en el `.scss` del componente?
@@ -246,6 +495,15 @@ primer commit — no se agrega dark mode después.
 - [ ] ¿El contraste pasa AA en los dos temas?
 - [ ] ¿Los tokens nuevos se agregaron a la capa semántica, no al componente?
 - [ ] ¿Hay algún texto quemado? (ver [[i18n]])
+- [ ] ¿Cada `font-size` lleva su `line-height` hermano?
+- [ ] ¿Se consume la **pieza** del token de Material y no su atajo compuesto?
+- [ ] ¿Todo el contenido vive sobre una superficie, a ancho completo o de lectura?
+- [ ] En una grilla de tarjetas: ¿las zonas equivalentes arrancan a la misma
+      coordenada entre vecinas? Medirlo, no mirarlo.
+- [ ] En un formulario: ¿las clases de cada fila suman 12? ¿El ancho de cada campo
+      corresponde al dato? ¿El encabezado comparte borde con el formulario?
+- [ ] ¿Alguna caja combina `max-width` con `padding` sin `box-sizing: border-box`?
+- [ ] ¿El encabezado sigue usable a 1024px y a 375px? Es donde se rompe primero.
 
 ## Pendiente
 

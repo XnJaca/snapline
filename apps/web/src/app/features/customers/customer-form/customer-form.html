@@ -9,29 +9,29 @@
   <ng-template #datosCliente>
     <div [formGroup]="form">
     <div class="fields">
-      <mat-form-field appearance="outline" class="fields--wide">
+      <mat-form-field appearance="outline" class="field--medium">
         <mat-label>{{ t('field.required', { label: t('customers.displayName') }) }}</mat-label>
         <input matInput formControlName="displayName" />
         <mat-hint>{{ t('customers.displayNameHint') }}</mat-hint>
         <mat-error>{{ t('customers.displayNameRequired') }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="field--medium">
         <mat-label>{{ t('customers.firstName') }}</mat-label>
         <input matInput formControlName="firstName" />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="field--medium">
         <mat-label>{{ t('customers.lastName') }}</mat-label>
         <input matInput formControlName="lastName" />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="field--long">
         <mat-label>{{ t('customers.companyName') }}</mat-label>
         <input matInput formControlName="companyName" />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="field--long">
         <mat-label>{{ t('customers.source') }}</mat-label>
         <mat-select formControlName="source">
           @for (source of sources; track source) {
@@ -42,16 +42,16 @@
     </div>
 
     <div class="fields">
-      <div class="fields--wide"><sl-phone-field [group]="phone" /></div>
+      <div class="field--long"><sl-phone-field [group]="phone" /></div>
 
-      <mat-form-field appearance="outline" class="fields--wide">
+      <mat-form-field appearance="outline" class="field--long">
         <mat-label>{{ t('customers.email') }}</mat-label>
         <input matInput type="email" formControlName="email" />
         <mat-hint>{{ t('customers.contactHint') }}</mat-hint>
         <mat-error>{{ t('customers.emailInvalid') }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="fields--wide">
+      <mat-form-field appearance="outline" class="field--full">
         <mat-label>{{ t('customers.notes') }}</mat-label>
         <textarea matInput formControlName="notes" rows="2"></textarea>
       </mat-form-field>
