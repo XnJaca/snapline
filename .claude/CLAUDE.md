@@ -347,7 +347,10 @@ encabezado de página y diálogos tienen su sección.
 
 ### 26. Git — ramas por spec, nunca directo a main
 
-- Todo spec tiene su rama `feature/SPEC-XXXX-slug`. Sin excepción, sin mezclar dos specs.
+- Todo spec tiene su rama `feature/<plataforma>-NNNN-slug`, con su plataforma y su
+  número —`feature/web-0011-gente`—. Sin excepción, sin mezclar dos specs. El número
+  solo no alcanza: la numeración es independiente por plataforma, así que `web/0010` y
+  `mobile/0010` son specs distintos. Lo que no es spec va en `fix/slug` o `docs/slug`.
 - No commitear ni pushear directo a `main`.
 - La IA **nunca** mergea un PR. Lo abre y avisa; el humano revisa y mergea.
 - Antes de abrir PR: typecheck y lint verdes.

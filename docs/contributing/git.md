@@ -37,9 +37,9 @@ que la copien.
 El flujo es **GitHub Flow**: todo sale de `main` y vuelve a `main` por PR.
 
 ```
-main ──┬── feature/SPEC-XXXX-slug ──▶ PR ──▶ main
-       ├── fix/slug ─────────────────▶ PR ──▶ main
-       └── docs/slug ────────────────▶ PR ──▶ main
+main ──┬── feature/<plataforma>-NNNN-slug ──▶ PR ──▶ main
+       ├── fix/slug ───────────────────────────▶ PR ──▶ main
+       └── docs/slug ──────────────────────────▶ PR ──▶ main
 ```
 
 **No existen `develop`, `release/` ni `hotfix/`.** Sin `develop` no hay diferencia
