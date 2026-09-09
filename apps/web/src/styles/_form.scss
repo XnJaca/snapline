@@ -57,8 +57,11 @@ $columnas: 12;
   }
 }
 
-// Anchos por tipo de dato, no por porción de fila.
-@mixin widths {
+// Anchos por tipo de dato, no por porción de fila. Los tres escalones se
+// escriben una vez y se aplican contra el viewport a pantalla completa o contra
+// el contenedor adentro de un diálogo: el juego de anchos es el mismo, lo que
+// cambia es quién manda el breakpoint.
+@mixin _widths-wide {
   .field--date {
     grid-column: span 2;
   }
@@ -78,30 +81,80 @@ $columnas: 12;
   .field--full {
     grid-column: 1 / -1;
   }
+}
+
+@mixin _widths-mid {
+  .field--date {
+    grid-column: span 3;
+  }
+
+  .field--short,
+  .field--medium {
+    grid-column: span 6;
+  }
+
+  .field--long {
+    grid-column: 1 / -1;
+  }
+}
+
+@mixin _widths-narrow {
+  .field--date,
+  .field--short,
+  .field--medium,
+  .field--long {
+    grid-column: 1 / -1;
+  }
+}
+
+@mixin widths {
+  @include _widths-wide;
 
   @media (max-width: 62rem) {
-    .field--date {
-      grid-column: span 3;
-    }
-
-    .field--short,
-    .field--medium {
-      grid-column: span 6;
-    }
-
-    .field--long {
-      grid-column: 1 / -1;
-    }
+    @include _widths-mid;
   }
 
   @media (max-width: 40rem) {
-    .field--date,
-    .field--short,
-    .field--medium,
-    .field--long {
-      grid-column: 1 / -1;
-    }
+    @include _widths-narrow;
   }
+}
+
+// Los mismos anchos adentro de un diálogo. Un diálogo mide 40rem con el
+// navegador a 1920 y con el navegador a 1100, así que preguntarle al viewport no
+// dice nada: la consulta va contra el contenedor, y el escalón intermedio no
+// existe porque entre 24rem y el ancho del diálogo no hay lugar para uno.
+@mixin widths-contained($narrow: 24rem) {
+  @include _widths-wide;
+
+  @container (max-width: #{$narrow}) {
+    @include _widths-narrow;
+  }
+}
+
+// El envoltorio de los campos adentro de un diálogo. `mat-dialog-content` recorta
+// lo que se sale y el label flotante del primer campo sobresale unos 6px por
+// encima de su borde: sin este aire se ve cercenado. Se resuelve acá y no
+// peleándole a Material.
+@mixin dialog-air {
+  padding-top: var(--sl-space-2);
+  padding-bottom: var(--sl-space-2);
+}
+
+// Campos apilados: el diálogo de dos o tres campos, donde una rejilla de doce
+// columnas sería ceremonia.
+@mixin dialog-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+  @include dialog-air;
+}
+
+// La rejilla adentro de un diálogo. Va siempre con `widths-contained`, que es
+// quien necesita este contenedor para medir.
+@mixin dialog-fields {
+  @include dialog-air;
+  container-type: inline-size;
+  @include fields;
 }
 
 // El pie va pegado al último grupo, no al fondo de la pantalla: un formulario
