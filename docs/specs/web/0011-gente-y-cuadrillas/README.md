@@ -5,7 +5,7 @@ aliases:
   - "SPEC-0011: Gente, cuadrillas y asignación en el panel"
 type: spec
 platform: web
-status: en-implementacion
+status: implementado
 goal: "William da de alta a un trabajador desde el panel con su rol y su tarifa, le dicta un código de seis dígitos que el trabajador canjea en la app para elegir su contraseña y activar su membresía, y desde ahí lo suma a una cuadrilla y asigna esa cuadrilla a una obra en una fecha: el trabajador entra y ve esa obra sin que nadie toque la base de datos."
 apps:
   - api
@@ -20,10 +20,10 @@ domain:
   - proyecto
 frente: administrativo
 created: 2026-09-03
-updated: 2026-09-03
+updated: 2026-09-09
 tags:
   - spec
-  - spec/en-implementacion
+  - spec/implementado
   - web
 ---
 
@@ -729,6 +729,7 @@ Termina entrando a la app, no volviendo al login.
 
 | Fecha | Estado | Nota |
 |-------|--------|------|
+| 2026-09-09 | implementado | **PR #45 mergeado.** Los 37 criterios comprobados; el que queda sin marcar es el aislamiento entre contratistas, que exige un segundo contratista y hoy todavía no se puede crear — queda escrito arriba con su razón, no tachado. `code-reviewer` cerró en LISTO PARA PR a la tercera pasada. Al traer `main` aparecieron dos choques de numeración con Obras en el panel, que se mergeó primero y se queda con los números: este spec pasó de 0010 a **0011** y su deuda de 0014 a **DEBT-0015**; el `SPEC-0010` de móvil no se tocó, que la numeración es por track. API 110 unitarios y 95 e2e, panel 92, móvil 438 |
 | 2026-09-09 | en-implementacion | **El capataz ve su cuadrilla y ninguna otra**, decidido por @jaca sobre la pregunta que dejó abierta el revisor. `crews.read` incluye al FOREMAN, así que el scope por rol **es** el control de acceso de estas cuatro rutas: sin él, el REST le entregaba la empresa entera —quién está en cada cuadrilla, con qué fechas— mientras el pull ya se lo negaba, y la app mostraba una cosa u otra según de dónde hubiera leído. La regla no se inventó: es la de `cuadrillaVisible` del pull, **la que lidera o la que integra hoy**, copiada tal cual. La cuadrilla ajena responde **404 y no 403**, porque que exista es lo que no le toca saber. Alcanza a `GET /crews`, a la ficha, a los miembros y a las asignaciones, y por defensa también a las escrituras que hoy el guard ya le niega. Dos e2e nuevos: la suya y solo la suya, y la que integra sin liderarla. De paso quedó una nota del spec al día: decía que el pull acota solo al WORKER, y este spec ya lo había acotado al FOREMAN. API 106 unitarios y 95 e2e |
 | 2026-09-07 | en-implementacion | **Segunda pasada de `code-reviewer`: LISTO PARA PR, con dos MEDIO que se cerraron.** El primero destapó algo peor que lo que reportaba: el revisor marcó que el mensaje del solape se mostraba **tal como venía del servidor**, en español, al único usuario que administra en inglés. Al escribir el test para arreglarlo resultó que **ese mensaje nunca existió**: `cuadrillaQueChoca()` consultaba dentro del `catch`, y cuando la exclusión de la base salta, Postgres aborta la transacción entera —el request corre dentro de una—, así que la consulta fallaba y se llevaba puesto el error bueno. Lo que llegaba era «La operación viola una restricción de datos», el genérico. **Se pregunta antes de insertar**; la exclusión sigue siendo la que manda para dos altas simultáneas, sin nombre porque a esa altura ya no se puede consultar. El nombre viaja ahora en `details` y no dentro de la frase, que es lo que ADR-0011 pide desde el principio, y la frase la arma el panel. Barrido: no quedaba ninguna otra consulta adentro de un `catch` en todo el API. El segundo MEDIO era una ausencia de señal —los tres endpoints de asignación declaran el mismo `crews.write` y nada lo probaba—, y ahora un e2e con token de capataz los recorre. Tres tests nuevos: el solape con su `details`, el 403 de los tres endpoints, y el diálogo que traduce en vez de repetir al servidor. API 106 unitarios y 93 e2e, panel 65, móvil 438 |
 | 2026-09-07 | en-implementacion | **Los siete hallazgos de `code-reviewer`, cerrados.** El que más pesaba no se veía leyendo: el selector de asignar filtraba por un estado **que no existe** —`ESTIMATING`—, así que una obra estimada nunca aparecía y nadie recibía un error; los nombres del enum viven ahora en `isOpenProject()` y no escritos a mano en cada pantalla. Los demás: `EndCrewMemberDto` en vez de un cuerpo sin declarar, el rechazo de quedarse sin contacto comparado contra **lo que queda en la fila** y no contra lo que vino en el cuerpo —mandar solo `{phone: null}` sobre alguien sin correo lo dejaba sin forma de entrar—, `app_user_needs_contact` mapeado en el filtro, el choque de cuadrillas que ahora **nombra la otra cuadrilla** con `CREW_MEMBER_OVERLAP`, `plannedHeadcount` fuera de `CrewAssignmentDto`, y la paleta en `core/brand/crew-colors.ts`. Y el hallazgo que era una ausencia: **Cuadrillas no tenía un solo test**. Van tres sobre lo que el spec promete —que el capataz no pide las tarifas y que `crews.write` gobierna el alta—, y la suite del panel queda en 63. **Un flake que el ojo no explicaba y el reloj sí**: dos e2e tomaban su cursor de `since` con `new Date()` de Node, que en esta máquina corre **un milisegundo adelante** del reloj de Postgres —medido—, así que `updated_at > cursor` daba falso cuando la escritura caía en el mismo milisegundo. El cursor sale ahora del `serverTime` del pull, que es lo que hace el móvil y lo que ese mismo docblock ya advertía. Seis corridas seguidas en verde donde antes fallaban cuatro de ocho |

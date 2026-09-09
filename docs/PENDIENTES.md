@@ -174,8 +174,9 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
       de las dos alturas de acción primaria: el objetivo de campo son 64dp y un
       FAB de Material mide 56.
 
-- [ ] **No hay forma de dar de alta a un trabajador, y sin eso la cuadrilla no
-      existe.** El API tiene `crews` completo —crear cuadrilla, editarla, sumar
+- [x] **No hay forma de dar de alta a un trabajador, y sin eso la cuadrilla no
+      existe.** ~~Pendiente~~ **Resuelto por SPEC-0011, PR #45 mergeado el
+      2026-09-09.** El API tiene `crews` completo —crear cuadrilla, editarla, sumar
       y sacar miembros, designar capataz— y `POST /projects/:id/assignments`
       para asignarla a una obra en una fecha. Lo que **no existe en ningún
       lado** es crear la membresía: no hay `POST /memberships`, ni invitación,
@@ -184,9 +185,11 @@ Ninguno bloquea el prototipo: el recorrido corre completo en desarrollo.
       `CrewsClient` generado no lo llama nadie.
       *Encontrado el 2026-09-03: se entró como Carlos y la app dijo que no tiene
       obra asignada, sin ningún camino para arreglarlo desde la app.*
-      **Es el próximo spec, y es el que desbloquea el uso real** — sin esto la
-      app solo la puede usar quien ya está en la base. Arrastra además la deuda
-      declarada de `crews`, que se construyó sin spec.
+      Era el spec que desbloqueaba el uso real: hasta acá la app solo la podía
+      usar quien ya estuviera en la base. El alta va con un código de seis
+      dígitos que se dicta en persona y se canjea en la app, y la asignación de
+      la cuadrilla a la obra es un período. Saldó también la deuda declarada de
+      `crews`, que se había construido sin spec.
 
 - [ ] **Una nota para el cliente no tiene forma de salir en una obra en modo
       etapas.** Hoy el aviso ofrece cambiar el modo de la obra entera, que es

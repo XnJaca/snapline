@@ -14,29 +14,32 @@ Design partner: William Ferman, Professional Construction LLC, Maryland.
 
 Monorepo pnpm + Turborepo. Alcance reestructurado el 2026-08-08.
 
-`apps/mobile` — **423 tests**. La obra completa: sus cuatro tabs —Avance, Fotos,
+`apps/mobile` — **438 tests**. La obra completa: sus cuatro tabs —Avance, Fotos,
 Horas y Detalle—, el marcaje de asistencia, clientes y propiedades con su mapa, y
 la capa local con su bandeja de salida. Ninguna tab de obra usa ya `Placeholder`;
 lo que queda de andamiaje son los ejes que todavía no tienen spec.
 
-`apps/web` — el panel, con clientes y propiedades (SPEC-0009 de web).
+`apps/web` — el panel, con clientes y propiedades (SPEC-0009), obras (SPEC-0010) y
+**el alta de trabajadores con sus cuadrillas y asignaciones** (SPEC-0011). 92 tests.
 `apps/site` sin scaffold.
 
-`apps/api` — esquema completo (35 tablas, 35 entities, RLS en 30), **81 endpoints**,
-97 tests unitarios y 78 e2e:
+`apps/api` — esquema completo (35 tablas, 35 entities, RLS en 30), **92 endpoints**,
+110 tests unitarios y 95 e2e:
 
 | Módulo | Estado |
 |---|---|
 | auth · customers · projects · media · time-entries | Completo |
-| catalog · crews · billing · reports | Completo, **sin spec** — ver deuda abajo |
+| crews · memberships | Completo — SPEC-0011 lo escribió retroactivamente |
+| catalog · billing · reports | Completo, **sin spec** — ver deuda abajo |
 | publishing | Completo — publicar, antes/después, feed público y de redes |
 | client-portal | Completo — magic link y las cinco rutas del portal |
 
 Lo único que separa la demo de tener fotos reales: **cargar las credenciales de
 Backblaze**. Todo lo demás del recorrido corre. Ver `docs/PENDIENTES.md`.
 
-**Deuda declarada:** catalog, crews, billing y reports se construyeron sin spec,
-contra la regla 2. Escribirlos retroactivamente antes de que la superficie crezca.
+**Deuda declarada:** catalog, billing y reports se construyeron sin spec, contra la
+regla 2. Escribirlos retroactivamente antes de que la superficie crezca. `crews` ya
+salió de esa lista: SPEC-0011 lo cubrió al usarlo desde el panel.
 
 ## Stack
 
