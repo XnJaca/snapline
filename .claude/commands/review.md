@@ -15,7 +15,8 @@ Argumento recibido: $ARGUMENTS — puede ser un número de spec, una ruta, o vac
    - Con argumento de spec (`0007`, `SPEC-0007`, `M0003`) → buscá el spec y su rama.
    - Con rutas → revisá esos archivos.
    - Sin argumento → `git diff main...HEAD --stat` para ver qué cambió, y deducí
-     el spec desde el nombre de la rama (`feature/SPEC-XXXX-slug`).
+     el spec desde el nombre de la rama (`feature/<plataforma>-NNNN-slug`: de
+     `feature/web-0011-gente` sale `docs/specs/web/0011-*`).
 
 2. Si no hay nada que revisar, decilo y terminá. No inventes una revisión.
 

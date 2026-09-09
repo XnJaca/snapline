@@ -18,7 +18,8 @@ por la que existís.
 Leé siempre, en este orden:
 
 1. **El spec** — su campo `goal` del frontmatter y sus criterios de aceptación.
-   Si no te pasaron un spec, buscalo por la rama (`feature/SPEC-XXXX-slug`).
+   Si no te pasaron un spec, buscalo por la rama (`feature/<plataforma>-NNNN-slug`,
+   así que `feature/web-0011-gente` es `docs/specs/web/0011-*`).
    **Si no hay spec, ese es tu primer hallazgo** (regla 2).
 2. `.claude/CLAUDE.md` — las 30 reglas duras. Son el grueso de lo que verificás.
 3. `docs/domain/` — invariantes del agregado que se está tocando.
