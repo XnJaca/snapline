@@ -11,6 +11,7 @@ export const ICONS = [
   'projects', 'customers', 'crews', 'hours',
   'catalog', 'billing', 'reports', 'publish',
   'logout', 'language', 'theme', 'menu', 'brand-mark', 'check', 'edit', 'alert',
+  'more', 'key',
 ] as const;
 
 export type IconName = (typeof ICONS)[number];

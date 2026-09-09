@@ -1,0 +1,58 @@
+<form [formGroup]="form" (ngSubmit)="submit()" *transloco="let t">
+  <h2 mat-dialog-title>{{ data.crew ? t('crews.editCrew') : t('crews.newCrew') }}</h2>
+
+  <mat-dialog-content>
+    <div class="fields">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('crews.crewNameRequired') }}</mat-label>
+        <input matInput formControlName="name" autocomplete="off" />
+      </mat-form-field>
+
+      <div class="colors">
+        <span class="colors__label">{{ t('crews.color') }}</span>
+        <div class="colors__row" role="radiogroup" [attr.aria-label]="t('crews.color')">
+          @for (color of colors; track color) {
+            <button
+              class="swatch"
+              type="button"
+              role="radio"
+              [attr.aria-checked]="form.controls.color.value === color"
+              [class.swatch--on]="form.controls.color.value === color"
+              [style.background]="color"
+              [attr.aria-label]="color"
+              (click)="pick(color)"
+            ></button>
+          }
+        </div>
+        <span class="colors__hint">{{ t('crews.colorHint') }}</span>
+      </div>
+
+      @if (candidates.length) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ t('crews.foreman') }} · {{ t('action.optional') }}</mat-label>
+          <mat-select formControlName="foremanMembershipId">
+            <mat-option [value]="null">{{ t('crews.noForeman') }}</mat-option>
+            @for (person of candidates; track person.id) {
+              <mat-option [value]="person.id">{{ person.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (error(); as key) {
+        <p class="error" role="alert">{{ t(key) }}</p>
+      }
+    </div>
+  </mat-dialog-content>
+
+  <div class="progress" aria-hidden="true">
+    @if (busy()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+  </div>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" (click)="cancel()">{{ t('action.cancel') }}</button>
+    <button matButton="filled" type="submit" [disabled]="busy()">{{ t('action.save') }}</button>
+  </mat-dialog-actions>
+</form>

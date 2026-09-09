@@ -30,8 +30,14 @@ export class UpdateProjectDto {
 export class AssignCrewDto {
   @IsOptional() @IsUUID() crewId?: string;
   @IsOptional() @IsUUID() membershipId?: string;
-  @IsDateString() workDate!: string;
+  @IsDateString() fromDate!: string;
+  @IsOptional() @IsDateString() toDate?: string;
   @IsOptional() plannedHeadcount?: number;
+}
+
+/** Cerrar la labor de esa cuadrilla en esa obra. */
+export class EndAssignmentDto {
+  @IsDateString() toDate!: string;
 }
 
 /**

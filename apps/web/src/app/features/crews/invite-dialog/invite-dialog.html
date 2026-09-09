@@ -1,0 +1,27 @@
+<div class="invite" *transloco="let t">
+  <span class="invite__icon"><mat-icon svgIcon="key" /></span>
+
+  <h2 class="invite__title" mat-dialog-title>{{ t('crews.inviteTitle', { name: data.name }) }}</h2>
+
+  <mat-dialog-content>
+    <p class="invite__code">
+      @for (group of groups; track $index) {
+        <span class="invite__pair">{{ group }}</span>
+      }
+    </p>
+
+    @if (data.expiresAt) {
+      <p class="invite__expires">{{ t('crews.inviteExpires', { date: data.expiresAt | slDate }) }}</p>
+    }
+
+    <p class="invite__how">{{ t('crews.inviteHow') }}</p>
+    <p class="invite__hint">{{ t('crews.inviteHint') }}</p>
+  </mat-dialog-content>
+</div>
+
+<mat-dialog-actions align="center" *transloco="let t">
+  <button matButton="outlined" type="button" (click)="copy()">
+    {{ copied() ? t('crews.inviteCopied') : t('crews.inviteCopy') }}
+  </button>
+  <button matButton="filled" type="button" (click)="close()">{{ t('crews.inviteDone') }}</button>
+</mat-dialog-actions>

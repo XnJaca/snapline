@@ -78,7 +78,8 @@ void main() {
         updatedAt: DateTime.now(),
         projectId: id,
         membershipId: Value(membershipId),
-        workDate: DateTime.now(),
+        // Entró hoy y sigue en la obra: `to_date` nulo.
+        fromDate: DateTime.now(),
       ),
     );
   }
@@ -113,6 +114,29 @@ void main() {
     expect(find.text('Horas'), findsOneWidget);
     expect(find.text('Carlos Ruiz'), findsOneWidget);
     expect(find.text('Sin marcar hoy'), findsWidgets);
+    await desmontar(tester);
+  });
+
+  /// Lo que se vio probando: el eje se llama Cuadrilla, así que entrar y no ver
+  /// a nadie porque hoy no hay obra no tiene sentido. Ver a su gente es lo que
+  /// la ficha de dominio pide del lado del teléfono; marcar por ellos es otra
+  /// cosa, y esa sí necesita obra.
+  testWidgets('sin obra hoy, el capataz igual ve a su gente', (tester) async {
+    await cuadrilla('cr1', 'Cuadrilla A', gente: [
+      ('m1', 'María López'),
+      ('m2', 'Carlos Ramírez'),
+    ]);
+    // Sin `asignadaHoy`: hoy no tiene ninguna obra.
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cuadrilla A'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Carlos Ramírez'), findsOneWidget);
+    expect(find.text('María López'), findsWidgets);
+    // Y dice por qué no puede marcar, en vez de esconder a todos.
+    expect(find.textContaining('no puede marcar por nadie'), findsOneWidget);
     await desmontar(tester);
   });
 

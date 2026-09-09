@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/brand/snapline_backdrop.dart';
 import '../../core/brand/snapline_logo.dart';
@@ -8,6 +9,7 @@ import '../../core/theme/theme_extensions.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../l10n/app_localizations.dart';
 import 'login_controller.dart';
+import 'redeem_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -140,6 +142,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         expand: true,
                       ),
                     ],
+
+                    // Quien recién entra no tiene contraseña todavía: tiene el
+                    // código de seis dígitos que le dictaron.
+                    SizedBox(height: spacing.lg),
+                    TextButton(
+                      onPressed: enviando
+                          ? null
+                          : () => context.push(RedeemScreen.route),
+                      child: Text(l10n.authRedeemLink),
+                    ),
                     ],
                   ),
                 ),

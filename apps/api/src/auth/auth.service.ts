@@ -8,11 +8,25 @@ import { AppUser, Locale } from './entities/app-user.entity';
 import { Membership } from './entities/membership.entity';
 import { AccessTokenPayload } from './guards/auth.guard';
 import { AuthResultDto, AuthMembershipDto, AuthUserDto } from './dto/auth-result.dto';
+import { VerifyInviteDto } from '../memberships/dto/membership.dto';
 import { TenantService } from '../tenant/tenant.service';
 import { normalizeIdentifier } from './phone';
 import { permissionsForRole } from './permissions';
 
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 60;
+
+// Diez intentos por invitación. Con seis dígitos y siete días de vida, es lo que
+// hace que el código no sea adivinable aunque el rate limit sea por IP.
+const MAX_INVITE_ATTEMPTS = 10;
+
+interface InviteCandidate {
+  id: string;
+  companyId: string;
+  role: Membership['role'];
+  inviteCodeHash: string;
+  inviteExpiresAt: Date;
+  inviteAttempts: number;
+}
 
 interface SessionMembership {
   id: string;
@@ -45,7 +59,9 @@ export class AuthService {
 
     // Mismo mensaje para usuario inexistente y contraseña mala: no revelamos cuál falló.
     const invalid = ApiError.unauthorized('INVALID_CREDENTIALS', 'Credenciales inválidas');
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) throw invalid;
+    // Sin contraseña es quien fue invitado y todavía no canjeó. Se ataja antes de
+    // comparar: bcrypt.compare con un nulo no devuelve false, tira TypeError.
+    if (!user?.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) throw invalid;
 
     const memberships = await this.membershipsForUser(user.id);
     if (!memberships.length) throw invalid;
@@ -53,6 +69,106 @@ export class AuthService {
     // Por defecto entra a la membresía más antigua. El criterio es explícito y
     // determinista a propósito; el cliente recibe la lista completa para ofrecer
     // cambiar de empresa. Ver DEBT-0002.
+    return this.issue(user, memberships[0], memberships);
+  }
+
+  /**
+   * Canjea el código que se dictó en persona. Es anterior al contexto de tenant,
+   * como el login: lee con `auth_invites_for_user()` y escribe con `runAs()`.
+   */
+  /**
+   * Comprueba el código **sin consumirlo**, para que la app pueda pedir la
+   * contraseña en un segundo paso: escribirla y recién ahí enterarse de que el
+   * código no servía es hacerle perder el trabajo a quien recién entra.
+   *
+   * Un fallo gasta intento igual que el canje. Si no, esto sería un oráculo
+   * gratis para probar códigos sin límite.
+   */
+  async verifyInvite(identifier: string, code: string): Promise<VerifyInviteDto> {
+    const { user, match } = await this.resolveInvite(identifier, code);
+    // Sin contraseña en el cuerpo, `resolveInvite` o encuentra la invitación o
+    // rechaza: acá `match` no puede ser nulo.
+    return {
+      needsPassword: user.passwordHash === null,
+      expiresAt: match!.inviteExpiresAt,
+    };
+  }
+
+  async redeemInvite(identifier: string, code: string, password?: string): Promise<AuthResultDto> {
+    const { user, match } = await this.resolveInvite(identifier, code, password);
+    if (match === null) return this.issueForRedeemed(user, password!);
+    return this.activate(user, match, password);
+  }
+
+  /**
+   * El camino común de verificar y canjear: resuelve la persona, su invitación
+   * viva y el código, o tira el rechazo que corresponda.
+   *
+   * `match` nulo significa que no hay invitación pero la contraseña abre sesión:
+   * es el reintento de un canje ya aplicado (regla 19), y solo lo contempla el
+   * canje, no la verificación.
+   */
+  private async resolveInvite(
+    identifier: string, code: string, password?: string,
+  ): Promise<{ user: AppUser; match: InviteCandidate | null }> {
+    const { email, phone } = normalizeIdentifier(identifier);
+    const user = await this.users
+      .createQueryBuilder('u')
+      .addSelect('u.passwordHash')
+      .where('u.deletedAt IS NULL')
+      .andWhere(email ? 'u.email = :email' : 'u.phone = :phone', { email, phone })
+      .getOne();
+
+    const invalid = ApiError.unauthorized('INVITE_CODE_INVALID', 'Código inválido');
+    if (!user) throw invalid;
+
+    const invites = await this.invitesForUser(user.id);
+
+    // Sin invitación viva, un reintento de un canje que ya se aplicó no puede
+    // decir "código inválido" a quien acaba de elegir su contraseña (regla 19):
+    // si esa contraseña resuelve sesión, se devuelve la sesión. Es un login, y
+    // quien la acierta ya podía entrar por /auth/login.
+    if (!invites.length) {
+      if (password && user.passwordHash && (await bcrypt.compare(password, user.passwordHash))) {
+        return { user, match: null };
+      }
+      throw invalid;
+    }
+
+    if (invites.every((i) => i.inviteAttempts >= MAX_INVITE_ATTEMPTS)) {
+      throw new ApiError('INVITE_TOO_MANY_ATTEMPTS', 'Demasiados intentos: pida un código nuevo', 429);
+    }
+
+    let match: InviteCandidate | undefined;
+    for (const invite of invites) {
+      if (invite.inviteAttempts < MAX_INVITE_ATTEMPTS
+        && (await bcrypt.compare(code, invite.inviteCodeHash))) {
+        match = invite;
+        break;
+      }
+    }
+
+    if (!match) {
+      // Se suma el intento a todas las invitaciones vivas: el servidor no sabe
+      // cuál se intentaba canjear, y elegir una deja las otras sin contar, que es
+      // fuerza bruta gratis para quien tenga una segunda invitación abierta.
+      await this.countFailedAttempt(user.id, invites);
+      throw invalid;
+    }
+
+    if (match.inviteExpiresAt.getTime() <= Date.now()) {
+      throw ApiError.unauthorized('INVITE_CODE_EXPIRED', 'El código venció: pida uno nuevo');
+    }
+
+    return { user, match };
+  }
+
+  /** El reintento de un canje ya aplicado: es un login con otro nombre. */
+  private async issueForRedeemed(user: AppUser, _password: string): Promise<AuthResultDto> {
+    const memberships = await this.membershipsForUser(user.id);
+    if (!memberships.length) {
+      throw ApiError.unauthorized('INVITE_CODE_INVALID', 'Código inválido');
+    }
     return this.issue(user, memberships[0], memberships);
   }
 
@@ -122,6 +238,58 @@ export class AuthService {
        ORDER BY m.id ASC`,
       [userId],
     );
+  }
+
+  // Segunda lectura fuera del scope de tenant, y la última. Ver la migración
+  // MembershipInvites y la discusión en SPEC-0011.
+  private invitesForUser(userId: string): Promise<InviteCandidate[]> {
+    return this.dataSource.query<InviteCandidate[]>(
+      `SELECT m.id, m.company_id AS "companyId", m.role,
+              m.invite_code_hash AS "inviteCodeHash",
+              m.invite_expires_at AS "inviteExpiresAt",
+              m.invite_attempts AS "inviteAttempts"
+       FROM auth_invites_for_user($1) m
+       ORDER BY m.id ASC`,
+      [userId],
+    );
+  }
+
+  private async countFailedAttempt(userId: string, invites: InviteCandidate[]): Promise<void> {
+    for (const invite of invites) {
+      await this.tenants.runAs(
+        { companyId: invite.companyId, membershipId: invite.id, userId, role: invite.role },
+        () => this.memberships.increment({ id: invite.id }, 'inviteAttempts', 1),
+      );
+    }
+  }
+
+  private async activate(user: AppUser, invite: InviteCandidate, password?: string): Promise<AuthResultDto> {
+    // Quien ya trabaja para otro contratista conserva la suya: si se aceptara una
+    // nueva acá, emitir un código con el teléfono de esa persona sería quedarse
+    // con su cuenta, y con su acceso a la otra empresa.
+    if (!user.passwordHash) {
+      if (!password) {
+        throw ApiError.badRequest('VALIDATION_FAILED', 'Hace falta elegir una contraseña');
+      }
+      await this.users.update({ id: user.id }, { passwordHash: await AuthService.hashPassword(password) });
+    }
+
+    await this.tenants.runAs(
+      { companyId: invite.companyId, membershipId: invite.id, userId: user.id, role: invite.role },
+      () => this.memberships.update({ id: invite.id }, {
+        status: 'ACTIVE',
+        joinedAt: new Date(),
+        // De un solo uso: el mismo código, canjeado dos veces, ya no existe.
+        inviteCodeHash: null,
+        inviteExpiresAt: null,
+        inviteAttempts: 0,
+      }),
+    );
+
+    const fresh = await this.users.findOneOrFail({ where: { id: user.id } });
+    const memberships = await this.membershipsForUser(user.id);
+    const membership = memberships.find((m) => m.id === invite.id) ?? memberships[0];
+    return this.issue(fresh, membership, memberships);
   }
 
   private async issue(

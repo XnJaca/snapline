@@ -12,6 +12,7 @@ kanban-plugin: board
 
 ## 📥 Backlog (registrada, sin trigger disparado)
 
+- [ ] [[tech-debt/0014-el-banner-dice-sin-conexion-ante-cualquier-fallo|DEBT-0014: El banner dice «sin conexión» ante cualquier fallo del sincronizador]] — **severidad media**: el estado del sync es un `bool`, así que un error de la base local o un 500 del servidor se muestran como falta de señal. Encontrado probando SPEC-0010 en un teléfono real: la frase mentía dos veces, porque además prometía enviar después lo que no se estaba guardando (trigger: el próximo fallo que no sea de red, o el primer «no tengo señal» teniéndola)
 - [ ] [[tech-debt/0010-listados-sin-la-persona|DEBT-0010: El panel no puede mostrar quién marcó las horas ni quién es el capataz]] — **severidad media**: `/time-entries` devuelve solo ids y `/crews` embebe la membresía del capataz sin su usuario. No se tocaron porque el contrato del móvil está en vuelo en otra rama (trigger: el spec de Horas, o el de Cuadrillas)
 - [ ] [[tech-debt/0011-jornada-en-conflicto-sin-camino-de-resolucion|DEBT-0011: Una jornada en conflicto no tiene camino de resolución en el móvil]] — **severidad media**: `watchConflicts()` existe desde SPEC-0004 y ninguna pantalla lo consume; SPEC-0011 volvió el estado alcanzable en uso normal (trigger: el primer conflicto visto en un teléfono real, o aprobar en lote)
 

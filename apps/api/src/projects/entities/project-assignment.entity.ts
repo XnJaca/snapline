@@ -32,8 +32,13 @@ export class ProjectAssignment extends SoftDeletableTenantEntity {
   @RelationId((a: ProjectAssignment) => a.membership)
   membershipId!: string | null;
 
-  @Column({ type: 'date', name: 'work_date' })
-  workDate!: string;
+  @Column({ type: 'date', name: 'from_date' })
+  fromDate!: string;
+
+  // Nulo mientras la cuadrilla siga en la obra. Lo cierra una persona: la obra
+  // tiene su fecha estimada, pero cuándo terminó esta cuadrilla ahí no se deduce.
+  @Column({ type: 'date', name: 'to_date', nullable: true })
+  toDate!: string | null;
 
   @Column({ type: 'integer', name: 'planned_headcount', nullable: true })
   plannedHeadcount!: number | null;

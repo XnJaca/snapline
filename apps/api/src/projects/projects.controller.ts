@@ -3,7 +3,7 @@ import { RequirePermission } from '../auth/decorators/require-permission.decorat
 import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
 import { TenantContext } from '../tenant/tenant-context';
 import { ProjectsService } from './projects.service';
-import { AssignCrewDto, CreateProjectDto, CreateProjectUpdateDto, UpdateProjectDto } from './dto/project.dto';
+import { AssignCrewDto, CreateProjectDto, CreateProjectUpdateDto, EndAssignmentDto, UpdateProjectDto } from './dto/project.dto';
 import { Project } from './entities/project.entity';
 import { ProjectAssignment } from './entities/project-assignment.entity';
 import { ProjectUpdate } from './entities/project-update.entity';
@@ -47,6 +47,28 @@ export class ProjectsController {
   @Post(':id/assignments')
   assign(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignCrewDto, @CurrentTenant() tenant: TenantContext): Promise<ProjectAssignment> {
     return this.service.assign(id, dto, tenant);
+  }
+
+  @RequirePermission('crews.write')
+  @Post(':id/assignments/:assignmentId/end')
+  @HttpCode(200)
+  endAssignment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('assignmentId', ParseUUIDPipe) assignmentId: string,
+    @Body() dto: EndAssignmentDto,
+  ): Promise<ProjectAssignment> {
+    return this.service.endAssignment(id, assignmentId, dto.toDate);
+  }
+
+  // Mismo permiso que el POST hermano: quitar no puede exigir menos que poner.
+  @RequirePermission('crews.write')
+  @Delete(':id/assignments/:assignmentId')
+  @HttpCode(204)
+  unassign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('assignmentId', ParseUUIDPipe) assignmentId: string,
+  ): Promise<void> {
+    return this.service.unassign(id, assignmentId);
   }
 
   @RequirePermission('projects.read')

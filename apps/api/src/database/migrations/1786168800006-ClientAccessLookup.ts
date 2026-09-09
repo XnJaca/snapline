@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 // El portal del cliente es anónimo: el token identifica la empresa, así que no
-// puede setear app.company_id antes de resolverlo. Tercera y última función
+// puede setear app.company_id antes de resolverlo. Tercera función
 // SECURITY DEFINER del sistema, acotada a canjear un token vigente.
 export class ClientAccessLookup1786168800006 implements MigrationInterface {
   name = 'ClientAccessLookup1786168800006';

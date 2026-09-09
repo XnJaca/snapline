@@ -170,9 +170,9 @@ async function seed(): Promise<void> {
   // La cuadrilla asignada a la obra hoy: es lo que hace probable el marcaje,
   // el pull del foreman y la bandera de asignación.
   await obtenerOCrear(
-    ds, 'project_assignment', 'project_id = $1 AND crew_id = $2 AND work_date = CURRENT_DATE', [projectId, crewId],
+    ds, 'project_assignment', 'project_id = $1 AND crew_id = $2 AND from_date = CURRENT_DATE', [projectId, crewId],
     (id) => ds.query(
-      `INSERT INTO project_assignment (id, company_id, project_id, crew_id, work_date)
+      `INSERT INTO project_assignment (id, company_id, project_id, crew_id, from_date)
        VALUES ($1,$2,$3,$4,CURRENT_DATE)`,
       [id, companyId, projectId, crewId],
     ),

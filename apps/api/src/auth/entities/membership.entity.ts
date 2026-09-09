@@ -49,4 +49,18 @@ export class Membership extends SoftDeletableTenantEntity {
 
   @Column({ type: 'timestamptz', name: 'joined_at', nullable: true })
   joinedAt!: Date | null;
+
+  // El código que se dicta en persona. Bcrypt y no sha256: seis dígitos son un
+  // millón de preimágenes. Lo escribe el servidor y nunca vuelve a mostrarse.
+  @ApiHideProperty()
+  @Column({ type: 'text', name: 'invite_code_hash', nullable: true, select: false })
+  inviteCodeHash!: string | null;
+
+  @ApiHideProperty()
+  @Column({ type: 'timestamptz', name: 'invite_expires_at', nullable: true, select: false })
+  inviteExpiresAt!: Date | null;
+
+  @ApiHideProperty()
+  @Column({ type: 'int', name: 'invite_attempts', default: 0, select: false })
+  inviteAttempts!: number;
 }

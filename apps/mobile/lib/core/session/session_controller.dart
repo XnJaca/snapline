@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/login_dto.dart';
+import '../../api/models/redeem_invite_dto.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/media_repository.dart';
 import '../network/api_client.dart';
@@ -27,6 +28,37 @@ class SessionController extends AsyncNotifier<Session?> {
           .read(authClientProvider)
           .authLogin(
             body: LoginDto(identifier: identifier, password: password),
+          );
+
+      final session = Session.fromAuthResult(result, DateTime.now());
+      await ref.read(sessionStorageProvider).write(session);
+      state = AsyncData(session);
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      throw ApiFailure.from(error);
+    }
+  }
+
+  /// Canjea el código que le dictaron y deja la sesión lista, sin pasar por el
+  /// login: quien acaba de elegir su contraseña ya demostró quién es.
+  ///
+  /// `password` va vacío cuando la persona ya trabaja para otro contratista y
+  /// por lo tanto ya tiene contraseña: ahí el canje solo activa la membresía.
+  Future<void> redeemInvite({
+    required String identifier,
+    required String code,
+    String? password,
+  }) async {
+    try {
+      final result = await ref
+          .read(authClientProvider)
+          .authRedeemInvite(
+            body: RedeemInviteDto(
+              identifier: identifier,
+              code: code,
+              password: password,
+            ),
           );
 
       final session = Session.fromAuthResult(result, DateTime.now());

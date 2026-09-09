@@ -36,6 +36,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/invite/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Auth_verifyInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/invite/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Auth_redeemInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/me": {
         parameters: {
             query?: never;
@@ -227,6 +259,38 @@ export interface paths {
         put?: never;
         post: operations["Projects_assign"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/assignments/{assignmentId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Projects_endAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}/assignments/{assignmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["Projects_unassign"];
         options?: never;
         head?: never;
         patch?: never;
@@ -552,6 +616,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/crews/{id}/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Crews_assignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/crews/{id}/members/{memberId}/end": {
         parameters: {
             query?: never;
@@ -562,6 +642,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["Crews_endMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Memberships_list"];
+        put?: never;
+        post: operations["Memberships_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Memberships_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["Memberships_update"];
+        trace?: never;
+    };
+    "/memberships/{id}/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Memberships_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Memberships_deactivate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1026,6 +1170,21 @@ export interface components {
         RefreshDto: {
             refreshToken: string;
         };
+        CheckInviteDto: {
+            identifier: string;
+            code: string;
+        };
+        VerifyInviteDto: {
+            /** @description Falso cuando esa persona ya trabaja para otra empresa y tiene contraseña. */
+            needsPassword: boolean;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        RedeemInviteDto: {
+            identifier: string;
+            code: string;
+            password?: string;
+        };
         SessionDto: {
             /** Format: uuid */
             companyId: string;
@@ -1216,7 +1375,8 @@ export interface components {
             crewId?: string;
             /** Format: uuid */
             membershipId?: string;
-            workDate: string;
+            fromDate: string;
+            toDate?: string;
             plannedHeadcount?: number;
         };
         AppUser: {
@@ -1276,7 +1436,8 @@ export interface components {
             projectId: string;
             crewId: string | null;
             membershipId: string | null;
-            workDate: string;
+            fromDate: string;
+            toDate: string | null;
             plannedHeadcount: number | null;
             /** Format: date-time */
             deletedAt: string | null;
@@ -1286,6 +1447,9 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        EndAssignmentDto: {
+            toDate: string;
         };
         CreateProjectUpdateDto: {
             /** Format: uuid */
@@ -1550,6 +1714,17 @@ export interface components {
             category?: string;
             active?: boolean;
         };
+        CrewPersonDto: {
+            membershipId: string;
+            name: string;
+        };
+        CrewDto: {
+            id: string;
+            name: string;
+            color?: string | null;
+            foreman?: components["schemas"]["CrewPersonDto"] | null;
+            memberCount: number;
+        };
         CreateCrewDto: {
             /** Format: uuid */
             id?: string;
@@ -1563,6 +1738,28 @@ export interface components {
             /** Format: uuid */
             foremanMembershipId?: string;
             color?: string;
+        };
+        CrewMemberDto: {
+            id: string;
+            membershipId: string;
+            name: string;
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
+            fromDate: string;
+            toDate?: string | null;
+        };
+        CrewAssignmentDto: {
+            id: string;
+            projectId: string;
+            projectName: string;
+            fromDate: string;
+            toDate?: string | null;
+        };
+        AddCrewMemberDto: {
+            /** Format: uuid */
+            membershipId: string;
+            fromDate: string;
+            toDate?: string;
         };
         CrewMember: {
             crew?: components["schemas"]["Crew"];
@@ -1580,11 +1777,85 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        AddCrewMemberDto: {
+        EndCrewMemberDto: {
+            toDate: string;
+        };
+        MemberCrewDto: {
+            id: string;
+            name: string;
+        };
+        MemberDto: {
+            id: string;
+            userId: string;
+            name: string;
+            email?: string | null;
+            phone?: string | null;
+            /** @enum {string} */
+            locale: "en" | "es";
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
+            /** @enum {string} */
+            status: "INVITED" | "ACTIVE" | "INACTIVE";
+            payRateCents?: number | null;
+            /** @enum {string|null} */
+            employmentType?: "W2" | "CONTRACTOR_1099" | null;
+            /** Format: date-time */
+            invitedAt?: string | null;
+            /** Format: date-time */
+            joinedAt?: string | null;
+            /** Format: date-time */
+            inviteExpiresAt?: string | null;
+            crew?: components["schemas"]["MemberCrewDto"] | null;
+        };
+        CreateMemberDto: {
             /** Format: uuid */
-            membershipId: string;
-            fromDate: string;
-            toDate?: string;
+            id?: string;
+            name: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
+            payRateCents?: number;
+            /** @enum {string} */
+            employmentType?: "W2" | "CONTRACTOR_1099";
+            /** @enum {string} */
+            locale?: "en" | "es";
+        };
+        MemberWithInviteDto: {
+            id: string;
+            userId: string;
+            name: string;
+            email?: string | null;
+            phone?: string | null;
+            /** @enum {string} */
+            locale: "en" | "es";
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
+            /** @enum {string} */
+            status: "INVITED" | "ACTIVE" | "INACTIVE";
+            payRateCents?: number | null;
+            /** @enum {string|null} */
+            employmentType?: "W2" | "CONTRACTOR_1099" | null;
+            /** Format: date-time */
+            invitedAt?: string | null;
+            /** Format: date-time */
+            joinedAt?: string | null;
+            /** Format: date-time */
+            inviteExpiresAt?: string | null;
+            crew?: components["schemas"]["MemberCrewDto"] | null;
+            inviteCode: string;
+        };
+        UpdateMemberDto: {
+            /** @enum {string} */
+            role?: "OWNER" | "ADMIN" | "FOREMAN" | "WORKER" | "ACCOUNTANT";
+            payRateCents?: number;
+            /** @enum {string} */
+            employmentType?: "W2" | "CONTRACTOR_1099";
+            name?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
         };
         Estimate: {
             customer: components["schemas"]["Customer"];
@@ -2076,7 +2347,7 @@ export interface components {
              * @description Código estable. No se traduce: es contra lo que ramifica el cliente.
              * @enum {string}
              */
-            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "CUSTOMER_HAS_HISTORY" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ASSET_NOT_IN_PROJECT" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
+            code: "BAD_REQUEST" | "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SERVICE_UNAVAILABLE" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "TOKEN_MISSING" | "TOKEN_INVALID" | "MEMBERSHIP_INACTIVE" | "PERMISSION_NOT_DECLARED" | "PERMISSION_DENIED" | "INVITE_CODE_INVALID" | "INVITE_CODE_EXPIRED" | "INVITE_TOO_MANY_ATTEMPTS" | "OWNER_ALREADY_EXISTS" | "CONTACT_ALREADY_MEMBER" | "CREW_MEMBER_OVERLAP" | "CUSTOMER_HAS_HISTORY" | "PROJECT_INVALID_TRANSITION" | "TIME_ENTRY_ALREADY_OPEN" | "TIME_ENTRY_ALREADY_CLOSED" | "CANNOT_APPROVE_OWN_HOURS" | "PAY_RATE_MISSING" | "TIME_ENTRY_STILL_OPEN" | "TIME_ENTRY_DECISION_MATCHES" | "TIME_ENTRY_DECISION_CONFLICTS" | "EXIF_NOT_STRIPPED" | "VISIBILITY_SKIPS_STEP" | "ASSET_IN_USE" | "UPLOAD_NOT_READY" | "MEDIA_ALREADY_UPLOADED" | "ASSET_NOT_PUBLIC" | "ALREADY_PUBLISHED" | "ASSET_NOT_IN_PROJECT" | "ESTIMATE_ALREADY_SENT" | "ESTIMATE_NOT_ACCEPTED" | "ESTIMATE_ALREADY_INVOICED" | "INVOICE_NOT_SENT" | "INVOICE_VOIDED" | "PAYMENT_EXCEEDS_BALANCE" | "STORAGE_NOT_CONFIGURED";
             /** @description Texto para mostrar. Esto sí se traduce. */
             message: string;
             /** @description Vacío cuando no aplica; nunca ausente. */
@@ -2181,6 +2452,160 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RefreshDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResultDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Auth_verifyInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInviteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyInviteDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Auth_redeemInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemInviteDto"];
             };
         };
         responses: {
@@ -3704,6 +4129,160 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProjectAssignment"];
                 };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Projects_endAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndAssignmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAssignment"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Projects_unassign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error */
             400: {
@@ -5382,7 +5961,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Crew"][];
+                    "application/json": components["schemas"]["CrewDto"][];
                 };
             };
             /** @description Error */
@@ -5454,12 +6033,12 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Crew"];
+                    "application/json": components["schemas"]["CrewDto"];
                 };
             };
             /** @description Error */
@@ -5534,7 +6113,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Crew"];
+                    "application/json": components["schemas"]["CrewDto"];
                 };
             };
             /** @description Error */
@@ -5613,7 +6192,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Crew"];
+                    "application/json": components["schemas"]["CrewDto"];
                 };
             };
             /** @description Error */
@@ -5688,7 +6267,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CrewMember"][];
+                    "application/json": components["schemas"]["CrewMemberDto"][];
                 };
             };
             /** @description Error */
@@ -5826,13 +6405,12 @@ export interface operations {
             };
         };
     };
-    Crews_endMember: {
+    Crews_assignments: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
-                memberId: string;
             };
             cookie?: never;
         };
@@ -5843,7 +6421,541 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["CrewAssignmentDto"][];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Crews_endMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndCrewMemberDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["CrewMember"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Memberships_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDto"][];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Memberships_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMemberDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberWithInviteDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Memberships_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Memberships_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemberDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Memberships_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberWithInviteDto"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    Memberships_deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDto"];
                 };
             };
             /** @description Error */

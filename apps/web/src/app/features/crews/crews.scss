@@ -9,12 +9,56 @@
   min-height: 0;
 }
 
+// Las pestañas viven sobre una superficie, como en la ficha: sueltas sobre el
+// fondo de la página quedaban flotando sin nada que las contenga.
+.card {
+  overflow: hidden;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--sl-radius-md);
+  background: var(--mat-sys-surface);
+}
+
+// Compactas y alineadas a la izquierda, como la ficha del cliente.
+.tabs {
+  --mat-tab-container-height: 3rem;
+  --mat-tab-divider-color: var(--mat-sys-outline);
+}
+
+// La acción es de la pestaña y va adentro de su contenido, no en el encabezado
+// de la página ni flotando sobre la fila de pestañas.
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-4) var(--sl-space-5) 0;
+}
+
+// El buscador va pegado a su acción, no en la otra punta del panel: son las
+// dos cosas que se hacen sobre la misma lista.
+.panel__head--search {
+  justify-content: flex-end;
+}
+
+.search {
+  width: 22rem;
+  max-width: 100%;
+}
+
 .frame {
   @include table.frame;
+
+  margin-top: var(--sl-space-4);
+  border: none;
+  border-radius: 0;
 }
 
 .table {
   @include table.base;
+}
+
+.row {
+  cursor: pointer;
 }
 
 .crew {
@@ -28,4 +72,42 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: var(--sl-radius-full);
+  outline: 1px solid var(--mat-sys-outline);
+  outline-offset: -1px;
+}
+
+.link {
+  color: var(--mat-sys-primary);
+  cursor: pointer;
+  font-weight: var(--sl-font-weight-medium);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.person {
+  display: block;
+  font-weight: var(--sl-font-weight-medium);
+}
+
+// El contacto es con lo que entra a la app: se ve junto al nombre, no escondido.
+.person__contact {
+  display: block;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--sl-font-size-caption);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--sl-space-6) var(--sl-space-5);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+  text-wrap: balance;
 }

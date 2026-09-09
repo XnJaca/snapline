@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/location/open_in_maps.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/theme_extensions.dart';
+import '../../data/sync/sync_controller.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/section_card.dart';
@@ -41,22 +42,42 @@ class ObrasScreen extends ConsumerWidget {
       conJornada = ref.watch(placeProvider(abierta.projectId)).value;
     }
 
-    final lista = [?conJornada, ...obras];
+    final lista = [?conJornada, ...obras.where((o) => !o.upcoming)];
+    final proximas = obras.where((o) => o.upcoming).toList(growable: false);
 
     return AppScaffold(
       title: l10n.navToday,
-      body: lista.isEmpty
-          ? EmptyState(
-              icon: Icons.event_busy_outlined,
-              message: l10n.todayNoAssignments,
+      // Tirar para refrescar, igual que Obras del panel y que Clientes: es donde
+      // se para quien llega a la obra y quiere ver si ya le asignaron algo.
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(syncControllerProvider.notifier).refresh(),
+        // Sin spinner: la base local responde al instante, así que un indicador
+        // infinito sería ruido —y cuelga cualquier test que espere animaciones.
+        child: lista.isEmpty && proximas.isEmpty
+          ? ListView(
+              // Scrolleable igual, o no se puede tirar para refrescar.
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.6,
+                  child: EmptyState(
+                    icon: Icons.event_busy_outlined,
+                    message: l10n.todayNoAssignments,
+                  ),
+                ),
+              ],
             )
           : ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.all(context.spacing.lg),
               children: [
                 SectionCard(
                   label: l10n.obrasSectionTiempo,
                   child: _ResumenSemanal(membershipId: membershipId),
                 ),
+                // Sin nada hoy pero con algo la semana que viene, esta sección
+                // no se dibuja vacía: se pasa directo a lo que viene.
+                if (lista.isNotEmpty) ...[
                 SizedBox(height: context.spacing.lg),
                 SectionCard(
                   label: l10n.obrasSectionAsignadas,
@@ -79,8 +100,37 @@ class ObrasScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                ],
+
+                // Lo que viene: se ve para saber a dónde se va, y no se marca
+                // hasta el día. Sin esto, una obra ya asignada no aparece en
+                // ningún lado y hay que preguntar por teléfono.
+                if (proximas.isNotEmpty) ...[
+                  SizedBox(height: context.spacing.lg),
+                  SectionCard(
+                    label: l10n.obrasSectionProximas,
+                    padded: false,
+                    child: Column(
+                      children: [
+                        for (final (i, obra) in proximas.indexed) ...[
+                          if (i > 0)
+                            Divider(height: 1, color: context.colors.outline),
+                          _ObraTile(
+                            obra: obra,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ObraScreen(obra: obra),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
+      ),
     );
   }
 }
@@ -209,6 +259,15 @@ class _ObraTile extends StatelessWidget {
                       StatusChip(
                         tone: StatusTone.success,
                         label: AppLocalizations.of(context).obrasAbiertaAca,
+                      ),
+                    ],
+                    // Desde cuándo: la fecha es el dato, «próximamente» solo
+                    // dice que todavía no.
+                    if (obra.startsOn case final desde?) ...[
+                      SizedBox(height: context.spacing.sm),
+                      StatusLine(
+                        tone: StatusTone.info,
+                        label: AppLocalizations.of(context).obrasStartsOn(desde),
                       ),
                     ],
                   ],

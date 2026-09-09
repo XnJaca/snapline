@@ -12,9 +12,11 @@ export class AppUser extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   phone!: string | null;
 
+  // Nulo hasta que la persona canjea su invitación. El login lo ataja antes de
+  // comparar: bcrypt.compare con un nulo no es un 401, es un 500.
   @ApiHideProperty()
-  @Column({ type: 'text', name: 'password_hash', select: false })
-  passwordHash!: string;
+  @Column({ type: 'text', name: 'password_hash', select: false, nullable: true })
+  passwordHash!: string | null;
 
   @Column({ type: 'text' })
   name!: string;

@@ -290,7 +290,7 @@ export class TimeEntriesService {
 
   /// Quién estaba asignado a la obra ese día, directo o por su cuadrilla.
   ///
-  /// La ventana es de dos días porque `work_date` es una fecha local y
+  /// La tolerancia de un día es porque la asignación lleva fechas locales y
   /// `device_recorded_at` viaja en UTC: una entrada de la tarde de Maryland cae
   /// en el día siguiente en UTC. Preferible no marcar a un encargado legítimo
   /// que marcar de más — la bandera existe para el que aprueba, no para castigar.
@@ -301,9 +301,9 @@ export class TimeEntriesService {
     const filas = await this.entries.query<unknown[]>(
       `SELECT 1 FROM project_assignment a
        LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
-         AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
+         AND daterange(a.from_date, a.to_date, '[]') && daterange(cm.from_date, cm.to_date, '[]')
        WHERE a.project_id = $1 AND a.deleted_at IS NULL
-         AND a.work_date BETWEEN ($2::date - 1) AND $2::date
+         AND daterange(a.from_date, a.to_date, '[]') && daterange($2::date - 1, $2::date, '[]')
          AND (a.membership_id = $3 OR cm.membership_id = $3)
        LIMIT 1`,
       [projectId, dia, membershipId],

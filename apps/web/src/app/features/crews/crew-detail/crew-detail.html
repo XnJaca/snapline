@@ -1,0 +1,221 @@
+<sl-page
+  *transloco="let t"
+  icon="crews"
+  [heading]="crew.value()?.name ?? t('nav.crews')"
+  [meta]="crew.value()
+    ? (crew.value()!.memberCount === 1
+        ? t('crews.memberCountOne')
+        : t('crews.memberCount', { n: crew.value()!.memberCount }))
+    : ''"
+  [loading]="loading()"
+  [failed]="!!crew.error()"
+  (retry)="crew.reload(); members.reload(); assignments.reload()"
+>
+  <!-- Volver es navegación, no una acción sobre la cuadrilla: se queda acá. -->
+  <div slPageActions class="head-actions">
+    <button matButton="outlined" type="button" (click)="back()">{{ t('action.back') }}</button>
+  </div>
+
+  <section class="card">
+    <mat-tab-group
+      class="tabs"
+      [mat-stretch-tabs]="false"
+      mat-align-tabs="start"
+      animationDuration="160ms"
+      [(selectedIndex)]="tab"
+    >
+      <!-- ------------------------------------------------------------ resumen -->
+      <mat-tab [label]="t('crews.tabSummary')">
+        <div class="panel panel--summary">
+          @if (canWrite()) {
+            <button class="panel__edit" matButton="outlined" type="button" (click)="edit()">
+              {{ t('action.edit') }}
+            </button>
+          }
+
+          <dl class="facts">
+            <div class="fact">
+              <dt>{{ t('crews.summaryForeman') }}</dt>
+              @if (crew.value()?.foreman) {
+                <dd>{{ crew.value()!.foreman!.name }}</dd>
+              } @else {
+                <dd class="unset">{{ t('crews.noForeman') }}</dd>
+              }
+            </div>
+
+            <div class="fact">
+              <dt>{{ t('crews.summaryWorkers') }}</dt>
+              <dd>
+                {{ crew.value()?.memberCount === 1
+                  ? t('crews.memberCountOne')
+                  : t('crews.memberCount', { n: crew.value()?.memberCount ?? 0 }) }}
+              </dd>
+            </div>
+          </dl>
+
+          <!-- La pregunta que se hace quien abre esta ficha: dónde está hoy. -->
+          <h3 class="group">{{ t('crews.workingNow') }}</h3>
+
+          @if (current().length === 0) {
+            <p class="empty empty--left">{{ t('crews.noWorkingNow') }}</p>
+          } @else {
+            <ul class="jobs">
+              @for (job of current(); track job.id) {
+                <li class="job">
+                  <div class="job__what">
+                    <span class="job__name">{{ job.projectName }}</span>
+                    <span class="job__when">
+                      {{ t('crews.sinceDate', { date: job.fromDate | slDate }) }}
+                    </span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- --------------------------------------------------------------- obras -->
+      <mat-tab [label]="t('crews.tabJobs')">
+        <div class="panel">
+          @if (canWrite()) {
+            <header class="panel__head">
+              <button matButton="filled" type="button" (click)="assign()">
+                {{ t('crews.assign') }}
+              </button>
+            </header>
+          }
+
+          @if (assignments.value().length === 0) {
+            <p class="empty">{{ t('crews.noJobs') }}</p>
+          } @else {
+            <ul class="jobs">
+              @for (job of current(); track job.id) {
+                <li class="job">
+                  <div class="job__what">
+                    <span class="job__name">{{ job.projectName }}</span>
+                    <span class="job__when">
+                      {{ t('crews.sinceDate', { date: job.fromDate | slDate }) }}
+                    </span>
+                  </div>
+
+                  @if (canWrite()) {
+                    <div class="job__actions">
+                      <button matButton="outlined" type="button" (click)="removeFromJob(job)">
+                        {{ t('crews.removeFromJob') }}
+                      </button>
+                      <button
+                        matIconButton
+                        type="button"
+                        [matMenuTriggerFor]="menu"
+                        [attr.aria-label]="job.projectName"
+                      >
+                        <mat-icon svgIcon="more" />
+                      </button>
+                      <mat-menu #menu="matMenu">
+                        <button mat-menu-item type="button" (click)="deleteAssignment(job)">
+                          {{ t('crews.deleteAssignment') }}
+                        </button>
+                      </mat-menu>
+                    </div>
+                  }
+                </li>
+              }
+
+              @for (job of past(); track job.id) {
+                <li class="job job--past">
+                  <div class="job__what">
+                    <span class="job__name">{{ job.projectName }}</span>
+                    <span class="job__when">
+                      {{ t('crews.workedFromTo', {
+                        from: job.fromDate | slDate,
+                        to: job.toDate | slDate
+                      }) }}
+                    </span>
+                  </div>
+
+                  @if (canWrite()) {
+                    <div class="job__actions">
+                      <button
+                        matIconButton
+                        type="button"
+                        [matMenuTriggerFor]="pastMenu"
+                        [attr.aria-label]="job.projectName"
+                      >
+                        <mat-icon svgIcon="more" />
+                      </button>
+                      <mat-menu #pastMenu="matMenu">
+                        <button mat-menu-item type="button" (click)="deleteAssignment(job)">
+                          {{ t('crews.deleteAssignment') }}
+                        </button>
+                      </mat-menu>
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- -------------------------------------------------------- trabajadores -->
+      <mat-tab [label]="t('crews.tabWorkers')">
+        <header class="panel__head panel__head--search">
+          <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+            <!-- El contacto sale de /memberships, que el capataz no puede leer:
+                 prometerle buscar por teléfono sería mentirle. -->
+            <mat-label>
+              {{ canManage() ? t('crews.searchWorkers') : t('crews.searchWorkersByName') }}
+            </mat-label>
+            <input matInput [value]="query()" (input)="query.set($any($event.target).value)" />
+          </mat-form-field>
+
+          @if (canWrite() && canManage()) {
+            <button matButton="filled" type="button" (click)="addMember()">
+              {{ t('crews.addMember') }}
+            </button>
+          }
+        </header>
+
+        @if (members.value().length === 0) {
+          <p class="empty">{{ t('crews.noMembers') }}</p>
+        } @else if (filteredMembers().length === 0) {
+          <p class="empty">{{ t('crews.noWorkerMatch') }}</p>
+        } @else {
+          <div class="frame">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="grow">{{ t('crews.personName') }}</th>
+                  <th>{{ t('crews.role') }}</th>
+                  <th>{{ t('crews.fromDate') }}</th>
+                  <th>{{ t('crews.toDate') }}</th>
+                  <th class="chevron"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (member of filteredMembers(); track member.id) {
+                  <tr [class.row--ended]="ended(member)">
+                    <td class="grow">{{ member.name }}</td>
+                    <td>{{ t('roles.' + member.role) }}</td>
+                    <td class="muted">{{ member.fromDate | slDate }}</td>
+                    <td class="muted">
+                      {{ member.toDate ? (member.toDate | slDate) : '—' }}
+                    </td>
+                    <td class="chevron">
+                      @if (canWrite() && !member.toDate) {
+                        <button matButton type="button" (click)="endMember(member)">
+                          {{ t('crews.endMember') }}
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </mat-tab>
+    </mat-tab-group>
+  </section>
+</sl-page>
