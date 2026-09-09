@@ -688,6 +688,11 @@ Termina entrando a la app, no volviendo al login.
 
 ## Riesgos / consideraciones
 
+- **Los formularios de este spec no usan la rejilla del panel** — `DEBT-0016`.
+  Deuda de cronología: `styles/_form.scss` llegó con Obras y esto se escribió antes.
+  Nada se ve roto, todos consumen tokens; lo que falta es cambiar cinco maquetas
+  propias por los mixins que ya existen, y tres de las cinco lo necesitan.
+
 - **Seis dígitos es una decisión de usabilidad, no de seguridad.** Lo que la sostiene
   son las tres cosas juntas: el identificador, el vencimiento de siete días y el corte
   a los diez intentos. Si alguna se cae —un vencimiento largo, un contador que no se
