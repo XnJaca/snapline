@@ -426,7 +426,8 @@ un bug cada una:
 - **El contenido arranca con aire arriba.** `mat-dialog-content` recorta lo que se
   sale, y el label flotante del primer campo sobresale unos 6px por encima de su
   borde: sin `padding-top` en el envoltorio de los campos, se ve cercenado. Se
-  resuelve con el envoltorio, no peleándole a Material.
+  resuelve con el envoltorio, no peleándole a Material — y ese envoltorio sale de
+  `_form.scss`, no se escribe en cada diálogo.
 - **Devuelve lo que creó, no un `true`.** Quien abrió el diálogo casi siempre
   necesita dejar seleccionado lo que se acaba de crear.
 - **Lo que el diálogo creó ya existe al cerrarse.** No es un borrador que se
@@ -434,6 +435,30 @@ un bug cada una:
   creado se conserva y no se deshace.
 - Pie a la derecha, la acción secundaria primero, y **barra de progreso de 4px**
   entre el contenido y el pie mientras se guarda.
+
+### Los campos de un diálogo salen del mismo parcial
+
+Dos formas, y la elección es por cuántos campos hay:
+
+```scss
+.fields { @include form.dialog-stack; }     // dos o tres campos, apilados
+```
+
+```scss
+.fields { @include form.dialog-fields; }    // la rejilla adentro del diálogo
+@include form.widths-contained;
+```
+
+**El breakpoint mira al contenedor, no al viewport.** Un diálogo mide 40rem con el
+navegador a 1920 y con el navegador a 1100, así que `@media` no tiene nada que
+decir ahí: `widths-contained` pregunta por `@container` y `dialog-fields` declara
+el `container-type` que hace falta para medir. Es el mismo juego de anchos
+`field--*` de la pantalla completa, con un solo escalón —a 24rem todo se apila—
+porque entre eso y el ancho del diálogo no hay lugar para uno intermedio.
+
+Un diálogo cuyos campos ocupan todos la fila entera **no necesita rejilla**:
+`dialog-stack` es esa misma columna sin las doce columnas de por medio. La rejilla
+entra cuando hay pares que compartir fila.
 
 ## 6. Los dos temas, desde el primer componente
 
@@ -502,6 +527,9 @@ primer commit — no se agrega dark mode después.
       coordenada entre vecinas? Medirlo, no mirarlo.
 - [ ] En un formulario: ¿las clases de cada fila suman 12? ¿El ancho de cada campo
       corresponde al dato? ¿El encabezado comparte borde con el formulario?
+- [ ] ¿La pantalla consume `_form.scss` o volvió a escribir su propia maqueta? Un
+      envoltorio de campos, un aviso de error o un gap copiados a mano son el
+      mismo error que un hex literal.
 - [ ] ¿Alguna caja combina `max-width` con `padding` sin `box-sizing: border-box`?
 - [ ] ¿El encabezado sigue usable a 1024px y a 375px? Es donde se rompe primero.
 

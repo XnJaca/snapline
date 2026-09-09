@@ -3,18 +3,18 @@
 
   <mat-dialog-content>
     <div class="fields">
-      <sl-address-field [group]="address" />
+      <div class="field--full"><sl-address-field [group]="address" /></div>
 
-      <div class="extra">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>{{ t('sites.radius') }}</mat-label>
-          <input matInput type="number" formControlName="geofenceRadiusM" min="1" />
-          <mat-hint>{{ t('sites.radiusHint') }}</mat-hint>
-        </mat-form-field>
-      </div>
+      <!-- `subscriptSizing="dynamic"` porque su ayuda ocupa dos líneas y en modo
+           fijo el subíndice es absoluto y se pisa con lo que sigue. -->
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--long">
+        <mat-label>{{ t('sites.radius') }}</mat-label>
+        <input matInput type="number" formControlName="geofenceRadiusM" min="1" />
+        <mat-hint>{{ t('sites.radiusHint') }}</mat-hint>
+      </mat-form-field>
 
       @if (error(); as failure) {
-        <p class="error" role="alert">{{ t('form.error.' + failure) }}</p>
+        <p class="error field--full" role="alert">{{ t('form.error.' + failure) }}</p>
       }
     </div>
   </mat-dialog-content>

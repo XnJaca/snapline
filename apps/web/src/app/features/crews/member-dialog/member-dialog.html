@@ -6,7 +6,7 @@
       <!-- El estado no es un campo: lo deriva el acceso, y por eso se explica
            en vez de ofrecerse. -->
       @if (data.member; as member) {
-        <p class="status">
+        <p class="status field--full">
           <sl-chip [tone]="tone(member.status)">
             {{ t('crews.status.' + member.status) }}
           </sl-chip>
@@ -14,62 +14,59 @@
         </p>
       }
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--full">
         <mat-label>{{ t('crews.personNameRequired') }}</mat-label>
         <input matInput formControlName="name" autocomplete="off" />
       </mat-form-field>
 
-      <sl-phone-field [group]="phone" [label]="t('crews.phone')" />
+      <div class="field--full"><sl-phone-field [group]="phone" [label]="t('crews.phone')" /></div>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--full">
         <mat-label>{{ t('crews.email') }} · {{ t('action.optional') }}</mat-label>
         <input matInput formControlName="email" type="email" autocomplete="off" />
         <mat-hint>{{ editing ? t('crews.contactEditHint') : t('crews.contactHint') }}</mat-hint>
       </mat-form-field>
 
-      <!-- Los dos selectores arriba y la tarifa abajo: su ayuda ocupa dos
-           líneas, así que es el campo que mejor tolera quedar sin pareja. -->
-      <div class="pair">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>{{ t('crews.role') }}</mat-label>
-          <mat-select formControlName="role">
-            @for (role of roles; track role) {
-              <mat-option [value]="role">{{ t('roles.' + role) }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+      <!-- Estos cuatro se emparejan de a dos por el orden en que están: la
+           tarifa cae en la segunda fila, que es donde su ayuda de dos líneas no
+           desalinea a nadie. -->
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--long">
+        <mat-label>{{ t('crews.role') }}</mat-label>
+        <mat-select formControlName="role">
+          @for (role of roles; track role) {
+            <mat-option [value]="role">{{ t('roles.' + role) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>{{ t('crews.employment') }} · {{ t('action.optional') }}</mat-label>
-          <mat-select formControlName="employmentType">
-            <mat-option [value]="null">—</mat-option>
-            <mat-option value="W2">{{ t('crews.employmentW2') }}</mat-option>
-            <mat-option value="CONTRACTOR_1099">{{ t('crews.employment1099') }}</mat-option>
-          </mat-select>
-          <mat-hint>{{ t('crews.employmentHint') }}</mat-hint>
-        </mat-form-field>
-      </div>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--long">
+        <mat-label>{{ t('crews.employment') }} · {{ t('action.optional') }}</mat-label>
+        <mat-select formControlName="employmentType">
+          <mat-option [value]="null">—</mat-option>
+          <mat-option value="W2">{{ t('crews.employmentW2') }}</mat-option>
+          <mat-option value="CONTRACTOR_1099">{{ t('crews.employment1099') }}</mat-option>
+        </mat-select>
+        <mat-hint>{{ t('crews.employmentHint') }}</mat-hint>
+      </mat-form-field>
 
-      <div class="pair">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>{{ t('crews.payRate') }}</mat-label>
-          <input matInput formControlName="payRate" type="number" min="0" step="0.01" />
-          <mat-hint>{{ t('crews.payRateHint') }}</mat-hint>
-        </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--long">
+        <mat-label>{{ t('crews.payRate') }}</mat-label>
+        <input matInput formControlName="payRate" type="number" min="0" step="0.01" />
+        <mat-hint>{{ t('crews.payRateHint') }}</mat-hint>
+      </mat-form-field>
 
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>{{ t('crews.language') }}</mat-label>
-          <mat-select formControlName="locale">
-            <mat-option value="es">{{ t('language.es') }}</mat-option>
-            <mat-option value="en">{{ t('language.en') }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field--long">
+        <mat-label>{{ t('crews.language') }}</mat-label>
+        <mat-select formControlName="locale">
+          <mat-option value="es">{{ t('language.es') }}</mat-option>
+          <mat-option value="en">{{ t('language.en') }}</mat-option>
+        </mat-select>
+      </mat-form-field>
 
       <!-- El código no se puede volver a mostrar: vive hasheado. Lo que sí se
            puede es emitir uno nuevo, y ese es el camino cuando se perdió. -->
       @if (data.member; as member) {
-        <section class="access">
+        <section class="access field--full">
           <p class="access__text">
             {{ member.status === 'ACTIVE' ? t('crews.codeActive') : t('crews.codeHidden') }}
           </p>
@@ -80,7 +77,7 @@
       }
 
       @if (error(); as key) {
-        <p class="error" role="alert">{{ t(key) }}</p>
+        <p class="error field--full" role="alert">{{ t(key) }}</p>
       }
     </div>
   </mat-dialog-content>

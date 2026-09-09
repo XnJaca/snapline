@@ -688,10 +688,10 @@ Termina entrando a la app, no volviendo al login.
 
 ## Riesgos / consideraciones
 
-- **Los formularios de este spec no usan la rejilla del panel** — `DEBT-0016`.
-  Deuda de cronología: `styles/_form.scss` llegó con Obras y esto se escribió antes.
-  Nada se ve roto, todos consumen tokens; lo que falta es cambiar cinco maquetas
-  propias por los mixins que ya existen, y tres de las cinco lo necesitan.
+- ~~**Los formularios de este spec no usan la rejilla del panel**~~ — `DEBT-0016`,
+  resuelta el 2026-09-09. Los cinco diálogos consumen `styles/_form.scss`: la
+  rejilla adentro de un diálogo mide contra el contenedor y no contra la ventana,
+  y el parcial ganó `dialog-stack`, `dialog-fields` y `widths-contained` para eso.
 
 - **Seis dígitos es una decisión de usabilidad, no de seguridad.** Lo que la sostiene
   son las tres cosas juntas: el identificador, el vencimiento de siete días y el corte
