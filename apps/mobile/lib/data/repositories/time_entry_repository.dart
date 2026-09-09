@@ -35,6 +35,7 @@ class TodayProject {
     required this.address,
     this.lat,
     this.lng,
+    this.startsOn,
   });
 
   final String id;
@@ -50,7 +51,18 @@ class TodayProject {
   final double? lat;
   final double? lng;
 
+  /// Desde cuándo entra esta cuadrilla a la obra, si todavía no empezó. Nulo
+  /// cuando ya se trabaja ahí hoy.
+  ///
+  /// Saber a dónde se va la semana que viene es parte de saber dónde se trabaja:
+  /// una obra que ya está asignada y no aparece por ningún lado obliga a
+  /// preguntar por teléfono.
+  final DateTime? startsOn;
+
   bool get hasLocation => lat != null && lng != null;
+
+  /// Se ve, pero todavía no se puede marcar en ella.
+  bool get upcoming => startsOn != null;
 }
 
 /// Una persona de la obra de hoy, con el estado de su jornada.
@@ -382,10 +394,10 @@ class TimeEntryRepository {
       LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
       LEFT JOIN crew_members cm ON cm.crew_id = ?1
         AND cm.deleted_at IS NULL
-        AND a.work_date >= cm.from_date
-        AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+        AND cm.from_date <= COALESCE(a.to_date, cm.from_date)
+        AND (cm.to_date IS NULL OR cm.to_date >= a.from_date)
       WHERE a.deleted_at IS NULL
-        AND a.work_date >= ?2 AND a.work_date < ?3
+        AND a.from_date < ?3 AND (a.to_date IS NULL OR a.to_date >= ?2)
         AND (a.crew_id = ?1 OR a.membership_id = cm.membership_id)
       ORDER BY p.name
       ''',
@@ -406,6 +418,11 @@ class TimeEntryRepository {
     );
   }
 
+  /// Dónde se trabaja hoy, y dónde se va a trabajar.
+  ///
+  /// Las que empiezan más adelante bajan con su fecha en `startsOn`: se ven —una
+  /// obra asignada que no aparece en ningún lado obliga a preguntar por
+  /// teléfono— pero no se marca en ellas hasta el día.
   Stream<List<TodayProject>> watchTodayProjects(String membershipId) {
     final hoy = DateTime.now();
     final inicio = DateTime(hoy.year, hoy.month, hoy.day);
@@ -413,24 +430,25 @@ class TimeEntryRepository {
 
     final consulta = _db.customSelect(
       '''
-      SELECT DISTINCT p.id AS id, p.name AS name, p.site_id AS site_id,
-             s.address AS address, s.lat AS lat, s.lng AS lng
+      SELECT p.id AS id, p.name AS name, p.site_id AS site_id,
+             s.address AS address, s.lat AS lat, s.lng AS lng,
+             CASE WHEN min(a.from_date) >= ?1 THEN min(a.from_date) END AS starts_on
       FROM project_assignments a
       JOIN projects p ON p.id = a.project_id AND p.deleted_at IS NULL
       LEFT JOIN sites s ON s.id = p.site_id AND s.deleted_at IS NULL
       LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
         AND cm.deleted_at IS NULL
-        AND a.work_date >= cm.from_date
-        AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+        AND cm.from_date <= COALESCE(a.to_date, cm.from_date)
+        AND (cm.to_date IS NULL OR cm.to_date >= a.from_date)
       WHERE a.deleted_at IS NULL
-        AND a.work_date >= ? AND a.work_date < ?
-        AND (a.membership_id = ? OR cm.membership_id = ?)
-      ORDER BY p.name
+        AND (a.to_date IS NULL OR a.to_date >= ?2)
+        AND (a.membership_id = ?3 OR cm.membership_id = ?3)
+      GROUP BY p.id, p.name, p.site_id, s.address, s.lat, s.lng
+      ORDER BY starts_on IS NOT NULL, starts_on, p.name
       ''',
       variables: [
-        Variable<DateTime>(inicio),
         Variable<DateTime>(fin),
-        Variable<String>(membershipId),
+        Variable<DateTime>(inicio),
         Variable<String>(membershipId),
       ],
       readsFrom: {
@@ -474,6 +492,10 @@ class TimeEntryRepository {
     ),
     lat: f.readNullable<double>('lat'),
     lng: f.readNullable<double>('lng'),
+    // Solo viene en la consulta del eje; la de una obra suelta no la trae.
+    startsOn: f.data.containsKey('starts_on')
+        ? f.readNullable<DateTime>('starts_on')
+        : null,
   );
 
   /// La ficha de la obra para el tab Detalle: estado, fechas y descripción —
@@ -512,10 +534,10 @@ class TimeEntryRepository {
         FROM project_assignments a
         LEFT JOIN crew_members cm ON cm.crew_id = a.crew_id
           AND cm.deleted_at IS NULL
-          AND a.work_date >= cm.from_date
-          AND (cm.to_date IS NULL OR a.work_date <= cm.to_date)
+          AND cm.from_date <= COALESCE(a.to_date, cm.from_date)
+          AND (cm.to_date IS NULL OR cm.to_date >= a.from_date)
         WHERE a.project_id = ?1 AND a.deleted_at IS NULL
-          AND a.work_date >= ?2 AND a.work_date < ?3
+          AND a.from_date < ?3 AND (a.to_date IS NULL OR a.to_date >= ?2)
       ) asignados
       JOIN people pe ON pe.membership_id = asignados.membership_id
       LEFT JOIN time_entries t ON t.membership_id = pe.membership_id
@@ -562,6 +584,49 @@ class TimeEntryRepository {
   /// Toda la gente conocida en este teléfono. Es la salida de escape del
   /// foreman: marcar por alguien que no aparece asignado — la bandera del
   /// servidor lo señala, no lo bloquea.
+  /// La gente de las cuadrillas que este capataz lidera o integra **hoy**.
+  ///
+  /// Es lo que la ficha de dominio pide del lado del teléfono: *"el foreman
+  /// necesita ver a su gente sin señal para poder marcar por ellos"*. Ver no
+  /// depende de tener obra hoy — marcar sí, y esa es otra cosa.
+  Stream<List<CrewmateToday>> watchMyCrewmates(String membershipId) {
+    final hoy = DateTime.now();
+    final inicio = DateTime(hoy.year, hoy.month, hoy.day);
+
+    final consulta = _db.customSelect(
+      '''
+      SELECT DISTINCT pe.membership_id AS membership_id, pe.name AS name,
+             pe.role AS role
+      FROM crew_members mios
+      JOIN crew_members otros ON otros.crew_id = mios.crew_id
+        AND otros.deleted_at IS NULL
+        AND otros.from_date <= ?1 AND (otros.to_date IS NULL OR otros.to_date >= ?1)
+      JOIN people pe ON pe.membership_id = otros.membership_id
+      WHERE mios.membership_id = ?2
+        AND mios.deleted_at IS NULL
+        AND mios.from_date <= ?1 AND (mios.to_date IS NULL OR mios.to_date >= ?1)
+      ORDER BY pe.name
+      ''',
+      variables: [
+        Variable<DateTime>(inicio),
+        Variable<String>(membershipId),
+      ],
+      readsFrom: {_db.crewMembers, _db.people},
+    );
+
+    return consulta.watch().map(
+      (filas) => filas
+          .map(
+            (f) => CrewmateToday(
+              membershipId: f.read<String>('membership_id'),
+              name: f.read<String>('name'),
+              role: f.read<String>('role'),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
   Stream<List<CrewmateToday>> watchEveryone() {
     return (_db.select(_db.people)
           ..orderBy([(p) => OrderingTerm.asc(p.name)]))

@@ -22,7 +22,7 @@ import '../local/tables.dart';
 /// empujar. Solo lo que escribe la app nace `PENDING`.
 ///
 /// Las marcas de tiempo llegan como `DateTime`, pero los campos de fecha suelta
-/// —`startDate`, `workDate`— llegan como texto: el contrato los declara `date`,
+/// —`startDate`, `fromDate`— llegan como texto: el contrato los declara `date`,
 /// no `date-time`. `tryParse` y no `parse`: un formato inesperado no puede
 /// tumbar la sincronización entera.
 abstract final class SyncMapper {
@@ -197,7 +197,8 @@ abstract final class SyncMapper {
         projectId: Value(dto.projectId),
         crewId: Value(dto.crewId),
         membershipId: Value(dto.membershipId),
-        workDate: Value(_fecha(dto.workDate) ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        fromDate: Value(_fecha(dto.fromDate) ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        toDate: Value(_fecha(dto.toDate)),
         plannedHeadcount: Value(dto.plannedHeadcount?.toInt()),
       );
 }

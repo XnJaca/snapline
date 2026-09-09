@@ -91,7 +91,6 @@ class _PersonasTabState extends ConsumerState<PersonasTab> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final sesion = ref.watch(sessionControllerProvider).value;
     if (sesion == null) return const SizedBox.shrink();
 
@@ -107,11 +106,11 @@ class _PersonasTabState extends ConsumerState<PersonasTab> {
         (obras.any((o) => o.id == _obraElegida) ? _obraElegida : null) ??
         (obras.isNotEmpty ? obras.first.id : null);
 
+    // Sin obra hoy se ve igual a la gente de sus cuadrillas: el eje se llama
+    // Cuadrilla y la ficha de dominio pide que el capataz pueda ver a los suyos
+    // sin señal. Lo que no se puede sin obra es marcar por ellos, y eso se dice.
     return obraId == null
-        ? EmptyState(
-            icon: Icons.groups_outlined,
-            message: l10n.crewNoProject,
-          )
+        ? _SinObra(membershipId: sesion.membership.id)
         : _Gente(
             obras: obras,
             obraId: obraId,
@@ -315,6 +314,69 @@ class _OtraPersonaSheet extends ConsumerWidget {
     );
   }
 }
+
+/// La cuadrilla cuando todavía no hay obra hoy: se ve quién es su gente, sin la
+/// acción de marcar.
+class _SinObra extends ConsumerWidget {
+  const _SinObra({required this.membershipId});
+
+  final String membershipId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final gente =
+        ref.watch(myCrewmatesProvider(membershipId)).value ??
+        const <CrewmateToday>[];
+
+    if (gente.isEmpty) {
+      return EmptyState(
+        icon: Icons.groups_outlined,
+        message: l10n.crewNobody,
+      );
+    }
+
+    return ListView(
+      padding: EdgeInsets.all(context.spacing.lg),
+      children: [
+        StatusChip(
+          tone: StatusTone.info,
+          label: l10n.crewNoProjectToClockIn,
+          expand: true,
+        ),
+        SizedBox(height: context.spacing.lg),
+        SectionCard(
+          label: l10n.crewSectionPersonas,
+          padded: false,
+          child: Column(
+            children: [
+              for (final (i, persona) in gente.indexed) ...[
+                if (i > 0) Divider(height: 1, color: context.colors.outline),
+                ListTile(
+                  leading: Icon(
+                    Icons.person_outline,
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                  title: Text(persona.name),
+                  subtitle: Text(
+                    persona.role == 'FOREMAN' ? l10n.roleForeman : l10n.roleWorker,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final myCrewmatesProvider =
+    StreamProvider.family<List<CrewmateToday>, String>((ref, membershipId) {
+  return ref
+      .watch(timeEntryRepositoryProvider)
+      .watchMyCrewmates(membershipId);
+});
 
 final everyoneProvider = StreamProvider<List<CrewmateToday>>((ref) {
   return ref.watch(timeEntryRepositoryProvider).watchEveryone();

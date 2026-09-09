@@ -1,0 +1,46 @@
+<form [formGroup]="form" (ngSubmit)="submit()" *transloco="let t">
+  <h2 mat-dialog-title>{{ t('crews.addMemberIn', { crew: data.crewName }) }}</h2>
+
+  <mat-dialog-content>
+    <div class="fields">
+      @if (candidates.length === 0) {
+        <p class="empty">{{ t('crews.peopleEmpty') }}</p>
+      } @else {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ t('crews.whoRequired') }}</mat-label>
+          <mat-select formControlName="membershipId">
+            @for (person of candidates; track person.id) {
+              <mat-option [value]="person.id">
+                {{ person.name }} · {{ t('roles.' + person.role) }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ t('crews.fromDateRequired') }}</mat-label>
+          <input matInput formControlName="fromDate" type="date" />
+        </mat-form-field>
+      }
+
+      @if (error(); as message) {
+        <p class="error" role="alert">{{ message }}</p>
+      }
+    </div>
+  </mat-dialog-content>
+
+  <div class="progress" aria-hidden="true">
+    @if (busy()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+  </div>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" (click)="cancel()">{{ t('action.cancel') }}</button>
+    <button
+      matButton="filled"
+      type="submit"
+      [disabled]="busy() || candidates.length === 0"
+    >{{ t('action.save') }}</button>
+  </mat-dialog-actions>
+</form>

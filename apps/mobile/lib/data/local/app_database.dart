@@ -35,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'snapline'));
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   /// Se agregan columnas, no se recrea la base: un teléfono que actualiza la app
   /// con la jornada sin sincronizar no puede perder la bandeja de salida.
@@ -100,8 +100,49 @@ class AppDatabase extends _$AppDatabase {
         // ancla simplemente no la muestra.
         await m.addColumn(projects, projects.createdAt);
       }
+      if (from < 10) {
+        // La asignación pasa de un día a un período (SPEC-0011): `work_date` se
+        // convierte en `from_date` y aparece `to_date`, nula hasta que alguien
+        // marque que la cuadrilla terminó ahí.
+        //
+        // **Se pregunta por la columna en vez de suponerla.** Es el mismo bicho
+        // que la v6: `createTable` usa el esquema de HOY, así que una base cuya
+        // tabla ya nació con `from_date` —pero con la versión guardada más
+        // atrás— entra igual acá, y copiar desde `work_date` la revienta al
+        // abrir. Pasó en un teléfono real: la app arrancaba y el sincronizador
+        // fallaba en cada intento.
+        if (await _tieneColumna('project_assignments', 'work_date')) {
+          // El `columnTransformer` es lo que hace que el día viejo sobreviva
+          // como fecha de entrada: sin él, drift copia por nombre, no encuentra
+          // `from_date` en la tabla vieja y se lleva puesto lo que hubiera.
+          await m.alterTable(TableMigration(
+            projectAssignments,
+            columnTransformer: {
+              projectAssignments.fromDate:
+                  const CustomExpression<DateTime>('work_date'),
+            },
+            newColumns: [projectAssignments.toDate],
+          ));
+        } else if (!await _tieneColumna('project_assignments', 'to_date')) {
+          // La tabla ya está a medio camino: tiene `from_date` y le falta el
+          // cierre. Se agrega y listo, sin recrear nada.
+          await m.addColumn(projectAssignments, projectAssignments.toDate);
+        }
+      }
     },
   );
+
+  /// Qué columnas tiene de verdad una tabla, para no migrar a ciegas.
+  ///
+  /// La versión guardada dice por dónde va la app, no cómo quedó el esquema: una
+  /// tabla creada por `createTable` nace con la forma de hoy aunque el número
+  /// diga otra cosa.
+  Future<bool> _tieneColumna(String tabla, String columna) async {
+    final filas = await customSelect(
+      "SELECT name FROM pragma_table_info('$tabla')",
+    ).get();
+    return filas.any((f) => f.read<String>('name') == columna);
+  }
 
   /// Todo lo local, sin excepción.
   ///

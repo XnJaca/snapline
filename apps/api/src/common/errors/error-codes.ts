@@ -24,6 +24,17 @@ export const ERROR_CODES = [
   'PERMISSION_NOT_DECLARED',
   'PERMISSION_DENIED',
 
+  // gente y acceso
+  // El canje distingue vencido de inválido a propósito: la salida es distinta
+  // —pedir otro código— y no le enseña nada a quien está probando, porque para
+  // llegar al vencido hay que haber acertado el código.
+  'INVITE_CODE_INVALID',
+  'INVITE_CODE_EXPIRED',
+  'INVITE_TOO_MANY_ATTEMPTS',
+  'OWNER_ALREADY_EXISTS',
+  'CONTACT_ALREADY_MEMBER',
+  'CREW_MEMBER_OVERLAP',
+
   // cliente
   'CUSTOMER_HAS_HISTORY',
 

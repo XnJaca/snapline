@@ -32,8 +32,8 @@ export class ApiError extends HttpException {
   static notFound(code: ErrorCode, message: string): ApiError {
     return new ApiError(code, message, 404);
   }
-  static conflict(code: ErrorCode, message: string): ApiError {
-    return new ApiError(code, message, 409);
+  static conflict(code: ErrorCode, message: string, details: FieldError[] = []): ApiError {
+    return new ApiError(code, message, 409, details);
   }
   static unavailable(code: ErrorCode, message: string): ApiError {
     return new ApiError(code, message, 503);

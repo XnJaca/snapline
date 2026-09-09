@@ -302,11 +302,28 @@ export class SyncService {
      * `displayName`. Un contrato que miente es peor que uno sin tipos: el
      * cliente parsea, no encuentra nada y no falla.
      */
+    /**
+     * `recienVisible` es la otra mitad del delta, y sin ella el pull miente.
+     *
+     * Una obra que existe hace un mes no cambia porque hoy te asignen a ella:
+     * su `updated_at` sigue siendo viejo, así que el filtro por tiempo la deja
+     * afuera y el teléfono recibe la asignación **sin la obra**. Pasó probando
+     * SPEC-0011: la app mostraba la lista vacía después de asignar.
+     *
+     * Lo que cambió no es la fila, es el acceso — y eso se ve en la asignación,
+     * no en la obra.
+     */
     const vivos = async <T extends ObjectLiteral>(
-      entity: EntityTarget<T>, alias: string, extra?: string, params: ObjectLiteral = {},
+      entity: EntityTarget<T>, alias: string, extra?: string,
+      params: ObjectLiteral = {}, recienVisible?: string,
     ): Promise<T[]> => {
       const qb = this.dataSource.getRepository(entity).createQueryBuilder(alias)
-        .where(`${alias}.updatedAt > :desde::timestamptz`, { desde })
+        .where(
+          recienVisible
+            ? `(${alias}.updatedAt > :desde::timestamptz OR ${recienVisible})`
+            : `${alias}.updatedAt > :desde::timestamptz`,
+          { desde, ...params },
+        )
         .andWhere(`${alias}.deletedAt IS NULL`)
         .orderBy(`${alias}.updatedAt`, 'ASC')
         .limit(1000);
@@ -339,8 +356,9 @@ export class SyncService {
     const asignadoA = (projectId: string) => `EXISTS (
            SELECT 1 FROM project_assignment a
            LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
-             AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
+             AND daterange(a.from_date, a.to_date, '[]') && daterange(cm.from_date, cm.to_date, '[]')
            WHERE a.project_id = ${projectId} AND a.deleted_at IS NULL
+             AND (a.to_date IS NULL OR a.to_date >= current_date)
              AND (a.membership_id = :membershipId OR cm.membership_id = :membershipId))`;
 
     /// El cliente y la propiedad bajan solo si cuelga de ellos una obra asignada.
@@ -348,6 +366,24 @@ export class SyncService {
            SELECT 1 FROM project p
            WHERE p.${columna} = ${fk} AND p.deleted_at IS NULL
              AND ${asignadoA('p.id')})`;
+
+    /// La asignación que da acceso es **nueva desde el último pull**: es lo que
+    /// convierte a una obra vieja en algo que este teléfono todavía no tiene.
+    const accesoNuevo = (projectId: string) => `EXISTS (
+           SELECT 1 FROM project_assignment a
+           LEFT JOIN crew_member cm ON cm.crew_id = a.crew_id AND cm.deleted_at IS NULL
+             AND daterange(a.from_date, a.to_date, '[]') && daterange(cm.from_date, cm.to_date, '[]')
+           WHERE a.project_id = ${projectId} AND a.deleted_at IS NULL
+             AND (a.to_date IS NULL OR a.to_date >= current_date)
+             AND a.updated_at > :desde::timestamptz
+             AND (a.membership_id = :membershipId OR cm.membership_id = :membershipId))`;
+
+    /// Y lo mismo para lo que cuelga de la obra: si la obra recién se hace
+    /// visible, su cliente y su propiedad tampoco están en el teléfono.
+    const deObrasNuevas = (fk: string, columna: string) => `EXISTS (
+           SELECT 1 FROM project p
+           WHERE p.${columna} = ${fk} AND p.deleted_at IS NULL
+             AND ${accesoNuevo('p.id')})`;
 
     const soloSi = (expr: string) => (acotado ? expr : undefined);
 
@@ -366,9 +402,12 @@ export class SyncService {
                           AND coalesce(cmx.to_date, CURRENT_DATE)))`;
 
     const [customers, sites, projects, assignments, mediaAssets, timeEntries, crews, crewMembers] = await Promise.all([
-      vivos(Customer, 'customer', soloSi(deSusObras('customer.id', 'customer_id')), workerParam),
-      vivos(Site, 'site', soloSi(deSusObras('site.id', 'site_id')), workerParam),
-      vivos(Project, 'project', soloSi(asignadoA('project.id')), workerParam),
+      vivos(Customer, 'customer', soloSi(deSusObras('customer.id', 'customer_id')), workerParam,
+        soloSi(deObrasNuevas('customer.id', 'customer_id'))),
+      vivos(Site, 'site', soloSi(deSusObras('site.id', 'site_id')), workerParam,
+        soloSi(deObrasNuevas('site.id', 'site_id'))),
+      vivos(Project, 'project', soloSi(asignadoA('project.id')), workerParam,
+        soloSi(accesoNuevo('project.id'))),
       // El WORKER recibe las suyas; el FOREMAN, todas las de sus obras — sin
       // eso no puede saber quién tenía que estar hoy.
       vivos(

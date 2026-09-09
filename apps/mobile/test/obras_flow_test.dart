@@ -59,7 +59,8 @@ void main() {
         updatedAt: DateTime.now(),
         projectId: id,
         membershipId: Value(membershipId),
-        workDate: DateTime.now(),
+        // Entró hoy y sigue en la obra: `to_date` nulo.
+        fromDate: DateTime.now(),
       ),
     );
   }
@@ -71,6 +72,20 @@ void main() {
     photoCapture: camara,
   );
 
+  Future<void> asignadaDesde(String membershipId, DateTime desde) async {
+    await seedProject(db, id: 'p1', name: 'Techo Martinez', customerName: 'Martínez');
+    await db.into(db.projectAssignments).insertOnConflictUpdate(
+      ProjectAssignmentsCompanion.insert(
+        id: 'a-futura-$membershipId',
+        companyId: 'c1',
+        updatedAt: DateTime.now(),
+        projectId: 'p1',
+        membershipId: Value(membershipId),
+        fromDate: DateTime(desde.year, desde.month, desde.day),
+      ),
+    );
+  }
+
   Future<void> entrarALaObra(WidgetTester tester) async {
     await tester.tap(find.text('Techo Martinez'));
     await tester.pumpAndSettle();
@@ -81,6 +96,64 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Pedile a tu encargado'), findsOneWidget);
+    await desmontar(tester);
+  });
+
+  /// El gesto que se espera de una lista, y que faltaba solo acá: Clientes y
+  /// Proyectos ya lo tenían.
+  /// Lo que se pidió al probar: una obra ya asignada que empieza la semana que
+  /// viene tiene que verse. Si no aparece en ningún lado, hay que preguntar por
+  /// teléfono a dónde se va.
+  testWidgets('una obra que empieza después se ve, con su fecha', (
+    tester,
+  ) async {
+    await asignadaDesde('m1', DateTime.now().add(const Duration(days: 7)));
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Próximamente'), findsOneWidget);
+    expect(find.text('Techo Martinez'), findsOneWidget);
+    // La sección de hoy no se dibuja vacía cuando no hay nada hoy.
+    expect(find.text('Obras en las que estás asignado hoy'), findsNothing);
+    await desmontar(tester);
+  });
+
+  testWidgets('en una obra que no empezó no se puede marcar', (tester) async {
+    await asignadaDesde('m1', DateTime.now().add(const Duration(days: 7)));
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await entrarALaObra(tester);
+
+    // Ver a dónde se va, sí. Abrir jornada, no: todavía no le toca.
+    expect(find.byType(FieldActionButton), findsNothing);
+    expect(find.textContaining('podrá marcar desde'), findsOneWidget);
+    await desmontar(tester);
+  });
+
+  testWidgets('se puede tirar para refrescar, con obras y sin ellas', (
+    tester,
+  ) async {
+    FakeSyncController.refrescos = 0;
+
+    // Primero sin ninguna asignación: es justo cuando alguien tira para ver si
+    // ya le asignaron algo, y un estado vacío que no scrollea lo impediría.
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RefreshIndicator), findsOneWidget);
+    await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+    expect(FakeSyncController.refrescos, 1);
+    await desmontar(tester);
+
+    await asignadaHoy('m1');
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.fling(find.byType(ListView).first, const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+    expect(FakeSyncController.refrescos, 2);
     await desmontar(tester);
   });
 

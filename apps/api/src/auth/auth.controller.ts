@@ -5,6 +5,7 @@ import { UpdateLocaleDto } from './dto/update-locale.dto';
 import { SessionDto } from './dto/session.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { CheckInviteDto, RedeemInviteDto, VerifyInviteDto } from '../memberships/dto/membership.dto';
 import { Public } from './decorators/public.decorator';
 import { RequirePermission } from './decorators/require-permission.decorator';
 import { CurrentTenant } from './decorators/current-tenant.decorator';
@@ -32,6 +33,27 @@ export class AuthController {
   @ApiOkResponse({ type: AuthResultDto })
   refresh(@Body() dto: RefreshDto): Promise<AuthResultDto> {
     return this.auth.refresh(dto.refreshToken);
+  }
+
+  /// Comprueba el código antes de pedir la contraseña. No lo consume, pero un
+  /// fallo gasta intento igual que el canje: si no, sería probar códigos gratis.
+  @Public()
+  @StrictThrottle()
+  @Post('invite/verify')
+  @HttpCode(200)
+  @ApiOkResponse({ type: VerifyInviteDto })
+  verifyInvite(@Body() dto: CheckInviteDto): Promise<VerifyInviteDto> {
+    return this.auth.verifyInvite(dto.identifier, dto.code);
+  }
+
+  // Acepta credenciales sin autenticación previa, como login y refresh.
+  @Public()
+  @StrictThrottle()
+  @Post('invite/redeem')
+  @HttpCode(200)
+  @ApiOkResponse({ type: AuthResultDto })
+  redeemInvite(@Body() dto: RedeemInviteDto): Promise<AuthResultDto> {
+    return this.auth.redeemInvite(dto.identifier, dto.code, dto.password);
   }
 
   @RequirePermission('projects.read')

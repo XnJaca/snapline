@@ -7,7 +7,7 @@ status: borrador
 related_specs: []
 related_adrs: ["ADR-0003", "ADR-0004"]
 created: 2026-08-08
-updated: 2026-09-01
+updated: 2026-09-04
 tags: [domain, domain/borrador]
 ---
 
@@ -106,11 +106,21 @@ comparar: el bug era invisible hasta que alguien puso el código al lado de la f
 |---|---|---|---|
 | `project_id` | uuid | sí | |
 | `crew_id` o `membership_id` | uuid | sí | Uno de los dos |
-| `date` | date | sí | |
-| `planned_headcount` | int | no | Cuántos se esperaban |
+| `from_date` | date | sí | Cuándo entra a la obra. Se propone el inicio de la obra |
+| `to_date` | date | no | Nulo = sigue en la obra. Lo cierra una persona cuando esa cuadrilla terminó ahí |
+| `planned_headcount` | int | no | Cuántos se esperaban. **Hoy no lo escribe ni lo lee nadie** — ver SPEC-0011 |
 
-Esta tabla es la respuesta a *"no sé cuántos mandé a cada proyecto"*: lo planeado
-contra lo que realmente marcó asistencia.
+**La asignación es un período, no un día.** Una cuadrilla entra a una obra y en algún
+momento termina su parte; entremedio no hay una decisión por día que alguien vaya a
+cargar. Es la misma forma que la pertenencia a la cuadrilla en [[cuadrilla]], y por la
+misma razón: lo que se registra es desde cuándo, y el final llega cuando llega.
+
+**El final lo pone una persona, no un cálculo.** La obra tiene su fecha estimada de
+término y la cuadrilla puede irse antes o quedarse después; deducir el cierre de las
+fechas de la obra sería inventar un hecho que nadie atestiguó.
+
+Esta tabla es la respuesta a *"no sé cuántos mandé a cada proyecto"*: quién estaba en
+qué obra y desde cuándo, contra lo que realmente marcó asistencia.
 
 ### `project_status_change`
 
@@ -152,8 +162,10 @@ llega está en [[acceso-del-cliente]].
   *Decidido el 2026-08-10, al encontrar que el formulario de edición los ofrecía y
   el servidor los descartaba en silencio.*
 - `client_visibility_mode` arranca en `etapas`. Pasar a `avance` es acción explícita.
-- Un `WORKER` solo ve proyectos donde tiene asignación vigente. No puede enumerar
-  los demás.
+- Un `WORKER` solo ve proyectos donde tiene asignación vigente —la suya, o la de la
+  cuadrilla a la que pertenecía en esas fechas—. No puede enumerar los demás.
+  **Vigente es la que no terminó**: `to_date` nulo, o posterior a hoy. Una asignación
+  cerrada saca la obra de su lista y no le borra ni una hora de las que marcó ahí.
 - `CANCELLED` no borra nada: las horas trabajadas siguen siendo horas pagables.
 
 ### Del historial de estados

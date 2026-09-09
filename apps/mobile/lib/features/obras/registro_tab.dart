@@ -130,7 +130,17 @@ class _RegistroTabState extends ConsumerState<RegistroTab> {
             expand: true,
           ),
         ],
-        if (!abiertaEnOtra) ...[
+        // La obra todavía no empezó para esta cuadrilla: se ve para saber a
+        // dónde se va, pero no hay jornada que abrir. La fecha es el dato —
+        // decir solo «todavía no» obliga a preguntar cuándo.
+        if (widget.obra.startsOn case final desde?) ...[
+          SizedBox(height: context.spacing.xl),
+          StatusChip(
+            tone: StatusTone.info,
+            label: l10n.obrasUpcomingNoClockIn(desde),
+            expand: true,
+          ),
+        ] else if (!abiertaEnOtra) ...[
           SizedBox(height: context.spacing.xl),
           FieldActionButton(
             onPressed: _marcando ? null : () => _marcar(abiertaAca),

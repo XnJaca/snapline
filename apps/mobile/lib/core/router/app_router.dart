@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/account/account_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/redeem_screen.dart';
 import '../../features/customers/customer_form_screen.dart';
 import '../../features/customers/customer_screen.dart';
 import '../../features/customers/customers_screen.dart';
@@ -26,6 +27,10 @@ import '../widgets/splash_screen.dart';
 abstract final class Routes {
   static const splash = '/splash';
   static const login = '/login';
+
+  /// Quien todavía no tiene contraseña entra por acá con el código que le
+  /// dictaron. Sin sesión, como el login.
+  static const redeem = RedeemScreen.route;
   static const themePreview = '/dev/theme';
 
   /// El detalle vive fuera del shell: la obra es un contenedor propio, con sus
@@ -101,7 +106,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (session.value == null) {
-        return ubicacion == Routes.login ? null : Routes.login;
+        return const {Routes.login, Routes.redeem}.contains(ubicacion)
+            ? null
+            : Routes.login;
       }
 
       // Directo de la sesión, con funciones puras: leer un provider derivado
@@ -116,7 +123,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // `RoleShell` explica lo que pasa y deja cerrar sesión.
       final entrada = (inicial ?? AppDestination.values.first).route;
 
-      if (ubicacion == Routes.splash || ubicacion == Routes.login) {
+      if (ubicacion == Routes.splash ||
+          ubicacion == Routes.login ||
+          ubicacion == Routes.redeem) {
         return entrada;
       }
 
@@ -142,6 +151,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: Routes.redeem,
+        name: 'redeem',
+        builder: (context, state) => const RedeemScreen(),
       ),
       GoRoute(
         path: Routes.themePreview,

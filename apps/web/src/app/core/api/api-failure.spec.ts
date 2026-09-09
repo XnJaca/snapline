@@ -20,6 +20,9 @@ describe('toApiFailure', () => {
 
     expect(toApiFailure(rechazo)).toEqual({
       kind: 'http', status: 401, code: 'INVALID_CREDENTIALS', message: 'Credenciales inválidas',
+      // Siempre array, vacío cuando no aplica: ADR-0011 lo promete y hay
+      // pantallas que ramifican sobre lo que traiga.
+      details: [],
     });
   });
 

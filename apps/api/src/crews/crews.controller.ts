@@ -3,8 +3,11 @@ import { RequirePermission } from '../auth/decorators/require-permission.decorat
 import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
 import { TenantContext } from '../tenant/tenant-context';
 import { CrewsService } from './crews.service';
-import { AddCrewMemberDto, CreateCrewDto, UpdateCrewDto } from './dto/crew.dto';
-import { Crew } from './entities/crew.entity';
+import { ApiOkResponse } from '@nestjs/swagger';
+import {
+  AddCrewMemberDto, CreateCrewDto, CrewAssignmentDto, CrewDto, CrewMemberDto,
+  EndCrewMemberDto, UpdateCrewDto,
+} from './dto/crew.dto';
 import { CrewMember } from './entities/crew-member.entity';
 
 @Controller('crews')
@@ -13,32 +16,44 @@ export class CrewsController {
 
   @RequirePermission('crews.read')
   @Get()
-  list(): Promise<Crew[]> {
-    return this.service.list();
+  @ApiOkResponse({ type: [CrewDto] })
+  list(@CurrentTenant() tenant: TenantContext): Promise<CrewDto[]> {
+    return this.service.list(tenant);
   }
 
   @RequirePermission('crews.read')
   @Get(':id')
-  get(@Param('id', ParseUUIDPipe) id: string): Promise<Crew> {
-    return this.service.get(id);
+  @ApiOkResponse({ type: CrewDto })
+  get(@Param('id', ParseUUIDPipe) id: string, @CurrentTenant() tenant: TenantContext): Promise<CrewDto> {
+    return this.service.get(id, tenant);
   }
 
   @RequirePermission('crews.write')
   @Post()
-  create(@Body() dto: CreateCrewDto, @CurrentTenant() tenant: TenantContext): Promise<Crew> {
+  @ApiOkResponse({ type: CrewDto })
+  create(@Body() dto: CreateCrewDto, @CurrentTenant() tenant: TenantContext): Promise<CrewDto> {
     return this.service.create(dto, tenant);
   }
 
   @RequirePermission('crews.write')
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCrewDto): Promise<Crew> {
-    return this.service.update(id, dto);
+  @ApiOkResponse({ type: CrewDto })
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCrewDto, @CurrentTenant() tenant: TenantContext): Promise<CrewDto> {
+    return this.service.update(id, dto, tenant);
   }
 
   @RequirePermission('crews.read')
   @Get(':id/members')
-  members(@Param('id', ParseUUIDPipe) id: string): Promise<CrewMember[]> {
-    return this.service.listMembers(id);
+  @ApiOkResponse({ type: [CrewMemberDto] })
+  members(@Param('id', ParseUUIDPipe) id: string, @CurrentTenant() tenant: TenantContext): Promise<CrewMemberDto[]> {
+    return this.service.listMembers(id, tenant);
+  }
+
+  @RequirePermission('crews.read')
+  @Get(':id/assignments')
+  @ApiOkResponse({ type: [CrewAssignmentDto] })
+  assignments(@Param('id', ParseUUIDPipe) id: string, @CurrentTenant() tenant: TenantContext): Promise<CrewAssignmentDto[]> {
+    return this.service.listAssignments(id, tenant);
   }
 
   @RequirePermission('crews.write')
@@ -53,8 +68,9 @@ export class CrewsController {
   endMember(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('memberId', ParseUUIDPipe) memberId: string,
-    @Body() body: { toDate: string },
+    @Body() dto: EndCrewMemberDto,
+    @CurrentTenant() tenant: TenantContext,
   ): Promise<CrewMember> {
-    return this.service.endMembership(id, memberId, body.toDate);
+    return this.service.endMembership(id, memberId, dto.toDate, tenant);
   }
 }

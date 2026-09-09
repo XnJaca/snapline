@@ -18,6 +18,7 @@ import { MediaModule } from './media/media.module';
 import { TimeEntriesModule } from './time-entries/time-entries.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { CrewsModule } from './crews/crews.module';
+import { MembershipsModule } from './memberships/memberships.module';
 import { BillingModule } from './billing/billing.module';
 import { ReportsModule } from './reports/reports.module';
 import { PublishingModule } from './publishing/publishing.module';
@@ -46,6 +47,7 @@ import { SyncModule } from './sync/sync.module';
     TimeEntriesModule,
     CatalogModule,
     CrewsModule,
+    MembershipsModule,
     BillingModule,
     ReportsModule,
     PublishingModule,

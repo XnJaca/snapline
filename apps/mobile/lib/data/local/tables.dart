@@ -84,7 +84,10 @@ class ProjectAssignments extends Table with SyncedTable {
   TextColumn get projectId => text()();
   TextColumn get crewId => text().nullable()();
   TextColumn get membershipId => text().nullable()();
-  DateTimeColumn get workDate => dateTime()();
+  DateTimeColumn get fromDate => dateTime()();
+
+  /// Nula mientras la cuadrilla siga en la obra.
+  DateTimeColumn get toDate => dateTime().nullable()();
   IntColumn get plannedHeadcount => integer().nullable()();
 }
 

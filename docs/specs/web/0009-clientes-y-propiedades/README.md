@@ -73,8 +73,9 @@ comprueba nada — abajo.
 - **Invitar al cliente al portal.** Es [[../0006-portal-del-cliente/README|SPEC-0006
   web]] y su propio camino de acceso; acá solo se cargan los datos que ese camino
   después necesita.
-- **Crear proyectos desde la ficha.** Llega con SPEC-0010, que es el módulo
-  siguiente. Acá los proyectos del cliente se listan y se enlazan, nada más.
+- **Crear proyectos desde la ficha.** Llega con el módulo de Obras del panel,
+  [[../0010-obras-en-el-panel/README|SPEC-0010]]. Acá los proyectos del cliente se
+  listan y se enlazan, nada más.
 - **Importar clientes de QuickBooks o de un CSV.** No hay pedido real todavía.
 - **Ubicar la propiedad en el mapa.** El móvil lo resuelve con
   [[../../mobile/0007-ubicacion-de-la-propiedad-en-el-mapa/README|SPEC-0007 móvil]] y el punto

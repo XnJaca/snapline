@@ -72,7 +72,7 @@ describe('invariantes del dominio (e2e)', () => {
 
       await request(app.getHttpServer())
         .post(`/api/projects/${a.projectId}/assignments`).set('Authorization', `Bearer ${ownerA}`)
-        .send({ membershipId: a.workerMembershipId, workDate: '2026-08-08' })
+        .send({ membershipId: a.workerMembershipId, fromDate: '2026-08-08' })
         .expect(201);
 
       const conAsignacion = await request(app.getHttpServer())
@@ -782,7 +782,11 @@ describe('invariantes del dominio (e2e)', () => {
 
     it('las dos colecciones bajan por el pull', async () => {
       const id = await crearObra();
-      const antes = new Date().toISOString();
+      // El cursor sale del `serverTime` del pull anterior y nunca del reloj de
+      // acá: el de la base corre atrás del de Node, y `updated_at > antes` daba
+      // falso cuando el PATCH caía en el mismo milisegundo.
+      const antes = (await http.get('/api/sync')
+        .set('Authorization', `Bearer ${ownerA}`).expect(200)).body.serverTime as string;
       await http.patch(`/api/projects/${id}`).set('Authorization', `Bearer ${ownerA}`)
         .send({ status: 'ESTIMATED' }).expect(200);
       await http.post(`/api/projects/${id}/updates`).set('Authorization', `Bearer ${ownerA}`)

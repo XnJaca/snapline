@@ -79,6 +79,24 @@ void main() {
         PRIMARY KEY (id)
       )
     ''');
+    // `project_assignments` también nace con la app, y hasta la v10 ninguna
+    // migración la tocaba: por eso no estaba acá. Con su día convertido en
+    // período, el salto sí la recrea y el esquema simulado tiene que tenerla.
+    db.execute('''
+      CREATE TABLE project_assignments (
+        id TEXT NOT NULL,
+        company_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        deleted_at INTEGER,
+        sync_status INTEGER NOT NULL DEFAULT 0,
+        project_id TEXT NOT NULL,
+        crew_id TEXT,
+        membership_id TEXT,
+        work_date INTEGER NOT NULL,
+        planned_headcount INTEGER,
+        PRIMARY KEY (id)
+      )
+    ''');
     db.execute('PRAGMA user_version = 1');
     db.close();
   }
@@ -348,6 +366,120 @@ void main() {
 
     expect(await db.select(db.mediaAssets).get(), isEmpty);
     expect(await db.select(db.outboxOperations).get(), hasLength(1));
+  });
+
+  /// El día en que la cuadrilla entró a la obra no se pierde al actualizar: la
+  /// asignación pasó de ser un día suelto a un período, y `work_date` es lo que
+  /// da la fecha de entrada. Sin el `columnTransformer`, drift copia por nombre,
+  /// no encuentra `from_date` y la fecha se va con la migración.
+  test('subir a v10 conserva el día de la asignación como fecha de entrada', () async {
+    crearEsquemaV1();
+    final previa = sqlite3.open(archivo.path);
+    previa.execute(
+      'INSERT INTO project_assignments (id, company_id, updated_at, project_id, '
+      'crew_id, work_date, planned_headcount) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['a1', 'co1', 1754700000, 'p1', 'cr1', 1754700000, 4],
+    );
+    previa.execute('PRAGMA user_version = 9');
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    final asignacion = await db.select(db.projectAssignments).getSingle();
+    expect(asignacion.fromDate, DateTime.fromMillisecondsSinceEpoch(1754700000 * 1000));
+    // Sigue en la obra hasta que alguien marque que terminó.
+    expect(asignacion.toDate, null);
+
+    await (db.update(db.projectAssignments)..where((a) => a.id.equals('a1')))
+        .write(ProjectAssignmentsCompanion(toDate: Value(DateTime(2026, 9, 30))));
+    expect((await db.select(db.projectAssignments).getSingle()).toDate,
+        DateTime(2026, 9, 30));
+  });
+
+  /// El caso que rompió un teléfono real: la versión guardada dice 9, pero la
+  /// tabla ya nació con el esquema de hoy —`createTable` usa la forma actual, no
+  /// la de la versión que la creó—. Copiar desde `work_date` reventaba al abrir,
+  /// y el síntoma que se veía era «sin conexión» porque el sincronizador fallaba
+  /// en cada intento.
+  test('subir a v10 no rompe si la tabla ya está en el esquema nuevo', () async {
+    crearEsquemaV1();
+    final previa = sqlite3.open(archivo.path);
+    previa.execute('DROP TABLE project_assignments');
+    previa.execute('''
+      CREATE TABLE project_assignments (
+        id TEXT NOT NULL,
+        company_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        deleted_at INTEGER,
+        sync_status INTEGER NOT NULL DEFAULT 0,
+        project_id TEXT NOT NULL,
+        crew_id TEXT,
+        membership_id TEXT,
+        from_date INTEGER NOT NULL,
+        to_date INTEGER,
+        planned_headcount INTEGER,
+        PRIMARY KEY (id)
+      )
+    ''');
+    previa.execute(
+      'INSERT INTO project_assignments (id, company_id, updated_at, project_id, '
+      'crew_id, from_date) VALUES (?, ?, ?, ?, ?, ?)',
+      ['a1', 'co1', 1754700000, 'p1', 'cr1', 1754700000],
+    );
+    previa.execute('PRAGMA user_version = 9');
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    // Abre sin explotar y la fila sigue ahí.
+    final asignacion = await db.select(db.projectAssignments).getSingle();
+    expect(asignacion.fromDate, DateTime.fromMillisecondsSinceEpoch(1754700000 * 1000));
+    expect(asignacion.toDate, null);
+  });
+
+  /// La otra mitad del mismo caso: la tabla tiene `from_date` pero le falta el
+  /// cierre, así que se agrega la columna sin recrear nada.
+  test('subir a v10 completa una tabla a medio camino', () async {
+    crearEsquemaV1();
+    final previa = sqlite3.open(archivo.path);
+    previa.execute('DROP TABLE project_assignments');
+    previa.execute('''
+      CREATE TABLE project_assignments (
+        id TEXT NOT NULL,
+        company_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        deleted_at INTEGER,
+        sync_status INTEGER NOT NULL DEFAULT 0,
+        project_id TEXT NOT NULL,
+        crew_id TEXT,
+        membership_id TEXT,
+        from_date INTEGER NOT NULL,
+        planned_headcount INTEGER,
+        PRIMARY KEY (id)
+      )
+    ''');
+    previa.execute('PRAGMA user_version = 9');
+    previa.close();
+
+    final db = AppDatabase(NativeDatabase(archivo));
+    addTearDown(db.close);
+
+    await db
+        .into(db.projectAssignments)
+        .insert(
+          ProjectAssignmentsCompanion.insert(
+            id: 'a2',
+            companyId: 'co1',
+            updatedAt: DateTime(2026, 9, 1),
+            projectId: 'p1',
+            fromDate: DateTime(2026, 9, 1),
+            toDate: Value(DateTime(2026, 9, 30)),
+          ),
+        );
+    expect((await db.select(db.projectAssignments).getSingle()).toDate,
+        DateTime(2026, 9, 30));
   });
 
   /// El salto que hace hoy un teléfono con la app instalada: v8 es la versión

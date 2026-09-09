@@ -70,9 +70,10 @@ export class ProjectsService {
          LEFT JOIN crew_member cm
            ON cm.crew_id = a.crew_id
           AND cm.deleted_at IS NULL
-          AND a.work_date BETWEEN cm.from_date AND coalesce(cm.to_date, a.work_date)
+          AND daterange(a.from_date, a.to_date, '[]') && daterange(cm.from_date, cm.to_date, '[]')
          WHERE a.project_id = p.id
            AND a.deleted_at IS NULL
+           AND (a.to_date IS NULL OR a.to_date >= current_date)
            AND (a.membership_id = :mid OR cm.membership_id = :mid)
        )`,
       { mid: membershipId },
@@ -220,7 +221,8 @@ export class ProjectsService {
       project: { id: projectId } as ProjectAssignment['project'],
       crew: dto.crewId ? ({ id: dto.crewId } as ProjectAssignment['crew']) : null,
       membership: dto.membershipId ? ({ id: dto.membershipId } as ProjectAssignment['membership']) : null,
-      workDate: dto.workDate,
+      fromDate: dto.fromDate,
+      toDate: dto.toDate ?? null,
       plannedHeadcount: dto.plannedHeadcount ?? null,
       deletedAt: null,
     });
@@ -231,8 +233,34 @@ export class ProjectsService {
     return this.assignments.find({
       where: { project: { id: projectId }, deletedAt: IsNull() },
       relations: { crew: true, membership: true },
-      order: { workDate: 'ASC' },
+      order: { fromDate: 'ASC' },
     });
+  }
+
+  /**
+   * Cierra la labor de esa cuadrilla en esa obra. Lo pone una persona: la obra
+   * tiene su fecha estimada de término y la cuadrilla puede irse antes o quedarse
+   * después, así que deducirlo sería inventar un hecho que nadie atestiguó.
+   */
+  async endAssignment(projectId: string, assignmentId: string, toDate: string): Promise<ProjectAssignment> {
+    const found = await this.assignments.findOne({
+      where: { id: assignmentId, project: { id: projectId }, deletedAt: IsNull() },
+    });
+    if (!found) throw new NotFoundException('Asignación no encontrada');
+    if (toDate < found.fromDate) {
+      throw new BadRequestException('El final no puede ser anterior a la entrada');
+    }
+    await this.assignments.update({ id: assignmentId }, { toDate });
+    return (await this.assignments.findOneOrFail({ where: { id: assignmentId } }));
+  }
+
+  /** Cargar la asignación en el día equivocado es el error típico de esa pantalla. */
+  async unassign(projectId: string, assignmentId: string): Promise<void> {
+    const result = await this.assignments.update(
+      { id: assignmentId, project: { id: projectId }, deletedAt: IsNull() },
+      { deletedAt: new Date() },
+    );
+    if (!result.affected) throw new NotFoundException('Asignación no encontrada');
   }
   // ------------------------------------------------------------ bitácora
 

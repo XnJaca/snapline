@@ -198,8 +198,15 @@ TimeEntryRepository testTimeEntryRepository(AppDatabase db) =>
 /// No toca la red. La sincronización de verdad se prueba contra el API en
 /// `integration_test/`; acá lo que importa es que la UI lea de local.
 class FakeSyncController extends SyncController {
+  /// Cuántas veces se pidió sincronizar a mano. Lo usa el test del gesto de
+  /// tirar para refrescar.
+  static int refrescos = 0;
+
   @override
   Future<bool> build() async => true;
+
+  @override
+  Future<void> refresh() async => refrescos++;
 }
 
 /// El cliente de media que nunca se llama.

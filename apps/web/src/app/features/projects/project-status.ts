@@ -31,3 +31,20 @@ const TONE: Record<string, ChipTone> = {
 export function projectStatusTone(status: string): ChipTone {
   return TONE[status] ?? 'neutral';
 }
+
+/** Una obra cerrada, en pausa o abandonada no recibe gente nueva. */
+const CLOSED_PROJECT_STATUSES: readonly ProjectStatus[] =
+  ['ON_HOLD', 'COMPLETED', 'CANCELLED'];
+
+/**
+ * Las obras a las que todavía tiene sentido asignar una cuadrilla. **Se deriva
+ * de `PROJECT_STATUSES`**, no se escribe aparte: la lista suelta ya se pagó una
+ * vez —decía `ESTIMATING`, que no existe en el enum, y una obra estimada nunca
+ * aparecía en el selector de asignar sin ningún error a la vista—.
+ */
+export const OPEN_PROJECT_STATUSES: readonly ProjectStatus[] =
+  PROJECT_STATUSES.filter((s) => !CLOSED_PROJECT_STATUSES.includes(s));
+
+export function isOpenProject(status: string): boolean {
+  return (OPEN_PROJECT_STATUSES as readonly string[]).includes(status);
+}

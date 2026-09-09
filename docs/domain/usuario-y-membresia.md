@@ -4,10 +4,10 @@ title: "Usuario y Membresía"
 aliases: ["Usuario y Membresía"]
 type: domain
 status: borrador
-related_specs: []
+related_specs: ["SPEC-0011"]
 related_adrs: []
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-09-03
 tags: [domain, domain/borrador]
 ---
 
@@ -27,7 +27,7 @@ para más de un contratista.
 |---|---|---|---|
 | `email` | string | no | Único si existe |
 | `phone` | string | no | Único si existe. Muchos trabajadores no usan email |
-| `password_hash` | string | sí | |
+| `password_hash` | string | no | Nulo hasta que la persona canjea su invitación y la elige |
 | `name` | string | sí | |
 | `locale` | string | sí | `en` o `es`. **Por usuario, no por empresa** |
 
@@ -38,9 +38,12 @@ para más de un contratista.
 | `user_id` | uuid | sí | |
 | `role` | enum | sí | Ver tabla abajo |
 | `pay_rate_cents` | int | no | Tarifa por hora vigente |
-| `employment_type` | enum | no | `W2` o `1099` |
-| `status` | enum | sí | `invitado`, `activo`, `inactivo` |
+| `employment_type` | enum | no | `W2` o `CONTRACTOR_1099` |
+| `status` | enum | sí | `INVITED`, `ACTIVE`, `INACTIVE`. Solo una `ACTIVE` resuelve sesión |
 | `token_version` | int | sí | Arranca en 0. Sube al cerrar sesión; un refresh con la versión vieja se rechaza. **Nunca lo manda el cliente** |
+| `invite_code_hash` | string | no | El código que se dicta en persona, hasheado. Nulo cuando no hay invitación viva |
+| `invite_expires_at` | timestamptz | no | Siete días desde que se emite |
+| `invite_attempts` | int | sí | Arranca en 0. Se bloquea a los 10 y solo lo destraba emitir uno nuevo |
 
 ## Roles
 
@@ -61,6 +64,22 @@ para más de un contratista.
   teléfono, con ningún rol.
 
 - `email` o `phone`: al menos uno. No pueden ser ambos nulos.
+
+- **Un `app_user` con `password_hash` nulo no inicia sesión por ningún camino.** Es
+  quien fue invitado y todavía no canjeó. `bcrypt.compare` con un nulo no es una
+  comparación fallida sino un error de tipo, así que el camino de login lo ataja
+  antes de comparar: se cuela como 500 en vez de 401.
+
+- **La contraseña es del usuario, no de la membresía.** Una persona con dos
+  contratistas tiene una sola: no se la vuelve a pedir al canjear la segunda
+  invitación, y **no se nulea mientras tenga otra membresía activa que la esté
+  usando**. Regenerar el código de una empresa no puede dejarla sin entrar a la otra.
+
+- **El código de invitación es de un solo uso y se guarda hasheado**, con bcrypt y no
+  con sha256: seis dígitos son un millón de preimágenes que se precomputan en
+  segundos. Lo que lo sostiene son tres cosas juntas —el identificador, el
+  vencimiento y el corte por intentos—; si una se cae, el código queda adivinable y
+  nada avisa.
 - Una empresa tiene **exactamente un** `OWNER` activo.
 - Un `WORKER` no puede aprobar sus propias horas ni modificar su `pay_rate_cents`.
   Ni siquiera el suyo propio, ni siquiera para bajarlo.
@@ -111,4 +130,10 @@ local es conveniencia de UI, nunca autoridad.
 **Típico** — Un `WORKER` con teléfono, sin email, `locale: es`, tarifa por hora.
 
 **Borde** — Una persona que trabaja para dos contratistas: un `user`, dos
-`membership`, con roles y tarifas distintas. Su `locale` es el mismo en ambas.
+`membership`, con roles y tarifas distintas. Su `locale` es el mismo en ambas, y su
+contraseña también: canjear la invitación del segundo contratista activa esa
+membresía y no le pide una nueva.
+
+**Borde** — Alguien que se fue y volvió la temporada siguiente. Se reactiva **la misma
+membresía**, con el rol y la tarifa que traiga el alta nueva: sus horas viejas y su
+pertenencia terminada a una cuadrilla siguen apuntando a la misma fila.
