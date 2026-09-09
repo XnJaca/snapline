@@ -2210,7 +2210,7 @@ export interface components {
             id: string;
             name: string;
             /** @enum {string} */
-            stage: "INICIO" | "EN_PROCESO" | "FINALIZADO";
+            stage: "INICIO" | "EN_PROCESO" | "FINALIZADO" | "CANCELADO";
             /**
              * @description En STAGES el cliente solo ve la etapa; updates y fotos vienen vacíos.
              * @enum {string}
@@ -2224,6 +2224,13 @@ export interface components {
             /** Format: uuid */
             offerId: string;
             notes?: string;
+        };
+        RequestOfferResultDto: {
+            /**
+             * Format: uuid
+             * @description El lead que quedó registrado para esta empresa.
+             */
+            leadId: string;
         };
         SyncPersonDto: {
             /** @enum {string} */
@@ -9156,7 +9163,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RequestOfferResultDto"];
+                };
             };
             /** @description Error */
             400: {

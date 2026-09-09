@@ -13,7 +13,7 @@ $sl-light: (
   surface: #FFFFFF,
   on-surface: #171717,
   surface-variant: #F5F5F5,
-  background: #FAFAFA,
+  background: #F4F4F5,
   on-background: #171717,
   on-surface-variant: #525252,
   outline: #E5E5E5,
@@ -24,8 +24,8 @@ $sl-light: (
 
   // Derivados, para que Material no los tiña
   surface-container-lowest: #FFFFFF,
-  surface-container-low: #FAFAFA,
-  surface-container: #FAFAFA,
+  surface-container-low: #F4F4F5,
+  surface-container: #F4F4F5,
   surface-container-high: #F5F5F5,
   surface-container-highest: #F5F5F5,
   outline-variant: #E5E5E5,
@@ -81,6 +81,10 @@ $sl-dark: (
   --sl-font-size-body: 16px;
   --sl-font-size-title: 20px;
   --sl-font-size-display: 32px;
+  --sl-font-leading-caption: 1.45;
+  --sl-font-leading-body: 1.5;
+  --sl-font-leading-title: 1.25;
+  --sl-font-leading-display: 1.15;
   --sl-font-weight-regular: 400;
   --sl-font-weight-medium: 500;
   --sl-font-weight-bold: 700;

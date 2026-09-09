@@ -1,0 +1,102 @@
+<sl-page *transloco="let t" icon="projects" [heading]="t('projects.newTitle')">
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="block">
+      <h2 class="block__title">{{ t('projects.sectionWho') }}</h2>
+
+      <div class="fields">
+        <mat-form-field appearance="outline" class="field--long">
+          <mat-label>{{ t('field.required', { label: t('projects.customer') }) }}</mat-label>
+          <mat-select
+            [value]="form.controls.customerId.value"
+            (valueChange)="onCustomer($event)"
+          >
+            @for (customer of customers(); track customer.id) {
+              <mat-option [value]="customer.id">{{ customer.displayName }}</mat-option>
+            }
+            <mat-option [value]="CREAR" class="option--new">{{ t('projects.newCustomer') }}</mat-option>
+          </mat-select>
+          <mat-hint>{{ t('projects.customerHint') }}</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field--long">
+          <mat-label>{{ t('field.required', { label: t('projects.site') }) }}</mat-label>
+          <mat-select
+            [value]="form.controls.siteId.value"
+            (valueChange)="onSite($event)"
+            [disabled]="!customerChosen() || loadingSites()"
+          >
+            @for (site of sites(); track site.id) {
+              <mat-option [value]="site.id">{{ $any(site.address).line1 }}, {{ $any(site.address).city }}</mat-option>
+            }
+            <mat-option [value]="CREAR" class="option--new">{{ t('projects.newSite') }}</mat-option>
+          </mat-select>
+          <mat-hint>
+            @if (!customerChosen()) {
+              {{ t('projects.sitePickCustomerFirst') }}
+            } @else if (!loadingSites() && sites().length === 0) {
+              {{ t('projects.siteNoneForCustomer') }}
+            }
+          </mat-hint>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block__title">{{ t('projects.sectionWhat') }}</h2>
+
+      <div class="fields">
+        <mat-form-field appearance="outline" class="field--medium">
+          <mat-label>{{ t('field.required', { label: t('projects.fieldName') }) }}</mat-label>
+          <input matInput formControlName="name" />
+          <mat-hint>{{ t('projects.fieldNameHint') }}</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field--date">
+          <mat-label>{{ t('projects.serviceType') }}</mat-label>
+          <input matInput formControlName="serviceType" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field--date">
+          <mat-label>{{ t('projects.status') }}</mat-label>
+          <mat-select formControlName="status">
+            @for (option of statuses; track option) {
+              <mat-option [value]="option">{{ t('projectStatus.' + option) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- `type="date"` entrega yyyy-MM-dd, que es lo que el contrato espera, y
+             lo muestra en el formato del sistema sin configurar un DateAdapter. -->
+        <mat-form-field appearance="outline" class="field--date">
+          <mat-label>{{ t('projects.startDate') }}</mat-label>
+          <input matInput type="date" formControlName="startDate" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field--date">
+          <mat-label>{{ t('projects.targetEndDate') }}</mat-label>
+          <input matInput type="date" formControlName="targetEndDate" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field--full">
+          <mat-label>{{ t('projects.description') }}</mat-label>
+          <textarea matInput rows="3" formControlName="description"></textarea>
+        </mat-form-field>
+      </div>
+    </section>
+
+    @if (error(); as failure) {
+      <p class="error" role="alert">{{ t('form.error.' + failure) }}</p>
+    }
+
+    <div class="progress" aria-hidden="true">
+      @if (busy()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </div>
+
+    <div class="footer">
+      <button matButton type="button" (click)="cancel()">{{ t('action.cancel') }}</button>
+      <button matButton="filled" type="submit" [disabled]="busy()">{{ t('action.save') }}</button>
+    </div>
+  </form>
+</sl-page>

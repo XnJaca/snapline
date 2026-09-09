@@ -63,6 +63,42 @@ html {
     )
   );
 
+  // La otra mitad de la tipografía. `mat.theme()` recibe familia y pesos, pero el
+  // tamaño, el interlineado y el tracking los sigue poniendo Material con los
+  // valores de Roboto: un único `line-height` de 20px para los cuatro tamaños
+  // —el título de 20px terminaba con ratio 1.0— y un tracking de +0.031em que a
+  // Inter le queda aguado.
+  //
+  // Se pisan acá, una vez, con la escala de `design-tokens.json`. De paso quedan
+  // fuera el 12px de los hints y el 14px de botones y tabs, que eran un quinto y
+  // un sexto tamaño colados por el default.
+  @include mat.theme-overrides(
+    (
+      body-large-size: var(--sl-font-size-body),
+      body-large-line-height: calc(var(--sl-font-size-body) * var(--sl-font-leading-body)),
+      body-large-tracking: normal,
+      body-medium-size: var(--sl-font-size-body),
+      body-medium-line-height: calc(var(--sl-font-size-body) * var(--sl-font-leading-body)),
+      body-medium-tracking: normal,
+      body-small-size: var(--sl-font-size-caption),
+      body-small-line-height: calc(var(--sl-font-size-caption) * var(--sl-font-leading-caption)),
+      body-small-tracking: normal,
+      label-large-size: var(--sl-font-size-caption),
+      label-large-line-height: calc(var(--sl-font-size-caption) * var(--sl-font-leading-caption)),
+      label-large-tracking: normal,
+      label-large-weight: var(--sl-font-weight-medium),
+      label-medium-size: var(--sl-font-size-caption),
+      label-medium-line-height: calc(var(--sl-font-size-caption) * var(--sl-font-leading-caption)),
+      label-medium-tracking: normal,
+      title-medium-size: var(--sl-font-size-title),
+      title-medium-line-height: calc(var(--sl-font-size-title) * var(--sl-font-leading-title)),
+      title-medium-tracking: normal,
+      title-large-size: var(--sl-font-size-title),
+      title-large-line-height: calc(var(--sl-font-size-title) * var(--sl-font-leading-title)),
+      title-large-tracking: normal,
+    )
+  );
+
   // Los botones con texto no salen de los tokens de arriba: Material los ata a
   // `corner-full`, el mismo que hace círculo a los botones de icono. Se pisan
   // acá, y los de icono siguen redondos.
@@ -105,7 +141,16 @@ body {
   margin: 0;
   background: var(--mat-sys-background);
   color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+
+  // Las partes, no el atajo. Material emite `--mat-sys-body-medium` compuesto y
+  // NO lo recompone cuando se pisan sus piezas: el atajo seguía diciendo
+  // `0.875rem / 1.25rem` y todo el panel heredaba 14px, un tamaño que no está en
+  // la escala. Medido: partes en 16px y atajo en 14px al mismo tiempo.
+  font-family: var(--mat-sys-body-medium-font);
+  font-size: var(--mat-sys-body-medium-size);
+  font-weight: var(--mat-sys-body-medium-weight);
+  line-height: var(--mat-sys-body-medium-line-height);
+  letter-spacing: var(--mat-sys-body-medium-tracking);
 }
 
 // El contenedor de un paso del stepper lleva `overflow: hidden` —lo necesita para
@@ -150,4 +195,57 @@ body {
       container-vertical-padding: 8px,
     )
   );
+}
+
+// Material sangra el subíndice —hint y error— 16px respecto de su propio campo,
+// así que el texto de ayuda no alinea con nada de la pantalla. Medido: los campos
+// arrancan en x=306 y sus hints en x=322.
+.mat-mdc-form-field-subscript-wrapper {
+  padding-inline: 0;
+}
+
+// Material no dibuja anillo de foco en sus botones: se apoya en una capa de
+// estado del 12%, que sobre la superficie da 1.20:1 y sobre el naranja de la
+// acción primaria 1.21:1. WCAG 2.4.11 pide 3:1 para el indicador de foco.
+//
+// Se agrega acá para todos —los de icono de la barra superior y los de texto—
+// en vez de en cada pantalla. Solo `:focus-visible`, así que el clic con mouse
+// no lo dispara.
+.mat-mdc-button-base:focus-visible,
+.mat-mdc-icon-button:focus-visible,
+.mat-mdc-tab:focus-visible,
+.mat-mdc-menu-item:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+// El botón primario es del mismo naranja que el anillo: ahí el contraste lo da
+// el hueco del offset contra la superficie, no el color contra el relleno.
+.mat-mdc-unelevated-button:focus-visible,
+button[matButton='filled']:focus-visible {
+  outline-color: var(--mat-sys-on-surface);
+}
+
+// La etiqueta de un botón de Material envuelve cuando el botón se comprime, y el
+// botón se comprime cuando comparte fila con un campo. "Nueva obra" terminaba
+// partido en dos renglones dentro de una caja de 40px de alto.
+//
+// Va en el global y no en la pantalla: el botón se proyecta con `ng-content`
+// hacia `sl-page`, así que ninguno de los dos componentes lo alcanza con sus
+// estilos encapsulados.
+.mdc-button__label {
+  white-space: nowrap;
+}
+
+.page__actions .mat-mdc-button-base {
+  flex: none;
+}
+
+// La opción que da de alta un registro desde el propio desplegable, en vez de un
+// botón suelto al lado del campo. El overlay de Material se renderiza fuera del
+// componente, así que su estilo no puede vivir en la pantalla.
+.mat-mdc-option.option--new {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-primary);
+  font-weight: var(--sl-font-weight-medium);
 }

@@ -1,8 +1,8 @@
 ---
-id: DEBT-0014
+id: DEBT-0015
 title: "El banner dice «sin conexión» ante cualquier fallo del sincronizador"
 aliases:
-  - "DEBT-0014: El banner dice «sin conexión» ante cualquier fallo del sincronizador"
+  - "DEBT-0015: El banner dice «sin conexión» ante cualquier fallo del sincronizador"
 type: tech-debt
 status: abierta
 severity: media
@@ -18,7 +18,7 @@ tags:
   - campo
 ---
 
-# DEBT-0014: El banner dice «sin conexión» ante cualquier fallo del sincronizador
+# DEBT-0015: El banner dice «sin conexión» ante cualquier fallo del sincronizador
 
 ## Contexto
 

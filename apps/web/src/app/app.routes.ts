@@ -19,6 +19,8 @@ export const routes: Routes = [
     loadComponent: () => import('./features/shell/shell').then((m) => m.Shell),
     children: [
       { path: 'projects', loadComponent: () => import('./features/projects/projects').then((m) => m.Projects) },
+      { path: 'projects/new', loadComponent: () => import('./features/projects/project-form/project-form').then((m) => m.ProjectForm) },
+      { path: 'projects/:id', loadComponent: () => import('./features/projects/project-detail/project-detail').then((m) => m.ProjectDetail) },
       { path: 'customers', loadComponent: () => import('./features/customers/customers').then((m) => m.Customers) },
       // `new` antes que `:id`, o se toma por un id.
       { path: 'customers/new', loadComponent: () => import('./features/customers/customer-form/customer-form').then((m) => m.CustomerForm) },

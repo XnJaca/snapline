@@ -258,7 +258,12 @@ Un borrado duro no se puede propagar a un dispositivo que estuvo sin señal.
 ## Reglas de UI
 
 Estas no son preferencias de estilo. Cada una corrige algo que ya salió caro antes.
-Guía completa en `docs/code-guidelines/estilos-y-temas.md` y `docs/code-guidelines/i18n.md`.
+
+**Antes de escribir una línea de CSS de una pantalla nueva, leer
+`docs/code-guidelines/estilos-y-temas.md` y abrir la pantalla equivalente que ya
+existe.** El sistema está construido; el error caro no es elegir mal un valor, es
+no darse cuenta de que la decisión ya estaba tomada. Ver también
+`docs/code-guidelines/i18n.md`, `PRODUCT.md` y `DESIGN.md` en la raíz.
 
 ### 21. Angular: tres archivos, siempre
 
@@ -279,7 +284,17 @@ variables CSS. El componente **consume tokens, no valores**.
 
 **Un hex literal en el archivo de un componente es un error de revisión.** Si un
 token no existe para lo que se necesita, se agrega al sistema — no se hardcodea
-y se sigue.
+y se sigue. Un `line-height` literal cuenta igual.
+
+**El sistema se consume entero, y a veces está a medias.** Dos formas de romperlo
+sin escribir un solo literal, las dos encontradas el 2026-09-04:
+
+- **Un `font-size` sin su `line-height` hermano** hereda el de Material — un único
+  20px para los cuatro tamaños de la escala, con el título de 20px en ratio 1.00.
+  Los `--sl-font-leading-*` existen: se usan siempre, en la misma regla.
+- **El atajo compuesto de Material no se recompone.** Pisar `body-medium-size` deja
+  `--mat-sys-body-medium` diciendo el valor viejo, y las dos variables conviven en
+  desacuerdo. Se consumen las **piezas**, nunca el atajo.
 
 ### 23. Modo claro y oscuro desde el primer componente
 
@@ -305,11 +320,29 @@ Idiomas desde el inicio: **inglés y español**. William administra en inglés y
 probable que sus trabajadores usen la app en español — el `locale` es por usuario,
 no por empresa.
 
+### 25. Nada flota, y lo equivalente se alinea
+
+Ningún campo, título ni bloque se apoya sobre el fondo de la página: todo vive
+sobre una superficie con borde, radio y fondo, **a ancho completo**. Nada se acota
+con un `max-width` propio, o queda una franja muerta al costado.
+
+En una grilla, **las zonas equivalentes de elementos vecinos arrancan a la misma
+coordenada**. Igualar la caja exterior no alcanza: si el bloque de datos de una
+tarjeta mide distinto que el de al lado, su línea divisoria cae a otra altura y se
+lee como descuido. Se resuelve con altura conocida, no con `min-height` a ojo.
+
+En un formulario, **el ancho lo declara el dato** —una fecha no mide lo mismo que
+una descripción— y **cada fila suma 12 columnas**. Si una sección no tiene con qué
+llenar su fila, la sección está mal armada.
+
+El detalle, con el bug que originó cada regla, en la guía de estilos: formularios,
+encabezado de página y diálogos tienen su sección.
+
 ---
 
 ## Reglas de proceso
 
-### 25. Git — ramas por spec, nunca directo a main
+### 26. Git — ramas por spec, nunca directo a main
 
 - Todo spec tiene su rama `feature/SPEC-XXXX-slug`. Sin excepción, sin mezclar dos specs.
 - No commitear ni pushear directo a `main`.
@@ -325,19 +358,19 @@ no por empresa.
 Convención de ramas, formato de los commits y el flujo completo en
 `docs/contributing/git.md`.
 
-### 26. Commits atómicos cross-app
+### 27. Commits atómicos cross-app
 
 Si un cambio cruza `apps/api`, `apps/web` y `apps/mobile`, va en un solo commit. Nada de
 commits parciales que dejen el repo roto.
 
-### 27. El DASHBOARD refleja toda categoría nueva
+### 28. El DASHBOARD refleja toda categoría nueva
 
 Al crear una carpeta bajo `docs/` con archivos que tengan `type:` en el frontmatter,
 agregar su sección con queries Dataview a `docs/DASHBOARD.md` e incluirla en el
 query global de tareas. Sin esta regla el dashboard se vuelve parcial con cada
 categoría que aparece.
 
-### 28. Nada abre PR sin pasar por `code-reviewer`
+### 29. Nada abre PR sin pasar por `code-reviewer`
 
 Toda implementación se revisa con `/review` antes del PR, y **siempre** cuando la
 escribió un agente. El código de un agente compila, se lee bien y resuelve un
@@ -358,7 +391,7 @@ conciencia va a `/debt-new`, no a un TODO en el código.
 Los tres primeros leen y reportan; **ninguno edita**. El arreglo lo hace quien
 corresponda, en la app que corresponda.
 
-### 29. Diagramas: solo si el texto no alcanza
+### 30. Diagramas: solo si el texto no alcanza
 
 Excalidraw en `.excalidraw.md` **sin comprimir**, co-localizado con el doc que
 ilustra. Crear con `/diagram-new`. Convención completa en
@@ -375,7 +408,7 @@ decisión que ilustraba.
 `docs/domain/mapa-dominio.excalidraw.md` es el mapa canónico: **todo agregado nuevo
 recibe su caja ahí**, con `link` a su ficha.
 
-### 30. CLAUDE.md locales mandan en su carpeta
+### 31. CLAUDE.md locales mandan en su carpeta
 
 Cada app tendrá el suyo con sus convenciones de testing, estructura y naming.
 Dentro de esa carpeta, ese archivo gana sobre este.

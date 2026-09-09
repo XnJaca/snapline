@@ -46,7 +46,7 @@ export class ClientOfferDto {
 export class ClientProjectViewDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
-  @ApiProperty({ enum: ['INICIO', 'EN_PROCESO', 'FINALIZADO'] }) stage!: ClientStage;
+  @ApiProperty({ enum: ['INICIO', 'EN_PROCESO', 'FINALIZADO', 'CANCELADO'] }) stage!: ClientStage;
 
   @ApiProperty({
     enum: ['STAGES', 'PROGRESS'],
@@ -62,4 +62,9 @@ export class ClientProjectViewDto {
 export class RequestOfferDto {
   @IsUUID() offerId!: string;
   @IsOptional() @IsString() notes?: string;
+}
+
+export class RequestOfferResultDto {
+  @ApiProperty({ format: 'uuid', description: 'El lead que quedó registrado para esta empresa.' })
+  leadId!: string;
 }

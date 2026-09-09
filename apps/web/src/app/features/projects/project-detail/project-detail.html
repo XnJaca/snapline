@@ -1,0 +1,84 @@
+<sl-page
+  *transloco="let t"
+  icon="projects"
+  [heading]="project.value()?.name ?? t('nav.projects')"
+  [meta]="project.value()?.customer?.displayName ?? ''"
+  [loading]="project.isLoading()"
+  [failed]="!!project.error()"
+  (retry)="project.reload()"
+>
+  @if (project.value(); as obra) {
+    <div class="sheet">
+      <dl class="facts">
+        <div class="fact">
+          <dt>{{ t('projects.status') }}</dt>
+          <dd><sl-chip [tone]="tone">{{ t('projectStatus.' + obra.status) }}</sl-chip></dd>
+        </div>
+
+        @if (obra.serviceType) {
+          <div class="fact">
+            <dt>{{ t('projects.serviceType') }}</dt>
+            <dd>{{ obra.serviceType }}</dd>
+          </div>
+        }
+
+        @if (obra.startDate) {
+          <div class="fact">
+            <dt>{{ t('projects.start') }}</dt>
+            <dd>{{ obra.startDate | slDate }}</dd>
+          </div>
+        }
+
+        @if (obra.targetEndDate) {
+          <div class="fact">
+            <dt>{{ t('projects.target') }}</dt>
+            <dd>{{ obra.targetEndDate | slDate }}</dd>
+          </div>
+        }
+
+        @if (obra.actualEndDate) {
+          <div class="fact">
+            <dt>{{ t('projects.actualEnd') }}</dt>
+            <dd>{{ obra.actualEndDate | slDate }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (obra.description) {
+        <p class="description">{{ obra.description }}</p>
+      }
+
+      <section class="who">
+        <h2 class="who__title">{{ t('projects.sectionWho') }}</h2>
+
+        <dl class="facts">
+          <div class="fact">
+            <dt>{{ t('projects.customer') }}</dt>
+            <dd>
+              @if (canOpenCustomer() && obra.customerId) {
+                <a class="link" [routerLink]="['/customers', obra.customerId]">
+                  {{ obra.customer?.displayName }}
+                </a>
+              } @else {
+                {{ obra.customer?.displayName }}
+              }
+            </dd>
+          </div>
+
+          @if (address(obra.site?.address); as dir) {
+            <div class="fact">
+              <dt>{{ t('projects.site') }}</dt>
+              <dd>
+                {{ dir.line1 }}@if (dir.line2) {, {{ dir.line2 }}}<br />
+                {{ dir.city }}, {{ dir.state }} {{ dir.postalCode }}
+                @if (dir.country) { · {{ dir.country | slCountry }} }
+              </dd>
+            </div>
+          }
+        </dl>
+
+        <p class="note">{{ t('projects.customerAndSiteFixed') }}</p>
+      </section>
+    </div>
+  }
+</sl-page>
